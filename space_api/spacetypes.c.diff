@@ -1,0 +1,33 @@
+--- /home/bdancer/sources/blender/source/blender/editors/space_api/spacetypes.c	2010-07-19 17:09:38.327627551 +0400
++++ space_api/spacetypes.c	2010-07-19 17:21:13.397622897 +0400
+@@ -57,6 +57,8 @@
+ #include "ED_mball.h"
+ #include "ED_logic.h"
+ 
++#include "exporter_ops.h"
++
+ /* only call once on startup, storage is global in BKE kernel listbase */
+ void ED_spacetypes_init(void)
+ {
+@@ -102,7 +104,10 @@
+ 	ED_operatortypes_sound();
+ 	ED_operatortypes_render();
+ 	ED_operatortypes_logic();
+-	
++
++    // V-Ray/Blender exporter operator
++	ED_operatortypes_exporter();
++
+ 	UI_view2d_operatortypes();
+ 	UI_buttons_operatortypes();
+ 	
+--- /home/bdancer/sources/blender/source/blender/editors/space_api/SConscript	2010-07-19 17:09:38.327627551 +0400
++++ space_api/SConscript	2010-07-19 17:20:02.931373123 +0400
+@@ -4,6 +4,7 @@
+ sources = env.Glob('*.c')
+ 
+ incs = '../include ../../blenlib ../../blenkernel ../../makesdna'
++incs += ' ../../exporter'
+ incs += ' ../../windowmanager ../../python ../../makesrna'
+ incs += ' #/intern/guardedalloc #/extern/glew/include'
+ 

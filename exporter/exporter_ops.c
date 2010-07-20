@@ -7,6 +7,8 @@
 #include "WM_api.h"
 #include "WM_types.h"
 
+#include "RNA_define.h"
+
 #include "exporter.h"
 #include "exporter_ops.h"
 

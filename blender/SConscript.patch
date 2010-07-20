@@ -1,0 +1,10 @@
+--- /home/bdancer/sources/blender/source/blender/SConscript	2010-07-19 17:09:57.809133217 +0400
++++ SConscript	2010-07-19 17:30:30.617622329 +0400
+@@ -16,6 +16,7 @@
+             'readblenfile/SConscript',
+             'render/SConscript',
+             'nodes/SConscript',
++            'exporter/SConscript',
+             'modifiers/SConscript',
+             'ikplugin/SConscript',
+             'windowmanager/SConscript',

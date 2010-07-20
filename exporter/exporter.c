@@ -47,6 +47,8 @@
 #include "BLI_path_util.h"
 #include "BLI_string.h"
 
+#include "PIL_time.h"
+
 #include "RNA_access.h"
 
 #include "MEM_guardedalloc.h"

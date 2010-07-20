@@ -32,16 +32,16 @@ BF_OPENAL_LIB = 'openal alut'
 BF_TWEAK_MODE = 'false'
 BF_PYTHON_VERSION = '3.1'
 
-BF_DEBUG = 'false'
+BF_DEBUG = 'true'
+
+BF_NUMJOBS = 4
 
 if(sys.platform == "win32"):
-	BF_NUMJOBS = 4
-	
 	BF_SPLIT_SRC= 'true'
 
 	BF_BUILDDIR = 'C:\\b'
-	BF_INSTALLDIR = 'C:\\release\\vrayblender-2.5.02'
-	BF_DOCDIR='C:\\release\\vrayblender-2.5.02\\doc'
+	BF_INSTALLDIR = 'C:\\release\\vb25'
+	BF_DOCDIR='C:\\release\\vb25\\doc'
 
 else:
 	# Optimize for Intel Core
@@ -59,12 +59,8 @@ else:
 	C_WARN = ['-Wno-char-subscripts', '-Wdeclaration-after-statement']
 	CC_WARN = ['-Wall']
 
-	# Just because some gcc 4.4 bug that cause segfault
-	#CC= 'gcc-4.3'
-	#CXX= 'g++-4.3'
-
 	BF_NUMJOBS = 4
-	BF_BUILDDIR = '/tmp/build-vrayblender-25'
-	BF_INSTALLDIR = '/opt/vrayblender-2.5.02'
-	BF_DOCDIR='/opt/vrayblender-2.5/doc'
+	BF_BUILDDIR = '/tmp/build-vb25'
+	BF_INSTALLDIR = '/opt/vb25'
+	BF_DOCDIR='/opt/vb25/doc'
 	

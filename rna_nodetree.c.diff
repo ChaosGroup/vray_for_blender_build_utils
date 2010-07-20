@@ -1,5 +1,9 @@
---- source/blender/makesrna/intern/rna_nodetree.c	2010-03-25 16:17:04.280760251 +0300
-+++ source/blender/makesrna/intern/rna_nodetree.c	2010-03-29 21:14:04.531208554 +0400
+--- /home/bdancer/sources/blender/source/blender/makesrna/intern/rna_nodetree.c	2010-07-19 17:09:26.470122557 +0400
++++ rna_nodetree.c	2010-07-19 17:15:37.298075649 +0400
+@@ -2192,6 +2192,37 @@
+ 	RNA_def_property_float_funcs(prop, NULL, NULL, "rna_NodeSocket_defvalue_range");
+ }
+ 
 +static void rna_def_node_link(BlenderRNA *brna)
 +{
 +	StructRNA *srna;
@@ -31,10 +35,10 @@
 +	RNA_def_property_ui_text(prop, "To socket", "");
 +}
 +
- static void rna_def_nodetree(BlenderRNA *brna)
+ static void rna_def_node(BlenderRNA *brna)
  {
  	StructRNA *srna;
-@@ -2244,6 +2276,12 @@
+@@ -2245,6 +2276,12 @@
  	RNA_def_property_collection_sdna(prop, NULL, "nodes", NULL);
  	RNA_def_property_struct_type(prop, "Node");
  	RNA_def_property_ui_text(prop, "Nodes", "");
@@ -47,11 +51,11 @@
  	
  	/* Grease Pencil */
  	prop= RNA_def_property(srna, "grease_pencil", PROP_POINTER, PROP_NONE);
-@@ -2270,6 +2308,7 @@
+@@ -2271,6 +2308,7 @@
  	rna_def_node_socket_vector(brna);
  	rna_def_node_socket_rgba(brna);
  	rna_def_node(brna);
-+    rna_def_node_link(brna);
++	rna_def_node_link(brna);
  	rna_def_shader_node(brna);
  	rna_def_compositor_node(brna);
  	rna_def_texture_node(brna);

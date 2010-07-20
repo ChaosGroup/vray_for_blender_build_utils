@@ -1,0 +1,17 @@
+#!/bin/bash
+notify-send "vb25 SVN update" "Started…"
+cd ~/sources/vb25-patch
+git pull
+cd ~/sources/blender
+svn update
+cp -f ../vb25-patch/user-config.py .
+cp -f ../vb25-patch/splash.png.c source/blender/editors/datafiles
+cp -Rf ../vb25-patch/exporter source/blender/
+patch -Np0 -i ../vb25-patch/vb25.patch
+sudo python scons/scons.py —implicit-deps-unchanged —max-drift=1
+sudo mkdir -p /opt/vb25/api
+sudo /opt/vb25/blender -b -P source/blender/python/doc/sphinx_doc_gen.py
+sudo sphinx-build source/blender/python/doc/sphinx-in /opt/vb25/api
+sudo chown -R bdancer:bdancer /opt/vb25
+notify-send "vb25 SVN update" "Finished!"
+

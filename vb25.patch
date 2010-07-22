@@ -1,4 +1,4 @@
---- /home/bdancer/sources/blender/source/blender/makesrna/intern/rna_nodetree.c	2010-07-19 17:09:26.470122557 +0400
+--- source/blender/makesrna/intern/rna_nodetree.c	2010-07-19 17:09:26.470122557 +0400
 +++ rna_nodetree.c	2010-07-19 17:15:37.298075649 +0400
 @@ -2192,6 +2192,37 @@
  	RNA_def_property_float_funcs(prop, NULL, NULL, "rna_NodeSocket_defvalue_range");
@@ -59,7 +59,7 @@
  	rna_def_shader_node(brna);
  	rna_def_compositor_node(brna);
  	rna_def_texture_node(brna);
---- /home/bdancer/sources/blender/source/blender/SConscript	2010-07-19 17:09:57.809133217 +0400
+--- source/blender/SConscript	2010-07-19 17:09:57.809133217 +0400
 +++ SConscript	2010-07-19 17:30:30.617622329 +0400
 @@ -16,6 +16,7 @@
              'readblenfile/SConscript',
@@ -69,7 +69,7 @@
              'modifiers/SConscript',
              'ikplugin/SConscript',
              'windowmanager/SConscript',
---- /home/bdancer/sources/blender/source/blender/editors/space_api/spacetypes.c	2010-07-19 17:09:38.327627551 +0400
+--- source/blender/editors/space_api/spacetypes.c	2010-07-19 17:09:38.327627551 +0400
 +++ space_api/spacetypes.c	2010-07-19 17:21:13.397622897 +0400
 @@ -57,6 +57,8 @@
  #include "ED_mball.h"
@@ -92,7 +92,7 @@
  	UI_view2d_operatortypes();
  	UI_buttons_operatortypes();
  	
---- /home/bdancer/sources/blender/source/blender/editors/space_api/SConscript	2010-07-19 17:09:38.327627551 +0400
+--- source/blender/editors/space_api/SConscript	2010-07-19 17:09:38.327627551 +0400
 +++ space_api/SConscript	2010-07-19 17:20:02.931373123 +0400
 @@ -4,6 +4,7 @@
  sources = env.Glob('*.c')

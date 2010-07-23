@@ -8,6 +8,9 @@ import socket
 import platform
 import getpass
 import re
+import string
+import glob
+import subprocess
 
 from optparse import OptionParser
 
@@ -156,7 +159,11 @@ if options.pure_blender:
 
 install_dir= os.path.join(options.installdir,project)
 
-release_dir= "/home/bdancer/devel/vrayblender/release"
+if PLATFORM == "win32":
+	release_dir= "/home/bdancer/devel/vrayblender/release"
+else:
+	release_dir= "c:\\\\release\\\\installer"
+
 
 BF_NUMJOBS= options.jobs
 if not HOSTNAME.find('vbox') == -1:
@@ -168,7 +175,8 @@ def notify(title, message):
 	if not PLATFORM == "win32":
 		os.system("notify-send \"%s\" \"%s\"" % (title, message))
 
-def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME):
+def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
+	DIR= os.getcwd()
 	SKIP_DIRS= ('plugins')
 
 	#
@@ -237,7 +245,7 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME):
 	ns_cnt = string.replace(ns_cnt, "SHORTVER", VERSION)
 	ns_cnt = string.replace(ns_cnt, "VERSION",  VERSION)
 	ns_cnt = string.replace(ns_cnt, "RELDIR",   DIR)
-	ns_cnt = string.replace(ns_cnt, "[INSTALLER_DIR]", INSTALLER_DIR)
+	ns_cnt = string.replace(ns_cnt, "[INSTALLER_DIR]", release_dir)
 	ns_cnt = string.replace(ns_cnt, "[INSTALLER_NAME]", INSTALLER_NAME)
 
 	inst_nsis= os.path.join(DIR,"installer.nsi")
@@ -456,6 +464,7 @@ if not options.debug and options.archive:
 		io_scripts_path= os.path.join(install_dir,'2.53','scripts','io')
 		exporter_path= os.path.join(io_scripts_path,'vb25')
 		os.chdir(io_scripts_path)
+		print exporter_path
 		if os.path.exists(exporter_path):
 			os.chdir(exporter_path)
 			if not options.test:
@@ -470,7 +479,7 @@ if not options.debug and options.archive:
 		sys.stdout.write("Generating archive: %s\n" % (archive_name))
 	if not options.test:
 		if PLATFORM == "win32":
-			generate_installer(patch_dir, install_dir, archive_name)
+			generate_installer(patch_dir, install_dir, archive_name, '2.53')
 		else:
 			os.chdir(install_dir)
 			os.chdir('..')

@@ -1,5 +1,6 @@
 V-Ray/Blender 2.5 patchset:
 - NodeTree->links support
 - Custom mesh export operator
+- Custom splash image
 
 Usage: http://wiki.github.com/bdancer/vb25-patch/

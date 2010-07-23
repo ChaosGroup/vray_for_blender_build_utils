@@ -86,7 +86,7 @@ parser.add_option(
 )
 
 parser.add_option(
-	'-p',
+	'-o',
 	'--optimize',
 	action= 'store_true',
 	dest= 'optimize',
@@ -101,6 +101,15 @@ parser.add_option(
 	dest= 'update',
 	default= False,
 	help= 'Update sources.'
+)
+
+parser.add_option(
+	'-p',
+	'--update_patch',
+	action= 'store_true',
+	dest= 'update_patch',
+	default= False,
+	help= 'Update patch sources.'
 )
 
 parser.add_option(
@@ -149,13 +158,96 @@ install_dir= os.path.join(options.installdir,project)
 
 release_dir= "/home/bdancer/devel/vrayblender/release"
 
-NUMJOBS= options.jobs
+BF_NUMJOBS= options.jobs
 if not HOSTNAME.find('vbox') == -1:
-	NUMJOBS= 1
+	BF_NUMJOBS= 1
+
+BF_PYTHON_VERSION= '3.1'
 
 def notify(title, message):
 	if not PLATFORM == "win32":
 		os.system("notify-send \"%s\" \"%s\"" % (title, message))
+
+def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME):
+	SKIP_DIRS= ('plugins')
+
+	#
+	# NSIS installer sciprt template;
+	# based on official script by jesterKing
+	#
+	ns = open(os.path.join(patch_dir,'installer','template.nsi'),"r")
+	ns_cnt = str(ns.read())
+	ns.close()
+	
+	ns_cnt = string.replace(ns_cnt, "[PYTHON_VERSION]", BF_PYTHON_VERSION)
+
+	# do root
+	rootlist = []
+	rootdir = os.listdir(BF_INSTALLDIR+"\\")
+	for rootitem in rootdir:
+		if os.path.isdir(BF_INSTALLDIR+"\\"+ rootitem) == 0:
+			rootlist.append("File \"" + os.path.normpath(BF_INSTALLDIR) + "\\" + rootitem+"\"")
+	rootstring = string.join(rootlist, "\n  ")
+	rootstring += "\n\n"
+	ns_cnt = string.replace(ns_cnt, "[ROOTDIRCONTS]", rootstring)
+
+	dot_blender_str= ""
+	dot_blender_del= ""
+	scripts_dirs= []
+	for root, dirs, files in os.walk(os.path.join(BF_INSTALLDIR, ".blender")):
+		root_path= string.replace(root, BF_INSTALLDIR, "")
+		dot_blender_str+= '\n  SetOutPath \"$BLENDERHOME%s\"\n'%(root_path)
+		scripts_dirs.append(root_path)
+		for f in os.listdir(root):
+			f_path= os.path.join(root,f)
+			if os.path.isdir(f_path) == 0:
+				dot_blender_del+= '  Delete \"$INSTDIR%s%s\"\n'%(root_path,f)
+				dot_blender_str+= '  File \"%s\"\n'%(f_path)
+	ns_cnt = string.replace(ns_cnt, "[DOTBLENDER]", dot_blender_str)
+
+	scripts_dirs.reverse()
+	for sdir in scripts_dirs:
+		dot_blender_del+= '  RMDir /r \"$INSTDIR%s\"\n'%(sdir)
+
+	# do delete items
+	delrootlist = []
+	for rootitem in rootdir:
+		if os.path.isdir(BF_INSTALLDIR + rootitem) == 0:
+			delrootlist.append("Delete $INSTDIR\\" + rootitem)
+	delrootstring = string.join(delrootlist, "\n  ")
+	delrootstring+= "\n\n"
+
+	ns_cnt = string.replace(ns_cnt, "[DELROOTDIRCONTS]", delrootstring)
+	ns_cnt = string.replace(ns_cnt, "[DOTBLENDER_DELETE]", dot_blender_del)
+
+	plugincludelist = []
+	plugincludepath = "%s%s" % (BF_INSTALLDIR, "\\plugins\\include")
+	plugincludedir = os.listdir(plugincludepath)
+	for plugincludeitem in plugincludedir:
+		plugincludefile = "%s\\%s" % (plugincludepath, plugincludeitem)
+		if os.path.isdir(plugincludefile) == 0:
+			if plugincludefile.find('.h') or plugincludefile.find('.DEF'):
+				plugincludefile = os.path.normpath(plugincludefile)
+				plugincludelist.append("File \"%s\"" % plugincludefile)
+	plugincludestring = string.join(plugincludelist, "\n  ")
+	plugincludestring += "\n\n"
+	ns_cnt = string.replace(ns_cnt, "[PLUGINCONTS]", plugincludestring)
+
+	ns_cnt = string.replace(ns_cnt, "DISTDIR",  BF_INSTALLDIR)
+	ns_cnt = string.replace(ns_cnt, "SHORTVER", VERSION)
+	ns_cnt = string.replace(ns_cnt, "VERSION",  VERSION)
+	ns_cnt = string.replace(ns_cnt, "RELDIR",   DIR)
+	ns_cnt = string.replace(ns_cnt, "[INSTALLER_DIR]", INSTALLER_DIR)
+	ns_cnt = string.replace(ns_cnt, "[INSTALLER_NAME]", INSTALLER_NAME)
+
+	inst_nsis= os.path.join(DIR,"installer.nsi")
+	new_nsis = open(inst_nsis, 'w')
+	new_nsis.write(ns_cnt)
+	new_nsis.close()
+
+	if not options.test:
+		os.system("makensis \"%s\""%(inst_nsis))
+
 
 def generate_user_config(filename):
 	ofile= open(filename, 'w')
@@ -166,7 +258,6 @@ def generate_user_config(filename):
 			'WITH_BF_INTERNATIONAL',
 			'WITH_BF_JPEG',
 			'WITH_BF_PNG',
-			'WITH_BF_OPENEXR',
 			'WITH_BF_FFMPEG',
 			'WITH_BF_OPENAL',
 			'WITH_BF_SDL',
@@ -174,7 +265,8 @@ def generate_user_config(filename):
 			'WITH_BF_ZLIB',
 			'WITH_BF_FTGL',
 			'WITH_BF_RAYOPTIMIZATION',
-			'WITH_BUILDINFO'
+			'WITH_BUILDINFO',
+			'WITH_BF_OPENEXR'
 		],
 		'False': [
 			'WITH_BF_QUICKTIME',
@@ -195,6 +287,11 @@ def generate_user_config(filename):
 	# 	build_options['False'].append('WITH_BF_FFMPEG')
 	# 	build_options['False'].append('WITH_BF_OPENAL')
 
+	# if PLATFORM == "win32":
+	# 	build_options['False'].append('WITH_BF_OPENEXR')
+	# else:
+	# 	build_options['True'].append('WITH_BF_OPENEXR')
+
 	if options.with_collada:
 		build_options['True'].append('WITH_BF_COLLADA')
 	else:
@@ -207,13 +304,13 @@ def generate_user_config(filename):
 		for opt in build_options[key]:
 			ofile.write("%s = '%s'\n"%(opt,key))
 
-	if PLATFORM == "win32":
-		ofile.write("BF_OPENEXR_LIBPATH = \"%s\"\n" % "#../lib/windows/openexr/lib_vs2010")
+	# ofile.write("BF_OPENEXR_LIBPATH = \"#../lib/windows/openexr/lib_vs2010\"\n")
+	# ofile.write("BF_OPENEXR_INC= \"#../lib/windows/openexr/include_vs2010 #../lib/windows/openexr/include_vs2010/IlmImf #../lib/windows/openexr/include_vs2010/Iex #../lib/windows/openexr/include_vs2010/Imath\"\n")
 
 	ofile.write("BF_OPENAL_LIB = \'openal alut\'\n")
 	ofile.write("BF_TWEAK_MODE = \'false\'\n")
-	ofile.write("BF_PYTHON_VERSION = \'3.1\'\n")
-	ofile.write("BF_NUMJOBS = %i\n" % NUMJOBS)
+	ofile.write("BF_PYTHON_VERSION = \'%s\'\n" % BF_PYTHON_VERSION)
+	ofile.write("BF_NUMJOBS = %i\n" % BF_NUMJOBS)
 
 	ofile.write("BF_INSTALLDIR = \"%s\"\n" % os.path.join(options.installdir,project))
 	if PLATFORM == "win32" :
@@ -294,11 +391,11 @@ if not options.test:
 	generate_user_config(os.path.join(blender_dir,'user-config.py'))
 
 # Apply V-Ray/Blender patches if needed
+patch_dir= os.path.join(working_directory,'vb25-patch')
 if not options.pure_blender:
-	patch_dir= os.path.join(working_directory,'vb25-patch')
 	if os.path.exists(patch_dir):
 		os.chdir(patch_dir)
-		if options.update:
+		if options.update_patch:
 			sys.stdout.write("Updating vb25 patches\n")
 			if not options.test:
 				os.system("git pull")
@@ -332,7 +429,7 @@ if not options.test:
 # Generate docs if needed
 if options.docs:
 	if PLATFORM == "win32":
-		pass
+		sys.stdout.write("Docs generation on Windows is not supported\n")
 	else:
 		api_dir= os.path.join(install_dir,'api')
 		sys.stdout.write("Generating docs: %s\n" % (api_dir))
@@ -350,7 +447,9 @@ if not PLATFORM == "win32":
 
 # Generate archive (Linux) or installer (Windows)
 if not options.debug and options.archive:
-	archive_name= "vb25-%s-ubuntu10_04-%s.tar.bz2" % (REV,ARCH)
+	archive_name= "%s-%s-ubuntu10_04-%s.tar.bz2" % (project,REV,ARCH)
+	if PLATFORM == "win32":
+		archive_name= "%s-%s-win32.exe" % (project,REV)
 	sys.stdout.write("Creating release archive\n")
 	sys.stdout.write("Adding vb25 exporter...\n")
 	if not options.test:
@@ -365,10 +464,13 @@ if not options.debug and options.archive:
 			if not options.test:
 				os.system("git clone git://github.com/bdancer/vb25.git")
 
-	sys.stdout.write("Generating archive: %s\n" % (archive_name))
+	if PLATFORM == "win32":
+		sys.stdout.write("Generating installer: %s\n" % (archive_name))
+	else:
+		sys.stdout.write("Generating archive: %s\n" % (archive_name))
 	if not options.test:
 		if PLATFORM == "win32":
-			pass
+			generate_installer(patch_dir, install_dir, archive_name)
 		else:
 			os.chdir(install_dir)
 			os.chdir('..')

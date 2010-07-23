@@ -164,6 +164,7 @@ if PLATFORM == "win32":
 else:
 	release_dir= "c:\\\\release\\\\installer"
 
+working_directory= os.getcwd()
 
 BF_NUMJOBS= options.jobs
 if not HOSTNAME.find('vbox') == -1:
@@ -244,11 +245,11 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 	ns_cnt = string.replace(ns_cnt, "DISTDIR",  BF_INSTALLDIR)
 	ns_cnt = string.replace(ns_cnt, "SHORTVER", VERSION)
 	ns_cnt = string.replace(ns_cnt, "VERSION",  VERSION)
-	ns_cnt = string.replace(ns_cnt, "RELDIR",   DIR)
+	ns_cnt = string.replace(ns_cnt, "RELDIR",   os.path.join(patch_dir,'installer'))
 	ns_cnt = string.replace(ns_cnt, "[INSTALLER_DIR]", release_dir)
 	ns_cnt = string.replace(ns_cnt, "[INSTALLER_NAME]", INSTALLER_NAME)
 
-	inst_nsis= os.path.join(DIR,"installer.nsi")
+	inst_nsis= os.path.join(working_directory,"installer.nsi")
 	new_nsis = open(inst_nsis, 'w')
 	new_nsis.write(ns_cnt)
 	new_nsis.close()
@@ -345,8 +346,6 @@ def generate_user_config(filename):
 	ofile.close()
 
 notify("%s SVN update" % project, "Started...")
-
-working_directory= os.getcwd()
 
 # Update||obtain Blender SVN
 blender_dir= os.path.join(working_directory,'blender')

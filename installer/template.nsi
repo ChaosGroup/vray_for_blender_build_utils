@@ -364,9 +364,6 @@ Section "Open .blend files with V-Ray/Blender-VERSION" Section4
 SectionEnd
 
 
-[VRAYSECTION]
-
-
 UninstallText "This will uninstall V-Ray/Blender VERSION. Hit next to continue."
 
 

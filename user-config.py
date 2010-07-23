@@ -2,6 +2,10 @@
 # V-Ray/Blender
 #
 
+import sys
+
+PLATFORM= sys.platform
+
 WITH_BF_QUICKTIME = 'False'
 WITH_BF_FMOD = 'False'
 WITH_BF_ICONV = 'False'
@@ -21,20 +25,27 @@ WITH_BF_BULLET = 'True'
 WITH_BF_ZLIB = 'True'
 WITH_BF_FTGL = 'True'
 WITH_BF_RAYOPTIMIZATION = 'True'
-WITH_BUILDINFO = 'True'
 WITH_BF_OPENEXR = 'True'
+
+WITH_BUILDINFO = 'True'
 
 BF_OPENAL_LIB = 'openal alut'
 BF_TWEAK_MODE = 'false'
 BF_PYTHON_VERSION = '3.1'
 BF_NUMJOBS = 4
-BF_INSTALLDIR = "/opt/vb25"
-BF_BUILDDIR = "/tmp/build-vb25"
 
-CCFLAGS = ['-pipe','-fPIC','-funsigned-char','-fno-strict-aliasing']
-CPPFLAGS = ['-DXP_UNIX']
-CXXFLAGS = ['-pipe','-fPIC','-funsigned-char','-fno-strict-aliasing']
-REL_CFLAGS = ['-O2']
-REL_CCFLAGS = ['-O2']
-C_WARN = ['-Wno-char-subscripts', '-Wdeclaration-after-statement']
-CC_WARN = ['-Wall']
+if PLATFORM == "win32":
+	BF_INSTALLDIR = "C:\\vb25"
+	BF_SPLIT_SRC = 'true'
+	BF_BUILDDIR = "C:\\b"
+else:
+	BF_INSTALLDIR = "/opt/vb25"
+	BF_BUILDDIR = "/tmp/build-vb25"
+
+	CCFLAGS = ['-pipe','-fPIC','-funsigned-char','-fno-strict-aliasing']
+	CPPFLAGS = ['-DXP_UNIX']
+	CXXFLAGS = ['-pipe','-fPIC','-funsigned-char','-fno-strict-aliasing']
+	REL_CFLAGS = ['-O2']
+	REL_CCFLAGS = ['-O2']
+	C_WARN = ['-Wno-char-subscripts', '-Wdeclaration-after-statement']
+	CC_WARN = ['-Wall']

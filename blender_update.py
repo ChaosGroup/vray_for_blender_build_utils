@@ -23,7 +23,7 @@ REV= 'current'
 '''
   COMMAND LINE OPTIONS
 '''
-parser= OptionParser(usage="%prog [options]", version="blender_update %s by %s" % (__version__, __author__))
+parser= OptionParser(usage="python %prog [options]", version="blender_update %s by %s" % (__version__, __author__))
 
 parser.add_option(
 	'-b',
@@ -53,7 +53,7 @@ parser.add_option(
 )
 
 parser.add_option(
-	'-d',
+	'',
 	'--docs',
 	action= 'store_true',
 	dest= 'docs',
@@ -62,7 +62,7 @@ parser.add_option(
 )
 
 parser.add_option(
-	'-c',
+	'',
 	'--collada',
 	action= 'store_true',
 	dest= 'with_collada',
@@ -71,7 +71,7 @@ parser.add_option(
 )
 
 parser.add_option(
-	'-g',
+	'-d',
 	'--debug',
 	action= 'store_true',
 	dest= 'debug',
@@ -107,7 +107,7 @@ parser.add_option(
 )
 
 parser.add_option(
-	'-p',
+	'',
 	'--update_patch',
 	action= 'store_true',
 	dest= 'update_patch',
@@ -124,9 +124,19 @@ parser.add_option(
 	help= 'Test mode.'
 )
 
+parser.add_option(
+	'',
+	'--deps',
+	action= 'store',
+	dest= 'linux',
+	type= "string",
+	default= 'ubuntu',
+	help= 'Linux distribution.'
+)
+
 if PLATFORM == "win32":
 	parser.add_option(
-		'-i',
+		'',
 		'--installdir',
 		action= 'store_true',
 		dest= 'installdir',
@@ -135,7 +145,7 @@ if PLATFORM == "win32":
 	)
 else:
 	parser.add_option(
-		'-i',
+		'',
 		'--installdir',
 		action= 'store_true',
 		dest= 'installdir',
@@ -153,16 +163,49 @@ if(len(sys.argv) == 1):
 '''
   MAIN SECTION
 '''
+def which(program):
+	def is_exe(fpath):
+		return os.path.exists(fpath) and os.access(fpath, os.X_OK)
+
+	fpath, fname = os.path.split(program)
+	if fpath:
+		if is_exe(program):
+			return program
+	else:
+		for path in os.environ["PATH"].split(os.pathsep):
+			exe_file = os.path.join(path, program)
+			if is_exe(exe_file):
+				return exe_file
+
+	return None
+
+if not PLATFORM == "win32":
+	if options.linux:
+		sys.stdout.write("Installing dependencies: ")
+		if options.linux == 'ubuntu':
+			packages= "subversion build-essential gettext libxi-dev libsndfile1-dev libpng12-dev libfftw3-dev libopenexr-dev libopenjpeg-dev libopenal-dev libalut-dev libvorbis-dev libglu1-mesa-dev libsdl-dev libfreetype6-dev libtiff4-dev libsamplerate0-dev libavdevice-dev libavformat-dev libavutil-dev libavcodec-dev libjack-dev libswscale-dev libx264-dev libmp3lame-dev python3.1-dev git-core libnotify-bin"
+			if options.docs:
+				packages+= " python-sphinx"
+			sys.stdout.write("%s\n" % packages)
+			os.system("apt-get install %s" % packages)
+		elif options.linux == 'opensuse':
+			packages="scons gcc-c++ xorg-x11-devel Mesa-devel xorg-x11-libs zlib-devel libpng-devel xorg-x11 libjpeg-devel freetype2-devel libtiff-devel OpenEXR-devel SDL-devel openal-devel fftw3-devel libsamplerate-devel libjack-devel python3-devel libffmpeg-devel libxvidcore-devel libogg-devel libfaac-devel libfaad-devel libx264-devel libmp3lame-devel libvorbis-devel libtheora-devel freealut-devel update-desktop-files"
+			sys.stdout.write("%s\n" % packages)
+			os.system("zypper install %s" % packages)
+		else:
+			sys.stdout.write("Your distribution doesn\'t support automatic dependencies installation.\n")
+		sys.exit()
+
 project= 'vb25'
 if options.pure_blender:
-	project= 'blender-2.5'
+	project= 'b25'
 
 install_dir= os.path.join(options.installdir,project)
 
 if PLATFORM == "win32":
-	release_dir= "/home/bdancer/devel/vrayblender/release"
+	release_dir= "c:\\\\release\\"
 else:
-	release_dir= "c:\\\\release\\\\installer"
+	release_dir= "/home/bdancer/devel/vrayblender/release"
 
 working_directory= os.getcwd()
 
@@ -172,9 +215,41 @@ if not HOSTNAME.find('vbox') == -1:
 
 BF_PYTHON_VERSION= '3.1'
 
+patch_cmd= 'patch.exe'
+if PLATFORM == "win32":
+	path= os.getenv('PATH')
+	path_list= path.split(';')
+	for path in path_list:
+		if path.find('Git') != -1:
+			if path.find('cmd') != -1:
+				patch_cmd= os.path.join(os.path.normpath(os.path.join(path,'..','bin')),'patch.exe')
+				sys.stdout.write("Using patch from Git (%s)\n" % patch_cmd)
+				break
+	if not options.pure_blender:
+		if patch_cmd == 'patch.exe':
+			sys.stdout.write("Patch.exe not found!\n")
+			sys.exit()
+
 def notify(title, message):
 	if not PLATFORM == "win32":
-		os.system("notify-send \"%s\" \"%s\"" % (title, message))
+		if which("notify-send") is not None:
+			os.system("notify-send \"%s\" \"%s\"" % (title, message))
+
+def generate_desktop(filepath):
+	ofile= open(filepath, 'w')
+	ofile.write("[Desktop Entry]\n")
+	if project == 'vb25':
+		ofile.write("Name=V-Ray/Blender 2.5\n")
+	else:
+		ofile.write("Name=Blender 2.5\n")
+	ofile.write("Exec=%s/blender\n" % install_dir)
+	ofile.write("Icon=blender\n")
+	ofile.write("Terminal=true\n")
+	ofile.write("Type=Application\n")
+	ofile.write("Categories=Graphics;3DGraphics;\n")
+	ofile.write("StartupNotify=false\n")
+	ofile.write("MimeType=application/x-blender;\n")
+	ofile.close()
 
 def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 	DIR= os.getcwd()
@@ -203,7 +278,7 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 	dot_blender_str= ""
 	dot_blender_del= ""
 	scripts_dirs= []
-	for root, dirs, files in os.walk(os.path.join(BF_INSTALLDIR, ".blender")):
+	for root, dirs, files in os.walk(os.path.join(BF_INSTALLDIR, VERSION)):
 		root_path= string.replace(root, BF_INSTALLDIR, "")
 		dot_blender_str+= '\n  SetOutPath \"$BLENDERHOME%s\"\n'%(root_path)
 		scripts_dirs.append(root_path)
@@ -222,7 +297,7 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 	delrootlist = []
 	for rootitem in rootdir:
 		if os.path.isdir(BF_INSTALLDIR + rootitem) == 0:
-			delrootlist.append("Delete $INSTDIR\\" + rootitem)
+			delrootlist.append("Delete \"$INSTDIR\\%s\\\"" % rootitem)
 	delrootstring = string.join(delrootlist, "\n  ")
 	delrootstring+= "\n\n"
 
@@ -418,7 +493,11 @@ if not options.pure_blender:
 		if(os.path.exists(dst)):
 			shutil.rmtree(dst)
 		shutil.copytree(os.path.join(patch_dir, "exporter"), dst)
-		os.system("patch -Np0 -i %s" % os.path.join(patch_dir,"vb25.patch"))
+		os.chdir(blender_dir)
+		if PLATFORM == "win32":
+			os.system("\"%s\" -Np0 -i %s" % (patch_cmd, os.path.join(patch_dir,"vb25.patch")))
+		else:
+			os.system("patch -Np0 -i %s" % os.path.join(patch_dir,"vb25.patch"))
 
 # Finally build Blender
 sys.stdout.write("Building %s (%s)\n" % (project,REV))
@@ -426,12 +505,16 @@ if not options.test:
 	os.chdir(blender_dir)
 	build_cmd= "python scons/scons.py"
 	if not PLATFORM == "win32":
-		build_cmd= "sudo %s" % build_cmd
+		build_cmd= "%s" % build_cmd
 	if options.rebuild:
 		os.system("%s clean" % build_cmd)
 	if not options.rebuild:
 		build_cmd+= " --implicit-deps-unchanged --max-drift=1"
 	os.system(build_cmd)
+
+	desktop_file= "/usr/share/applications/%s.desktop" % project
+	sys.stdout.write("Generating .desktop file: %s\n" % (desktop_file))
+	generate_desktop(desktop_file)
 
 # Generate docs if needed
 if options.docs:
@@ -442,14 +525,14 @@ if options.docs:
 		sys.stdout.write("Generating docs: %s\n" % (api_dir))
 		if not options.test:
 			os.system("mkdir -p %s" % api_dir)
-			os.system("sudo %s -b -P source/blender/python/doc/sphinx_doc_gen.py" % os.path.join(install_dir,'blender'))
-			os.system("sudo sphinx-build source/blender/python/doc/sphinx-in %s" % api_dir)
+			os.system("%s -b -P source/blender/python/doc/sphinx_doc_gen.py" % os.path.join(install_dir,'blender'))
+			os.system("sphinx-build source/blender/python/doc/sphinx-in %s" % api_dir)
 
 # Set proper owner
 if not PLATFORM == "win32":
 	sys.stdout.write("Changing %s owner to %s:%s\n" % (install_dir,USER,USER))
 	if not options.test:
-		os.system("sudo chown -R %s:%s %s" % (USER,USER,install_dir))
+		os.system("chown -R %s:%s %s" % (USER,USER,install_dir))
 
 
 # Generate archive (Linux) or installer (Windows)
@@ -462,16 +545,13 @@ if not options.debug and options.archive:
 	if not options.test:
 		io_scripts_path= os.path.join(install_dir,'2.53','scripts','io')
 		exporter_path= os.path.join(io_scripts_path,'vb25')
-		os.chdir(io_scripts_path)
-		print exporter_path
-		if os.path.exists(exporter_path):
-			os.chdir(exporter_path)
-			if not options.test:
-				os.system("git pull")
-		else:
-			if not options.test:
-				os.system("git clone git://github.com/bdancer/vb25.git")
+		if not options.test:
+			if os.path.exists(exporter_path):
+				shutil.rmtree(exporter_path)
+			os.chdir(io_scripts_path)
+			os.system("git clone git://github.com/bdancer/vb25.git")
 
+	os.chdir(working_directory)
 	if PLATFORM == "win32":
 		sys.stdout.write("Generating installer: %s\n" % (archive_name))
 	else:

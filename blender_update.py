@@ -586,7 +586,7 @@ if options.docs:
 
 # Set proper owner
 if not PLATFORM == "win32":
-	sys.stdout.write("Changing %s owner to %s:%s\n" % (install_dir,USER,USER))
+	sys.stdout.write("Changing %s owner to %s\n" % (install_dir,USER))
 	if not options.test:
 		os.system("sudo chown -R %s %s" % (USER,install_dir))
 

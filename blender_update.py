@@ -557,7 +557,7 @@ if not options.test:
 	if not options.rebuild:
 		build_cmd+= " --implicit-deps-unchanged --max-drift=1"
 	if not PLATFORM == "win32":
-		build_cmd= "sudo \"%s\"" % build_cmd
+		build_cmd= "sudo %s" % build_cmd
 	os.system(build_cmd)
 
 
@@ -567,7 +567,7 @@ if not PLATFORM == "win32":
 	sys.stdout.write("Generating .desktop file: %s\n" % (os.path.basename(desktop_file)))
 	if not options.test:
 		generate_desktop(desktop_file)
-		os.system("sudo \"mv -f %s /usr/share/applications/\"" % desktop_file)
+		os.system("sudo mv -f %s /usr/share/applications/" % desktop_file)
 	
 
 # Generate docs if needed
@@ -578,17 +578,17 @@ if options.docs:
 		api_dir= os.path.join(install_dir,'api')
 		sys.stdout.write("Generating docs: %s\n" % (api_dir))
 		if not options.test:
-			os.system("sudo \"mkdir -p %s\"" % api_dir)
+			os.system("sudo mkdir -p %s" % api_dir)
 			os.chdir(blender_dir)
-			os.system("sudo \"%s -b -P source/blender/python/doc/sphinx_doc_gen.py\"" % os.path.join(install_dir,'blender'))
-			os.system("sudo \"sphinx-build source/blender/python/doc/sphinx-in %s\"" % api_dir)
+			os.system("sudo %s -b -P source/blender/python/doc/sphinx_doc_gen.py" % os.path.join(install_dir,'blender'))
+			os.system("sudo sphinx-build source/blender/python/doc/sphinx-in %s" % api_dir)
 
 
 # Set proper owner
 if not PLATFORM == "win32":
 	sys.stdout.write("Changing %s owner to %s:%s\n" % (install_dir,USER,USER))
 	if not options.test:
-		os.system("sudo \"chown -R %s %s\"" % (USER,install_dir))
+		os.system("sudo chown -R %s %s" % (USER,install_dir))
 
 
 # Adding exporter

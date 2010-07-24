@@ -592,15 +592,16 @@ if not PLATFORM == "win32":
 
 
 # Adding exporter
-sys.stdout.write("Adding vb25 exporter...\n")
-if not options.test:
-	io_scripts_path= os.path.join(install_dir,VERSION,'scripts','io')
-	exporter_path= os.path.join(io_scripts_path,'vb25')
+if not options.pure_blender:
+	sys.stdout.write("Adding vb25 exporter...\n")
 	if not options.test:
-		if os.path.exists(exporter_path):
-			shutil.rmtree(exporter_path)
-		os.chdir(io_scripts_path)
-		os.system("git clone git://github.com/bdancer/vb25.git")
+		io_scripts_path= os.path.join(install_dir,VERSION,'scripts','io')
+		exporter_path= os.path.join(io_scripts_path,'vb25')
+		if not options.test:
+			if os.path.exists(exporter_path):
+				shutil.rmtree(exporter_path)
+			os.chdir(io_scripts_path)
+			os.system("git clone git://github.com/bdancer/vb25.git")
 
 
 # Generate archive (Linux) or installer (Windows)

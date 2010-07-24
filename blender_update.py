@@ -240,11 +240,11 @@ if not PLATFORM == "win32":
 			if options.docs:
 				packages+= " python-sphinx"
 			sys.stdout.write("%s\n" % packages)
-			os.system("apt-get install %s" % packages)
+			os.system("sudo apt-get install %s" % packages)
 		elif options.linux == 'opensuse':
 			packages="scons gcc-c++ xorg-x11-devel Mesa-devel xorg-x11-libs zlib-devel libpng-devel xorg-x11 libjpeg-devel freetype2-devel libtiff-devel OpenEXR-devel SDL-devel openal-devel fftw3-devel libsamplerate-devel libjack-devel python3-devel libffmpeg-devel libxvidcore-devel libogg-devel libfaac-devel libfaad-devel libx264-devel libmp3lame-devel libvorbis-devel libtheora-devel freealut-devel update-desktop-files git subversion"
 			sys.stdout.write("%s\n" % packages)
-			os.system("zypper install %s" % packages)
+			os.system("sudo zypper install %s" % packages)
 		else:
 			sys.stdout.write("Your distribution doesn\'t support automatic dependencies installation.\n")
 		sys.exit()

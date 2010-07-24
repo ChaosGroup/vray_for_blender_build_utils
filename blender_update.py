@@ -1,5 +1,5 @@
 __author__ = "Andrey M. Izrantsev http://cgdo.ru"
-__version__ = "1.0"
+__version__ = "1.1"
 
 import sys
 import os
@@ -19,6 +19,15 @@ PLATFORM= sys.platform
 HOSTNAME= socket.gethostname()
 ARCH= platform.architecture()[0]
 REV= 'current'
+VERSION= '2.53'
+
+DEFAULT_INSTALLDIR= "/opt/"
+DEFAULT_RELEASEDIR= os.path.join(os.environ['HOME'],"vb_release")
+
+if PLATFORM == "win32":
+	DEFAULT_INSTALLDIR= "C:\\\\release\\\\",
+	DEFAULT_RELEASEDIR= "C:\\\\release\\\\",
+
 
 '''
   COMMAND LINE OPTIONS
@@ -99,7 +108,7 @@ parser.add_option(
 
 parser.add_option(
 	'-u',
-	'--update',
+	'--update_blender',
 	action= 'store_true',
 	dest= 'update',
 	default= False,
@@ -136,9 +145,11 @@ parser.add_option(
 parser.add_option(
 	'',
 	'--linux',
-	action= 'store',
+	choices= [
+		'ubuntu',
+		'opensuse'
+	],
 	dest= 'linux',
-	type= "string",
 	default= 'ubuntu',
 	help= 'Linux distribution.'
 )
@@ -146,28 +157,32 @@ parser.add_option(
 if PLATFORM == "win32":
 	parser.add_option(
 		'',
-		'--installdir',
-		action= 'store_true',
-		dest= 'installdir',
-		default= "C:\\\\release\\\\",
-		help= 'Installation directory.'
+		'--releasedir',
+		dest= 'releasedir',
+		help= "Directory for installer and archive."
 	)
+
 	parser.add_option(
 		'',
 		'--installdir',
-		action= 'store_true',
 		dest= 'installdir',
-		default= "C:\\\\release\\\\",
-		help= 'Installation directory.'
+		help= "Installation directory."
 	)
 else:
 	parser.add_option(
 		'',
+		'--releasedir',
+		metavar="FILE",
+		dest= 'releasedir',
+		help= "Directory for installer and archive."
+	)
+
+	parser.add_option(
+		'',
 		'--installdir',
-		action= 'store_true',
+		metavar="FILE",
 		dest= 'installdir',
-		default= "/opt/",
-		help= 'Installation directory.'
+		help= "Installation directory."
 	)
 
 (options, args) = parser.parse_args()
@@ -176,6 +191,27 @@ else:
 # 	parser.print_version()
 # 	parser.print_help()
 # 	sys.exit()
+
+'''
+  PATHS
+'''
+project= 'vb25'
+if options.pure_blender:
+	project= 'b25'
+
+install_dir= os.path.join(DEFAULT_INSTALLDIR,project)
+if options.installdir:
+	install_dir= options.installdir
+
+release_dir= DEFAULT_RELEASEDIR
+if options.releasedir:
+	release_dir= options.releasedir
+
+if options.test:
+	sys.stdout.write("Installation directory: %s\n" % install_dir)
+	if options.archive:
+		sys.stdout.write("Release directory: %s\n" % release_dir)
+
 
 '''
   MAIN SECTION
@@ -212,17 +248,6 @@ if not PLATFORM == "win32":
 		else:
 			sys.stdout.write("Your distribution doesn\'t support automatic dependencies installation.\n")
 		sys.exit()
-
-project= 'vb25'
-if options.pure_blender:
-	project= 'b25'
-
-install_dir= os.path.join(options.installdir,project)
-
-if PLATFORM == "win32":
-	release_dir= "c:\\\\release\\"
-else:
-	release_dir= "/home/bdancer/devel/vrayblender/release"
 
 working_directory= os.getcwd()
 
@@ -413,7 +438,7 @@ def generate_user_config(filename):
 	ofile.write("BF_PYTHON_VERSION = \'%s\'\n" % BF_PYTHON_VERSION)
 	ofile.write("BF_NUMJOBS = %i\n" % BF_NUMJOBS)
 
-	ofile.write("BF_INSTALLDIR = \"%s\"\n" % os.path.join(options.installdir,project))
+	ofile.write("BF_INSTALLDIR = \"%s\"\n" % install_dir)
 	if PLATFORM == "win32" :
 		ofile.write("BF_SPLIT_SRC = \'true\'\n")
 		# Optimal build path to avoid bugs when using scons
@@ -444,7 +469,7 @@ blender_dir= os.path.join(working_directory,'blender')
 if os.path.exists(blender_dir):
 	os.chdir(blender_dir)
 	if options.update:
-		sys.stdout.write("Updating Blender sources\n")
+		sys.stdout.write("Updating Blender sources...\n")
 		if not options.test:
 			os.system("svn update")
 
@@ -459,10 +484,11 @@ if os.path.exists(blender_dir):
 				REV= rev_match.groups()[0]
 
 else:
-	sys.stdout.write("Getting Blender sources\n")
+	sys.stdout.write("Getting Blender sources...\n")
 	if not options.test:
 		os.system("svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/blender")
 os.chdir(working_directory)
+
 
 # Update 'lib' on Windows
 if PLATFORM == "win32":
@@ -484,10 +510,6 @@ if PLATFORM == "win32":
 			os.system("svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/windows lib/windows")
 os.chdir(working_directory)
 
-# Generate user settings file
-sys.stdout.write("Generating user-config.py\n")
-if not options.test:
-	generate_user_config(os.path.join(blender_dir,'user-config.py'))
 
 # Apply V-Ray/Blender patches if needed
 patch_dir= os.path.join(working_directory,'vb25-patch')
@@ -511,27 +533,41 @@ if not options.pure_blender:
 			shutil.rmtree(dst)
 		shutil.copytree(os.path.join(patch_dir, "exporter"), dst)
 		os.chdir(blender_dir)
+		sys.stdout.write("Applying vb25 patches...\n")
 		if PLATFORM == "win32":
 			os.system("\"%s\" -Np0 -i %s" % (patch_cmd, os.path.join(patch_dir,"vb25.patch")))
 		else:
 			os.system("patch -Np0 -i %s" % os.path.join(patch_dir,"vb25.patch"))
+
+
+# Generate user settings file
+sys.stdout.write("Generating user-config.py\n")
+if not options.test:
+	generate_user_config(os.path.join(blender_dir,'user-config.py'))
+
 
 # Finally build Blender
 sys.stdout.write("Building %s (%s)\n" % (project,REV))
 if not options.test:
 	os.chdir(blender_dir)
 	build_cmd= "python scons/scons.py"
-	if not PLATFORM == "win32":
-		build_cmd= "%s" % build_cmd
 	if options.rebuild:
 		os.system("%s clean" % build_cmd)
 	if not options.rebuild:
 		build_cmd+= " --implicit-deps-unchanged --max-drift=1"
+	if not PLATFORM == "win32":
+		build_cmd= "gksudo \"%s\"" % build_cmd
 	os.system(build_cmd)
 
-	desktop_file= "/usr/share/applications/%s.desktop" % project
-	sys.stdout.write("Generating .desktop file: %s\n" % (desktop_file))
-	generate_desktop(desktop_file)
+
+# Generating .desktop file
+if not PLATFORM == "win32":
+	desktop_file= os.path.join(working_directory, "%s.desktop" % project)
+	sys.stdout.write("Generating .desktop file: %s\n" % (os.path.basename(desktop_file)))
+	if not options.test:
+		generate_desktop(desktop_file)
+		os.system("gksudo \"mv -f %s /usr/share/applications/\"" % desktop_file)
+	
 
 # Generate docs if needed
 if options.docs:
@@ -542,14 +578,28 @@ if options.docs:
 		sys.stdout.write("Generating docs: %s\n" % (api_dir))
 		if not options.test:
 			os.system("mkdir -p %s" % api_dir)
-			os.system("%s -b -P source/blender/python/doc/sphinx_doc_gen.py" % os.path.join(install_dir,'blender'))
+			os.chdir(blender_dir)
+			os.system("gksudo \"%s -b -P source/blender/python/doc/sphinx_doc_gen.py\"" % os.path.join(install_dir,'blender'))
 			os.system("sphinx-build source/blender/python/doc/sphinx-in %s" % api_dir)
+
 
 # Set proper owner
 if not PLATFORM == "win32":
 	sys.stdout.write("Changing %s owner to %s:%s\n" % (install_dir,USER,USER))
 	if not options.test:
-		os.system("chown -R %s:%s %s" % (USER,USER,install_dir))
+		os.system("gksudo \"chown -R %s %s\"" % (USER,install_dir))
+
+
+# Adding exporter
+sys.stdout.write("Adding vb25 exporter...\n")
+if not options.test:
+	io_scripts_path= os.path.join(install_dir,VERSION,'scripts','io')
+	exporter_path= os.path.join(io_scripts_path,'vb25')
+	if not options.test:
+		if os.path.exists(exporter_path):
+			shutil.rmtree(exporter_path)
+		os.chdir(io_scripts_path)
+		os.system("git clone git://github.com/bdancer/vb25.git")
 
 
 # Generate archive (Linux) or installer (Windows)
@@ -557,30 +607,21 @@ if not options.debug and options.archive:
 	archive_name= "%s-%s-ubuntu10_04-%s.tar.bz2" % (project,REV,ARCH)
 	if PLATFORM == "win32":
 		archive_name= "%s-%s-win32.exe" % (project,REV)
-	sys.stdout.write("Creating release archive\n")
-	sys.stdout.write("Adding vb25 exporter...\n")
-	if not options.test:
-		io_scripts_path= os.path.join(install_dir,'2.53','scripts','io')
-		exporter_path= os.path.join(io_scripts_path,'vb25')
-		if not options.test:
-			if os.path.exists(exporter_path):
-				shutil.rmtree(exporter_path)
-			os.chdir(io_scripts_path)
-			os.system("git clone git://github.com/bdancer/vb25.git")
 
-	os.chdir(working_directory)
 	if PLATFORM == "win32":
 		sys.stdout.write("Generating installer: %s\n" % (archive_name))
 	else:
 		sys.stdout.write("Generating archive: %s\n" % (archive_name))
+
+	os.chdir(working_directory)
 	if not options.test:
 		if PLATFORM == "win32":
-			generate_installer(patch_dir, install_dir, archive_name, '2.53')
+			generate_installer(patch_dir, install_dir, archive_name, VERSION)
 		else:
 			os.chdir(install_dir)
 			os.chdir('..')
 			os.system("tar jcf %s %s" % (os.path.join(release_dir,archive_name),project))
 
-notify("%s SVN update" % project, "Finished!")
 
+notify("%s SVN update" % project, "Finished!")
 

@@ -243,8 +243,7 @@ if not PLATFORM == "win32":
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo apt-get install %s" % packages)
 		elif options.linux == 'opensuse':
-			#packages="scons gcc-c++ xorg-x11-devel Mesa-devel xorg-x11-libs zlib-devel libpng-devel xorg-x11 libjpeg-devel freetype2-devel libtiff-devel OpenEXR-devel SDL-devel openal-devel fftw3-devel libsamplerate-devel libjack-devel python3-devel libffmpeg-devel libxvidcore-devel libogg-devel libfaac-devel libfaad-devel libx264-devel libmp3lame-devel libvorbis-devel libtheora-devel freealut-devel update-desktop-files git subversion"
-			packages="scons gcc-c++ xorg-x11-devel Mesa-devel xorg-x11-libs zlib-devel libpng-devel xorg-x11 libjpeg-devel freetype2-devel libtiff-devel OpenEXR-devel SDL-devel openal-devel fftw3-devel libsamplerate-devel libjack-devel python3-devel libogg-devel libvorbis-devel freealut-devel update-desktop-files libtheora-devel subversion git"
+			packages="scons gcc-c++ xorg-x11-devel Mesa-devel xorg-x11-libs zlib-devel libpng-devel xorg-x11 libjpeg-devel freetype2-devel libtiff-devel OpenEXR-devel SDL-devel openal-devel fftw3-devel libsamplerate-devel libjack-devel python3-devel libogg-devel libvorbis-devel freealut-devel update-desktop-files libtheora-devel subversion git-core"
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo zypper install %s" % packages)
 		else:
@@ -386,7 +385,6 @@ def generate_user_config(filename):
 			'WITH_BF_INTERNATIONAL',
 			'WITH_BF_JPEG',
 			'WITH_BF_PNG',
-			'WITH_BF_FFMPEG',
 			'WITH_BF_OPENAL',
 			'WITH_BF_SDL',
 			'WITH_BF_BULLET',
@@ -406,6 +404,12 @@ def generate_user_config(filename):
 			'WITH_BF_PLAYER',
 		]
 	}
+
+	if options.linux == 'opensuse':
+		build_options['False'].append('WITH_BF_FFMPEG')
+	else:
+		build_options['True'].append('WITH_BF_FFMPEG')
+
 	# Check this option:
 	#  'WITH_BF_FHS' (Use the Unix "Filesystem Hierarchy Standard" rather then a redistributable directory layout)
 

@@ -428,7 +428,7 @@ def generate_user_config(filename):
 			ofile.write("%s = '%s'\n"%(opt,key))
 
 	ofile.write("BF_PYTHON_VERSION = \'%s\'\n" % BF_PYTHON_VERSION)
-	if LINUX == 'opensuse':
+	if LINUX == 'opensuse' and ARCH == '64bit':
 		ofile.write("BF_PYTHON_LIBPATH = \"/usr/lib64\"\n")
 
 	ofile.write("BF_OPENAL_LIB = \'openal alut\'\n")

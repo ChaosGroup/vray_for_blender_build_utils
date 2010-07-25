@@ -237,7 +237,7 @@ if not PLATFORM == "win32":
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo apt-get install %s" % packages)
 		elif LINUX == 'opensuse':
-			packages="scons gcc-c++ xorg-x11-devel Mesa-devel xorg-x11-libs zlib-devel libpng-devel xorg-x11 libjpeg-devel freetype2-devel libtiff-devel OpenEXR-devel SDL-devel openal-devel fftw3-devel libsamplerate-devel libjack-devel python3-devel libogg-devel libvorbis-devel freealut-devel update-desktop-files libtheora-devel subversion git-core"
+			packages="scons gcc-c++ xorg-x11-devel Mesa-devel xorg-x11-libs zlib-devel libpng-devel xorg-x11 libjpeg-devel freetype2-devel libtiff-devel OpenEXR-devel SDL-devel openal-devel fftw3-devel libsamplerate-devel libjack-devel python3-devel libogg-devel libvorbis-devel freealut-devel update-desktop-files libtheora-devel subversion git-core gettext-tools"
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo zypper install %s" % packages)
 		else:
@@ -404,19 +404,16 @@ def generate_user_config(filename):
 	else:
 		build_options['True'].append('WITH_BF_FFMPEG')
 
-	# Check this option:
-	#  'WITH_BF_FHS' (Use the Unix "Filesystem Hierarchy Standard" rather then a redistributable directory layout)
+	# Check this option for Linux:
+	#   'WITH_BF_FHS'
+	#   Use the Unix "Filesystem Hierarchy Standard" rather then a redistributable directory layout
 
+	# MS VC Express doesn't build 64bit apps.
 	# if PLATFORM == "win32" and ARCH == '64bit':
 	# 	build_options['False'].append('WITH_BF_JACK')
 	# 	build_options['False'].append('WITH_BF_SNDFILE')
 	# 	build_options['False'].append('WITH_BF_FFMPEG')
 	# 	build_options['False'].append('WITH_BF_OPENAL')
-
-	# if PLATFORM == "win32":
-	# 	build_options['False'].append('WITH_BF_OPENEXR')
-	# else:
-	# 	build_options['True'].append('WITH_BF_OPENEXR')
 
 	if options.with_collada:
 		build_options['True'].append('WITH_BF_COLLADA')
@@ -429,9 +426,6 @@ def generate_user_config(filename):
 	for key in build_options:
 		for opt in build_options[key]:
 			ofile.write("%s = '%s'\n"%(opt,key))
-
-	# ofile.write("BF_OPENEXR_LIBPATH = \"#../lib/windows/openexr/lib_vs2010\"\n")
-	# ofile.write("BF_OPENEXR_INC= \"#../lib/windows/openexr/include_vs2010 #../lib/windows/openexr/include_vs2010/IlmImf #../lib/windows/openexr/include_vs2010/Iex #../lib/windows/openexr/include_vs2010/Imath\"\n")
 
 	ofile.write("BF_OPENAL_LIB = \'openal alut\'\n")
 	ofile.write("BF_TWEAK_MODE = \'false\'\n")

@@ -29,8 +29,8 @@ if PLATFORM == "win32":
 	DEFAULT_RELEASEDIR= "C:\\\\release\\\\",
 
 
-LINUX= platform.linux_distribution()[0].lower()
-LINUX_VER= platform.linux_distribution()[1].replace('.','_')
+LINUX= platform.linux_distribution()[0].lower().strip()
+LINUX_VER= platform.linux_distribution()[1].replace('.','_').strip()
 
 
 '''

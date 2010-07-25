@@ -28,11 +28,9 @@ if PLATFORM == "win32":
 	DEFAULT_INSTALLDIR= "C:\\\\release\\\\",
 	DEFAULT_RELEASEDIR= "C:\\\\release\\\\",
 
-LINUX= 'ubuntu'
-if os.path.exists("/etc/SuSE-release"):
-	LINUX= 'opensuse'
-# elif os.path.exists("/etc/redhat-release") or os.path.exists("/etc/fedora-release"):
-# 	LINUX= 'redhat'
+
+LINUX= platform.linux_distribution()[0].lower()
+LINUX_VER= platform.linux_distribution()[1].replace('.','_')
 
 
 '''
@@ -603,7 +601,7 @@ if not options.pure_blender:
 
 # Generate archive (Linux) or installer (Windows)
 if not options.debug and options.archive:
-	archive_name= "%s-%s-ubuntu10_04-%s.tar.bz2" % (project,REV,ARCH)
+	archive_name= "%s-%s-%s%s-%s.tar.bz2" % (project,REV,LINUX,LINUX_VER,ARCH)
 	if PLATFORM == "win32":
 		archive_name= "%s-%s-win32.exe" % (project,REV)
 

@@ -28,6 +28,12 @@ if PLATFORM == "win32":
 	DEFAULT_INSTALLDIR= "C:\\\\release\\\\",
 	DEFAULT_RELEASEDIR= "C:\\\\release\\\\",
 
+LINUX= 'ubuntu'
+if os.path.exists("/etc/SUSE-release"):
+	LINUX= 'opensuse'
+# elif os.path.exists("/etc/redhat-release") or os.path.exists("/etc/fedora-release"):
+# 	LINUX= 'redhat'
+
 
 '''
   COMMAND LINE OPTIONS
@@ -142,18 +148,6 @@ parser.add_option(
 	help= 'Install dependencies.'
 )
 
-parser.add_option(
-	'',
-	'--linux',
-	choices= [
-		'ubuntu',
-		'opensuse'
-	],
-	dest= 'linux',
-	default= 'ubuntu',
-	help= 'Linux distribution.'
-)
-
 if PLATFORM == "win32":
 	parser.add_option(
 		'',
@@ -234,15 +228,15 @@ def which(program):
 	return None
 
 if not PLATFORM == "win32":
-	if options.deps and options.linux:
+	if options.deps:
 		sys.stdout.write("Installing dependencies: ")
-		if options.linux == 'ubuntu':
+		if LINUX == 'ubuntu':
 			packages= "subversion build-essential gettext libxi-dev libsndfile1-dev libpng12-dev libfftw3-dev libopenexr-dev libopenjpeg-dev libopenal-dev libalut-dev libvorbis-dev libglu1-mesa-dev libsdl-dev libfreetype6-dev libtiff4-dev libsamplerate0-dev libavdevice-dev libavformat-dev libavutil-dev libavcodec-dev libjack-dev libswscale-dev libx264-dev libmp3lame-dev python3.1-dev git-core libnotify-bin"
 			if options.docs:
 				packages+= " python-sphinx"
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo apt-get install %s" % packages)
-		elif options.linux == 'opensuse':
+		elif LINUX == 'opensuse':
 			packages="scons gcc-c++ xorg-x11-devel Mesa-devel xorg-x11-libs zlib-devel libpng-devel xorg-x11 libjpeg-devel freetype2-devel libtiff-devel OpenEXR-devel SDL-devel openal-devel fftw3-devel libsamplerate-devel libjack-devel python3-devel libogg-devel libvorbis-devel freealut-devel update-desktop-files libtheora-devel subversion git-core"
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo zypper install %s" % packages)
@@ -405,7 +399,7 @@ def generate_user_config(filename):
 		]
 	}
 
-	if options.linux == 'opensuse':
+	if LINUX == 'opensuse':
 		build_options['False'].append('WITH_BF_FFMPEG')
 	else:
 		build_options['True'].append('WITH_BF_FFMPEG')

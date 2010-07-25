@@ -29,7 +29,7 @@ if PLATFORM == "win32":
 	DEFAULT_RELEASEDIR= "C:\\\\release\\\\",
 
 LINUX= 'ubuntu'
-if os.path.exists("/etc/SUSE-release"):
+if os.path.exists("/etc/SuSE-release"):
 	LINUX= 'opensuse'
 # elif os.path.exists("/etc/redhat-release") or os.path.exists("/etc/fedora-release"):
 # 	LINUX= 'redhat'

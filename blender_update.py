@@ -427,9 +427,12 @@ def generate_user_config(filename):
 		for opt in build_options[key]:
 			ofile.write("%s = '%s'\n"%(opt,key))
 
+	ofile.write("BF_PYTHON_VERSION = \'%s\'\n" % BF_PYTHON_VERSION)
+	if LINUX == 'opensuse':
+		ofile.write("BF_PYTHON_LIBPATH = \"/usr/lib64\"\n")
+
 	ofile.write("BF_OPENAL_LIB = \'openal alut\'\n")
 	ofile.write("BF_TWEAK_MODE = \'false\'\n")
-	ofile.write("BF_PYTHON_VERSION = \'%s\'\n" % BF_PYTHON_VERSION)
 	ofile.write("BF_NUMJOBS = %i\n" % BF_NUMJOBS)
 
 	ofile.write("BF_INSTALLDIR = \"%s\"\n" % install_dir)

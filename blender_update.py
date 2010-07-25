@@ -403,6 +403,7 @@ def generate_user_config(filename):
 		build_options['False'].append('WITH_BF_FFMPEG')
 	else:
 		build_options['True'].append('WITH_BF_FFMPEG')
+		build_options['True'].append('WITHOUT_BF_PYTHON_INSTALL')
 
 	# Check this option for Linux:
 	#   'WITH_BF_FHS'

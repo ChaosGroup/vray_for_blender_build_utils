@@ -238,6 +238,10 @@ if not PLATFORM == "win32":
 			packages="scons gcc-c++ xorg-x11-devel Mesa-devel xorg-x11-libs zlib-devel libpng-devel xorg-x11 libjpeg-devel freetype2-devel libtiff-devel OpenEXR-devel SDL-devel openal-devel fftw3-devel libsamplerate-devel libjack-devel python3-devel libogg-devel libvorbis-devel freealut-devel update-desktop-files libtheora-devel subversion git-core gettext-tools"
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo zypper install %s" % packages)
+		elif LINUX == 'redhat' or LINUX == 'fedora':
+			packages="gcc-c++ subversion libpng-devel libjpeg-devel libXi-devel openexr-devel openal-soft-devel freealut-devel SDL-devel fftw-devel libtiff-devel lame-libs libsamplerate-devel freetype-devel jack-audio-connection-kit-devel ffmpeg-libs ffmpeg-devel xvidcore-devel libogg-devel faac-devel faad2-devel x264-devel libvorbis-devel libtheora-devel lame-devel python3 python3-devel python3-libs git-core"
+			sys.stdout.write("%s\n" % packages)
+			os.system("sudo yum install %s" % packages)
 		else:
 			sys.stdout.write("Your distribution doesn\'t support automatic dependencies installation.\n")
 		sys.exit()

@@ -278,7 +278,7 @@ def generate_desktop(filepath):
 	else:
 		ofile.write("Name=Blender 2.5\n")
 	ofile.write("Exec=%s/blender\n" % install_dir)
-	ofile.write("Icon=blender\n")
+	ofile.write("Icon=%s/icons/scalable/blender.svg\n" % install_dir)
 	ofile.write("Terminal=true\n")
 	ofile.write("Type=Application\n")
 	ofile.write("Categories=Graphics;3DGraphics;\n")

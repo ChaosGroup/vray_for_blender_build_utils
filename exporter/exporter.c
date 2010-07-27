@@ -468,7 +468,7 @@ int export_scene(bContext *C, wmOperator *op)
                     printf("V-Ray/Blender: Exporting mesh: %s                    \r", ob->id.name+2);
 #else
                     printf("V-Ray/Blender: Exporting mesh: \033[0;32m%s\033[0m                    \r", ob->id.name+2);
-#enif
+#endif
                     fflush(stdout);
 
                     write_mesh_vray(gfile, sce, ob, mesh);

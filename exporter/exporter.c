@@ -482,7 +482,7 @@ int export_scene(bContext *C, wmOperator *op)
     double  time;
     char    time_str[32];
 
-    //int     vb_render_layers[20];
+    int     vb_render_layers[20];
     int     vb_active_layers= 0;
     int     vb_animation= 0;
 

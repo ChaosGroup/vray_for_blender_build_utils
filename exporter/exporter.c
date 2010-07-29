@@ -433,13 +433,48 @@ Mesh *get_render_mesh(Scene *sce, Main *bmain, Object *ob)
 }
 
 
+void export_meshes(FILE *gfile, Scene *sce, Main *bmain,  int vb_active_layers)
+{
+    Object  *ob;
+    Mesh    *mesh;
+    Base    *base;
+
+    base= (Base*)sce->base.first;
+
+    while(base) {
+        ob= base->object;
+
+        if(vb_active_layers)
+            if(!(ob->lay & sce->lay))
+                continue;
+
+        mesh= get_render_mesh(sce, bmain, ob);
+
+        if(mesh) {
+#ifdef _WIN32
+            printf("V-Ray/Blender: Mesh: [%d] %s                    \r", sce->r.cfra, ob->id.name+2);
+#else
+            printf("V-Ray/Blender: Mesh: [\033[0;33m%d\033[0m] \033[0;32m%s\033[0m                    \r", sce->r.cfra, ob->id.name+2);
+#endif
+            fflush(stdout);
+
+            write_mesh_vray(gfile, sce, ob, mesh);
+
+            /* remove the temporary mesh */
+            free_mesh(mesh);
+            BLI_remlink(&bmain->mesh, mesh);
+            MEM_freeN(mesh);
+        }
+            
+        base= base->next;
+    }
+}
+
+
 int export_scene(bContext *C, wmOperator *op)
 {
     Scene  *sce= CTX_data_scene(C);
     Main   *bmain= CTX_data_main(C);
-    Base   *base;
-    Object *ob;
-    Mesh   *mesh;
 
     FILE   *gfile= NULL;
     char    filename[FILE_MAX];
@@ -447,44 +482,47 @@ int export_scene(bContext *C, wmOperator *op)
     double  time;
     char    time_str[32];
 
-    if(RNA_property_is_set(op->ptr, "vray_geometry_file")) {
-        RNA_string_get(op->ptr, "vray_geometry_file", filename);
+    //int     vb_render_layers[20];
+    int     vb_active_layers= 0;
+    int     vb_animation= 0;
+
+    int     fra=   0;
+    int     cfra=  0;
+
+    if(RNA_property_is_set(op->ptr, "vb_geometry_file")) {
+        RNA_string_get(op->ptr, "vb_geometry_file", filename);
         gfile= fopen(filename, "w");
     }
 
-    if(gfile) {    
-        base= (Base*)sce->base.first;
+    if(RNA_property_is_set(op->ptr, "vb_active_layers"))
+        vb_active_layers= RNA_int_get(op->ptr, "vb_active_layers");
 
+    if(RNA_property_is_set(op->ptr, "vb_animation"))
+        vb_animation= RNA_int_get(op->ptr, "vb_animation");
+
+    if(gfile) {    
         time= PIL_check_seconds_timer();
 
-        while(base) {
-            ob= base->object;
+        if(vb_animation) {
+            cfra= sce->r.cfra;
+            fra= sce->r.sfra;
 
-            if(ob->lay & sce->lay) {
-                mesh= get_render_mesh(sce, bmain, ob);
+            while(fra <= sce->r.efra)
+            {
+                sce->r.cfra= fra;
+                CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
+                scene_update_for_newframe(sce, (1<<20) - 1);
 
-                if(mesh) {
-#ifdef _WIN32
-                    printf("V-Ray/Blender: Exporting mesh: %s                    \r", ob->id.name+2);
-#else
-                    printf("V-Ray/Blender: Exporting mesh: \033[0;32m%s\033[0m                    \r", ob->id.name+2);
-#endif
-                    fflush(stdout);
+                export_meshes(gfile, sce, bmain, vb_active_layers);
 
-                    write_mesh_vray(gfile, sce, ob, mesh);
-
-                    /* remove the temporary mesh */
-                    free_mesh(mesh);
-                    BLI_remlink(&bmain->mesh, mesh);
-                    MEM_freeN(mesh);
-                }
+                fra+= sce->r.frame_step;
             }
-            
-            base= base->next;
-        }
 
-        BLI_timestr(PIL_check_seconds_timer()-time, time_str);
+            sce->r.cfra= cfra;
+        } else
+            export_meshes(gfile, sce, bmain, vb_active_layers);
         
+        BLI_timestr(PIL_check_seconds_timer()-time, time_str);
         printf("V-Ray/Blender: Exporting meshes done [%s]                   \n", time_str);
 
         fclose(gfile);

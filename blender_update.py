@@ -146,6 +146,15 @@ parser.add_option(
 	help= 'Install dependencies.'
 )
 
+parser.add_option(
+	'',
+	'--devel',
+	action= 'store_true',
+	dest= 'devel',
+	default= False,
+	help= 'Developer mode.'
+)
+
 if PLATFORM == "win32":
 	parser.add_option(
 		'',
@@ -188,22 +197,35 @@ else:
 '''
   PATHS
 '''
+def get_full_path(path):
+	if(path[0:1] == '~'):
+		path= os.path.join(os.environ["HOME"],path[2:])
+	elif(path[0:1] != '/'):
+		path= os.path.abspath(path)
+	return path
+
 project= 'vb25'
 if options.pure_blender:
 	project= 'b25'
 
-install_dir= os.path.join(DEFAULT_INSTALLDIR,project)
+install_dir= DEFAULT_INSTALLDIR
 if options.installdir:
-	install_dir= options.installdir
+	install_dir= get_full_path(options.installdir)
+install_dir= os.path.join(install_dir,project)
+sys.stdout.write("Installation directory: %s\n" % install_dir)
+
+if not os.path.exists(install_dir):
+	sys.stdout.write("Installation directory doesn\'t exist! Trying to create...\n")
+	os.mkdir(install_dir)
 
 release_dir= DEFAULT_RELEASEDIR
 if options.releasedir:
-	release_dir= options.releasedir
+	release_dir= get_full_path(options.releasedir)
+sys.stdout.write("Release directory: %s\n" % release_dir)
 
-if options.test:
-	sys.stdout.write("Installation directory: %s\n" % install_dir)
-	if options.archive:
-		sys.stdout.write("Release directory: %s\n" % release_dir)
+if not os.path.exists(release_dir):
+	sys.stdout.write("Release directory doesn\'t exist! Trying to create...\n")
+	os.mkdir(release_dir)
 
 
 '''
@@ -564,7 +586,7 @@ if not options.test:
 if not PLATFORM == "win32":
 	desktop_file= os.path.join(working_directory, "%s.desktop" % project)
 	sys.stdout.write("Generating .desktop file: %s\n" % (os.path.basename(desktop_file)))
-	if not options.test:
+	if not options.test and not options.devel:
 		generate_desktop(desktop_file)
 		os.system("sudo mv -f %s /usr/share/applications/" % desktop_file)
 	
@@ -593,14 +615,18 @@ if not PLATFORM == "win32":
 # Adding exporter
 if not options.pure_blender:
 	sys.stdout.write("Adding vb25 exporter...\n")
+	io_scripts_path= os.path.join(install_dir,VERSION,'scripts','io')
+	exporter_path= os.path.join(io_scripts_path,'vb25')
 	if not options.test:
-		io_scripts_path= os.path.join(install_dir,VERSION,'scripts','io')
-		exporter_path= os.path.join(io_scripts_path,'vb25')
+		if os.path.exists(exporter_path):
+			shutil.rmtree(exporter_path)
+	if options.devel and not options.archive:
 		if not options.test:
-			if os.path.exists(exporter_path):
-				shutil.rmtree(exporter_path)
-			os.chdir(io_scripts_path)
-			os.system("git clone git://github.com/bdancer/vb25.git")
+			shutil.copytree(get_full_path('~/devel/vrayblender/exporter/symlinks'), exporter_path, symlinks=True)
+	else:
+		os.chdir(io_scripts_path)
+		os.system("git clone git://github.com/bdancer/vb25.git")
+os.chdir(working_directory)
 
 
 # Generate archive (Linux) or installer (Windows)

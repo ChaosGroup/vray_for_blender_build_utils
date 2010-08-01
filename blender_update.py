@@ -25,8 +25,8 @@ DEFAULT_INSTALLDIR= "/opt/"
 DEFAULT_RELEASEDIR= os.path.join(os.environ['HOME'],"vb_release")
 
 if PLATFORM == "win32":
-	DEFAULT_INSTALLDIR= "C:\\\\release\\\\",
-	DEFAULT_RELEASEDIR= "C:\\\\release\\\\",
+	DEFAULT_INSTALLDIR= "C:\\release\\"
+	DEFAULT_RELEASEDIR= "C:\\release\\"
 
 
 LINUX= platform.linux_distribution()[0].lower().strip()
@@ -620,12 +620,12 @@ if not options.pure_blender:
 	if not options.test:
 		if os.path.exists(exporter_path):
 			shutil.rmtree(exporter_path)
-	if options.devel and not options.archive:
-		if not options.test:
-			shutil.copytree(get_full_path('~/devel/vrayblender/exporter/symlinks'), exporter_path, symlinks=True)
-	else:
-		os.chdir(io_scripts_path)
-		os.system("git clone git://github.com/bdancer/vb25.git")
+		if options.devel and not options.archive:
+			if not options.test:
+				shutil.copytree(get_full_path('~/devel/vrayblender/exporter/symlinks'), exporter_path, symlinks=True)
+		else:
+			os.chdir(io_scripts_path)
+			os.system("git clone git://github.com/bdancer/vb25.git")
 os.chdir(working_directory)
 
 

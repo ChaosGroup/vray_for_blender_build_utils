@@ -482,7 +482,7 @@ int export_scene(bContext *C, wmOperator *op)
     double  time;
     char    time_str[32];
 
-    int     vb_render_layers[20];
+    //int     vb_render_layers[20];
     int     vb_active_layers= 0;
     int     vb_animation= 0;
 
@@ -511,7 +511,7 @@ int export_scene(bContext *C, wmOperator *op)
             {
                 sce->r.cfra= fra;
                 CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-                scene_update_for_newframe(sce, (1<<20) - 1);
+                scene_update_for_newframe(bmain, sce, (1<<20) - 1);
 
                 export_meshes(gfile, sce, bmain, vb_active_layers);
 

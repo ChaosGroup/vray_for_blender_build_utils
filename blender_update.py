@@ -627,7 +627,7 @@ if options.docs:
 		if not options.test:
 			os.system("sudo mkdir -p %s" % api_dir)
 			os.chdir(blender_dir)
-			os.system("sudo %s -b -P source/blender/python/doc/sphinx_doc_gen.py" % os.path.join(install_dir,'blender'))
+			os.system("sudo %s -b -P source/blender/python/doc/sphinx_doc_gen.py 2>&1 /dev/null" % os.path.join(install_dir,'blender'))
 			os.system("sudo sphinx-build source/blender/python/doc/sphinx-in %s" % api_dir)
 
 

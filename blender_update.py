@@ -216,7 +216,7 @@ sys.stdout.write("Installation directory: %s\n" % install_dir)
 
 if not os.path.exists(install_dir):
 	sys.stdout.write("Installation directory doesn\'t exist! Trying to create...\n")
-	os.mkdir(install_dir)
+	os.makedirs(install_dir)
 
 release_dir= DEFAULT_RELEASEDIR
 if options.releasedir:
@@ -225,7 +225,7 @@ sys.stdout.write("Release directory: %s\n" % release_dir)
 
 if not os.path.exists(release_dir):
 	sys.stdout.write("Release directory doesn\'t exist! Trying to create...\n")
-	os.mkdir(release_dir)
+	os.makedirs(release_dir)
 
 
 '''

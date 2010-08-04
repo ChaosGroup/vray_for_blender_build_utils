@@ -79,6 +79,7 @@
 #include "PIL_time.h"
 
 #include "RNA_access.h"
+#include "RNA_define.h"
 
 #include "MEM_guardedalloc.h"
 
@@ -386,6 +387,8 @@ Mesh *get_render_mesh(Scene *sce, Main *bmain, Object *ob)
     Mesh        *mesh= NULL;
     DerivedMesh *dm;
 
+    PointerRNA   me_rna;
+
     /* perform the mesh extraction based on type */
     switch (ob->type) {
     case OB_FONT:
@@ -433,37 +436,50 @@ Mesh *get_render_mesh(Scene *sce, Main *bmain, Object *ob)
 }
 
 
-void export_meshes(FILE *gfile, Scene *sce, Main *bmain,  int vb_active_layers)
+void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers)
 {
     Object  *ob;
     Mesh    *mesh;
     Base    *base;
+    
+    PointerRNA me_rna;
+    int        me_is_proxy= 0;
 
     base= (Base*)sce->base.first;
 
     while(base) {
         ob= base->object;
 
-        if(vb_active_layers)
-            if(!(ob->lay & sce->lay))
+        if(vb_active_layers) {
+            if(!(ob->lay & sce->lay)) {
+                base= base->next;
                 continue;
+            }
+        }
 
         mesh= get_render_mesh(sce, bmain, ob);
 
         if(mesh) {
+            /* me= (Mesh*)ob->data; */
+            /* RNA_id_pointer_create(&me->id, &me_rna); */
+            /* if(RNA_struct_find_property(&me_rna, "vray_proxy")) */
+            /*     me_is_proxy= RNA_boolean_get(&me_rna, "vray_proxy"); */
+
+            if(!(me_is_proxy)) {
 #ifdef _WIN32
-            printf("V-Ray/Blender: Mesh: [%d] %s                    \r", sce->r.cfra, ob->id.name+2);
+                printf("V-Ray/Blender: Mesh: [%d] %s                    \r", sce->r.cfra, ob->id.name+2);
 #else
-            printf("V-Ray/Blender: Mesh: [\033[0;33m%d\033[0m] \033[0;32m%s\033[0m                    \r", sce->r.cfra, ob->id.name+2);
+                printf("V-Ray/Blender: Mesh: [\033[0;33m%d\033[0m] \033[0;32m%s\033[0m                    \r", sce->r.cfra, ob->id.name+2);
 #endif
-            fflush(stdout);
+                fflush(stdout);
 
-            write_mesh_vray(gfile, sce, ob, mesh);
+                write_mesh_vray(gfile, sce, ob, mesh);
 
-            /* remove the temporary mesh */
-            free_mesh(mesh);
-            BLI_remlink(&bmain->mesh, mesh);
-            MEM_freeN(mesh);
+                /* remove the temporary mesh */
+                free_mesh(mesh);
+                BLI_remlink(&bmain->mesh, mesh);
+                MEM_freeN(mesh);
+            }
         }
             
         base= base->next;

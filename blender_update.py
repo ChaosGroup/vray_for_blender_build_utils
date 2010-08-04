@@ -21,12 +21,15 @@ ARCH= platform.architecture()[0]
 REV= 'current'
 VERSION= '2.53'
 
-DEFAULT_INSTALLDIR= "/opt/"
-DEFAULT_RELEASEDIR= os.path.join(os.environ['HOME'],"vb_release")
+DEFAULT_INSTALLDIR= ""
+DEFAULT_RELEASEDIR= ""
 
 if PLATFORM == "win32":
 	DEFAULT_INSTALLDIR= "C:\\\\release\\\\"
 	DEFAULT_RELEASEDIR= "C:\\\\release\\\\"
+else:
+	DEFAULT_INSTALLDIR= "/opt/"
+	DEFAULT_RELEASEDIR= os.path.join(os.environ['HOME'],"vb_release")
 
 
 LINUX= platform.linux_distribution()[0].lower().strip()

@@ -289,10 +289,6 @@ if PLATFORM == "win32":
 				patch_cmd= os.path.join(os.path.normpath(os.path.join(path,'..','bin')),'patch.exe')
 				sys.stdout.write("Using patch from Git (%s)\n" % patch_cmd)
 				break
-	if not options.pure_blender:
-		if patch_cmd == 'patch.exe':
-			sys.stdout.write("Patch.exe not found!\n")
-			sys.exit()
 
 def notify(title, message):
 	if not PLATFORM == "win32":

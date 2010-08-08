@@ -592,6 +592,9 @@ sys.stdout.write("Generating user-config.py\n")
 if not options.test:
 	generate_user_config(os.path.join(blender_dir,'user-config.py'))
 
+# Cleaning release dir
+if not PLATFORM == "win32":
+	os.system("rmdir /Q /S %s" % install_dir)
 
 # Finally build Blender
 sys.stdout.write("Building %s (%s)\n" % (project,REV))

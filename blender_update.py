@@ -593,7 +593,7 @@ if not options.test:
 	generate_user_config(os.path.join(blender_dir,'user-config.py'))
 
 # Cleaning release dir
-if not PLATFORM == "win32":
+if PLATFORM == "win32":
 	os.system("rmdir /Q /S %s" % install_dir)
 
 # Finally build Blender

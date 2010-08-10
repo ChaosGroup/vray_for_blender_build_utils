@@ -350,6 +350,7 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 	rootstring+= dot_blender_add
 	ns_cnt = string.replace(ns_cnt, "[ROOTDIRCONTS]", rootstring)
 	# ns_cnt= string.replace(ns_cnt, "[DOTBLENDER]", dot_blender_add)
+	ns_cnt= string.replace(ns_cnt, "[DOTBLENDER]", "")
 
 	# do delete items
 	scripts_dirs.reverse()

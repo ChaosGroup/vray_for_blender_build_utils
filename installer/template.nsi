@@ -33,7 +33,7 @@ Name "V-Ray/Blender VERSION"
 !insertmacro MUI_PAGE_DIRECTORY
 ;Page custom DataLocation DataLocationOnLeave
 ;Page custom AppDataChoice AppDataChoiceOnLeave
-Page custom PreMigrateUserSettings MigrateUserSettings
+;Page custom PreMigrateUserSettings MigrateUserSettings
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro MUI_PAGE_FINISH
   
@@ -113,6 +113,7 @@ FunctionEnd
 
 Var BLENDERHOME
 Var PREVHOME
+StrCpy $BLENDERHOME $INSTDIR
 
 Function SetWinXPPathCurrentUser
   SetShellVarContext current
@@ -140,46 +141,46 @@ Var HWND_BUTTON_NO
 
 Var SETUSERCONTEXT
 
-Function PreMigrateUserSettings
-  StrCpy $PREVHOME "$PROFILE\Application Data\Blender Foundation\Blender"
-  StrCpy $0 "$PROFILE\Application Data\Blender Foundation\Blender\.blender"
+; Function PreMigrateUserSettings
+;   StrCpy $PREVHOME "$PROFILE\Application Data\Blender Foundation\Blender"
+;   StrCpy $0 "$PROFILE\Application Data\Blender Foundation\Blender\.blender"
   
-  IfFileExists $0 0 nochange
+;   IfFileExists $0 0 nochange
   
-  StrCmp $BLENDERHOME $PREVHOME nochange
+;   StrCmp $BLENDERHOME $PREVHOME nochange
   
-  nsDialogs::Create /NOUNLOAD 1018
-  Pop $HWND
+;   nsDialogs::Create /NOUNLOAD 1018
+;   Pop $HWND
   
-  ${If} $HWND == error
-	Abort
-  ${EndIf}
+;   ${If} $HWND == error
+; 	Abort
+;   ${EndIf}
   
-  ${NSD_CreateLabel} 0 0 100% 12u "You have existing settings at:"
-  ${NSD_CreateLabel} 0 20 100% 12u $PREVHOME
-  ${NSD_CreateLabel} 0 40 100% 12u "Do you wish to migrate this data to:"
-  ${NSD_CreateLabel} 0 60 100% 12u $BLENDERHOME
-  ${NSD_CreateLabel} 0 80 100% 12u "Please note: If you choose no, V-Ray/Blender will not be able to use these files!"
-  ${NSD_CreateRadioButton} 0 100 100% 12u "Yes"
-  Pop $HWND_BUTTON_YES
-  ${NSD_CreateRadioButton} 0 120 100% 12u "No"
-  Pop $HWND_BUTTON_NO
+;   ${NSD_CreateLabel} 0 0 100% 12u "You have existing settings at:"
+;   ${NSD_CreateLabel} 0 20 100% 12u $PREVHOME
+;   ${NSD_CreateLabel} 0 40 100% 12u "Do you wish to migrate this data to:"
+;   ${NSD_CreateLabel} 0 60 100% 12u $BLENDERHOME
+;   ${NSD_CreateLabel} 0 80 100% 12u "Please note: If you choose no, V-Ray/Blender will not be able to use these files!"
+;   ${NSD_CreateRadioButton} 0 100 100% 12u "Yes"
+;   Pop $HWND_BUTTON_YES
+;   ${NSD_CreateRadioButton} 0 120 100% 12u "No"
+;   Pop $HWND_BUTTON_NO
   
-  SendMessage $HWND_BUTTON_YES ${BM_SETCHECK} 1 0
+;   SendMessage $HWND_BUTTON_YES ${BM_SETCHECK} 1 0
   
-  nsDialogs::Show
-  nochange:
+;   nsDialogs::Show
+;   nochange:
   
-FunctionEnd
+; FunctionEnd
 
-Function MigrateUserSettings
-  ${NSD_GetState} $HWND_BUTTON_YES $R0
-  ${If} $R0 == "1"
-    CreateDirectory $BLENDERHOME
-    CopyFiles $PREVHOME\*.* $BLENDERHOME
-    ;RMDir /r $PREVHOME
-  ${EndIf}  
-FunctionEnd
+; Function MigrateUserSettings
+;   ${NSD_GetState} $HWND_BUTTON_YES $R0
+;   ${If} $R0 == "1"
+;     CreateDirectory $BLENDERHOME
+;     CopyFiles $PREVHOME\*.* $BLENDERHOME
+;     ;RMDir /r $PREVHOME
+;   ${EndIf}  
+; FunctionEnd
 
 ;!define DLL_VER "9.00.21022.8"
 ;
@@ -379,8 +380,8 @@ Section "Uninstall"
   ; remove files
   [DELROOTDIRCONTS]
   
-  Delete $BLENDERHOME\.blender\.bfont.ttf
-  Delete $BLENDERHOME\.blender\.Blanguages
+  ; Delete $BLENDERHOME\.blender\.bfont.ttf
+  ; Delete $BLENDERHOME\.blender\.Blanguages
   ; remove shortcuts, if any.
   Delete "$SMPROGRAMS\V-RayBlender\*.*"
   Delete "$DESKTOP\V-RayBlender-VERSION.lnk"
@@ -390,9 +391,9 @@ Section "Uninstall"
   [DOTBLENDER_DELETE]
 
 ; Next:
-  RMDir /r $BLENDERHOME\plugins\include
-  RMDir /r $BLENDERHOME\plugins
-  RMDir $BLENDERHOME\.blender
+  ; RMDir /r $BLENDERHOME\plugins\include
+  ; RMDir /r $BLENDERHOME\plugins
+  ; RMDir $BLENDERHOME\.blender
   RMDir "$SMPROGRAMS\V-RayBlender"
   RMDir "$INSTDIR"
   RMDir "$INSTDIR\.."

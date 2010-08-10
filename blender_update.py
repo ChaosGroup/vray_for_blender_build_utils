@@ -335,25 +335,26 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 	rootstring += "\n\n"
 	ns_cnt = string.replace(ns_cnt, "[ROOTDIRCONTS]", rootstring)
 
-	dot_blender_str= ""
+	dot_blender_add= ""
 	dot_blender_del= ""
 	scripts_dirs= []
-	for root, dirs, files in os.walk(os.path.join(BF_INSTALLDIR, VERSION)):
+	for root, dirs, files in os.walk(os.path.join(BF_INSTALLDIR)):
 		root_path= string.replace(root, BF_INSTALLDIR, "")
-		dot_blender_str+= '\n  SetOutPath \"$BLENDERHOME%s\"\n'%(root_path)
+		dot_blender_add+= "\n  SetOutPath \"$BLENDERHOME%s\"\n"%(root_path)
 		scripts_dirs.append(root_path)
 		for f in os.listdir(root):
 			f_path= os.path.join(root,f)
 			if os.path.isdir(f_path) == 0:
-				dot_blender_del+= '  Delete \"$INSTDIR%s%s\"\n'%(root_path,f)
-				dot_blender_str+= '  File \"%s\"\n'%(f_path)
-	ns_cnt = string.replace(ns_cnt, "[DOTBLENDER]", dot_blender_str)
+				dot_blender_del+= "  Delete \"$INSTDIR%s%s\"\n"%(root_path,f)
+				dot_blender_add+= "  File \"%s\"\n"%(f_path)
 
+	ns_cnt= string.replace(ns_cnt, "[DOTBLENDER]", dot_blender_add)
+
+	# do delete items
 	scripts_dirs.reverse()
 	for sdir in scripts_dirs:
 		dot_blender_del+= '  RMDir /r \"$INSTDIR%s\"\n'%(sdir)
 
-	# do delete items
 	delrootlist = []
 	for rootitem in rootdir:
 		if os.path.isdir(BF_INSTALLDIR + rootitem) == 0:

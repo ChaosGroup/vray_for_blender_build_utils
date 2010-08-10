@@ -113,7 +113,6 @@ FunctionEnd
 
 Var BLENDERHOME
 Var PREVHOME
-StrCpy $BLENDERHOME $INSTDIR
 
 Function SetWinXPPathCurrentUser
   SetShellVarContext current
@@ -304,6 +303,8 @@ skip:
 FunctionEnd
 
 Section "V-Ray/Blender-VERSION (required)" SecCopyUI
+  StrCpy $BLENDERHOME $INSTDIR
+
   SectionIn RO
 
   SetOutPath $INSTDIR

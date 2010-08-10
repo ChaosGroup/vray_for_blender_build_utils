@@ -333,7 +333,6 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 			rootlist.append("File \"" + os.path.normpath(BF_INSTALLDIR) + "\\" + rootitem+"\"")
 	rootstring = string.join(rootlist, "\n  ")
 	rootstring += "\n\n"
-	ns_cnt = string.replace(ns_cnt, "[ROOTDIRCONTS]", rootstring)
 
 	dot_blender_add= ""
 	dot_blender_del= ""
@@ -348,7 +347,9 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 				dot_blender_del+= "  Delete \"$INSTDIR%s%s\"\n"%(root_path,f)
 				dot_blender_add+= "  File \"%s\"\n"%(f_path)
 
-	ns_cnt= string.replace(ns_cnt, "[DOTBLENDER]", dot_blender_add)
+	rootstring+= dot_blender_add
+	ns_cnt = string.replace(ns_cnt, "[ROOTDIRCONTS]", rootstring)
+	# ns_cnt= string.replace(ns_cnt, "[DOTBLENDER]", dot_blender_add)
 
 	# do delete items
 	scripts_dirs.reverse()

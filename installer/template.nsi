@@ -31,7 +31,7 @@ Name "V-Ray/Blender VERSION"
 !insertmacro MUI_PAGE_COMPONENTS
     
 !insertmacro MUI_PAGE_DIRECTORY
-Page custom DataLocation DataLocationOnLeave
+;Page custom DataLocation DataLocationOnLeave
 ;Page custom AppDataChoice AppDataChoiceOnLeave
 Page custom PreMigrateUserSettings MigrateUserSettings
 !insertmacro MUI_PAGE_INSTFILES
@@ -217,54 +217,54 @@ FunctionEnd
 ;FunctionEnd
 
 
-Function DataLocation
-  nsDialogs::Create /NOUNLOAD 1018
-  Pop $HWND
+; Function DataLocation
+;   nsDialogs::Create /NOUNLOAD 1018
+;   Pop $HWND
   
-  ${If} $HWND == error
-    Abort
-  ${EndIf}
+;   ${If} $HWND == error
+;     Abort
+;   ${EndIf}
   
-  ${NSD_CreateLabel} 0 0 100% 12u "Please specify where you wish to install V-Ray/Blender's user data files."
-  ${NSD_CreateRadioButton} 0 20 100% 12u "Use the Application Data directory (Windows 2000 or later)"
-  Pop $HWND_APPDATA
-  ${NSD_CreateRadioButton} 0 50 100% 12u "Use the installation directory (ie. location chosen to install blender.exe)."
-  Pop $HWND_INSTDIR
-  ${NSD_CreateRadioButton} 0 80 100% 12u "I have defined a %HOME% variable, please install files here."
-  Pop $HWND_HOMEDIR
+;   ${NSD_CreateLabel} 0 0 100% 12u "Please specify where you wish to install V-Ray/Blender's user data files."
+;   ${NSD_CreateRadioButton} 0 20 100% 12u "Use the Application Data directory (Windows 2000 or later)"
+;   Pop $HWND_APPDATA
+;   ${NSD_CreateRadioButton} 0 50 100% 12u "Use the installation directory (ie. location chosen to install blender.exe)."
+;   Pop $HWND_INSTDIR
+;   ${NSD_CreateRadioButton} 0 80 100% 12u "I have defined a %HOME% variable, please install files here."
+;   Pop $HWND_HOMEDIR
   
-  ${If} ${AtMostWinME}
-    GetDlgItem $0 $HWND $HWND_APPDATA
-    EnableWindow $0 0
-    SendMessage $HWND_INSTDIR ${BM_SETCHECK} 1 0
-  ${Else}
-    SendMessage $HWND_APPDATA ${BM_SETCHECK} 1 0
-  ${EndIf}
+;   ${If} ${AtMostWinME}
+;     GetDlgItem $0 $HWND $HWND_APPDATA
+;     EnableWindow $0 0
+;     SendMessage $HWND_INSTDIR ${BM_SETCHECK} 1 0
+;   ${Else}
+;     SendMessage $HWND_APPDATA ${BM_SETCHECK} 1 0
+;   ${EndIf}
   
-  nsDialogs::Show
+;   nsDialogs::Show
   
-FunctionEnd
+; FunctionEnd
 
 
-Function DataLocationOnLeave
-	StrCpy $SETUSERCONTEXT "false"
-	${NSD_GetState} $HWND_APPDATA $R0
-	${If} $R0 == "1"
-	  ; FIXME: disabled 'all users' until fully multi-user compatible
-	  ;StrCpy $SETUSERCONTEXT "true"
-	  Call SetWinXPPathCurrentUser
-	${Else}
-	  ${NSD_GetState} $HWND_INSTDIR $R0
-	  ${If} $R0 == "1"
-	    Call SetWin9xPath
-	  ${Else}
-	    ${NSD_GetState} $HWND_HOMEDIR $R0
-	    ${If} $R0 == "1"
-	      ReadEnvStr $BLENDERHOME "HOME"
-	    ${EndIf}
-	  ${EndIf}
-	${EndIf}
-FunctionEnd
+; Function DataLocationOnLeave
+; 	StrCpy $SETUSERCONTEXT "false"
+; 	${NSD_GetState} $HWND_APPDATA $R0
+; 	${If} $R0 == "1"
+; 	  ; FIXME: disabled 'all users' until fully multi-user compatible
+; 	  ;StrCpy $SETUSERCONTEXT "true"
+; 	  Call SetWinXPPathCurrentUser
+; 	${Else}
+; 	  ${NSD_GetState} $HWND_INSTDIR $R0
+; 	  ${If} $R0 == "1"
+; 	    Call SetWin9xPath
+; 	  ${Else}
+; 	    ${NSD_GetState} $HWND_HOMEDIR $R0
+; 	    ${If} $R0 == "1"
+; 	      ReadEnvStr $BLENDERHOME "HOME"
+; 	    ${EndIf}
+; 	  ${EndIf}
+; 	${EndIf}
+; FunctionEnd
 
 Var HWND_APPDATA_CURRENT
 Var HWND_APPDATA_ALLUSERS

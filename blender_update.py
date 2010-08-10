@@ -573,7 +573,7 @@ if not options.pure_blender:
 	else:
 		sys.stdout.write("Getting vb25 patches\n")
 		if not options.test:
-			os.system("git clone git://github.com/bdancer/vb25-patch.git")
+			os.system("git clone --depth=1 git://github.com/bdancer/vb25-patch.git")
 	os.chdir(working_directory)
 
 	if not options.test:

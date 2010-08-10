@@ -656,7 +656,7 @@ if not options.pure_blender:
 				shutil.copytree(get_full_path('~/devel/vrayblender/exporter/symlinks'), exporter_path, symlinks=True)
 		else:
 			os.chdir(io_scripts_path)
-			os.system("git clone git://github.com/bdancer/vb25.git")
+			os.system("git clone --depth=1 git://github.com/bdancer/vb25.git")
 os.chdir(working_directory)
 
 

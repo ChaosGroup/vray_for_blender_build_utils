@@ -385,11 +385,11 @@ Section "Uninstall"
   Delete "$SMPROGRAMS\V-RayBlender\*.*"
   Delete "$DESKTOP\V-RayBlender-VERSION.lnk"
   ; remove directories used.
-  RMDir /r $BLENDERHOME\.blender\locale
-  MessageBox MB_YESNO "Erase .blender\scripts folder? (ALL contents will be erased!)" /SD IDYES IDNO Next
-[DOTBLENDER_DELETE]
+  ; RMDir /r $BLENDERHOME\.blender\locale
+  ; MessageBox MB_YESNO "Erase .blender\scripts folder? (ALL contents will be erased!)" /SD IDYES IDNO Next
+  [DOTBLENDER_DELETE]
 
-Next:
+; Next:
   RMDir /r $BLENDERHOME\plugins\include
   RMDir /r $BLENDERHOME\plugins
   RMDir $BLENDERHOME\.blender

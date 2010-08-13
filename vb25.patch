@@ -102,3 +102,14 @@
  incs += ' ../../windowmanager ../../python ../../makesrna'
  incs += ' #/intern/guardedalloc #/extern/glew/include'
  
+--- source/blender/editors/render/render_internal.c	2010-08-13 04:48:14.330008395 +0400
++++ render_internal.c	2010-08-13 04:49:57.960078889 +0400
+@@ -654,7 +654,7 @@
+ 	// store spare
+ 
+ 	/* ensure at least 1 area shows result */
+-	screen_set_image_output(C, event->x, event->y);
++	/* screen_set_image_output(C, event->x, event->y); */
+ 
+ 	/* single layer re-render */
+ 	if(RNA_property_is_set(op->ptr, "layer")) {

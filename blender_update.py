@@ -19,7 +19,7 @@ PLATFORM= sys.platform
 HOSTNAME= socket.gethostname()
 ARCH= platform.architecture()[0]
 REV= 'current'
-VERSION= '2.53'
+VERSION= '2.54'
 
 DEFAULT_INSTALLDIR= ""
 DEFAULT_RELEASEDIR= ""

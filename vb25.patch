@@ -113,3 +113,14 @@
  
  	/* single layer re-render */
  	if(RNA_property_is_set(op->ptr, "layer")) {
+
+--- source/blender/makesrna/intern/rna_texture.c	2010-09-01 14:02:55.819168558 +0400
++++ rna_texture.c	2010-09-01 14:04:33.795918790 +0400
+@@ -66,6 +66,7 @@
+ 	{TEX_VORONOI, "VORONOI", ICON_TEXTURE, "Voronoi", ""},
+ 	{TEX_VOXELDATA, "VOXEL_DATA", ICON_TEXTURE, "Voxel Data", ""},
+ 	{TEX_WOOD, "WOOD", ICON_TEXTURE, "Wood", ""},
++	{200, "VRAY", ICON_TEXTURE, "V-Ray", ""},
+ 	{0, NULL, 0, NULL, NULL}};
+ 
+ #ifdef RNA_RUNTIME

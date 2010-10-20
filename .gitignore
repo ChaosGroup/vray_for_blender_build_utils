@@ -1,0 +1,7 @@
+*.bak
+*.orig
+*.c
+blender/
+space_api/
+installer/template_vray.nsi
+

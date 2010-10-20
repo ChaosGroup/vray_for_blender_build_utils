@@ -630,10 +630,11 @@ if options.docs:
 		api_dir= os.path.join(install_dir,'api')
 		sys.stdout.write("Generating docs: %s\n" % (api_dir))
 		if not options.test:
+			sphinx_doc_gen= "doc/python_api/sphinx_doc_gen.py"
 			os.system("sudo mkdir -p %s" % api_dir)
 			os.chdir(blender_dir)
-			os.system("sudo %s -b -P source/blender/python/doc/sphinx_doc_gen.py 2>&1 /dev/null" % os.path.join(install_dir,'blender'))
-			os.system("sudo sphinx-build source/blender/python/doc/sphinx-in %s" % api_dir)
+			os.system("sudo %s -b -P %s 2>&1 /dev/null" % (os.path.join(install_dir,'blender'),sphinx_doc_gen))
+			os.system("sudo sphinx-build doc/python_api/sphinx-in %s" % api_dir)
 
 
 # Set proper owner

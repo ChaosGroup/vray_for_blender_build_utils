@@ -59,6 +59,7 @@
 #include "DNA_object_types.h"
 #include "DNA_meshdata_types.h"
 #include "DNA_mesh_types.h"
+#include "DNA_meta_types.h"
 #include "DNA_image_types.h"
 #include "DNA_material_types.h"
 #include "DNA_texture_types.h"
@@ -387,8 +388,6 @@ Mesh *get_render_mesh(Scene *sce, Main *bmain, Object *ob)
     Mesh        *mesh= NULL;
     DerivedMesh *dm;
 
-    PointerRNA   me_rna;
-
     /* perform the mesh extraction based on type */
     switch (ob->type) {
     case OB_FONT:
@@ -436,19 +435,71 @@ Mesh *get_render_mesh(Scene *sce, Main *bmain, Object *ob)
 }
 
 
-void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers)
+int mesh_animated(Object *ob)
+{
+    switch(ob->type) {
+    case OB_CURVE:
+    case OB_SURF:
+    case OB_FONT: {
+        Curve *cu= (Curve*)ob->data;
+        if(cu->adt) return 1;
+    }
+        break;
+    case OB_MBALL: {
+        MetaBall *mb= (MetaBall*)ob->data;
+        if(mb->adt) return 1;
+    }
+        break;
+    case OB_MESH: {
+        Mesh *me= (Mesh*)ob->data;
+        if(me->adt) return 1;
+    }
+        break;
+    default:
+        break;
+    }
+
+    ModifierData *mod= (ModifierData*)ob->modifiers.first;
+    while(mod) {
+        switch (mod->type) {
+        case eModifierType_Armature:
+        case eModifierType_Softbody:
+        case eModifierType_Array:
+        case eModifierType_Explode:
+        case eModifierType_MeshDeform:
+        case eModifierType_SimpleDeform:
+        case eModifierType_ShapeKey:
+        case eModifierType_Screw:
+        case eModifierType_Warp:
+            return 1;
+        default:
+            mod= mod->next;
+        }
+    }
+
+    return 0;
+}
+
+
+void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers, int check_animated)
 {
     Object  *ob;
     Mesh    *mesh;
     Base    *base;
     
     PointerRNA me_rna;
-    int        me_is_proxy= 0;
-
+    
     base= (Base*)sce->base.first;
 
     while(base) {
         ob= base->object;
+
+        if(check_animated) {
+            if(!(mesh_animated(ob))) {
+                base= base->next;
+                continue;
+            }
+        }
 
         if(vb_active_layers) {
             if(!(ob->lay & sce->lay)) {
@@ -457,29 +508,37 @@ void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers)
             }
         }
 
+        if(ob->type == OB_MESH) {
+            Mesh *me= (Mesh*)ob->data;
+            RNA_id_pointer_create(&me->id, &me_rna);
+            if(RNA_struct_find_property(&me_rna, "vray")) {
+                PointerRNA VRayMeshRNA= RNA_pointer_get(&me_rna, "vray");
+                if(RNA_struct_find_property(&VRayMeshRNA, "GeomMeshFile")) {
+                    PointerRNA GeomMeshFile= RNA_pointer_get(&VRayMeshRNA, "GeomMeshFile");
+                    if(RNA_boolean_get(&GeomMeshFile, "use")) {
+                        base= base->next;
+                        continue;
+                    }
+                }
+            }
+        }
+
         mesh= get_render_mesh(sce, bmain, ob);
 
         if(mesh) {
-            /* me= (Mesh*)ob->data; */
-            /* RNA_id_pointer_create(&me->id, &me_rna); */
-            /* if(RNA_struct_find_property(&me_rna, "vray_proxy")) */
-            /*     me_is_proxy= RNA_boolean_get(&me_rna, "vray_proxy"); */
-
-            if(!(me_is_proxy)) {
 #ifdef _WIN32
-                printf("V-Ray/Blender: Mesh: [%d] %s                    \r", sce->r.cfra, ob->id.name+2);
+            printf("V-Ray/Blender: Mesh: [%d] %s                    \r", sce->r.cfra, ob->id.name+2);
 #else
-                printf("V-Ray/Blender: Mesh: [\033[0;33m%d\033[0m] \033[0;32m%s\033[0m                    \r", sce->r.cfra, ob->id.name+2);
+            printf("V-Ray/Blender: Mesh: [\033[0;33m%d\033[0m] \033[0;32m%s\033[0m                    \r", sce->r.cfra, ob->id.name+2);
 #endif
-                fflush(stdout);
+            fflush(stdout);
 
-                write_mesh_vray(gfile, sce, ob, mesh);
+            write_mesh_vray(gfile, sce, ob, mesh);
 
-                /* remove the temporary mesh */
-                free_mesh(mesh);
-                BLI_remlink(&bmain->mesh, mesh);
-                MEM_freeN(mesh);
-            }
+            /* remove the temporary mesh */
+            free_mesh(mesh);
+            BLI_remlink(&bmain->mesh, mesh);
+            MEM_freeN(mesh);
         }
             
         base= base->next;
@@ -523,20 +582,29 @@ int export_scene(bContext *C, wmOperator *op)
             cfra= sce->r.cfra;
             fra= sce->r.sfra;
 
+            /* Export meshes for the start frame */
+            sce->r.cfra= fra;
+            CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
+            scene_update_for_newframe(bmain, sce, (1<<20) - 1);
+            export_meshes(gfile, sce, bmain, vb_active_layers, 0);
+            fra+= sce->r.frame_step;
+
+            /* Export meshes for the rest frames checking if mesh is animated */
             while(fra <= sce->r.efra)
             {
                 sce->r.cfra= fra;
                 CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
                 scene_update_for_newframe(bmain, sce, (1<<20) - 1);
 
-                export_meshes(gfile, sce, bmain, vb_active_layers);
+                export_meshes(gfile, sce, bmain, vb_active_layers, 1);
 
                 fra+= sce->r.frame_step;
             }
 
             sce->r.cfra= cfra;
-        } else
-            export_meshes(gfile, sce, bmain, vb_active_layers);
+        } else {
+            export_meshes(gfile, sce, bmain, vb_active_layers, 0);
+        }
         
         BLI_timestr(PIL_check_seconds_timer()-time, time_str);
         printf("V-Ray/Blender: Exporting meshes done [%s]                   \n", time_str);

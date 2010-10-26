@@ -114,7 +114,7 @@ char *clean_string(char *str)
 }
 
 
-void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, UVId *uv_ids)
+void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh)
 {
     Mesh   *me= ob->data;
     MFace  *face;
@@ -484,7 +484,6 @@ void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers, i
 
     Object  *ob;
     Mesh    *mesh;
-    UVId    *uv_ids= NULL;
     
     PointerRNA me_rna;
     
@@ -535,7 +534,7 @@ void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers, i
 #endif
             fflush(stdout);
 
-            write_mesh_vray(gfile, sce, ob, mesh, uv_ids);
+            write_mesh_vray(gfile, sce, ob, mesh);
 
             /* remove the temporary mesh */
             free_mesh(mesh);
@@ -544,11 +543,6 @@ void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers, i
         }
             
         base= base->next;
-    }
-
-    if(uv_ids) {
-        free(uv_ids);
-        uv_ids_size= 0;
     }
 }
 

@@ -93,7 +93,7 @@
 char *clean_string(char *str)
 {
     char *tmp_str;
-    int i;
+    int   i;
 
     tmp_str= (char*)malloc(MAX_IDPROP_NAME * sizeof(char));
 
@@ -114,8 +114,7 @@ char *clean_string(char *str)
 }
 
 
-
-void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh)
+void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, UVId *uv_ids)
 {
     Mesh   *me= ob->data;
     MFace  *face;
@@ -141,16 +140,14 @@ void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh)
     int u, u0;
 
 
-    //printf("V-Ray/Blender: Processing object: %s\n", ob->id.name+2);
-    //printf("  Mesh: %s\n", me->id.name+2);
-
-
     // Name format: Geom_<meshname>_<libname>
     fprintf(gfile,"GeomStaticMesh Geom_%s", clean_string(me->id.name+2));
     if(me->id.lib) {
         BLI_split_dirfile(me->id.lib->name+2, NULL, lib_file);
         fprintf(gfile,"_%s", clean_string(lib_file));
 
+        printf("V-Ray/Blender: Object: %s\n", ob->id.name+2);
+        printf("  Mesh: %s\n", me->id.name+2);
         printf("    Lib: %s\n", me->id.lib->name+2);
         printf("      File: %s\n", lib_file);
     }
@@ -463,8 +460,8 @@ int mesh_animated(Object *ob)
     while(mod) {
         switch (mod->type) {
         case eModifierType_Armature:
-        case eModifierType_Softbody:
         case eModifierType_Array:
+        case eModifierType_Softbody:
         case eModifierType_Explode:
         case eModifierType_MeshDeform:
         case eModifierType_SimpleDeform:
@@ -483,9 +480,11 @@ int mesh_animated(Object *ob)
 
 void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers, int check_animated)
 {
+    Base    *base;
+
     Object  *ob;
     Mesh    *mesh;
-    Base    *base;
+    UVId    *uv_ids= NULL;
     
     PointerRNA me_rna;
     
@@ -523,6 +522,9 @@ void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers, i
             }
         }
 
+        /* TODO: hair */
+        //write_hair(gfile, sce, ob, mesh);
+
         mesh= get_render_mesh(sce, bmain, ob);
 
         if(mesh) {
@@ -533,7 +535,7 @@ void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers, i
 #endif
             fflush(stdout);
 
-            write_mesh_vray(gfile, sce, ob, mesh);
+            write_mesh_vray(gfile, sce, ob, mesh, uv_ids);
 
             /* remove the temporary mesh */
             free_mesh(mesh);
@@ -542,6 +544,11 @@ void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers, i
         }
             
         base= base->next;
+    }
+
+    if(uv_ids) {
+        free(uv_ids);
+        uv_ids_size= 0;
     }
 }
 

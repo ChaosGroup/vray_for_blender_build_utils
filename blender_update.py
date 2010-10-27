@@ -537,6 +537,11 @@ else:
 	sys.stdout.write("Getting Blender sources...\n")
 	if not options.test:
 		os.system("svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/blender")
+
+version_file= open(os.path.join(blender_dir,"release","VERSION"),'r')
+VERSION= version_file.read().split('-')[0]
+version_file.close()
+
 os.chdir(working_directory)
 
 

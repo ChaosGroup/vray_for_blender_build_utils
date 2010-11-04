@@ -461,6 +461,7 @@ int mesh_animated(Object *ob)
         switch (mod->type) {
         case eModifierType_Armature:
         case eModifierType_Array:
+        case eModifierType_Displace:
         case eModifierType_Softbody:
         case eModifierType_Explode:
         case eModifierType_MeshDeform:

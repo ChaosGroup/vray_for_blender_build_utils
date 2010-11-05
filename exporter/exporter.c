@@ -434,6 +434,8 @@ Mesh *get_render_mesh(Scene *sce, Main *bmain, Object *ob)
 
 int mesh_animated(Object *ob)
 {
+    ModifierData *mod;
+
     switch(ob->type) {
     case OB_CURVE:
     case OB_SURF:
@@ -456,7 +458,7 @@ int mesh_animated(Object *ob)
         break;
     }
 
-    ModifierData *mod= (ModifierData*)ob->modifiers.first;
+    mod= (ModifierData*)ob->modifiers.first;
     while(mod) {
         switch (mod->type) {
         case eModifierType_Armature:
@@ -484,9 +486,12 @@ void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers, i
     Base    *base;
 
     Object  *ob;
+    Mesh    *me;
     Mesh    *mesh;
     
     PointerRNA me_rna;
+    PointerRNA VRayMeshRNA;
+    PointerRNA GeomMeshFile;
     
     base= (Base*)sce->base.first;
 
@@ -508,12 +513,12 @@ void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers, i
         }
 
         if(ob->type == OB_MESH) {
-            Mesh *me= (Mesh*)ob->data;
+            me= (Mesh*)ob->data;
             RNA_id_pointer_create(&me->id, &me_rna);
             if(RNA_struct_find_property(&me_rna, "vray")) {
-                PointerRNA VRayMeshRNA= RNA_pointer_get(&me_rna, "vray");
+                VRayMeshRNA= RNA_pointer_get(&me_rna, "vray");
                 if(RNA_struct_find_property(&VRayMeshRNA, "GeomMeshFile")) {
-                    PointerRNA GeomMeshFile= RNA_pointer_get(&VRayMeshRNA, "GeomMeshFile");
+                    GeomMeshFile= RNA_pointer_get(&VRayMeshRNA, "GeomMeshFile");
                     if(RNA_boolean_get(&GeomMeshFile, "use")) {
                         base= base->next;
                         continue;

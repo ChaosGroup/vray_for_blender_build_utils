@@ -245,9 +245,9 @@ void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh)
     for(f= 0; f < mesh->totface; ++face, ++f) {
         if(f) fprintf(gfile,",");
         if(face->v4)
-            fprintf(gfile,"%d,%d", face->mat_nr, face->mat_nr);
+            fprintf(gfile,"%d,%d", face->mat_nr + 1, face->mat_nr + 1);
         else
-            fprintf(gfile,"%d", face->mat_nr);
+            fprintf(gfile,"%d", face->mat_nr + 1);
     }
     fprintf(gfile,");\n");
 

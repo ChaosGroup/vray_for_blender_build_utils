@@ -367,18 +367,18 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 	ns_cnt = string.replace(ns_cnt, "[DELROOTDIRCONTS]", delrootstring)
 	ns_cnt = string.replace(ns_cnt, "[DOTBLENDER_DELETE]", dot_blender_del)
 
-	plugincludelist = []
-	plugincludepath = "%s%s" % (BF_INSTALLDIR, "\\plugins\\include")
-	plugincludedir = os.listdir(plugincludepath)
-	for plugincludeitem in plugincludedir:
-		plugincludefile = "%s\\%s" % (plugincludepath, plugincludeitem)
-		if os.path.isdir(plugincludefile) == 0:
-			if plugincludefile.find('.h') or plugincludefile.find('.DEF'):
-				plugincludefile = os.path.normpath(plugincludefile)
-				plugincludelist.append("File \"%s\"" % plugincludefile)
-	plugincludestring = string.join(plugincludelist, "\n  ")
-	plugincludestring += "\n\n"
-	ns_cnt = string.replace(ns_cnt, "[PLUGINCONTS]", plugincludestring)
+	# plugincludelist = []
+	# plugincludepath = "%s%s" % (BF_INSTALLDIR, "\\plugins\\include")
+	# plugincludedir = os.listdir(plugincludepath)
+	# for plugincludeitem in plugincludedir:
+	# 	plugincludefile = "%s\\%s" % (plugincludepath, plugincludeitem)
+	# 	if os.path.isdir(plugincludefile) == 0:
+	# 		if plugincludefile.find('.h') or plugincludefile.find('.DEF'):
+	# 			plugincludefile = os.path.normpath(plugincludefile)
+	# 			plugincludelist.append("File \"%s\"" % plugincludefile)
+	# plugincludestring = string.join(plugincludelist, "\n  ")
+	# plugincludestring += "\n\n"
+	# ns_cnt = string.replace(ns_cnt, "[PLUGINCONTS]", plugincludestring)
 
 	ns_cnt = string.replace(ns_cnt, "DISTDIR",  BF_INSTALLDIR)
 	ns_cnt = string.replace(ns_cnt, "SHORTVER", VERSION)

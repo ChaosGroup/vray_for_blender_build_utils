@@ -328,41 +328,20 @@ void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh)
                                 mesh->mtface[f].uv[i][1]);
                     }
                 }
-
                 fprintf(gfile,"),");
 
                 fprintf(gfile,"ListInt(");
-                u= -1;
-                u0= -1;
+                u= 0;
                 face= mesh->mface;
                 for(f = 0; f < mesh->totface; ++face, ++f) {
                     if(f) fprintf(gfile,",");
 
                     if(face->v4) {
-                        verts= 6;
-                        u= u0;
+                        fprintf(gfile, "%i,%i,%i,%i,%i,%i", u, u+1, u+2, u+2, u+3, u);
+                        u+= 4;
                     } else {
-                        if(mesh->mface[f-1].v4)
-                            u= u0;
-                        verts= 3;
-                    }
-
-                    for(i= 0; i < verts; i++) {
-                        if(i) fprintf(gfile,",");
-                            
-                        if(verts == 6) {
-                            if(i == 5) {
-                                u0= u;
-                                u-= 4;
-                            }
-                            if(i != 3)
-                                u++;
-                        } else {
-                            u++;
-                            u0= u;
-                        }
-
-                        fprintf(gfile,"%d", u);
+                        fprintf(gfile, "%i,%i,%i", u, u+1, u+2);
+                        u+= 3;
                     }
                 }
                 fprintf(gfile,"))");

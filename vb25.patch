@@ -64,14 +64,3 @@
  
  #ifdef RNA_RUNTIME
  
---- source/blender/windowmanager/intern/wm_draw.c	2010-10-12 10:32:18.000000000 +0400
-+++ wm_draw.c	2010-10-12 10:32:51.000000000 +0400
-@@ -257,7 +258,7 @@
- 						CTX_wm_region_set(C, NULL);
- 
- 						ar->swap= WIN_BOTH_OK;
--						printf("draws swap exchange %d\n", ar->swinid);
-+						//printf("draws swap exchange %d\n", ar->swinid);
- 					}
- 					else if(ar->swap == WIN_BACK_OK)
- 						ar->swap= WIN_FRONT_OK;

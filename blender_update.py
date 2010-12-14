@@ -250,7 +250,7 @@ def which(program):
 
 	return None
 
-if not PLATFORM == "win32":
+if PLATFORM == "linux2":
 	if options.deps:
 		sys.stdout.write("Installing dependencies: ")
 		if LINUX == 'ubuntu':

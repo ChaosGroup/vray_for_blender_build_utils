@@ -88,12 +88,26 @@
 
 #include "exporter.h"
 
+//#define VB_DEBUG
 
 #define TYPE_UV          5
 #define MAX_MESH_THREADS 16
 
+struct ThreadData {
+    bContext *C;
+    LinkNode *objects;
+    LinkNode *uvs;
+    int       id;
+};
+
+struct Material;
+struct MTex;
+struct Tex;
+
 pthread_mutex_t mtx= PTHREAD_MUTEX_INITIALIZER;
-int counter= 0;
+
+struct ThreadData thread_data[MAX_MESH_THREADS];
+
 
 char *clean_string(char *str)
 {
@@ -461,65 +475,42 @@ int mesh_animated(Object *ob)
         }
     }
 
-    return 0;
+    return;
 }
 
-static int pc_cmp(void *a, void *b)
+void *export_meshes_thread(void *ptr)
 {
-    LinkData *ad = a, *bd = b;
-    if(GET_INT_FROM_POINTER(ad->data) > GET_INT_FROM_POINTER(bd->data))
-        return 1;
-    else return 0;
-}
-
-void *print_message_function(void *ptr)
-{
+    struct ThreadData *td;
+   
     double   time;
     char     time_str[32];
 
     FILE    *gfile= NULL;
     char     gfilename[256];
 
-    Scene   *sce= CTX_data_scene((bContext*)ptr);
-    Main    *bmain= CTX_data_main((bContext*)ptr);
-
-    Base    *base= (Base*)sce->base.first;
+    Scene   *sce;
+    Main    *bmain;
+    Base    *base;
     Object  *ob;
-    Mesh    *me;
     Mesh    *mesh;
     
-    PointerRNA me_rna;
-    PointerRNA VRayMeshRNA;
-    PointerRNA GeomMeshFile;
+    LinkNode *tdl;
+
+    td= (struct ThreadData*)ptr;
+
+    sce= CTX_data_scene(td->C);
+    bmain= CTX_data_main(td->C);
+    base= (Base*)sce->base.first;
 
     time= PIL_check_seconds_timer();
 
-    pthread_mutex_lock(&mtx);
-    {
-        sprintf(gfilename, "/tmp/vb25/scene_geometry_%.2d.vrscene", counter);
-        printf("V-Ray/Blender: Mesh export thread: %d...\n", counter + 1);
-        gfile= fopen(gfilename, "w");
-        counter++;
-    }
-    pthread_mutex_unlock(&mtx);
+    printf("V-Ray/Blender: Mesh export thread [%d]\n", td->id + 1);
+    sprintf(gfilename, "/tmp/vb25/scene_geometry_%.2d.vrscene", td->id);
+    gfile= fopen(gfilename, "w");
 
-    while(base) {
-        ob= base->object;
-
-        if(ob->type == OB_MESH) {
-            me= (Mesh*)ob->data;
-            RNA_id_pointer_create(&me->id, &me_rna);
-            if(RNA_struct_find_property(&me_rna, "vray")) {
-                VRayMeshRNA= RNA_pointer_get(&me_rna, "vray");
-                if(RNA_struct_find_property(&VRayMeshRNA, "GeomMeshFile")) {
-                    GeomMeshFile= RNA_pointer_get(&VRayMeshRNA, "GeomMeshFile");
-                    if(RNA_boolean_get(&GeomMeshFile, "use")) {
-                        base= base->next;
-                        continue;
-                    }
-                }
-            }
-        }
+    tdl= td->objects;
+    while(tdl) {
+        ob= tdl->link;
 
         pthread_mutex_lock(&mtx);
         {
@@ -540,16 +531,16 @@ void *print_message_function(void *ptr)
             pthread_mutex_unlock(&mtx);
         }
 
-        base= base->next;
+        tdl= tdl->next;
     }
 
     fclose(gfile);
 
     BLI_timestr(PIL_check_seconds_timer() - time, time_str);
-    printf("V-Ray/Blender: Mesh export thread done [%s]\n", time_str);
+    printf("V-Ray/Blender: Mesh export thread [%d] done [%s]\n", td->id + 1, time_str);
 }
 
-void export_meshes_threaded(bContext *C, int vb_active_layers, int check_animated)
+void export_meshes_threaded(bContext *C, int active_layers, int check_animated)
 {
     Scene    *sce= CTX_data_scene(C);
     Main     *bmain= CTX_data_main(C);
@@ -557,29 +548,53 @@ void export_meshes_threaded(bContext *C, int vb_active_layers, int check_animate
     Object   *ob;
     Mesh     *me;
     Mesh     *mesh;
-    
+
+    Material *ma;
+    MTex     *mtex;
+    Tex      *tex;
+
     pthread_t threads[MAX_MESH_THREADS];
-    int       thread_count;
+    int       threads_count;
+    int       threads_to_create;
     int       t;
 
-    LinkNode  *thread_list;
-    LinkNode  *thread_list_item;
+    LinkNode *thread_object_link;
+    LinkNode *list_iter;
+    int       i;
  
-    double    time;
-    char      time_str[32];
-
     PointerRNA me_rna;
-    PointerRNA VRayMeshRNA;
+    PointerRNA VRayMesh;
     PointerRNA GeomMeshFile;
 
-    time= PIL_check_seconds_timer();
-    printf("V-Ray/Blender: Threaded mesh export...\n");
-    
-    thread_count= BLI_system_thread_count();
+    threads_count= BLI_system_thread_count();
+    threads_to_create= 0;
 
     /*
       Preprocess textures to find proper UV channel indexes
     */
+    for(ma= bmain->mat.first; ma; ma= ma->id.next) {
+        printf("Material: %s\n", ma->id.name);
+        for(i= 0; i < MAX_MTEX; ++i) {
+            if(ma->mtex) {
+                mtex= ma->mtex[i];
+                if(mtex->tex) {
+                    if(mtex->texco & TEXCO_UV) {
+                        printf("Texture: %s\n", mtex->tex->id.name);
+                    }
+                }
+            }
+        }
+    }        
+
+    /*
+      Init thread data
+    */
+    for(t= 0; t < MAX_MESH_THREADS; ++t) {
+        thread_data[t].C= C;
+        thread_data[t].id= t;
+        thread_data[t].objects= NULL;
+        thread_data[t].uvs= NULL;
+    }
 
     /*
       Split object list to multiple lists
@@ -589,79 +604,15 @@ void export_meshes_threaded(bContext *C, int vb_active_layers, int check_animate
     while(base) {
         ob= base->object;
 
-        if(ob->type == OB_MESH) {
-            me= (Mesh*)ob->data;
-            RNA_id_pointer_create(&me->id, &me_rna);
-            if(RNA_struct_find_property(&me_rna, "vray")) {
-                VRayMeshRNA= RNA_pointer_get(&me_rna, "vray");
-                if(RNA_struct_find_property(&VRayMeshRNA, "GeomMeshFile")) {
-                    GeomMeshFile= RNA_pointer_get(&VRayMeshRNA, "GeomMeshFile");
-                    if(RNA_boolean_get(&GeomMeshFile, "use")) {
-                        base= base->next;
-                        continue;
-                    }
-                }
+        if(ob->type == OB_EMPTY   ||
+           ob->type == OB_LAMP    ||
+           ob->type == OB_CAMERA  ||
+           ob->type == OB_LATTICE ||
+           ob->type == OB_ARMATURE)
+            {
+                base= base->next;
+                continue;
             }
-        }
-
-        if(!thread_objects[t]) {
-            BLI_linklist_prepend(&thread_objects[t], ob);
-        } else {
-            BLI_linklist_append(&thread_objects[t], ob);
-        }
-    
-        
-        if(t < thread_count) {
-            t++;
-        } else {
-            t= 0;
-        }
-
-        base= base->next;
-    }
-
-    /* BLI_linklist_free(<param>,NULL); */
-
-    /* for(t= 0; t < thread_count; ++t) { */
-    /*     printf("Objects[%i]\n", t); */
-
-    /*     base= (Base*)thread_objects[t].first; */
-    /*     while(base) { */
-    /*         ob= base->object; */
-            
-    /*         printf("  %s\n", ob->id.name); */
-            
-    /*         base= base->next; */
-    /*     } */
-    /* } */
-
-    /* for(t= 0; t < thread_count; ++t) { */
-    /*     pthread_create(&threads[t], NULL, print_message_function, (void*) C); */
-    /* } */
-    
-    /* for(t= 0; t < thread_count; ++t) { */
-    /*     pthread_join(threads[t], NULL); */
-    /* } */
-
-    /* BLI_timestr(PIL_check_seconds_timer() - time, time_str); */
-    /* printf("V-Ray/Blender: Threaded mesh export done [%s]\n", time_str); */
-}
-
-void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers, int check_animated)
-{
-    Base    *base;
-    Object  *ob;
-    Mesh    *me;
-    Mesh    *mesh;
-    
-    PointerRNA me_rna;
-    PointerRNA VRayMeshRNA;
-    PointerRNA GeomMeshFile;
-    
-    base= (Base*)sce->base.first;
-
-    while(base) {
-        ob= base->object;
 
         if(check_animated) {
             if(!(mesh_animated(ob))) {
@@ -670,7 +621,7 @@ void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers, i
             }
         }
 
-        if(vb_active_layers) {
+        if(active_layers) {
             if(!(ob->lay & sce->lay)) {
                 base= base->next;
                 continue;
@@ -681,9 +632,9 @@ void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers, i
             me= (Mesh*)ob->data;
             RNA_id_pointer_create(&me->id, &me_rna);
             if(RNA_struct_find_property(&me_rna, "vray")) {
-                VRayMeshRNA= RNA_pointer_get(&me_rna, "vray");
-                if(RNA_struct_find_property(&VRayMeshRNA, "GeomMeshFile")) {
-                    GeomMeshFile= RNA_pointer_get(&VRayMeshRNA, "GeomMeshFile");
+                VRayMesh= RNA_pointer_get(&me_rna, "vray");
+                if(RNA_struct_find_property(&VRayMesh, "GeomMeshFile")) {
+                    GeomMeshFile= RNA_pointer_get(&VRayMesh, "GeomMeshFile");
                     if(RNA_boolean_get(&GeomMeshFile, "use")) {
                         base= base->next;
                         continue;
@@ -692,99 +643,110 @@ void export_meshes(FILE *gfile, Scene *sce, Main *bmain, int vb_active_layers, i
             }
         }
 
-        /* TODO: hair */
-        //write_hair(gfile, sce, ob, mesh);
-
-        mesh= get_render_mesh(sce, bmain, ob);
-
-        if(mesh) {
-#ifdef _WIN32
-            printf("V-Ray/Blender: Mesh: [%d] %s                    \r", sce->r.cfra, ob->id.name+2);
-#else
-            printf("V-Ray/Blender: Mesh: [\033[0;33m%d\033[0m] \033[0;32m%s\033[0m                    \r", sce->r.cfra, ob->id.name+2);
-#endif
-            fflush(stdout);
-
-            write_mesh_vray(gfile, sce, ob, mesh);
-
-            /* remove the temporary mesh */
-            free_mesh(mesh);
-            BLI_remlink(&bmain->mesh, mesh);
-            MEM_freeN(mesh);
+        if(!&(thread_data[t].objects)) {
+            BLI_linklist_prepend(&(thread_data[t].objects), ob);
+        } else {
+            BLI_linklist_append(&(thread_data[t].objects), ob);
         }
-            
+    
+        // TODO: improve balancing
+        if(t < threads_count) {
+            t++;
+        } else {
+            t= 0;
+        }
+
         base= base->next;
     }
-}
 
+    for(t= 0; t < threads_count; ++t) {
+        if(BLI_linklist_length(thread_data[t].objects)) {
+            threads_to_create= t + 1;
+
+#ifdef VB_DEBUG
+            printf("Objects [%i]\n", t);
+            thread_object_link= thread_data[t].objects;
+            while(thread_object_link) {
+                ob= thread_object_link->link;
+                if(ob) {
+                    printf("  %s\n", ob->id.name);
+                }
+                thread_object_link= thread_object_link->next;
+            }
+#endif
+        }
+    }
+
+    for(t= 0; t < threads_to_create; ++t) {
+        pthread_create(&threads[t], NULL, export_meshes_thread, (void*) &thread_data[t]);
+    }
+    
+    for(t= 0; t < threads_to_create; ++t) {
+        pthread_join(threads[t], NULL);
+    }
+
+    for(t= 0; t < MAX_MESH_THREADS; ++t) {
+        BLI_linklist_free(thread_data[t].objects, NULL);
+    }
+
+    return 0;
+}
 
 int export_scene(bContext *C, wmOperator *op)
 {
-    counter= 0;
-    export_meshes_threaded(C, 1, 0);
-
     Scene  *sce= CTX_data_scene(C);
     Main   *bmain= CTX_data_main(C);
-
-    FILE   *gfile= NULL;
-    char    filename[FILE_MAX];
-
-    double  time;
-    char    time_str[32];
-
-    //int     vb_render_layers[20];
-    int     vb_active_layers= 0;
-    int     vb_animation= 0;
 
     int     fra=   0;
     int     cfra=  0;
 
-    if(RNA_property_is_set(op->ptr, "vb_geometry_file")) {
+    char    filename[FILE_MAX];
+    int     active_layers= 0;
+    int     animation= 0;
+
+    double  time;
+    char    time_str[32];
+
+    if(RNA_property_is_set(op->ptr, "vb_geometry_file"))
         RNA_string_get(op->ptr, "vb_geometry_file", filename);
-        gfile= fopen(filename, "w");
-    }
 
     if(RNA_property_is_set(op->ptr, "vb_active_layers"))
-        vb_active_layers= RNA_int_get(op->ptr, "vb_active_layers");
+        active_layers= RNA_int_get(op->ptr, "vb_active_layers");
 
     if(RNA_property_is_set(op->ptr, "vb_animation"))
-        vb_animation= RNA_int_get(op->ptr, "vb_animation");
+        animation= RNA_int_get(op->ptr, "vb_animation");
 
-    if(gfile) {    
-        time= PIL_check_seconds_timer();
+    time= PIL_check_seconds_timer();
 
-        if(vb_animation) {
-            cfra= sce->r.cfra;
-            fra= sce->r.sfra;
+    if(animation) {
+        cfra= sce->r.cfra;
+        fra= sce->r.sfra;
 
-            /* Export meshes for the start frame */
+        /* Export meshes for the start frame */
+        sce->r.cfra= fra;
+        CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
+        scene_update_for_newframe(bmain, sce, (1<<20) - 1);
+        export_meshes_threaded(C, active_layers, 0);
+        fra+= sce->r.frame_step;
+
+        /* Export meshes for the rest frames checking if mesh is animated */
+        while(fra <= sce->r.efra) {
             sce->r.cfra= fra;
             CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
             scene_update_for_newframe(bmain, sce, (1<<20) - 1);
-            export_meshes(gfile, sce, bmain, vb_active_layers, 0);
-            fra+= sce->r.frame_step;
-
-            /* Export meshes for the rest frames checking if mesh is animated */
-            while(fra <= sce->r.efra) {
-                sce->r.cfra= fra;
-                CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-                scene_update_for_newframe(bmain, sce, (1<<20) - 1);
                 
-                export_meshes(gfile, sce, bmain, vb_active_layers, 1);
+            export_meshes_threaded(C, active_layers, 1);
 
-                fra+= sce->r.frame_step;
-            }
-
-            sce->r.cfra= cfra;
-        } else {
-            export_meshes(gfile, sce, bmain, vb_active_layers, 0);
+            fra+= sce->r.frame_step;
         }
-        
-        BLI_timestr(PIL_check_seconds_timer()-time, time_str);
-        printf("V-Ray/Blender: Exporting meshes done [%s]                   \n", time_str);
 
-        fclose(gfile);
+        sce->r.cfra= cfra;
+    } else {
+        export_meshes_threaded(C, active_layers, 0);
     }
+        
+    BLI_timestr(PIL_check_seconds_timer()-time, time_str);
+    printf("V-Ray/Blender: Exporting meshes done [%s]                   \n", time_str);
 
     return 0;
 }

@@ -5,7 +5,7 @@
  http://vray.cgdo.ru
 
  Author: Andrey M. Izrantsev (aka bdancer)
- E-Mail: izrantsev@gmail.com
+ E-Mail: izrantsev@cgdo.ru
 
  This plugin is protected by the GNU General Public License v.2
 
@@ -88,10 +88,21 @@
 
 #include "exporter.h"
 
+
 //#define VB_DEBUG
 
 #define TYPE_UV          5
 #define MAX_MESH_THREADS 16
+
+
+struct Material;
+struct MTex;
+struct Tex;
+
+typedef struct UVLayer {
+    char *name;
+    int   id;
+} UVLayer;
 
 struct ThreadData {
     bContext *C;
@@ -100,14 +111,36 @@ struct ThreadData {
     int       id;
 };
 
-struct Material;
-struct MTex;
-struct Tex;
-
 pthread_mutex_t mtx= PTHREAD_MUTEX_INITIALIZER;
 
 struct ThreadData thread_data[MAX_MESH_THREADS];
 
+
+int uvlayer_name_to_id(LinkNode *list, char *name)
+{
+    LinkNode *list_iter;
+    UVLayer  *uv_layer;
+
+    list_iter= list;
+    while(list_iter) {
+        uv_layer= (UVLayer*)list_iter->link;
+        if(strcmp(name, "") == 0)
+            return 1;
+        if(strcmp(name, uv_layer->name) == 0)
+            return uv_layer->id;
+        list_iter= list_iter->next;
+    }
+    return 0;
+}
+
+void *uvlayer_ptr(char *name, int id)
+{
+    UVLayer *tmp;
+    tmp= (UVLayer*)malloc(sizeof(UVLayer));
+    tmp->name= name;
+    tmp->id= id;
+    return (void*)tmp;
+}
 
 char *clean_string(char *str)
 {
@@ -133,7 +166,7 @@ char *clean_string(char *str)
 }
 
 
-void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh)
+void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, LinkNode *uv_list)
 {
     Mesh   *me= ob->data;
     MFace  *face;
@@ -164,11 +197,12 @@ void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh)
     if(me->id.lib) {
         BLI_split_dirfile(me->id.lib->name+2, NULL, lib_file);
         fprintf(gfile,"_%s", clean_string(lib_file));
-
+#ifdef VB_DEBUG
         printf("V-Ray/Blender: Object: %s\n", ob->id.name+2);
         printf("  Mesh: %s\n", me->id.name+2);
         printf("    Lib: %s\n", me->id.lib->name+2);
         printf("      File: %s\n", lib_file);
+#endif
     }
     fprintf(gfile," {\n");
 
@@ -329,7 +363,7 @@ void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh)
                 mesh_update_customdata_pointers(mesh);
                 
                 fprintf(gfile,"\n\t\t// %s", fdata->layers[l].name);
-                fprintf(gfile,"\n\t\tList(%d,ListVector(", l);
+                fprintf(gfile,"\n\t\tList(%i,ListVector(", uvlayer_name_to_id(uv_list, fdata->layers[l].name));
 
                 face= mesh->mface;
                 for(f= 0; f < mesh->totface; ++face, ++f) {
@@ -475,7 +509,7 @@ int mesh_animated(Object *ob)
         }
     }
 
-    return;
+    return 0;
 }
 
 void *export_meshes_thread(void *ptr)
@@ -519,7 +553,7 @@ void *export_meshes_thread(void *ptr)
         pthread_mutex_unlock(&mtx);
 
         if(mesh) {
-            write_mesh_vray(gfile, sce, ob, mesh);
+            write_mesh_vray(gfile, sce, ob, mesh, td->uvs);
             
             pthread_mutex_lock(&mtx);
             {
@@ -538,6 +572,8 @@ void *export_meshes_thread(void *ptr)
 
     BLI_timestr(PIL_check_seconds_timer() - time, time_str);
     printf("V-Ray/Blender: Mesh export thread [%d] done [%s]\n", td->id + 1, time_str);
+
+    return NULL;
 }
 
 void export_meshes_threaded(bContext *C, int active_layers, int check_animated)
@@ -547,7 +583,6 @@ void export_meshes_threaded(bContext *C, int active_layers, int check_animated)
     Base     *base;
     Object   *ob;
     Mesh     *me;
-    Mesh     *mesh;
 
     Material *ma;
     MTex     *mtex;
@@ -558,11 +593,16 @@ void export_meshes_threaded(bContext *C, int active_layers, int check_animated)
     int       threads_to_create;
     int       t;
 
-    LinkNode *thread_object_link;
+    UVLayer  *uv_layer;
+    LinkNode *uvs= NULL;
+    int       uv_id= 0;
+
     LinkNode *list_iter;
     int       i;
  
-    PointerRNA me_rna;
+    PointerRNA rna_me;
+    PointerRNA rna_tex;
+    PointerRNA VRayTexture;
     PointerRNA VRayMesh;
     PointerRNA GeomMeshFile;
 
@@ -573,18 +613,50 @@ void export_meshes_threaded(bContext *C, int active_layers, int check_animated)
       Preprocess textures to find proper UV channel indexes
     */
     for(ma= bmain->mat.first; ma; ma= ma->id.next) {
+#ifdef VB_DEBUG
         printf("Material: %s\n", ma->id.name);
+#endif
         for(i= 0; i < MAX_MTEX; ++i) {
             if(ma->mtex) {
                 mtex= ma->mtex[i];
-                if(mtex->tex) {
-                    if(mtex->texco & TEXCO_UV) {
-                        printf("Texture: %s\n", mtex->tex->id.name);
+                if(mtex) {
+                    tex= mtex->tex;
+                    if(tex) {
+                        RNA_id_pointer_create(&tex->id, &rna_tex);
+                        if(RNA_struct_find_property(&rna_tex, "vray")) {
+                            VRayTexture= RNA_pointer_get(&rna_tex, "vray");
+                            if(RNA_enum_get(&VRayTexture, "texture_coords")) { // 0 - object; 1 - UV
+#ifdef VB_DEBUG
+                                printf("Texture: %s [UV: %s]\n", mtex->tex->id.name, mtex->uvname);
+#endif
+                                if(!(strcmp(mtex->uvname, "") == 0)) {
+                                    if(!uvs) {
+                                        BLI_linklist_prepend(&uvs, uvlayer_ptr(mtex->uvname, ++uv_id));
+                                    } else {
+                                        if(uvlayer_name_to_id(uvs,mtex->uvname) == 0) {
+                                            BLI_linklist_append(&uvs, uvlayer_ptr(mtex->uvname, ++uv_id));
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
-    }        
+    }
+
+#ifdef VB_DEBUG
+    list_iter= uvs;
+    while(list_iter) {
+        uv_layer= list_iter->link;
+        if(uv_layer) {
+            printf("UV.name= %s\n", uv_layer->name);
+            printf("UV.id= %i\n", uv_layer->id);
+        }
+        list_iter= list_iter->next;
+    }
+#endif
 
     /*
       Init thread data
@@ -593,7 +665,7 @@ void export_meshes_threaded(bContext *C, int active_layers, int check_animated)
         thread_data[t].C= C;
         thread_data[t].id= t;
         thread_data[t].objects= NULL;
-        thread_data[t].uvs= NULL;
+        thread_data[t].uvs= uvs;
     }
 
     /*
@@ -630,9 +702,9 @@ void export_meshes_threaded(bContext *C, int active_layers, int check_animated)
 
         if(ob->type == OB_MESH) {
             me= (Mesh*)ob->data;
-            RNA_id_pointer_create(&me->id, &me_rna);
-            if(RNA_struct_find_property(&me_rna, "vray")) {
-                VRayMesh= RNA_pointer_get(&me_rna, "vray");
+            RNA_id_pointer_create(&me->id, &rna_me);
+            if(RNA_struct_find_property(&rna_me, "vray")) {
+                VRayMesh= RNA_pointer_get(&rna_me, "vray");
                 if(RNA_struct_find_property(&VRayMesh, "GeomMeshFile")) {
                     GeomMeshFile= RNA_pointer_get(&VRayMesh, "GeomMeshFile");
                     if(RNA_boolean_get(&GeomMeshFile, "use")) {
@@ -648,9 +720,10 @@ void export_meshes_threaded(bContext *C, int active_layers, int check_animated)
         } else {
             BLI_linklist_append(&(thread_data[t].objects), ob);
         }
-    
-        // TODO: improve balancing
-        if(t < threads_count) {
+
+        // TODO [LOW]: improve balancing using:
+        // list sorting with ob->derivedFinal->numVertData
+        if(t < threads_count - 1) {
             t++;
         } else {
             t= 0;
@@ -662,26 +735,25 @@ void export_meshes_threaded(bContext *C, int active_layers, int check_animated)
     for(t= 0; t < threads_count; ++t) {
         if(BLI_linklist_length(thread_data[t].objects)) {
             threads_to_create= t + 1;
-
 #ifdef VB_DEBUG
             printf("Objects [%i]\n", t);
-            thread_object_link= thread_data[t].objects;
-            while(thread_object_link) {
-                ob= thread_object_link->link;
+            list_iter= thread_data[t].objects;
+            while(list_iter) {
+                ob= list_iter->link;
                 if(ob) {
                     printf("  %s\n", ob->id.name);
                 }
-                thread_object_link= thread_object_link->next;
+                list_iter= list_iter->next;
             }
 #endif
         }
     }
 
-    for(t= 0; t < threads_to_create; ++t) {
+    for(t= 0; t < threads_count; ++t) {
         pthread_create(&threads[t], NULL, export_meshes_thread, (void*) &thread_data[t]);
     }
     
-    for(t= 0; t < threads_to_create; ++t) {
+    for(t= 0; t < threads_count; ++t) {
         pthread_join(threads[t], NULL);
     }
 
@@ -689,7 +761,9 @@ void export_meshes_threaded(bContext *C, int active_layers, int check_animated)
         BLI_linklist_free(thread_data[t].objects, NULL);
     }
 
-    return 0;
+    BLI_linklist_free(uvs, NULL);
+
+    return;
 }
 
 int export_scene(bContext *C, wmOperator *op)

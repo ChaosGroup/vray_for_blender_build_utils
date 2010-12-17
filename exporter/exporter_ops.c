@@ -55,9 +55,9 @@ void SCENE_OT_scene_export(wmOperatorType *ot)
     /* flags */
     ot->flag= 0;
 
-    RNA_def_string(ot->srna, "vb_geometry_file", "", FILE_MAX, "Geometry export file", "Geometry export file.");
-    RNA_def_boolean(ot->srna, "vb_active_layers", 0, "", "");
-    RNA_def_boolean(ot->srna, "vb_animation", 0, "", "");
+    RNA_def_string(ot->srna, "filepath", "", FILE_MAX, "Geometry filepath", "Geometry filepath.");
+    RNA_def_boolean(ot->srna, "use_active_layers", 0,  "Active layer",      "Export only active layers.");
+    RNA_def_boolean(ot->srna, "use_animation",     0,  "Animation",         "Export animation.");
     //RNA_def_boolean_array(srna, "vb_render_layers", ARRAY_SIZE, NULL, "barr", "boolean array");
 }
 

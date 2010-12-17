@@ -109,6 +109,7 @@ struct ThreadData {
     LinkNode *objects;
     LinkNode *uvs;
     int       id;
+    char     *filepath;
 };
 
 pthread_mutex_t mtx= PTHREAD_MUTEX_INITIALIZER;
@@ -520,7 +521,7 @@ void *export_meshes_thread(void *ptr)
     char     time_str[32];
 
     FILE    *gfile= NULL;
-    char     gfilename[256];
+    char     filepath[FILE_MAX];
 
     Scene   *sce;
     Main    *bmain;
@@ -539,8 +540,8 @@ void *export_meshes_thread(void *ptr)
     time= PIL_check_seconds_timer();
 
     printf("V-Ray/Blender: Mesh export thread [%d]\n", td->id + 1);
-    sprintf(gfilename, "/tmp/vb25/scene_geometry_%.2d.vrscene", td->id);
-    gfile= fopen(gfilename, "w");
+    sprintf(filepath, "%s_%.2d.vrscene", td->filepath, td->id);
+    gfile= fopen(filepath, "w");
 
     tdl= td->objects;
     while(tdl) {
@@ -576,7 +577,7 @@ void *export_meshes_thread(void *ptr)
     return NULL;
 }
 
-void export_meshes_threaded(bContext *C, int active_layers, int check_animated)
+void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int check_animated)
 {
     Scene    *sce= CTX_data_scene(C);
     Main     *bmain= CTX_data_main(C);
@@ -666,6 +667,7 @@ void export_meshes_threaded(bContext *C, int active_layers, int check_animated)
         thread_data[t].id= t;
         thread_data[t].objects= NULL;
         thread_data[t].uvs= uvs;
+        thread_data[t].filepath= filepath;
     }
 
     /*
@@ -774,53 +776,57 @@ int export_scene(bContext *C, wmOperator *op)
     int     fra=   0;
     int     cfra=  0;
 
-    char    filename[FILE_MAX];
+    char    *filepath= NULL;
     int     active_layers= 0;
     int     animation= 0;
 
     double  time;
     char    time_str[32];
 
-    if(RNA_property_is_set(op->ptr, "vb_geometry_file"))
-        RNA_string_get(op->ptr, "vb_geometry_file", filename);
+    if(RNA_property_is_set(op->ptr, "filepath")) {
+        filepath= (char*)malloc(FILE_MAX * sizeof(char));
+        RNA_string_get(op->ptr, "filepath", filepath);
+    }
 
-    if(RNA_property_is_set(op->ptr, "vb_active_layers"))
-        active_layers= RNA_int_get(op->ptr, "vb_active_layers");
+    if(RNA_property_is_set(op->ptr, "use_active_layers"))
+        active_layers= RNA_int_get(op->ptr, "use_active_layers");
 
-    if(RNA_property_is_set(op->ptr, "vb_animation"))
-        animation= RNA_int_get(op->ptr, "vb_animation");
+    if(RNA_property_is_set(op->ptr, "use_animation"))
+        animation= RNA_int_get(op->ptr, "use_animation");
 
     time= PIL_check_seconds_timer();
 
-    if(animation) {
-        cfra= sce->r.cfra;
-        fra= sce->r.sfra;
+    if(filepath) {
+        if(animation) {
+            cfra= sce->r.cfra;
+            fra= sce->r.sfra;
 
-        /* Export meshes for the start frame */
-        sce->r.cfra= fra;
-        CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-        scene_update_for_newframe(bmain, sce, (1<<20) - 1);
-        export_meshes_threaded(C, active_layers, 0);
-        fra+= sce->r.frame_step;
-
-        /* Export meshes for the rest frames checking if mesh is animated */
-        while(fra <= sce->r.efra) {
+            /* Export meshes for the start frame */
             sce->r.cfra= fra;
             CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
             scene_update_for_newframe(bmain, sce, (1<<20) - 1);
-                
-            export_meshes_threaded(C, active_layers, 1);
-
+            export_meshes_threaded(filepath, C, active_layers, 0);
             fra+= sce->r.frame_step;
-        }
 
-        sce->r.cfra= cfra;
-    } else {
-        export_meshes_threaded(C, active_layers, 0);
-    }
+            /* Export meshes for the rest frames checking if mesh is animated */
+            while(fra <= sce->r.efra) {
+                sce->r.cfra= fra;
+                CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
+                scene_update_for_newframe(bmain, sce, (1<<20) - 1);
+                
+                export_meshes_threaded(filepath, C, active_layers, 1);
+
+                fra+= sce->r.frame_step;
+            }
+
+            sce->r.cfra= cfra;
+        } else {
+            export_meshes_threaded(filepath, C, active_layers, 0);
+        }
         
-    BLI_timestr(PIL_check_seconds_timer()-time, time_str);
-    printf("V-Ray/Blender: Exporting meshes done [%s]                   \n", time_str);
+        BLI_timestr(PIL_check_seconds_timer()-time, time_str);
+        printf("V-Ray/Blender: Exporting meshes done [%s]                   \n", time_str);
+    }
 
     return 0;
 }

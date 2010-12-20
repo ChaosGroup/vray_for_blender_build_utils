@@ -64,3 +64,14 @@
  
  #ifdef RNA_RUNTIME
  
+--- source/blender/python/intern/bpy_rna.c	2010-12-17 05:44:53.302238004 +0300
++++ bpy_rna.c	2010-12-17 19:59:02.645938003 +0300
+@@ -53,7 +53,7 @@
+ #include "../generic/IDProp.h" /* for IDprop lookups */
+ #include "../generic/py_capi_utils.h"
+ 
+-#define USE_PEDANTIC_WRITE
++//#define USE_PEDANTIC_WRITE
+ #define USE_MATHUTILS
+ #define USE_STRING_COERCE
+ 

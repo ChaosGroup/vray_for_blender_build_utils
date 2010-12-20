@@ -793,7 +793,7 @@ int export_scene(bContext *C, wmOperator *op)
     int     fra=   0;
     int     cfra=  0;
 
-    char    *filepath= NULL;
+    char   *filepath= NULL;
     int     active_layers= 0;
     int     animation= 0;
 

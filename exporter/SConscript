@@ -1,4 +1,5 @@
 #!/usr/bin/python
+
 Import('env')
 
 sources= env.Glob('*.c')
@@ -8,4 +9,7 @@ incs+= ' ../makesdna ../makesrna'
 incs+= ' ../windowmanager'
 incs+= ' ../../../intern/guardedalloc'
 
-env.BlenderLib('bf_scene_exporter', sources, Split(incs), [], libtype='core', priority=300)
+if env['OURPLATFORM'] in ('win32-vc', 'win32-mingw', 'linuxcross', 'win64-vc'):
+	incs += ' ' + env['BF_PTHREADS_INC']
+
+env.BlenderLib('vb_mesh_exporter', sources, Split(incs), [], libtype=['core'], priority=[300])

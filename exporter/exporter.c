@@ -797,6 +797,8 @@ int export_scene(bContext *C, wmOperator *op)
     time= PIL_check_seconds_timer();
 
     if(filepath) {
+        printf("V-Ray/Blender: Using special build exporting operator...\n");
+
         if(animation) {
             cfra= sce->r.cfra;
             fra= sce->r.sfra;

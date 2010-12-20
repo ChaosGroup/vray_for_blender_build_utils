@@ -131,7 +131,7 @@ int uvlayer_name_to_id(LinkNode *list, char *name)
             return uv_layer->id;
         list_iter= list_iter->next;
     }
-    return 0;
+    return 1;
 }
 
 void *uvlayer_ptr(char *name, int id)

@@ -122,16 +122,33 @@ int uvlayer_name_to_id(LinkNode *list, char *name)
     LinkNode *list_iter;
     UVLayer  *uv_layer;
 
+    if(strcmp(name, "") == 0)
+        return 1;
+
     list_iter= list;
     while(list_iter) {
         uv_layer= (UVLayer*)list_iter->link;
-        if(strcmp(name, "") == 0)
-            return 1;
         if(strcmp(name, uv_layer->name) == 0)
             return uv_layer->id;
         list_iter= list_iter->next;
     }
+
     return 1;
+}
+
+int uvlayer_in_list(LinkNode *list, char *name)
+{
+    LinkNode *list_iter;
+    UVLayer  *uv_layer;
+
+    list_iter= list;
+    while(list_iter) {
+        uv_layer= (UVLayer*)list_iter->link;
+        if(strcmp(name, uv_layer->name) == 0)
+            return 1;
+        list_iter= list_iter->next;
+    }
+    return 0;
 }
 
 void *uvlayer_ptr(char *name, int id)
@@ -634,7 +651,7 @@ void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int 
                                     if(!uvs) {
                                         BLI_linklist_prepend(&uvs, uvlayer_ptr(mtex->uvname, ++uv_id));
                                     } else {
-                                        if(uvlayer_name_to_id(uvs,mtex->uvname) == 0) {
+                                        if(!(uvlayer_in_list(uvs, mtex->uvname))) {
                                             BLI_linklist_append(&uvs, uvlayer_ptr(mtex->uvname, ++uv_id));
                                         }
                                     }

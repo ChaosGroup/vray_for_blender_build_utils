@@ -1,28 +1,26 @@
 /*
 
- V-Ray/Blender
+  V-Ray/Blender
 
- http://vray.cgdo.ru
+  http://vray.cgdo.ru
 
- Author: Andrey M. Izrantsev (aka bdancer)
- E-Mail: izrantsev@cgdo.ru
+  Author: Andrey M. Izrantsev (aka bdancer)
+  E-Mail: izrantsev@cgdo.ru
 
- This plugin is protected by the GNU General Public License v.2
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation; either version 2
+  of the License, or (at your option) any later version.
 
- This program is free software: you can redioutibute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
 
- This program is dioutibuted in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
- You should have received a copy of the GNU General Public License
- along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
- All Rights Reserved. V-Ray(R) is a registered trademark of Chaos Group
+  All Rights Reserved. V-Ray(R) is a registered trademark of Chaos Software.
 
 */
 
@@ -94,7 +92,6 @@
 #define TYPE_UV          5
 #define MAX_MESH_THREADS 16
 
-
 struct Material;
 struct MTex;
 struct Tex;
@@ -108,8 +105,9 @@ struct ThreadData {
     bContext *C;
     LinkNode *objects;
     LinkNode *uvs;
-    int       id;
+    short     id;
     char     *filepath;
+    short     animation;
 };
 
 pthread_mutex_t mtx= PTHREAD_MUTEX_INITIALIZER;
@@ -534,17 +532,17 @@ void *export_meshes_thread(void *ptr)
 {
     struct ThreadData *td;
    
-    double   time;
-    char     time_str[32];
+    double    time;
+    char      time_str[32];
 
-    FILE    *gfile= NULL;
-    char     filepath[FILE_MAX];
+    FILE     *gfile= NULL;
+    char      filepath[FILE_MAX];
 
-    Scene   *sce;
-    Main    *bmain;
-    Base    *base;
-    Object  *ob;
-    Mesh    *mesh;
+    Scene    *sce;
+    Main     *bmain;
+    Base     *base;
+    Object   *ob;
+    Mesh     *mesh;
     
     LinkNode *tdl;
 
@@ -558,7 +556,11 @@ void *export_meshes_thread(void *ptr)
 
     printf("V-Ray/Blender: Mesh export thread [%d]\n", td->id + 1);
     sprintf(filepath, "%s_%.2d.vrscene", td->filepath, td->id);
-    gfile= fopen(filepath, "w");
+    if(td->animation) {
+        gfile= fopen(filepath, "a");
+    } else {
+        gfile= fopen(filepath, "w");
+    }
 
     tdl= td->objects;
     while(tdl) {
@@ -594,7 +596,7 @@ void *export_meshes_thread(void *ptr)
     return NULL;
 }
 
-void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int check_animated)
+void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int animation)
 {
     Scene    *sce= CTX_data_scene(C);
     Main     *bmain= CTX_data_main(C);
@@ -685,6 +687,7 @@ void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int 
         thread_data[t].objects= NULL;
         thread_data[t].uvs= uvs;
         thread_data[t].filepath= filepath;
+        thread_data[t].animation= animation;
     }
 
     /*
@@ -705,7 +708,7 @@ void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int 
                 continue;
             }
 
-        if(check_animated) {
+        if(animation) {
             if(!(mesh_animated(ob))) {
                 base= base->next;
                 continue;
@@ -805,11 +808,13 @@ int export_scene(bContext *C, wmOperator *op)
         RNA_string_get(op->ptr, "filepath", filepath);
     }
 
-    if(RNA_property_is_set(op->ptr, "use_active_layers"))
+    if(RNA_property_is_set(op->ptr, "use_active_layers")) {
         active_layers= RNA_int_get(op->ptr, "use_active_layers");
+    }
 
-    if(RNA_property_is_set(op->ptr, "use_animation"))
+    if(RNA_property_is_set(op->ptr, "use_animation")) {
         animation= RNA_int_get(op->ptr, "use_animation");
+    }
 
     time= PIL_check_seconds_timer();
 

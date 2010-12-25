@@ -642,7 +642,7 @@ void *export_meshes_thread(void *ptr)
     return NULL;
 }
 
-void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int instances, int animation)
+void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int instances, int check_animated, int animation)
 {
     Scene    *sce= CTX_data_scene(C);
     Main     *bmain= CTX_data_main(C);
@@ -775,9 +775,11 @@ void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int 
         };
 
         if(animation) {
-            if(!(mesh_animated(ob))) {
-                base= base->next;
-                continue;
+            if(check_animated) {
+                if(!(mesh_animated(ob))) {
+                    base= base->next;
+                    continue;
+                }
             }
         }
 
@@ -873,7 +875,9 @@ int export_scene(bContext *C, wmOperator *op)
     char   *filepath= NULL;
     int     active_layers= 0;
     int     animation= 0;
+    int     check_animated= 0;
     int     instances= 1;
+    int     debug= 0;
 
     double  time;
     char    time_str[32];
@@ -895,6 +899,14 @@ int export_scene(bContext *C, wmOperator *op)
         instances= RNA_int_get(op->ptr, "use_instances");
     }
 
+    if(RNA_property_is_set(op->ptr, "check_animated")) {
+        check_animated= RNA_int_get(op->ptr, "check_animated");
+    }
+
+    if(RNA_property_is_set(op->ptr, "debug")) {
+        debug= RNA_int_get(op->ptr, "debug");
+    }
+
     time= PIL_check_seconds_timer();
 
     if(filepath) {
@@ -908,7 +920,7 @@ int export_scene(bContext *C, wmOperator *op)
             sce->r.cfra= fra;
             CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
             scene_update_for_newframe(bmain, sce, (1<<20) - 1);
-            export_meshes_threaded(filepath, C, active_layers, instances, 0);
+            export_meshes_threaded(filepath, C, active_layers, instances, check_animated, 0);
             fra+= sce->r.frame_step;
 
             /* Export meshes for the rest frames checking if mesh is animated */
@@ -917,14 +929,14 @@ int export_scene(bContext *C, wmOperator *op)
                 CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
                 scene_update_for_newframe(bmain, sce, (1<<20) - 1);
                 
-                export_meshes_threaded(filepath, C, active_layers, instances, 1);
+                export_meshes_threaded(filepath, C, active_layers, instances, check_animated, 1);
 
                 fra+= sce->r.frame_step;
             }
 
             sce->r.cfra= cfra;
         } else {
-            export_meshes_threaded(filepath, C, active_layers, instances, 0);
+            export_meshes_threaded(filepath, C, active_layers, instances, check_animated, 0);
         }
         
         BLI_timestr(PIL_check_seconds_timer()-time, time_str);

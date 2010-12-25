@@ -57,6 +57,7 @@ void SCENE_OT_scene_export(wmOperatorType *ot)
     RNA_def_boolean(ot->srna, "use_active_layers", 0,  "Active layer",      "Export only active layers.");
     RNA_def_boolean(ot->srna, "use_animation",     0,  "Animation",         "Export animation.");
     RNA_def_boolean(ot->srna, "use_instances",     0,  "Instances",         "Export instances.");
+    RNA_def_boolean(ot->srna, "debug",             0,  "Debug",             "Debug mode.");
     RNA_def_boolean(ot->srna, "check_animated",    0,  "Check animated",    "Try to detect if mesh is animated.");
 }
 

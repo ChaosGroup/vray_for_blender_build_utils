@@ -149,6 +149,24 @@ int uvlayer_in_list(LinkNode *list, char *name)
     return 0;
 }
 
+int already_exported(LinkNode *list, char *me_name)
+{
+    LinkNode *list_iter;
+    char     *name;
+
+    if(!me_name)
+        return 0;
+    
+    list_iter= list;
+    while(list_iter) {
+        name= (char*)list_iter->link;
+        if(strcmp(name, me_name) == 0)
+            return 1;
+        list_iter= list_iter->next;
+    }
+    return 0;
+}
+
 void *uvlayer_ptr(char *name, int id)
 {
     UVLayer *tmp;
@@ -156,6 +174,32 @@ void *uvlayer_ptr(char *name, int id)
     tmp->name= name;
     tmp->id= id;
     return (void*)tmp;
+}
+
+char *get_data_name(Object *ob)
+{
+    switch(ob->type) {
+    case OB_CURVE:
+    case OB_SURF:
+    case OB_FONT: {
+        Curve *cu= (Curve*)ob->data;
+        return cu->id.name;
+    }
+        break;
+    case OB_MBALL: {
+        MetaBall *mb= (MetaBall*)ob->data;
+        return mb->id.name;
+    }
+        break;
+    case OB_MESH: {
+        Mesh *me= (Mesh*)ob->data;
+        return me->id.name;
+    }
+        break;
+    default:
+        break;
+    }
+    return NULL;
 }
 
 char *clean_string(char *str)
@@ -562,30 +606,32 @@ void *export_meshes_thread(void *ptr)
         gfile= fopen(filepath, "w");
     }
 
-    tdl= td->objects;
-    while(tdl) {
-        ob= tdl->link;
+    if(BLI_linklist_length(td->objects)) {
+        tdl= td->objects;
+        while(tdl) {
+            ob= tdl->link;
 
-        pthread_mutex_lock(&mtx);
-        {
-            mesh= get_render_mesh(sce, bmain, ob);
-        }
-        pthread_mutex_unlock(&mtx);
-
-        if(mesh) {
-            write_mesh_vray(gfile, sce, ob, mesh, td->uvs);
-            
             pthread_mutex_lock(&mtx);
             {
-                /* remove the temporary mesh */
-                free_mesh(mesh);
-                BLI_remlink(&bmain->mesh, mesh);
-                MEM_freeN(mesh);
+                mesh= get_render_mesh(sce, bmain, ob);
             }
             pthread_mutex_unlock(&mtx);
-        }
 
-        tdl= tdl->next;
+            if(mesh) {
+                write_mesh_vray(gfile, sce, ob, mesh, td->uvs);
+            
+                pthread_mutex_lock(&mtx);
+                {
+                    /* remove the temporary mesh */
+                    free_mesh(mesh);
+                    BLI_remlink(&bmain->mesh, mesh);
+                    MEM_freeN(mesh);
+                }
+                pthread_mutex_unlock(&mtx);
+            }
+
+            tdl= tdl->next;
+        }
     }
 
     fclose(gfile);
@@ -596,7 +642,7 @@ void *export_meshes_thread(void *ptr)
     return NULL;
 }
 
-void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int animation)
+void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int instances, int animation)
 {
     Scene    *sce= CTX_data_scene(C);
     Main     *bmain= CTX_data_main(C);
@@ -609,16 +655,18 @@ void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int 
     Tex      *tex;
 
     pthread_t threads[MAX_MESH_THREADS];
-    int       threads_count;
-    int       threads_to_create;
+    int       threads_count= 1;
     int       t;
 
     UVLayer  *uv_layer;
     LinkNode *uvs= NULL;
     int       uv_id= 0;
 
-    LinkNode *list_iter;
+    LinkNode *list_iter= NULL;
     int       i;
+
+    LinkNode *me_list= NULL;
+    char     *me_name;
  
     PointerRNA rna_me;
     PointerRNA rna_tex;
@@ -626,8 +674,15 @@ void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int 
     PointerRNA VRayMesh;
     PointerRNA GeomMeshFile;
 
-    threads_count= BLI_system_thread_count();
-    threads_to_create= 0;
+    if(sce->r.mode & R_FIXED_THREADS) {
+        threads_count= sce->r.threads;
+    } else {
+        threads_count= BLI_system_thread_count();
+    }
+
+    if(threads_count > MAX_MESH_THREADS) {
+        threads_count= MAX_MESH_THREADS;
+    }
 
     /*
       Preprocess textures to find proper UV channel indexes
@@ -708,6 +763,17 @@ void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int 
                 continue;
             }
 
+        me_name= get_data_name(ob);
+
+        if(instances) {
+            if(me_list) {
+                if(already_exported(me_list, me_name)) {
+                    base= base->next;
+                    continue;
+                }
+            }
+        };
+
         if(animation) {
             if(!(mesh_animated(ob))) {
                 base= base->next;
@@ -737,6 +803,14 @@ void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int 
             }
         }
 
+        if(instances) {
+            if(!(me_list)) {
+                BLI_linklist_prepend(&me_list, me_name);
+            } else {
+                BLI_linklist_append(&me_list, me_name);
+            }
+        }
+
         if(!&(thread_data[t].objects)) {
             BLI_linklist_prepend(&(thread_data[t].objects), ob);
         } else {
@@ -754,10 +828,9 @@ void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int 
         base= base->next;
     }
 
+#ifdef VB_DEBUG
     for(t= 0; t < threads_count; ++t) {
         if(BLI_linklist_length(thread_data[t].objects)) {
-            threads_to_create= t + 1;
-#ifdef VB_DEBUG
             printf("Objects [%i]\n", t);
             list_iter= thread_data[t].objects;
             while(list_iter) {
@@ -767,9 +840,9 @@ void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int 
                 }
                 list_iter= list_iter->next;
             }
-#endif
         }
     }
+#endif
 
     for(t= 0; t < threads_count; ++t) {
         pthread_create(&threads[t], NULL, export_meshes_thread, (void*) &thread_data[t]);
@@ -784,6 +857,7 @@ void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int 
     }
 
     BLI_linklist_free(uvs, NULL);
+    BLI_linklist_free(me_list, NULL);
 
     return;
 }
@@ -799,6 +873,7 @@ int export_scene(bContext *C, wmOperator *op)
     char   *filepath= NULL;
     int     active_layers= 0;
     int     animation= 0;
+    int     instances= 1;
 
     double  time;
     char    time_str[32];
@@ -816,6 +891,10 @@ int export_scene(bContext *C, wmOperator *op)
         animation= RNA_int_get(op->ptr, "use_animation");
     }
 
+    if(RNA_property_is_set(op->ptr, "use_instances")) {
+        instances= RNA_int_get(op->ptr, "use_instances");
+    }
+
     time= PIL_check_seconds_timer();
 
     if(filepath) {
@@ -829,7 +908,7 @@ int export_scene(bContext *C, wmOperator *op)
             sce->r.cfra= fra;
             CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
             scene_update_for_newframe(bmain, sce, (1<<20) - 1);
-            export_meshes_threaded(filepath, C, active_layers, 0);
+            export_meshes_threaded(filepath, C, active_layers, instances, 0);
             fra+= sce->r.frame_step;
 
             /* Export meshes for the rest frames checking if mesh is animated */
@@ -838,14 +917,14 @@ int export_scene(bContext *C, wmOperator *op)
                 CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
                 scene_update_for_newframe(bmain, sce, (1<<20) - 1);
                 
-                export_meshes_threaded(filepath, C, active_layers, 1);
+                export_meshes_threaded(filepath, C, active_layers, instances, 1);
 
                 fra+= sce->r.frame_step;
             }
 
             sce->r.cfra= cfra;
         } else {
-            export_meshes_threaded(filepath, C, active_layers, 0);
+            export_meshes_threaded(filepath, C, active_layers, instances, 0);
         }
         
         BLI_timestr(PIL_check_seconds_timer()-time, time_str);

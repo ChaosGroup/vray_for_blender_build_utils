@@ -239,6 +239,7 @@ void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, LinkNode *
 	float *ve[4];
 	float  no[3];
 
+    int matid= 0;
     int hasUV= 0;
     int maxLayer= 0;
 
@@ -267,32 +268,40 @@ void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, LinkNode *
     fprintf(gfile," {\n");
 
 
-    fprintf(gfile,"\tvertices= interpolate((%d, ListVector(", sce->r.cfra);
+    fprintf(gfile,"\tvertices= interpolate((%d, ListVectorHex(\"", sce->r.cfra);
     vert= mesh->mvert;
     for(f= 0; f < mesh->totvert; ++vert, ++f) {
-        if(f) fprintf(gfile,",");
-        fprintf(gfile,"Vector(%.6f,%.6f,%.6f)", vert->co[0], vert->co[1], vert->co[2]);
+        fprintf(gfile, "%08X%08X%08X",
+                htonl(*(int*)&(vert->co[0])),
+                htonl(*(int*)&(vert->co[1])),
+                htonl(*(int*)&(vert->co[2])));
     }
-    fprintf(gfile,")));\n");
+    fprintf(gfile,"\")));\n");
 
 
-    fprintf(gfile,"\tfaces= interpolate((%d, ListInt(", sce->r.cfra);
+    fprintf(gfile,"\tfaces= interpolate((%d, ListIntHex(\"", sce->r.cfra);
     face= mesh->mface;
     for(f= 0; f < mesh->totface; ++face, ++f) {
-        if(f) fprintf(gfile,",");
         if(face->v4)
-            fprintf(gfile,"%d,%d,%d,%d,%d,%d", face->v1, face->v2, face->v3, face->v3, face->v4, face->v1);
+            fprintf(gfile, "%08X%08X%08X%08X%08X%08X",
+                    htonl(*(int*)&(face->v1)),
+                    htonl(*(int*)&(face->v2)),
+                    htonl(*(int*)&(face->v3)),
+                    htonl(*(int*)&(face->v3)),
+                    htonl(*(int*)&(face->v4)),
+                    htonl(*(int*)&(face->v1)));
         else
-            fprintf(gfile,"%d,%d,%d", face->v1, face->v2, face->v3);
+            fprintf(gfile, "%08X%08X%08X",
+                    htonl(*(int*)&(face->v1)),
+                    htonl(*(int*)&(face->v2)),
+                    htonl(*(int*)&(face->v3)));
     }
-    fprintf(gfile,")));\n");
+    fprintf(gfile,"\")));\n");
 
 
-    fprintf(gfile,"\tnormals= interpolate((%d, ListVector(", sce->r.cfra);
+    fprintf(gfile,"\tnormals= interpolate((%d, ListVectorHex(\"", sce->r.cfra);
     face= mesh->mface;
     for(f= 0; f < mesh->totface; ++face, ++f) {
-        if(f) fprintf(gfile,",");
-
         fve[0]= face->v1;
         fve[1]= face->v2;
         fve[2]= face->v3;
@@ -309,63 +318,63 @@ void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, LinkNode *
                 
         if(face->v4) {
             for(i= 0; i < 6; i++) {
-                if(i) fprintf(gfile,",");
-
                 // If face is smooth get vertex normal
                 if(face->flag & ME_SMOOTH)
                     for(j= 0; j < 3; j++)
                         no[j]= (float)(mesh->mvert[fve[ft[i]]].no[j]/32767.0);
 
-                fprintf(gfile,"Vector(%.6f,%.6f,%.6f)", no[0],no[1],no[2]);
+                fprintf(gfile, "%08X%08X%08X",
+                        htonl(*(int*)&(no[0])),
+                        htonl(*(int*)&(no[1])),
+                        htonl(*(int*)&(no[2])));
             }
         } else {
             for(i= 0; i < 3; i++) {
-                if(i) fprintf(gfile,",");
-
                 // If face is smooth get vertex normal
                 if(face->flag & ME_SMOOTH)
                     for(j= 0; j < 3; j++)
                         no[j]= (float)(mesh->mvert[fve[i]].no[j]/32767.0);
 
-                fprintf(gfile,"Vector(%.6f,%.6f,%.6f)", no[0],no[1],no[2]);
+                fprintf(gfile, "%08X%08X%08X",
+                        htonl(*(int*)&(no[0])),
+                        htonl(*(int*)&(no[1])),
+                        htonl(*(int*)&(no[2])));
             }
         }
     }
-    fprintf(gfile,")));\n");
+    fprintf(gfile,"\")));\n");
 
 
-    fprintf(gfile,"\tfaceNormals= interpolate((%d, ListInt(", sce->r.cfra);
+    fprintf(gfile,"\tfaceNormals= interpolate((%d, ListIntHex(\"", sce->r.cfra);
     face= mesh->mface;
     k= 0;
     for(f= 0; f < mesh->totface; ++face, ++f) {
-        if(f) fprintf(gfile,",");
-        
         if(mesh->mface[f].v4)
             verts= 6;
         else
             verts= 3;
 
         for(i= 0; i < verts; i++) {
-            if(i) fprintf(gfile,",");
-            fprintf(gfile,"%d", k++);
+            fprintf(gfile, "%08X", htonl(*(int*)&k));
+            k++;
         }
     }
-    fprintf(gfile,")));\n");
+    fprintf(gfile,"\")));\n");
 
 
-    fprintf(gfile,"\tface_mtlIDs= ListInt(");
+    fprintf(gfile,"\tface_mtlIDs= ListIntHex(\"");
     face= mesh->mface;
     for(f= 0; f < mesh->totface; ++face, ++f) {
-        if(f) fprintf(gfile,",");
+        matid= face->mat_nr + 1;
         if(face->v4)
-            fprintf(gfile,"%d,%d", face->mat_nr + 1, face->mat_nr + 1);
+            fprintf(gfile, "%08X%08X", htonl(*(int*)&matid), htonl(*(int*)&matid));
         else
-            fprintf(gfile,"%d", face->mat_nr + 1);
+            fprintf(gfile, "%08X", htonl(*(int*)&matid));
     }
-    fprintf(gfile,");\n");
+    fprintf(gfile,"\");\n");
 
 
-    fprintf(gfile,"\tedge_visibility= ListInt(");
+    fprintf(gfile,"\tedge_visibility= ListIntHex(\"");
     ev= 0;
 	if(mesh->totface <= 5) {
         face= mesh->mface;
@@ -376,7 +385,7 @@ void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, LinkNode *
                 ev= (ev << 3) | 7;
             }
         }
-        fprintf(gfile,"%lu", ev);
+        fprintf(gfile, "%08X", htonl(*(int*)&ev));
     } else {
         k= 0;
         face= mesh->mface;
@@ -389,19 +398,17 @@ void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, LinkNode *
                 k+= 1;
             }
             if(k == 10) {
-                fprintf(gfile,"%lu", ev);
-                if(f < mesh->totface - 1)
-                    fprintf(gfile,",");
+                fprintf(gfile, "%08X", htonl(*(int*)&ev));
                 ev= 0;
                 k= 0;
             }
         }
 
         if(k) {
-            fprintf(gfile,"%lu", ev);
+            fprintf(gfile, "%08X", htonl(*(int*)&ev));
         }
     }
-    fprintf(gfile,");\n");
+    fprintf(gfile,"\");\n");
 
 
     fdata= &mesh->fdata;
@@ -423,41 +430,47 @@ void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, LinkNode *
                 mesh_update_customdata_pointers(mesh);
                 
                 fprintf(gfile,"\n\t\t// %s", fdata->layers[l].name);
-                fprintf(gfile,"\n\t\tList(%i,ListVector(", uvlayer_name_to_id(uv_list, fdata->layers[l].name));
+                fprintf(gfile,"\n\t\tList(%i,ListVectorHex(\"", uvlayer_name_to_id(uv_list, fdata->layers[l].name));
 
                 face= mesh->mface;
                 for(f= 0; f < mesh->totface; ++face, ++f) {
-                    if(f) fprintf(gfile,",");
-
                     if(face->v4)
                         verts= 4;
                     else
                         verts= 3;
                     for(i= 0; i < verts; i++) {
-                        if(i) fprintf(gfile,",");
-                        
-                        fprintf(gfile, "Vector(%.6f,%.6f,0.0)",
-                                mesh->mtface[f].uv[i][0],
-                                mesh->mtface[f].uv[i][1]);
+                        fprintf(gfile, "%08X%08X00000000",
+                                htonl(*(int*)&(mesh->mtface[f].uv[i][0])),
+                                htonl(*(int*)&(mesh->mtface[f].uv[i][1])));
                     }
                 }
-                fprintf(gfile,"),");
+                fprintf(gfile,"\"),");
 
-                fprintf(gfile,"ListInt(");
+                fprintf(gfile,"ListIntHex(\"");
                 u= 0;
                 face= mesh->mface;
                 for(f = 0; f < mesh->totface; ++face, ++f) {
-                    if(f) fprintf(gfile,",");
-
                     if(face->v4) {
-                        fprintf(gfile, "%i,%i,%i,%i,%i,%i", u, u+1, u+2, u+2, u+3, u);
+                        fprintf(gfile, "%08X", htonl(*(int*)&u));
+                        k= u+1;
+                        fprintf(gfile, "%08X", htonl(*(int*)&k));
+                        k= u+2;
+                        fprintf(gfile, "%08X", htonl(*(int*)&k));
+                        fprintf(gfile, "%08X", htonl(*(int*)&k));
+                        k= u+3;
+                        fprintf(gfile, "%08X", htonl(*(int*)&k));
+                        fprintf(gfile, "%08X", htonl(*(int*)&u));
                         u+= 4;
                     } else {
-                        fprintf(gfile, "%i,%i,%i", u, u+1, u+2);
+                        fprintf(gfile, "%08X", htonl(*(int*)&u));
+                        k= u+1;
+                        fprintf(gfile, "%08X", htonl(*(int*)&k));
+                        k= u+2;
+                        fprintf(gfile, "%08X", htonl(*(int*)&k));
                         u+= 3;
                     }
                 }
-                fprintf(gfile,"))");
+                fprintf(gfile,"\"))");
 
                 if(l != maxLayer)
                     fprintf(gfile,",");

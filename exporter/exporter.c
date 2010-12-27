@@ -225,13 +225,22 @@ char *clean_string(char *str)
     return tmp_str;
 }
 
+int write_edge_visibility(FILE *gfile, int k, unsigned long int *ev)
+{
+    if(k == 9) {
+        fprintf(gfile, "%08X", htonl(*(int*)ev));
+        *ev= 0;
+        return 0;
+    }
+    return k + 1;
+}
 
 void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, LinkNode *uv_list)
 {
     Mesh   *me= ob->data;
     MFace  *face;
     MVert  *vert;
-
+ 
     CustomData *fdata;
 
     int    verts;
@@ -382,7 +391,7 @@ void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, LinkNode *
             if(face->v4) {
                 ev= (ev << 6) | 27;
             } else {
-                ev= (ev << 3) | 7;
+                ev= (ev << 3) | 8;
             }
         }
         fprintf(gfile, "%08X", htonl(*(int*)&ev));
@@ -391,16 +400,13 @@ void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, LinkNode *
         face= mesh->mface;
         for(f= 0; f < mesh->totface; ++face, ++f) {
             if(face->v4) {
-                ev= (ev << 6) | 27;
-                k+= 2;
+                ev= (ev << 3) | 3;
+                k= write_edge_visibility(gfile, k, &ev);
+                ev= (ev << 3) | 3;
+                k= write_edge_visibility(gfile, k, &ev);
             } else {
-                ev= (ev << 3) | 7;
-                k+= 1;
-            }
-            if(k == 10) {
-                fprintf(gfile, "%08X", htonl(*(int*)&ev));
-                ev= 0;
-                k= 0;
+                ev= (ev << 3) | 8;
+                k= write_edge_visibility(gfile, k, &ev);
             }
         }
 

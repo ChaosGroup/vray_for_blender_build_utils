@@ -56,6 +56,7 @@
 
 #include "DNA_scene_types.h"
 #include "DNA_object_types.h"
+#include "DNA_group_types.h"
 #include "DNA_meshdata_types.h"
 #include "DNA_mesh_types.h"
 #include "DNA_meta_types.h"
@@ -149,18 +150,16 @@ int uvlayer_in_list(LinkNode *list, char *name)
     return 0;
 }
 
-int already_exported(LinkNode *list, char *me_name)
+int in_list(LinkNode *list, void *item)
 {
     LinkNode *list_iter;
-    char     *name;
 
-    if(!me_name)
+    if(!list)
         return 0;
-    
+
     list_iter= list;
     while(list_iter) {
-        name= (char*)list_iter->link;
-        if(strcmp(name, me_name) == 0)
+        if(list_iter->link == item)
             return 1;
         list_iter= list_iter->next;
     }
@@ -661,13 +660,82 @@ void *export_meshes_thread(void *ptr)
     return NULL;
 }
 
+
+void append_object(Scene *sce, LinkNode **objects, LinkNode **meshes, Object *ob,
+                   int active_layers, int instances, int check_animated, int animation)
+{
+    GroupObject *gobject;
+    Object      *gob;
+
+    Mesh        *me;
+
+    PointerRNA   rna_me;
+    PointerRNA   VRayMesh;
+    PointerRNA   GeomMeshFile;
+
+    if(ob->dup_group) {
+        gobject= (GroupObject*)ob->dup_group->gobject.first;
+        while(gobject) {
+            gob= gobject->ob;
+            
+            if(!in_list(*objects, (void*)gob)) {
+#ifdef VB_DEBUG
+                printf("Group object: %s\n", gob->id.name);
+#endif
+                append_object(sce, objects, meshes, gob,
+                              active_layers, instances, check_animated, animation);
+            }
+            
+            gobject= gobject->next;
+        }
+    }
+
+    if(ob->type == OB_EMPTY   ||
+       ob->type == OB_LAMP    ||
+       ob->type == OB_CAMERA  ||
+       ob->type == OB_LATTICE ||
+       ob->type == OB_ARMATURE)
+        return;
+
+    if(active_layers)
+        if(!(ob->lay & sce->lay))
+            return;
+
+    if(instances)
+        if(in_list(*meshes, ob->data))
+            return;
+
+    if(ob->type == OB_MESH) {
+        me= (Mesh*)ob->data;
+        RNA_id_pointer_create(&me->id, &rna_me);
+        if(RNA_struct_find_property(&rna_me, "vray")) {
+            VRayMesh= RNA_pointer_get(&rna_me, "vray");
+            if(RNA_struct_find_property(&VRayMesh, "GeomMeshFile")) {
+                GeomMeshFile= RNA_pointer_get(&VRayMesh, "GeomMeshFile");
+                if(RNA_boolean_get(&GeomMeshFile, "use"))
+                    return;
+            }
+        }
+    }
+  
+    if(animation)
+        if(check_animated)
+            if(!mesh_animated(ob))
+                return;
+
+    if(instances)
+        BLI_linklist_prepend(meshes, ob->data);
+
+    BLI_linklist_prepend(objects, ob);
+}
+
+
 void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int instances, int check_animated, int animation)
 {
     Scene    *sce= CTX_data_scene(C);
     Main     *bmain= CTX_data_main(C);
     Base     *base;
     Object   *ob;
-    Mesh     *me;
 
     Material *ma;
     MTex     *mtex;
@@ -684,14 +752,12 @@ void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int 
     LinkNode *list_iter= NULL;
     int       i;
 
-    LinkNode *me_list= NULL;
-    char     *me_name;
- 
-    PointerRNA rna_me;
+    LinkNode *objects= NULL;
+    LinkNode *objects_iter;
+    LinkNode *meshes= NULL;
+
     PointerRNA rna_tex;
     PointerRNA VRayTexture;
-    PointerRNA VRayMesh;
-    PointerRNA GeomMeshFile;
 
     if(sce->r.mode & R_FIXED_THREADS) {
         threads_count= sce->r.threads;
@@ -765,88 +831,46 @@ void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int 
     }
 
     /*
-      Split object list to multiple lists
+      Collect objects
     */
-    t= 0;
     base= (Base*)sce->base.first;
     while(base) {
         ob= base->object;
 
-        if(ob->type == OB_EMPTY   ||
-           ob->type == OB_LAMP    ||
-           ob->type == OB_CAMERA  ||
-           ob->type == OB_LATTICE ||
-           ob->type == OB_ARMATURE)
-            {
-                base= base->next;
-                continue;
-            }
-
-        me_name= get_data_name(ob);
-
-        if(instances) {
-            if(me_list) {
-                if(already_exported(me_list, me_name)) {
-                    base= base->next;
-                    continue;
-                }
-            }
-        };
-
-        if(animation) {
-            if(check_animated) {
-                if(!(mesh_animated(ob))) {
-                    base= base->next;
-                    continue;
-                }
-            }
-        }
-
-        if(active_layers) {
-            if(!(ob->lay & sce->lay)) {
-                base= base->next;
-                continue;
-            }
-        }
-
-        if(ob->type == OB_MESH) {
-            me= (Mesh*)ob->data;
-            RNA_id_pointer_create(&me->id, &rna_me);
-            if(RNA_struct_find_property(&rna_me, "vray")) {
-                VRayMesh= RNA_pointer_get(&rna_me, "vray");
-                if(RNA_struct_find_property(&VRayMesh, "GeomMeshFile")) {
-                    GeomMeshFile= RNA_pointer_get(&VRayMesh, "GeomMeshFile");
-                    if(RNA_boolean_get(&GeomMeshFile, "use")) {
-                        base= base->next;
-                        continue;
-                    }
-                }
-            }
-        }
-
-        if(instances) {
-            if(!(me_list)) {
-                BLI_linklist_prepend(&me_list, me_name);
-            } else {
-                BLI_linklist_append(&me_list, me_name);
-            }
-        }
-
-        if(!&(thread_data[t].objects)) {
-            BLI_linklist_prepend(&(thread_data[t].objects), ob);
-        } else {
-            BLI_linklist_append(&(thread_data[t].objects), ob);
-        }
-
-        // TODO [LOW]: improve balancing using:
-        // list sorting with ob->derivedFinal->numVertData
-        if(t < threads_count - 1) {
-            t++;
-        } else {
-            t= 0;
-        }
+        append_object(sce, &objects, &meshes, ob, active_layers, instances, check_animated, animation);
 
         base= base->next;
+    }
+
+#ifdef VB_DEBUG
+    printf("Object list\n");
+    objects_iter= objects;
+    while(objects_iter) {
+        ob= (Object*)objects_iter->link;
+
+        printf("Object: %s\n", ob->id.name);
+
+        objects_iter= objects_iter->next;
+    }
+#endif
+
+    /*
+      Split object list to multiple lists
+    */
+    t= 0;
+    objects_iter= objects;
+    while(objects_iter) {
+        ob= (Object*)objects_iter->link;
+
+        BLI_linklist_prepend(&(thread_data[t].objects), ob);
+
+        // TODO [LOW]: improve balancing using list sorting with ob->derivedFinal->numVertData
+        if(t < threads_count - 1)
+            t++;
+        else
+            t= 0;
+
+        objects_iter= objects_iter->next;
     }
 
 #ifdef VB_DEBUG
@@ -877,8 +901,9 @@ void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int 
         BLI_linklist_free(thread_data[t].objects, NULL);
     }
 
-    BLI_linklist_free(uvs, NULL);
-    BLI_linklist_free(me_list, NULL);
+    BLI_linklist_free(uvs,     NULL);
+    BLI_linklist_free(meshes,  NULL);
+    BLI_linklist_free(objects, NULL);
 
     return;
 }

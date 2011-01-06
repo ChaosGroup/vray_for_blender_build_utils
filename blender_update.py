@@ -29,7 +29,7 @@ if PLATFORM == "win32":
 	DEFAULT_RELEASEDIR= "C:\\\\release\\\\"
 else:
 	DEFAULT_INSTALLDIR= "/opt/"
-	DEFAULT_RELEASEDIR= os.path.join(os.environ['HOME'],"vb_release")
+	DEFAULT_RELEASEDIR= os.path.join(os.getcwd(),"release")
 
 
 LINUX= platform.linux_distribution()[0].lower().strip()
@@ -319,6 +319,7 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 	# NSIS installer sciprt template;
 	# based on official script by jesterKing
 	#
+
 	ns = open(os.path.join(patch_dir,'installer','template.nsi'),"r")
 	ns_cnt = str(ns.read())
 	ns.close()
@@ -366,20 +367,6 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 
 	ns_cnt = string.replace(ns_cnt, "[DELROOTDIRCONTS]", delrootstring)
 	ns_cnt = string.replace(ns_cnt, "[DOTBLENDER_DELETE]", dot_blender_del)
-
-	# plugincludelist = []
-	# plugincludepath = "%s%s" % (BF_INSTALLDIR, "\\plugins\\include")
-	# plugincludedir = os.listdir(plugincludepath)
-	# for plugincludeitem in plugincludedir:
-	# 	plugincludefile = "%s\\%s" % (plugincludepath, plugincludeitem)
-	# 	if os.path.isdir(plugincludefile) == 0:
-	# 		if plugincludefile.find('.h') or plugincludefile.find('.DEF'):
-	# 			plugincludefile = os.path.normpath(plugincludefile)
-	# 			plugincludelist.append("File \"%s\"" % plugincludefile)
-	# plugincludestring = string.join(plugincludelist, "\n  ")
-	# plugincludestring += "\n\n"
-	# ns_cnt = string.replace(ns_cnt, "[PLUGINCONTS]", plugincludestring)
-
 	ns_cnt = string.replace(ns_cnt, "DISTDIR",  BF_INSTALLDIR)
 	ns_cnt = string.replace(ns_cnt, "SHORTVER", VERSION)
 	ns_cnt = string.replace(ns_cnt, "VERSION",  VERSION)
@@ -514,17 +501,27 @@ def generate_user_config(filename):
 
 notify("%s SVN update" % project, "Started...")
 
-# Update||obtain Blender SVN
+os.chdir(working_directory)
+
+# Update or obtain Blender SVN
 blender_dir= os.path.join(working_directory,'blender')
-if os.path.exists(blender_dir):
-	os.chdir(blender_dir)
+blender_svn_dir= os.path.join(working_directory,'blender-svn')
+if os.path.exists(blender_svn_dir):
+	os.chdir(blender_svn_dir)
 	if options.update:
 		sys.stdout.write("Updating Blender sources...\n")
 		if not options.test:
 			os.system("svn update")
+			os.chdir(working_directory)
+			if PLATFORM == "win32":
+				os.system("rmdir /Q /S %s" % blender_dir)
+				os.system("svn export blender-svn blender")
+			else:
+				os.system("rm -rf %s" % blender_dir)
+				os.system("svn export blender-svn blender")
 
 	try:
-		entries= open(os.path.join(blender_dir,'.svn','entries'), 'r').read()
+		entries= open(os.path.join(blender_svn_dir,'.svn','entries'), 'r').read()
 	except IOError:
 		pass
 	else:
@@ -537,13 +534,13 @@ else:
 	sys.stdout.write("Getting Blender sources...\n")
 	if not options.test:
 		os.system("svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/blender")
+		os.system("mv blender blender-svn")
 
-#version_file= open(os.path.join(blender_dir,"release","VERSION"),'r')
+#version_file= open(os.path.join(blender_svn_dir,"release","VERSION"),'r')
 #VERSION= version_file.read().split('-')[0]
 #version_file.close()
 
 os.chdir(working_directory)
-
 
 # Update 'lib' on Windows
 if PLATFORM == "win32":
@@ -563,8 +560,8 @@ if PLATFORM == "win32":
 		sys.stdout.write("Getting lib sources\n")
 		if not options.test:
 			os.system("svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/windows lib/windows")
-os.chdir(working_directory)
 
+os.chdir(working_directory)
 
 # Apply V-Ray/Blender patches if needed
 patch_dir= os.path.join(working_directory,'vb25-patch')

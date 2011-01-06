@@ -1,15 +1,16 @@
---- source/blender/SConscript	2010-07-19 17:09:57.809133217 +0400
-+++ SConscript	2010-07-19 17:30:30.617622329 +0400
-@@ -16,6 +16,7 @@
-             'readblenfile/SConscript',
-             'render/SConscript',
-             'nodes/SConscript',
+--- source/blender/SConscript 2011-01-06 14:52:13.000000000 +0300
++++ SConscript  2011-01-06 15:13:12.474295043 +0300
+@@ -9,6 +9,7 @@
+             'blenpluginapi/SConscript',
+             'gpu/SConscript',
+             'editors/SConscript',
 +            'exporter/SConscript',
-             'modifiers/SConscript',
-             'ikplugin/SConscript',
-             'windowmanager/SConscript',
+             'imbuf/SConscript',
+             'makesdna/SConscript',
+             'makesrna/SConscript',
+
 --- source/blender/editors/space_api/spacetypes.c	2010-07-19 17:09:38.327627551 +0400
-+++ space_api/spacetypes.c	2010-07-19 17:21:13.397622897 +0400
++++ spacetypes.c	2010-07-19 17:21:13.397622897 +0400
 @@ -57,6 +57,8 @@
  #include "ED_mball.h"
  #include "ED_logic.h"
@@ -32,7 +33,7 @@
  	UI_buttons_operatortypes();
  	
 --- source/blender/editors/space_api/SConscript	2010-07-19 17:09:38.327627551 +0400
-+++ space_api/SConscript	2010-07-19 17:20:02.931373123 +0400
++++ SConscript	2010-07-19 17:20:02.931373123 +0400
 @@ -4,6 +4,7 @@
  sources = env.Glob('*.c')
  
@@ -40,30 +41,7 @@
 +incs += ' ../../exporter'
  incs += ' ../../windowmanager ../../python ../../makesrna'
  incs += ' #/intern/guardedalloc #/extern/glew/include'
- 
---- source/blender/editors/render/render_internal.c	2010-08-13 04:48:14.330008395 +0400
-+++ render_internal.c	2010-08-13 04:49:57.960078889 +0400
-@@ -654,7 +654,7 @@
- 	// store spare
- 
- 	/* ensure at least 1 area shows result */
--	screen_set_image_output(C, event->x, event->y);
-+	/* screen_set_image_output(C, event->x, event->y); */
- 
- 	/* single layer re-render */
- 	if(RNA_property_is_set(op->ptr, "layer")) {
 
---- source/blender/makesrna/intern/rna_texture.c	2010-09-01 14:02:55.819168558 +0400
-+++ rna_texture.c	2010-09-01 14:04:33.795918790 +0400
-@@ -66,6 +66,7 @@
- 	{TEX_VORONOI, "VORONOI", ICON_TEXTURE, "Voronoi", ""},
- 	{TEX_VOXELDATA, "VOXEL_DATA", ICON_TEXTURE, "Voxel Data", ""},
- 	{TEX_WOOD, "WOOD", ICON_TEXTURE, "Wood", ""},
-+	{200, "VRAY", ICON_TEXTURE, "V-Ray", ""},
- 	{0, NULL, 0, NULL, NULL}};
- 
- #ifdef RNA_RUNTIME
- 
 --- source/blender/python/intern/bpy_rna.c	2010-12-17 05:44:53.302238004 +0300
 +++ bpy_rna.c	2010-12-17 19:59:02.645938003 +0300
 @@ -53,7 +53,7 @@
@@ -74,4 +52,54 @@
 +//#define USE_PEDANTIC_WRITE
  #define USE_MATHUTILS
  #define USE_STRING_COERCE
+
+--- source/blender/editors/render/render_internal.c   2011-01-06 14:51:55.000000000 +0300
++++ render_internal.c   2011-01-06 16:08:02.447495042 +0300
+@@ -698,7 +698,7 @@ static int screen_render_invoke(bContext
+ 	// store spare
  
+ 	/* ensure at least 1 area shows result */
+-	screen_set_image_output(C, event->x, event->y);
++	/* screen_set_image_output(C, event->x, event->y); */
+ 
+ 	/* single layer re-render */
+ 	if(RNA_property_is_set(op->ptr, "layer")) {
+
+--- source/blender/makesrna/intern/rna_texture.c	2011-01-06 14:51:10.000000000 +0300
++++ rna_texture.c	2011-01-06 15:10:08.536095042 +0300
+@@ -51,21 +51,22 @@ EnumPropertyItem texture_filter_items[] 
+ 
+ EnumPropertyItem texture_type_items[] = {
+ 	{0, "NONE", 0, "None", ""},
+-	{TEX_BLEND, "BLEND", ICON_TEXTURE, "Blend", ""},
+-	{TEX_CLOUDS, "CLOUDS", ICON_TEXTURE, "Clouds", ""},
+-	{TEX_DISTNOISE, "DISTORTED_NOISE", ICON_TEXTURE, "Distorted Noise", ""},
+-	{TEX_ENVMAP, "ENVIRONMENT_MAP", ICON_IMAGE_DATA, "Environment Map", ""},
++	/* {TEX_BLEND, "BLEND", ICON_TEXTURE, "Blend", ""}, */
++	/* {TEX_CLOUDS, "CLOUDS", ICON_TEXTURE, "Clouds", ""}, */
++	/* {TEX_DISTNOISE, "DISTORTED_NOISE", ICON_TEXTURE, "Distorted Noise", ""}, */
++	/* {TEX_ENVMAP, "ENVIRONMENT_MAP", ICON_IMAGE_DATA, "Environment Map", ""}, */
+ 	{TEX_IMAGE, "IMAGE", ICON_IMAGE_DATA, "Image or Movie", ""},
+-	{TEX_MAGIC, "MAGIC", ICON_TEXTURE, "Magic", ""},
+-	{TEX_MARBLE, "MARBLE", ICON_TEXTURE, "Marble", ""},
+-	{TEX_MUSGRAVE, "MUSGRAVE", ICON_TEXTURE, "Musgrave", ""},
+-	{TEX_NOISE, "NOISE", ICON_TEXTURE, "Noise", ""},
++	/* {TEX_MAGIC, "MAGIC", ICON_TEXTURE, "Magic", ""}, */
++	/* {TEX_MARBLE, "MARBLE", ICON_TEXTURE, "Marble", ""}, */
++	/* {TEX_MUSGRAVE, "MUSGRAVE", ICON_TEXTURE, "Musgrave", ""}, */
++	/* {TEX_NOISE, "NOISE", ICON_TEXTURE, "Noise", ""}, */
+ 	//{TEX_PLUGIN, "PLUGIN", ICON_PLUGIN, "Plugin", ""}, /* Nothing yet */
+-	{TEX_POINTDENSITY, "POINT_DENSITY", ICON_TEXTURE, "Point Density", ""},
+-	{TEX_STUCCI, "STUCCI", ICON_TEXTURE, "Stucci", ""},
+-	{TEX_VORONOI, "VORONOI", ICON_TEXTURE, "Voronoi", ""},
+-	{TEX_VOXELDATA, "VOXEL_DATA", ICON_TEXTURE, "Voxel Data", ""},
+-	{TEX_WOOD, "WOOD", ICON_TEXTURE, "Wood", ""},
++	/* {TEX_POINTDENSITY, "POINT_DENSITY", ICON_TEXTURE, "Point Density", ""}, */
++	/* {TEX_STUCCI, "STUCCI", ICON_TEXTURE, "Stucci", ""}, */
++	/* {TEX_VORONOI, "VORONOI", ICON_TEXTURE, "Voronoi", ""}, */
++	/* {TEX_VOXELDATA, "VOXEL_DATA", ICON_TEXTURE, "Voxel Data", ""}, */
++	/* {TEX_WOOD, "WOOD", ICON_TEXTURE, "Wood", ""}, */
++	{200, "VRAY", ICON_TEXTURE, "V-Ray", ""},
+ 	{0, NULL, 0, NULL, NULL}};
+ 
+ #ifdef RNA_RUNTIME

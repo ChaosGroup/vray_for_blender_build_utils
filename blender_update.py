@@ -535,6 +535,7 @@ else:
 	if not options.test:
 		os.system("svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/blender")
 		os.system("mv blender blender-svn")
+		os.system("svn export blender-svn blender")
 
 #version_file= open(os.path.join(blender_svn_dir,"release","VERSION"),'r')
 #VERSION= version_file.read().split('-')[0]

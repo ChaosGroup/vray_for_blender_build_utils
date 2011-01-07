@@ -92,6 +92,7 @@
 #undef htons
 #undef ntohl
 #undef ntohs
+#endif
 
 #include <winsock.h>
 

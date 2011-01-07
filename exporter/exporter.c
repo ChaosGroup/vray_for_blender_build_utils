@@ -85,6 +85,10 @@
 
 #include "MEM_guardedalloc.h"
 
+#ifdef WIN32
+#include <winsock.h>
+#endif
+
 #include "exporter.h"
 
 

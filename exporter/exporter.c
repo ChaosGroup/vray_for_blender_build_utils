@@ -86,7 +86,15 @@
 #include "MEM_guardedalloc.h"
 
 #ifdef WIN32
+
+#ifdef htonl
+#undef htonl
+#undef htons
+#undef ntohl
+#undef ntohs
+
 #include <winsock.h>
+
 #endif
 
 #include "exporter.h"
@@ -179,31 +187,31 @@ void *uvlayer_ptr(char *name, int id)
     return (void*)tmp;
 }
 
-char *get_data_name(Object *ob)
-{
-    switch(ob->type) {
-    case OB_CURVE:
-    case OB_SURF:
-    case OB_FONT: {
-        Curve *cu= (Curve*)ob->data;
-        return cu->id.name;
-    }
-        break;
-    case OB_MBALL: {
-        MetaBall *mb= (MetaBall*)ob->data;
-        return mb->id.name;
-    }
-        break;
-    case OB_MESH: {
-        Mesh *me= (Mesh*)ob->data;
-        return me->id.name;
-    }
-        break;
-    default:
-        break;
-    }
-    return NULL;
-}
+/* char *get_data_name(Object *ob) */
+/* { */
+/*     switch(ob->type) { */
+/*     case OB_CURVE: */
+/*     case OB_SURF: */
+/*     case OB_FONT: { */
+/*         Curve *cu= (Curve*)ob->data; */
+/*         return cu->id.name; */
+/*     } */
+/*         break; */
+/*     case OB_MBALL: { */
+/*         MetaBall *mb= (MetaBall*)ob->data; */
+/*         return mb->id.name; */
+/*     } */
+/*         break; */
+/*     case OB_MESH: { */
+/*         Mesh *me= (Mesh*)ob->data; */
+/*         return me->id.name; */
+/*     } */
+/*         break; */
+/*     default: */
+/*         break; */
+/*     } */
+/*     return NULL; */
+/* } */
 
 char *clean_string(char *str)
 {
@@ -594,6 +602,7 @@ int mesh_animated(Object *ob)
     return 0;
 }
 
+
 void *export_meshes_thread(void *ptr)
 {
     struct ThreadData *td;
@@ -734,7 +743,8 @@ void append_object(Scene *sce, LinkNode **objects, LinkNode **meshes, Object *ob
 }
 
 
-void export_meshes_threaded(char *filepath, bContext *C, int active_layers, int instances, int check_animated, int animation)
+void export_meshes_threaded(char *filepath, bContext *C,
+                            int active_layers, int instances, int check_animated, int animation)
 {
     Scene    *sce= CTX_data_scene(C);
     Main     *bmain= CTX_data_main(C);

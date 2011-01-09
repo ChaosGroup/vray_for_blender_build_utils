@@ -226,10 +226,6 @@ if options.releasedir:
 	release_dir= get_full_path(options.releasedir)
 sys.stdout.write("Release directory: %s\n" % release_dir)
 
-if not os.path.exists(release_dir):
-	sys.stdout.write("Release directory doesn\'t exist! Trying to create...\n")
-	os.makedirs(release_dir)
-
 
 '''
   MAIN SECTION
@@ -666,6 +662,10 @@ os.chdir(working_directory)
 
 # Generate archive (Linux) or installer (Windows)
 if not options.debug and options.archive:
+	if not os.path.exists(release_dir):
+		sys.stdout.write("Release directory doesn\'t exist! Trying to create...\n")
+		os.makedirs(release_dir)
+
 	archive_name= "%s-%s-%s%s-%s.tar.bz2" % (project,REV,LINUX,LINUX_VER,ARCH)
 	if PLATFORM == "win32":
 		archive_name= "%s-%s-win32.exe" % (project,REV)

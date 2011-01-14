@@ -67,4 +67,3 @@ void ED_operatortypes_exporter(void)
 {
 	WM_operatortype_append(SCENE_OT_vray_export_meshes);
 }
-

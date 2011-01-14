@@ -1,5 +1,5 @@
 --- source/blender/SConscript 2011-01-06 14:52:13.000000000 +0300
-+++ SConscript  2011-01-06 15:13:12.474295043 +0300
++++ source/blender/SConscript  2011-01-06 15:13:12.474295043 +0300
 @@ -9,6 +9,7 @@
              'blenpluginapi/SConscript',
              'gpu/SConscript',
@@ -10,7 +10,7 @@
              'makesrna/SConscript',
 
 --- source/blender/editors/space_api/spacetypes.c	2010-07-19 17:09:38.327627551 +0400
-+++ spacetypes.c	2010-07-19 17:21:13.397622897 +0400
++++ source/blender/editors/space_api/spacetypes.c	2010-07-19 17:21:13.397622897 +0400
 @@ -57,6 +57,8 @@
  #include "ED_mball.h"
  #include "ED_logic.h"
@@ -33,7 +33,7 @@
  	UI_buttons_operatortypes();
  	
 --- source/blender/editors/space_api/SConscript	2010-07-19 17:09:38.327627551 +0400
-+++ SConscript	2010-07-19 17:20:02.931373123 +0400
++++ source/blender/editors/space_api/SConscript	2010-07-19 17:20:02.931373123 +0400
 @@ -4,6 +4,7 @@
  sources = env.Glob('*.c')
  
@@ -43,7 +43,7 @@
  incs += ' #/intern/guardedalloc #/extern/glew/include'
 
 --- source/blender/python/intern/bpy_rna.c	2010-12-17 05:44:53.302238004 +0300
-+++ bpy_rna.c	2010-12-17 19:59:02.645938003 +0300
++++ source/blender/python/intern/bpy_rna.c	2010-12-17 19:59:02.645938003 +0300
 @@ -53,7 +53,7 @@
  #include "../generic/IDProp.h" /* for IDprop lookups */
  #include "../generic/py_capi_utils.h"
@@ -54,7 +54,7 @@
  #define USE_STRING_COERCE
 
 --- source/blender/editors/render/render_internal.c   2011-01-06 14:51:55.000000000 +0300
-+++ render_internal.c   2011-01-06 16:08:02.447495042 +0300
++++ source/blender/editors/render/render_internal.c   2011-01-06 16:08:02.447495042 +0300
 @@ -698,7 +698,7 @@ static int screen_render_invoke(bContext
  	// store spare
  
@@ -66,7 +66,7 @@
  	if(RNA_property_is_set(op->ptr, "layer")) {
 
 --- source/blender/makesrna/intern/rna_texture.c	2011-01-06 14:51:10.000000000 +0300
-+++ rna_texture.c	2011-01-06 15:10:08.536095042 +0300
++++ source/blender/makesrna/intern/rna_texture.c	2011-01-06 15:10:08.536095042 +0300
 @@ -51,21 +51,22 @@ EnumPropertyItem texture_filter_items[] 
  
  EnumPropertyItem texture_type_items[] = {
@@ -103,3 +103,36 @@
  	{0, NULL, 0, NULL, NULL}};
  
  #ifdef RNA_RUNTIME
+
+--- source/blender/editors/space_api/CMakeLists.txt	2011-01-06 14:51:57.000000000 +0300
++++ source/blender/editors/space_api/CMakeLists.txt	2011-01-14 18:03:57.457981234 +0300
+@@ -23,6 +23,7 @@
+ 	../include
+ 	../../blenkernel
+ 	../../blenlib
++	../../exporter
+ 	../../makesdna
+ 	../../makesrna
+ 	../../windowmanager
+
+--- source/blender/CMakeLists.txt	2011-01-06 14:52:13.000000000 +0300
++++ source/blender/CMakeLists.txt	2011-01-14 17:53:03.215981234 +0300
+@@ -41,6 +41,7 @@
+ add_subdirectory(modifiers)
+ add_subdirectory(makesdna)
+ add_subdirectory(makesrna)
++add_subdirectory(exporter)
+ 
+ if(WITH_IMAGE_OPENEXR)
+ 	add_subdirectory(imbuf/intern/openexr)
+
+--- source/creator/CMakeLists.txt	2011-01-06 14:48:46.000000000 +0300
++++ source/creator/CMakeLists.txt	2011-01-14 19:05:58.851581234 +0300
+@@ -490,6 +490,7 @@
+		bf_editor_space_time
+		bf_editor_space_userpref
+		bf_editor_space_view3d
++		vb_mesh_exporter
+ 
+		bf_editor_text
+		bf_editor_transform

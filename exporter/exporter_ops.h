@@ -32,7 +32,7 @@
 
 struct wmOperatorType;
 
-void SCENE_OT_scene_export(struct wmOperatorType *ot);
+void VB_export_meshes(struct wmOperatorType *ot);
 
 void ED_operatortypes_exporter(void);
 

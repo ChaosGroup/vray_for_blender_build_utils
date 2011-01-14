@@ -1004,3 +1004,13 @@ int export_scene(bContext *C, wmOperator *op)
 
     return 0;
 }
+
+int export_scene_poll(bContext *C)
+{
+    Scene *sce= CTX_data_scene(C);
+	
+	if(sce)
+		return 1;
+	
+	return 0;
+}

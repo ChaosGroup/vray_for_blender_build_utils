@@ -35,5 +35,6 @@
 #include "BKE_context.h"
 
 int export_scene(bContext *C, wmOperator *op);
+int export_scene_poll(bContext *C);
 
 #endif /* EXPORTER_H */

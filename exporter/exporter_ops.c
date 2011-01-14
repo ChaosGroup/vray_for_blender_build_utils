@@ -40,14 +40,15 @@
 #include "exporter_ops.h"
 
 
-void SCENE_OT_scene_export(wmOperatorType *ot)
+void VB_export_meshes(wmOperatorType *ot)
 {
     /* identifiers */
-    ot->name= "Export scene";
-    ot->idname= "SCENE_OT_scene_export";
+    ot->name= "Export meshes";
+    ot->idname= "VB_export_meshes";
     ot->description="Export meshes in .vrscene format.";
 
     /* api callbacks */
+	ot->poll= export_scene_poll;
     ot->exec= export_scene;
 
     /* flags */
@@ -64,6 +65,6 @@ void SCENE_OT_scene_export(wmOperatorType *ot)
 
 void ED_operatortypes_exporter(void)
 {
-	WM_operatortype_append(SCENE_OT_scene_export);
+	WM_operatortype_append(VB_export_meshes);
 }
 

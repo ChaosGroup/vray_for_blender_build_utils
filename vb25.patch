@@ -11,7 +11,7 @@
 
 --- source/blender/editors/space_api/spacetypes.c	2010-07-19 17:09:38.327627551 +0400
 +++ source/blender/editors/space_api/spacetypes.c	2010-07-19 17:21:13.397622897 +0400
-@@ -57,6 +57,8 @@
+@@ -59,6 +59,8 @@
  #include "ED_mball.h"
  #include "ED_logic.h"
  
@@ -20,7 +20,7 @@
  /* only call once on startup, storage is global in BKE kernel listbase */
  void ED_spacetypes_init(void)
  {
-@@ -102,7 +104,10 @@
+@@ -104,7 +106,10 @@
  	ED_operatortypes_sound();
  	ED_operatortypes_render();
  	ED_operatortypes_logic();
@@ -44,7 +44,7 @@
 
 --- source/blender/python/intern/bpy_rna.c	2010-12-17 05:44:53.302238004 +0300
 +++ source/blender/python/intern/bpy_rna.c	2010-12-17 19:59:02.645938003 +0300
-@@ -53,7 +53,7 @@
+@@ -54,7 +54,7 @@
  #include "../generic/IDProp.h" /* for IDprop lookups */
  #include "../generic/py_capi_utils.h"
  
@@ -55,7 +55,7 @@
 
 --- source/blender/editors/render/render_internal.c   2011-01-06 14:51:55.000000000 +0300
 +++ source/blender/editors/render/render_internal.c   2011-01-06 16:08:02.447495042 +0300
-@@ -698,7 +698,7 @@ static int screen_render_invoke(bContext
+@@ -699,7 +699,7 @@ static int screen_render_invoke(bContext
  	// store spare
  
  	/* ensure at least 1 area shows result */

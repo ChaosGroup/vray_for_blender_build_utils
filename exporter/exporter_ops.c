@@ -40,19 +40,19 @@
 #include "exporter_ops.h"
 
 
-void SCENE_OT_vray_export_meshes(wmOperatorType *ot)
+void VRAY_OT_vray_export_meshes(wmOperatorType *ot)
 {
     /* identifiers */
     ot->name= "Export meshes";
-    ot->idname= "SCENE_OT_vray_export_meshes";
+    ot->idname= "VRAY_OT_vray_export_meshes";
     ot->description="Export meshes in .vrscene format.";
 
     /* api callbacks */
-	ot->poll= export_scene_poll;
     ot->exec= export_scene;
+	/* ot->poll= export_scene_poll; */
 
     /* flags */
-    ot->flag= 0;
+    /* ot->flag= 0; */
 
     RNA_def_string(ot->srna, "filepath", "", FILE_MAX, "Geometry filepath", "Geometry filepath.");
     RNA_def_boolean(ot->srna, "use_active_layers", 0,  "Active layer",      "Export only active layers.");
@@ -65,5 +65,5 @@ void SCENE_OT_vray_export_meshes(wmOperatorType *ot)
 
 void ED_operatortypes_exporter(void)
 {
-	WM_operatortype_append(SCENE_OT_vray_export_meshes);
+	WM_operatortype_append(VRAY_OT_vray_export_meshes);
 }

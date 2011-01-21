@@ -1009,8 +1009,12 @@ int export_scene_poll(bContext *C)
 {
     Scene *sce= CTX_data_scene(C);
 	
-	if(sce)
+	if(sce) {
 		return 1;
-	
-	return 0;
+	} else {
+		printf("bContext->scene is NULL\n");
+		return 0;
+	}	
+
+	return 1;
 }

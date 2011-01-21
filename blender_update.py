@@ -21,21 +21,6 @@ ARCH= platform.architecture()[0]
 REV= 'current'
 VERSION= '2.56'
 
-DEFAULT_INSTALLDIR= ""
-DEFAULT_RELEASEDIR= ""
-
-if PLATFORM == "win32":
-	DEFAULT_INSTALLDIR= "C:\\\\release\\\\"
-	DEFAULT_RELEASEDIR= "C:\\\\release\\\\"
-else:
-	DEFAULT_INSTALLDIR= "/opt/"
-	DEFAULT_RELEASEDIR= os.path.join(os.getcwd(),"release")
-
-
-LINUX= platform.linux_distribution()[0].lower().strip()
-LINUX_VER= platform.linux_distribution()[1].replace('.','_').strip()
-
-
 '''
   COMMAND LINE OPTIONS
 '''
@@ -84,6 +69,15 @@ parser.add_option(
 	dest= 'with_collada',
 	default= False,
 	help= 'Add Collada support.'
+)
+
+parser.add_option(
+	'',
+	'--desktop',
+	action= 'store_true',
+	dest= 'desktop',
+	default= False,
+	help= 'Generate desktop file.'
 )
 
 parser.add_option(
@@ -191,10 +185,19 @@ else:
 
 (options, args) = parser.parse_args()
 
-# if(len(sys.argv) == 1):
-# 	parser.print_version()
-# 	parser.print_help()
-# 	sys.exit()
+
+DEFAULT_INSTALLPATH= ""
+DEFAULT_RELEASEDIR= ""
+
+if PLATFORM == "win32":
+	DEFAULT_INSTALLPATH= "C:\\\\release\\\\"
+	DEFAULT_RELEASEDIR= "C:\\\\release\\\\"
+else:
+	DEFAULT_INSTALLPATH= os.path.join(os.getcwd(),"install")
+	DEFAULT_RELEASEDIR= os.path.join(os.getcwd(),"release")
+
+LINUX= platform.linux_distribution()[0].lower().strip()
+LINUX_VER= platform.linux_distribution()[1].replace('.','_').strip()
 
 
 '''
@@ -211,7 +214,7 @@ project= 'vb25'
 if options.pure_blender:
 	project= 'b25'
 
-install_dir= DEFAULT_INSTALLDIR
+install_dir= DEFAULT_INSTALLPATH
 if options.installdir:
 	install_dir= get_full_path(options.installdir)
 install_dir= os.path.join(install_dir,project)
@@ -607,13 +610,11 @@ if not options.test:
 		os.system("%s clean" % build_cmd)
 	if not options.rebuild:
 		build_cmd+= " --implicit-deps-unchanged --max-drift=1"
-	if not PLATFORM == "win32":
-		build_cmd= "sudo %s" % build_cmd
 	os.system(build_cmd)
 
 
 # Generating .desktop file
-if not PLATFORM == "win32":
+if PLATFORM == "linux2" and options.desktop:
 	desktop_file= os.path.join(working_directory, "%s.desktop" % project)
 	sys.stdout.write("Generating .desktop file: %s\n" % (os.path.basename(desktop_file)))
 	if not options.test and not options.devel:
@@ -621,7 +622,7 @@ if not PLATFORM == "win32":
 		os.system("sudo mv -f %s /usr/share/applications/" % desktop_file)
 	
 
-# Generate docs if needed
+# Generate docs
 if options.docs:
 	if PLATFORM == "win32":
 		sys.stdout.write("Docs generation on Windows is not supported\n")
@@ -630,17 +631,10 @@ if options.docs:
 		sys.stdout.write("Generating docs: %s\n" % (api_dir))
 		if not options.test:
 			sphinx_doc_gen= "doc/python_api/sphinx_doc_gen.py"
-			os.system("sudo mkdir -p %s" % api_dir)
+			os.system("mkdir -p %s" % api_dir)
 			os.chdir(blender_dir)
-			os.system("sudo %s -b -P %s 2>&1 /dev/null" % (os.path.join(install_dir,'blender'),sphinx_doc_gen))
-			os.system("sudo sphinx-build doc/python_api/sphinx-in %s" % api_dir)
-
-
-# Set proper owner
-if not PLATFORM == "win32":
-	sys.stdout.write("Changing %s owner to %s\n" % (install_dir,USER))
-	if not options.test:
-		os.system("sudo chown -R %s %s" % (USER,install_dir))
+			os.system("%s -b -P %s 2>&1 /dev/null" % (os.path.join(install_dir,'blender'),sphinx_doc_gen))
+			os.system("sphinx-build doc/python_api/sphinx-in %s" % api_dir)
 
 
 # Adding exporter

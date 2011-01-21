@@ -99,7 +99,7 @@
 +	/* {TEX_VORONOI, "VORONOI", ICON_TEXTURE, "Voronoi", ""}, */
 +	/* {TEX_VOXELDATA, "VOXEL_DATA", ICON_TEXTURE, "Voxel Data", ""}, */
 +	/* {TEX_WOOD, "WOOD", ICON_TEXTURE, "Wood", ""}, */
-+	{200, "VRAY", ICON_TEXTURE, "V-Ray", ""},
++	{TEX_VRAY, "VRAY", ICON_TEXTURE, "V-Ray", ""},
  	{0, NULL, 0, NULL, NULL}};
  
  #ifdef RNA_RUNTIME
@@ -136,3 +136,29 @@
  
 		bf_editor_text
 		bf_editor_transform
+
+--- source/blender/editors/render/render_shading.c	2011-01-14 19:55:00.236281234 +0300
++++ source/blender/editors/render/render_shading.c	2011-01-21 18:38:34.927359002 +0300
+@@ -579,8 +579,10 @@
+ 	/* add or copy texture */
+ 	if(tex)
+ 		tex= copy_texture(tex);
+-	else
++	else {
+ 		tex= add_texture("Texture");
++		tex->type= TEX_IMAGE;
++	}
+ 
+ 	/* hook into UI */
+ 	uiIDContextProperty(C, &ptr, &prop);
+
+--- source/blender/makesdna/DNA_texture_types.h	2011-01-07 22:42:51.812373001 +0300
++++ source/blender/makesdna/DNA_texture_types.h	2011-01-21 18:42:30.430959002 +0300
+@@ -298,6 +298,7 @@
+ #define TEX_DISTNOISE	13
+ #define TEX_POINTDENSITY	14
+ #define TEX_VOXELDATA		15
++#define TEX_VRAY		200
+ 
+ /* musgrave stype */
+ #define TEX_MFRACTAL		0

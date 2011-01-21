@@ -40,11 +40,11 @@
 #include "exporter_ops.h"
 
 
-void VRAY_OT_vray_export_meshes(wmOperatorType *ot)
+void VRAY_OT_export_meshes(wmOperatorType *ot)
 {
     /* identifiers */
     ot->name= "Export meshes";
-    ot->idname= "VRAY_OT_vray_export_meshes";
+    ot->idname= "VRAY_OT_export_meshes";
     ot->description="Export meshes in .vrscene format.";
 
     /* api callbacks */
@@ -65,5 +65,5 @@ void VRAY_OT_vray_export_meshes(wmOperatorType *ot)
 
 void ED_operatortypes_exporter(void)
 {
-	WM_operatortype_append(VRAY_OT_vray_export_meshes);
+	WM_operatortype_append(VRAY_OT_export_meshes);
 }

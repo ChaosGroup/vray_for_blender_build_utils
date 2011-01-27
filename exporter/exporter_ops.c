@@ -103,7 +103,6 @@
 
 
 //#define VB_DEBUG
-
 #define TYPE_UV          5
 #define MAX_MESH_THREADS 16
 

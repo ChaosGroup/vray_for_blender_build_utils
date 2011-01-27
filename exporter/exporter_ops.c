@@ -49,10 +49,6 @@ void VRAY_OT_export_meshes(wmOperatorType *ot)
 
     /* api callbacks */
     ot->exec= export_scene;
-	/* ot->poll= export_scene_poll; */
-
-    /* flags */
-    /* ot->flag= 0; */
 
     RNA_def_string(ot->srna, "filepath", "", FILE_MAX, "Geometry filepath", "Geometry filepath.");
     RNA_def_boolean(ot->srna, "use_active_layers", 0,  "Active layer",      "Export only active layers.");

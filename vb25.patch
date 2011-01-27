@@ -26,7 +26,7 @@
  	ED_operatortypes_logic();
 -	
 +
-+    // V-Ray/Blender exporter operator
++	// V-Ray/Blender mesh export operator
 +	ED_operatortypes_exporter();
 +
  	UI_view2d_operatortypes();

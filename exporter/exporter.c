@@ -98,8 +98,8 @@
 
 #endif
 
-#include "exporter.h"
 
+#include "exporter.h"
 
 //#define VB_DEBUG
 
@@ -188,32 +188,6 @@ void *uvlayer_ptr(char *name, int id)
     return (void*)tmp;
 }
 
-/* char *get_data_name(Object *ob) */
-/* { */
-/*     switch(ob->type) { */
-/*     case OB_CURVE: */
-/*     case OB_SURF: */
-/*     case OB_FONT: { */
-/*         Curve *cu= (Curve*)ob->data; */
-/*         return cu->id.name; */
-/*     } */
-/*         break; */
-/*     case OB_MBALL: { */
-/*         MetaBall *mb= (MetaBall*)ob->data; */
-/*         return mb->id.name; */
-/*     } */
-/*         break; */
-/*     case OB_MESH: { */
-/*         Mesh *me= (Mesh*)ob->data; */
-/*         return me->id.name; */
-/*     } */
-/*         break; */
-/*     default: */
-/*         break; */
-/*     } */
-/*     return NULL; */
-/* } */
-
 char *clean_string(char *str)
 {
     char *tmp_str;
@@ -272,7 +246,6 @@ void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, LinkNode *
 
     int i, j, f, k, l;
     int u;
-
 
     // Name format: Geom_<meshname>_<libname>
     fprintf(gfile,"GeomStaticMesh Geom_%s", clean_string(me->id.name+2));
@@ -503,10 +476,11 @@ void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, LinkNode *
 
 Mesh *get_render_mesh(Scene *sce, Main *bmain, Object *ob)
 {
-    Object      *tmpobj= NULL;
-    Curve       *tmpcu= NULL;
-    Mesh        *mesh= NULL;
-    DerivedMesh *dm;
+    Object         *tmpobj= NULL;
+    Curve          *tmpcu= NULL;
+    Mesh           *mesh= NULL;
+    DerivedMesh    *dm;
+    CustomDataMask  mask= CD_MASK_MESH; 
 
     /* perform the mesh extraction based on type */
     switch (ob->type) {
@@ -515,41 +489,44 @@ Mesh *get_render_mesh(Scene *sce, Main *bmain, Object *ob)
     case OB_SURF:
         /* copies object and modifiers (but not the data) */
         tmpobj= copy_object( ob );
-        tmpcu = (Curve *)tmpobj->data;
+        tmpcu= (Curve *)tmpobj->data;
         tmpcu->id.us--;
 
         /* copies the data */
-        tmpobj->data = copy_curve( (Curve *) ob->data );
+        tmpobj->data= copy_curve((Curve *)ob->data);
 
         /* get updated display list, and convert to a mesh */
-        makeDispListCurveTypes( sce, tmpobj, 0 );
-        nurbs_to_mesh( tmpobj );
+        makeDispListCurveTypes(sce, tmpobj, 0);
+        nurbs_to_mesh(tmpobj);
 		
         /* nurbs_to_mesh changes the type tp a mesh, check it worked */
         if(tmpobj->type != OB_MESH) {
-            free_libblock_us( &bmain->object, tmpobj );
+            free_libblock_us(&bmain->object, tmpobj);
             return NULL;
         }
 
-        mesh = tmpobj->data;
-        free_libblock_us( &bmain->object, tmpobj );
+        mesh= tmpobj->data;
+        free_libblock_us(&bmain->object, tmpobj);
         break;
     case OB_MBALL:
         /* metaballs don't have modifiers, so just convert to mesh */
-        ob = find_basis_mball( sce, ob );
-        mesh = add_mesh( "Mesh" );
-        mball_to_mesh( &ob->disp, mesh );
+        ob= find_basis_mball(sce, ob);
+        mesh= add_mesh("Mesh");
+        mball_to_mesh(&ob->disp, mesh);
         break;
     case OB_MESH:
         /* apply modifiers and create mesh */
-        dm = mesh_create_derived_render( sce, ob, CD_MASK_MESH );
-        mesh = add_mesh( "Mesh" );
-        DM_to_mesh( dm, mesh );
-        dm->release( dm );
+        dm= mesh_create_derived_render(sce, ob, mask);
+        mesh= add_mesh("Mesh");
+        DM_to_mesh(dm, mesh);
+        dm->release(dm);
         break;
     default:
         return NULL;
     }
+
+    /* we don't assign it to anything */
+    mesh->id.us--;
 
     return mesh;
 }
@@ -703,6 +680,12 @@ void append_object(Scene *sce, LinkNode **objects, LinkNode **meshes, Object *ob
             gobject= gobject->next;
         }
     }
+
+    if(ob->data == NULL)
+        return;
+
+    if(ob->restrictflag & OB_RESTRICT_RENDER)
+        return;
 
     if(ob->type == OB_EMPTY   ||
        ob->type == OB_LAMP    ||
@@ -928,6 +911,9 @@ int export_scene(bContext *C, wmOperator *op)
     Scene  *sce= CTX_data_scene(C);
     Main   *bmain= CTX_data_main(C);
 
+    /* Main   *bm= G.main; */
+    /* Scene  *sc= (Scene*)bm->scene.first; */
+
     int     fra=   0;
     int     cfra=  0;
 
@@ -940,6 +926,8 @@ int export_scene(bContext *C, wmOperator *op)
 
     double  time;
     char    time_str[32];
+
+    /* printf("G.scene->name= %s\n", sc->id.name); */
 
     if(RNA_property_is_set(op->ptr, "filepath")) {
         filepath= (char*)malloc(FILE_MAX * sizeof(char));
@@ -1003,18 +991,4 @@ int export_scene(bContext *C, wmOperator *op)
     }
 
     return 0;
-}
-
-int export_scene_poll(bContext *C)
-{
-    Scene *sce= CTX_data_scene(C);
-	
-	if(sce) {
-		return 1;
-	} else {
-		printf("bContext->scene is NULL\n");
-		return 0;
-	}	
-
-	return 1;
 }

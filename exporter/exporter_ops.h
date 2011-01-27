@@ -29,8 +29,6 @@
 
 struct wmOperatorType;
 
-void SCENE_OT_vray_export_meshes(struct wmOperatorType *ot);
-
 void ED_operatortypes_exporter(void);
 
 #endif /* EXPORTER_OPS_H */

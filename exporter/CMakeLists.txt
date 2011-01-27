@@ -11,10 +11,8 @@ set(INC
 )
 
 set(SRC
-    exporter.c
     exporter_ops.c
 
-    exporter.h
     exporter_ops.h
 )
 

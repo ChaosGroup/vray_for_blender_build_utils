@@ -620,6 +620,8 @@ static void *export_meshes_thread(void *ptr)
         gfile= fopen(filepath, "a");
     } else {
         gfile= fopen(filepath, "w");
+        fprintf(gfile,"// V-Ray/Blender 2.5\n");
+        fprintf(gfile,"// Geometry file\n\n");
     }
 
     if(BLI_linklist_length(td->objects)) {

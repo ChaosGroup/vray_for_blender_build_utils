@@ -124,6 +124,7 @@ typedef struct ThreadData {
     short     id;
     char     *filepath;
     short     animation;
+    short     instances;
 } ThreadData;
 
 pthread_mutex_t mtx= PTHREAD_MUTEX_INITIALIZER;
@@ -223,7 +224,7 @@ static int write_edge_visibility(FILE *gfile, int k, unsigned long int *ev)
     return k + 1;
 }
 
-static void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, LinkNode *uv_list)
+static void write_mesh(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, LinkNode *uv_list, short instances)
 {
     Mesh   *me= ob->data;
     MFace  *face;
@@ -251,7 +252,10 @@ static void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, Lin
     int u;
 
     // Name format: ME<meshname>LI<libname>
-    cleared_string= clean_string(me->id.name+2);
+    if(instances)
+        cleared_string= clean_string(me->id.name+2);
+    else
+        cleared_string= clean_string(ob->id.name+2);
     fprintf(gfile,"GeomStaticMesh ME%s", cleared_string);
     if(me->id.lib) {
         BLI_split_dirfile(me->id.lib->name+2, NULL, lib_file);
@@ -636,7 +640,7 @@ static void *export_meshes_thread(void *ptr)
             pthread_mutex_unlock(&mtx);
 
             if(mesh) {
-                write_mesh_vray(gfile, sce, ob, mesh, td->uvs);
+                write_mesh(gfile, sce, ob, mesh, td->uvs, td->instances);
             
                 pthread_mutex_lock(&mtx);
                 {

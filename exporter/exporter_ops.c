@@ -967,7 +967,7 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
             cfra= sce->r.cfra;
             fra= sce->r.sfra;
 
-            printf("V-Ray/Blender: Exporting meshes for frame %-32i...\n", fra);
+            printf("V-Ray/Blender: Exporting meshes for frame %-32i\n", fra);
 
             /* Export meshes for the start frame */
             sce->r.cfra= fra;
@@ -982,7 +982,7 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
 
             /* Export meshes for the rest frames */
             while(fra <= sce->r.efra) {
-                printf("V-Ray/Blender: Exporting meshes for frame %-32i...\n", fra);
+                printf("V-Ray/Blender: Exporting meshes for frame %-32i\n", fra);
 
                 sce->r.cfra= fra;
                 CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
@@ -1005,7 +1005,7 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
             scene_update_for_newframe(bmain, sce, (1<<20) - 1);
 #endif
         } else {
-            printf("V-Ray/Blender: Exporting meshes for frame %-32i...\n", sce->r.cfra);
+            printf("V-Ray/Blender: Exporting meshes for frame %-32i\n", sce->r.cfra);
             export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 0);
         }
         

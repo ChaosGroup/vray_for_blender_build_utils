@@ -121,10 +121,10 @@ typedef struct ThreadData {
     Main     *bmain;
     LinkNode *objects;
     LinkNode *uvs;
-    short     id;
     char     *filepath;
-    short     animation;
-    short     instances;
+    int       id;
+    int       animation;
+    int       instances;
 } ThreadData;
 
 pthread_mutex_t mtx= PTHREAD_MUTEX_INITIALIZER;
@@ -151,6 +151,7 @@ static int uvlayer_name_to_id(LinkNode *list, char *name)
     return 1;
 }
 
+
 static int uvlayer_in_list(LinkNode *list, char *name)
 {
     LinkNode *list_iter;
@@ -165,6 +166,7 @@ static int uvlayer_in_list(LinkNode *list, char *name)
     }
     return 0;
 }
+
 
 static int in_list(LinkNode *list, void *item)
 {
@@ -182,6 +184,7 @@ static int in_list(LinkNode *list, void *item)
     return 0;
 }
 
+
 static void *uvlayer_ptr(char *name, int id)
 {
     UVLayer *tmp;
@@ -190,6 +193,7 @@ static void *uvlayer_ptr(char *name, int id)
     tmp->id= id;
     return (void*)tmp;
 }
+
 
 static char *clean_string(char *str)
 {
@@ -214,6 +218,7 @@ static char *clean_string(char *str)
     return tmp_str;
 }
 
+
 static int write_edge_visibility(FILE *gfile, int k, unsigned long int *ev)
 {
     if(k == 9) {
@@ -224,7 +229,10 @@ static int write_edge_visibility(FILE *gfile, int k, unsigned long int *ev)
     return k + 1;
 }
 
-static void write_mesh(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, LinkNode *uv_list, short instances)
+
+static void write_mesh(FILE *gfile,
+                       Scene *sce, Object *ob, Mesh *mesh,
+                       LinkNode *uv_list, int instances)
 {
     Mesh   *me= ob->data;
     MFace  *face;
@@ -697,6 +705,7 @@ static void append_object(Scene *sce, LinkNode **objects, LinkNode **meshes, Obj
     if(ob->data == NULL)
         return;
 
+    // TODO: geom_doHidden
     if(ob->restrictflag & OB_RESTRICT_RENDER)
         return;
 
@@ -836,6 +845,7 @@ static void export_meshes_threaded(char *filepath, Scene *sce, Main *bmain,
         thread_data[t].uvs= uvs;
         thread_data[t].filepath= filepath;
         thread_data[t].animation= animation;
+        thread_data[t].instances= instances;
     }
 
     /*
@@ -925,7 +935,7 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
     int     active_layers= 0;
     int     animation= 0;
     int     check_animated= 0;
-    int     instances= 1;
+    int     instances= 0;
     int     debug= 0;
 
     double  time;
@@ -993,9 +1003,9 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
                 sce->r.cfra= fra;
                 CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
 #ifdef VB_TAGGED
-            scene_update_tagged(bmain, sce);
+                scene_update_tagged(bmain, sce);
 #else
-            scene_update_for_newframe(bmain, sce, (1<<20) - 1);
+                scene_update_for_newframe(bmain, sce, (1<<20) - 1);
 #endif
                 
                 export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 1);
@@ -1091,7 +1101,7 @@ void VRAY_OT_export_meshes(wmOperatorType *ot)
     RNA_def_string(ot->srna, "filepath", "", FILE_MAX, "Geometry filepath", "Geometry filepath.");
     RNA_def_boolean(ot->srna, "use_active_layers", 0,  "Active layer",      "Export only active layers.");
     RNA_def_boolean(ot->srna, "use_animation",     0,  "Animation",         "Export animation.");
-    RNA_def_boolean(ot->srna, "use_instances",     0,  "Instances",         "Export instances.");
+    RNA_def_boolean(ot->srna, "use_instances",     0,  "Instances",         "Use instances.");
     RNA_def_boolean(ot->srna, "debug",             0,  "Debug",             "Debug mode.");
     RNA_def_boolean(ot->srna, "check_animated",    0,  "Check animated",    "Try to detect if mesh is animated.");
 }

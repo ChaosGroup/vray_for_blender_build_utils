@@ -29,6 +29,7 @@
 #include <string.h>
 #include <math.h>
 #include <pthread.h>
+#include <time.h>
 
 #include "BKE_main.h"
 #include "BKE_scene.h"
@@ -101,8 +102,8 @@
 
 #include "exporter_ops.h"
 
-
 //#define VB_DEBUG
+#define VB_TAGGED
 #define TYPE_UV          5
 #define MAX_MESH_THREADS 16
 
@@ -115,18 +116,19 @@ typedef struct UVLayer {
     int   id;
 } UVLayer;
 
-struct ThreadData {
-    bContext *C;
+typedef struct ThreadData {
+    Scene    *sce;
+    Main     *bmain;
     LinkNode *objects;
     LinkNode *uvs;
     short     id;
     char     *filepath;
     short     animation;
-};
+} ThreadData;
 
 pthread_mutex_t mtx= PTHREAD_MUTEX_INITIALIZER;
 
-struct ThreadData thread_data[MAX_MESH_THREADS];
+ThreadData thread_data[MAX_MESH_THREADS];
 
 
 static int uvlayer_name_to_id(LinkNode *list, char *name)
@@ -210,6 +212,7 @@ static char *clean_string(char *str)
     
     return tmp_str;
 }
+
 static int write_edge_visibility(FILE *gfile, int k, unsigned long int *ev)
 {
     if(k == 9) {
@@ -238,6 +241,7 @@ static void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, Lin
     int maxLayer= 0;
 
     char *lib_file= (char*)malloc(FILE_MAX * sizeof(char));
+    char *cleared_string;
     
     const int ft[6]= {0,1,2,2,3,0};
 
@@ -246,11 +250,14 @@ static void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, Lin
     int i, j, f, k, l;
     int u;
 
-    // Name format: Geom_<meshname>_<libname>
-    fprintf(gfile,"GeomStaticMesh Geom_%s", clean_string(me->id.name+2));
+    // Name format: ME<meshname>LI<libname>
+    cleared_string= clean_string(me->id.name+2);
+    fprintf(gfile,"GeomStaticMesh ME%s", cleared_string);
     if(me->id.lib) {
         BLI_split_dirfile(me->id.lib->name+2, NULL, lib_file);
-        fprintf(gfile,"_%s", clean_string(lib_file));
+        cleared_string= clean_string(lib_file);
+        fprintf(gfile,"LI%s", cleared_string);
+        free(lib_file);
 #ifdef VB_DEBUG
         printf("V-Ray/Blender: Object: %s\n", ob->id.name+2);
         printf("  Mesh: %s\n", me->id.name+2);
@@ -259,6 +266,7 @@ static void write_mesh_vray(FILE *gfile, Scene *sce, Object *ob, Mesh *mesh, Lin
 #endif
     }
     fprintf(gfile," {\n");
+    free(cleared_string);
 
 
     fprintf(gfile,"\tvertices= interpolate((%d, ListVectorHex(\"", sce->r.cfra);
@@ -600,8 +608,8 @@ static void *export_meshes_thread(void *ptr)
 
     td= (struct ThreadData*)ptr;
 
-    sce= CTX_data_scene(td->C);
-    bmain= CTX_data_main(td->C);
+    sce= td->sce;
+    bmain= td->bmain;
     base= (Base*)sce->base.first;
 
     time= PIL_check_seconds_timer();
@@ -726,11 +734,9 @@ static void append_object(Scene *sce, LinkNode **objects, LinkNode **meshes, Obj
 }
 
 
-static void export_meshes_threaded(char *filepath, bContext *C,
+static void export_meshes_threaded(char *filepath, Scene *sce, Main *bmain,
                                    int active_layers, int instances, int check_animated, int animation)
 {
-    Scene    *sce= CTX_data_scene(C);
-    Main     *bmain= CTX_data_main(C);
     Base     *base;
     Object   *ob;
 
@@ -756,15 +762,13 @@ static void export_meshes_threaded(char *filepath, bContext *C,
     PointerRNA rna_tex;
     PointerRNA VRayTexture;
 
-    if(sce->r.mode & R_FIXED_THREADS) {
+    if(sce->r.mode & R_FIXED_THREADS)
         threads_count= sce->r.threads;
-    } else {
+    else
         threads_count= BLI_system_thread_count();
-    }
 
-    if(threads_count > MAX_MESH_THREADS) {
+    if(threads_count > MAX_MESH_THREADS)
         threads_count= MAX_MESH_THREADS;
-    }
 
     /*
       Preprocess textures to find proper UV channel indexes
@@ -819,7 +823,8 @@ static void export_meshes_threaded(char *filepath, bContext *C,
       Init thread data
     */
     for(t= 0; t < MAX_MESH_THREADS; ++t) {
-        thread_data[t].C= C;
+        thread_data[t].sce= sce;
+        thread_data[t].bmain= bmain;
         thread_data[t].id= t;
         thread_data[t].objects= NULL;
         thread_data[t].uvs= uvs;
@@ -905,14 +910,8 @@ static void export_meshes_threaded(char *filepath, bContext *C,
     return;
 }
 
-static int export_scene(bContext *C, wmOperator *op)
+static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
 {
-    Scene  *sce= CTX_data_scene(C);
-    Main   *bmain= CTX_data_main(C);
-
-    /* Main   *bm= G.main; */
-    /* Scene  *sc= (Scene*)bm->scene.first; */
-
     int     fra=   0;
     int     cfra=  0;
 
@@ -926,7 +925,13 @@ static int export_scene(bContext *C, wmOperator *op)
     double  time;
     char    time_str[32];
 
-    /* printf("G.scene->name= %s\n", sc->id.name); */
+    if(!sce) {
+        // TODO: get current scene not first
+        sce= (Scene*)G.main->scene.first;
+    }
+
+    if(!sce)
+        return OPERATOR_CANCELLED;
 
     if(RNA_property_is_set(op->ptr, "filepath")) {
         filepath= (char*)malloc(FILE_MAX * sizeof(char));
@@ -956,52 +961,126 @@ static int export_scene(bContext *C, wmOperator *op)
     time= PIL_check_seconds_timer();
 
     if(filepath) {
-        printf("V-Ray/Blender: Using special build exporting operator...\n");
+        printf("V-Ray/Blender: Exporting meshes...\n");
 
         if(animation) {
             cfra= sce->r.cfra;
             fra= sce->r.sfra;
 
+            printf("V-Ray/Blender: Exporting meshes for frame %-32i...\n", fra);
+
             /* Export meshes for the start frame */
             sce->r.cfra= fra;
             CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
+#ifdef VB_TAGGED
+            scene_update_tagged(bmain, sce);
+#else
             scene_update_for_newframe(bmain, sce, (1<<20) - 1);
-            export_meshes_threaded(filepath, C, active_layers, instances, check_animated, 0);
+#endif
+            export_meshes_threaded(filepath, sce, bmain, active_layers, instances, 0, 0);
             fra+= sce->r.frame_step;
 
-            /* Export meshes for the rest frames checking if mesh is animated */
+            /* Export meshes for the rest frames */
             while(fra <= sce->r.efra) {
+                printf("V-Ray/Blender: Exporting meshes for frame %-32i...\n", fra);
+
                 sce->r.cfra= fra;
                 CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-                scene_update_for_newframe(bmain, sce, (1<<20) - 1);
+#ifdef VB_TAGGED
+            scene_update_tagged(bmain, sce);
+#else
+            scene_update_for_newframe(bmain, sce, (1<<20) - 1);
+#endif
                 
-                export_meshes_threaded(filepath, C, active_layers, instances, check_animated, 1);
+                export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 1);
 
                 fra+= sce->r.frame_step;
             }
 
             sce->r.cfra= cfra;
+            CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
+#ifdef VB_TAGGED
+            scene_update_tagged(bmain, sce);
+#else
+            scene_update_for_newframe(bmain, sce, (1<<20) - 1);
+#endif
         } else {
-            export_meshes_threaded(filepath, C, active_layers, instances, check_animated, 0);
+            printf("V-Ray/Blender: Exporting meshes for frame %-32i...\n", sce->r.cfra);
+            export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 0);
         }
         
         BLI_timestr(PIL_check_seconds_timer()-time, time_str);
-        printf("V-Ray/Blender: Exporting meshes done [%s]                   \n", time_str);
+        printf("V-Ray/Blender: Exporting meshes done [%s]%-32s\n", time_str, " ");
+
+        free(filepath);
+
+        return OPERATOR_FINISHED;
     }
 
-    return 0;
+    return OPERATOR_CANCELLED;
 }
 
+
+
+/*
+  OPERATOR
+*/
+static int export_scene_invoke(bContext *C, wmOperator *op, wmEvent *event)
+{
+	/* Scene *scene= CTX_data_scene(C); */
+
+    /* if(!scene) */
+    /*     return OPERATOR_CANCELLED; */
+    
+	/* /\* only one render job at a time *\/ */
+	/* if(WM_jobs_test(CTX_wm_manager(C), scene)) */
+	/* 	return OPERATOR_CANCELLED; */
+
+	/* /\* stop all running jobs, currently previews frustrate Render *\/ */
+	/* WM_jobs_stop_all(CTX_wm_manager(C)); */
+
+	/* /\* handle UI stuff *\/ */
+	/* WM_cursor_wait(1); */
+
+	/* /\* add modal handler for ESC *\/ */
+	/* WM_event_add_modal_handler(C, op); */
+
+	return OPERATOR_RUNNING_MODAL;
+}
+
+static int export_scene_modal(bContext *C, wmOperator *op, wmEvent *event)
+{
+	switch(event->type) {
+		case ESCKEY:
+			/* cancel */
+			return OPERATOR_FINISHED;
+		default:
+			/* nothing to do */
+			return OPERATOR_RUNNING_MODAL;
+	}
+
+	return OPERATOR_RUNNING_MODAL;
+}
+
+static int export_scene_exec(bContext *C, wmOperator *op)
+{
+    Main   *bmain= CTX_data_main(C);
+    Scene  *sce=   CTX_data_scene(C);
+
+    return export_scene(sce, bmain, op);
+}
 
 void VRAY_OT_export_meshes(wmOperatorType *ot)
 {
     /* identifiers */
-    ot->name= "Export meshes";
-    ot->idname= "VRAY_OT_export_meshes";
-    ot->description="Export meshes in .vrscene format.";
+    ot->name=        "Export meshes";
+    ot->idname=      "VRAY_OT_export_meshes";
+    ot->description= "Export meshes in .vrscene format.";
 
     /* api callbacks */
-    ot->exec= export_scene;
+	ot->invoke= export_scene_invoke;
+	ot->modal=  export_scene_modal;
+    ot->exec=   export_scene_exec;
 
     RNA_def_string(ot->srna, "filepath", "", FILE_MAX, "Geometry filepath", "Geometry filepath.");
     RNA_def_boolean(ot->srna, "use_active_layers", 0,  "Active layer",      "Export only active layers.");
@@ -1010,7 +1089,6 @@ void VRAY_OT_export_meshes(wmOperatorType *ot)
     RNA_def_boolean(ot->srna, "debug",             0,  "Debug",             "Debug mode.");
     RNA_def_boolean(ot->srna, "check_animated",    0,  "Check animated",    "Try to detect if mesh is animated.");
 }
-
 
 void ED_operatortypes_exporter(void)
 {

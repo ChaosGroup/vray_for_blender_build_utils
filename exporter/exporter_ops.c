@@ -84,11 +84,6 @@
 #include "RNA_access.h"
 #include "RNA_define.h"
 
-#include "WM_api.h"
-#include "WM_types.h"
-
-#include "MEM_guardedalloc.h"
-
 #ifdef WIN32
 #ifdef htonl
 #undef htonl
@@ -99,6 +94,10 @@
 #include <winsock.h>
 #endif
 
+#include "WM_api.h"
+#include "WM_types.h"
+
+#include "MEM_guardedalloc.h"
 
 #include "exporter_ops.h"
 
@@ -106,7 +105,6 @@
 #define VB_TAGGED
 #define TYPE_UV          5
 #define MAX_MESH_THREADS 16
-
 
 struct Material;
 struct MTex;

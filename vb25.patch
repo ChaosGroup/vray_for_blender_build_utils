@@ -37,7 +37,7 @@
 @@ -4,6 +4,7 @@
  sources = env.Glob('*.c')
  
- incs = '../include ../../blenlib ../../blenkernel ../../makesdna'
+ incs = '../include ../../blenlib ../../blenkernel ../../blenloader ../../makesdna'
 +incs += ' ../../exporter'
  incs += ' ../../windowmanager ../../python ../../makesrna'
  incs += ' #/intern/guardedalloc #/extern/glew/include'

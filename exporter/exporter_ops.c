@@ -102,7 +102,6 @@
 #include "exporter_ops.h"
 
 //#define VB_DEBUG
-#define VB_TAGGED
 #define TYPE_UV          5
 #define MAX_MESH_THREADS 16
 
@@ -987,11 +986,7 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
             /* Export meshes for the start frame */
             sce->r.cfra= fra;
             CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-#ifdef VB_TAGGED
-            scene_update_tagged(bmain, sce);
-#else
             scene_update_for_newframe(bmain, sce, (1<<20) - 1);
-#endif
             export_meshes_threaded(filepath, sce, bmain, active_layers, instances, 0, 0);
             fra+= sce->r.frame_step;
 
@@ -1001,11 +996,7 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
 
                 sce->r.cfra= fra;
                 CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-#ifdef VB_TAGGED
-                scene_update_tagged(bmain, sce);
-#else
                 scene_update_for_newframe(bmain, sce, (1<<20) - 1);
-#endif
                 
                 export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 1);
 
@@ -1014,11 +1005,7 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
 
             sce->r.cfra= cfra;
             CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-#ifdef VB_TAGGED
-            scene_update_tagged(bmain, sce);
-#else
             scene_update_for_newframe(bmain, sce, (1<<20) - 1);
-#endif
         } else {
             printf("V-Ray/Blender: Exporting meshes for frame %-32i\n", sce->r.cfra);
             export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 0);

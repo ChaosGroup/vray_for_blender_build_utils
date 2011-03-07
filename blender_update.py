@@ -276,7 +276,7 @@ BF_NUMJOBS= options.jobs
 if not HOSTNAME.find('vbox') == -1:
 	BF_NUMJOBS= 1
 
-BF_PYTHON_VERSION= '3.1'
+BF_PYTHON_VERSION= '3.2'
 
 patch_cmd= 'patch.exe'
 if PLATFORM == "win32":
@@ -465,9 +465,17 @@ def generate_user_config(filename):
 		for opt in build_options[key]:
 			ofile.write("%s = '%s'\n"%(opt,key))
 
-	ofile.write("BF_PYTHON_VERSION = \'%s\'\n" % BF_PYTHON_VERSION)
+	ofile.write("SUFFIX = 'm'\n")
+	LIB = "lib"
 	if LINUX == 'opensuse' and ARCH == '64bit':
-		ofile.write("BF_PYTHON_LIBPATH = \"/usr/lib64\"\n")
+		LIB = "lib64"
+
+	ofile.write("BF_PYTHON_VERSION = '%s'\n" % BF_PYTHON_VERSION)
+	ofile.write("BF_PYTHON =         '/usr'\n")
+	ofile.write("BF_PYTHON_LIBPATH = '${BF_PYTHON}/%s'\n" % LIB)
+	ofile.write("BF_PYTHON_INC =     '${BF_PYTHON}/include/python${BF_PYTHON_VERSION}' + SUFFIX\n")
+	ofile.write("BF_PYTHON_BINARY =  '${BF_PYTHON}/bin/python${BF_PYTHON_VERSION}'\n")
+	ofile.write("BF_PYTHON_LIB =     'python${BF_PYTHON_VERSION}' + SUFFIX\n")
 
 	if not PLATFORM == "win32":
 		ofile.write("BF_OPENAL_LIB = \'openal alut\'\n")

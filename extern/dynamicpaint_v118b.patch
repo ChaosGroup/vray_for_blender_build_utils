@@ -28,7 +28,7 @@ Index: release/scripts/ui/properties_physics_dynamicpaint.py
 ===================================================================
 --- release/scripts/ui/properties_physics_dynamicpaint.py	(revision 0)
 +++ release/scripts/ui/properties_physics_dynamicpaint.py	(revision 0)
-@@ -0,0 +1,264 @@
+@@ -0,0 +1,271 @@
 +# ##### BEGIN GPL LICENSE BLOCK #####
 +#
 +#  This program is free software; you can redistribute it and/or
@@ -285,11 +285,18 @@ Index: release/scripts/ui/properties_physics_dynamicpaint.py
 +                col.template_color_ramp(paint, "paint_ramp", expand=True)
 +
 +def register():
-+    pass
-+
++    bpy.utils.register_class(PHYSICS_PT_dynamic_paint)
++    bpy.utils.register_class(PHYSICS_PT_dp_output)
++    bpy.utils.register_class(PHYSICS_PT_dp_advanced_canvas)
++    bpy.utils.register_class(PHYSICS_PT_dp_effects)
++    bpy.utils.register_class(PHYSICS_PT_dp_advanced_paint)
 +
 +def unregister():
-+    pass
++    bpy.utils.unregister_class(PHYSICS_PT_dynamic_paint)
++    bpy.utils.unregister_class(PHYSICS_PT_dp_output)
++    bpy.utils.unregister_class(PHYSICS_PT_dp_advanced_canvas)
++    bpy.utils.unregister_class(PHYSICS_PT_dp_effects)
++    bpy.utils.unregister_class(PHYSICS_PT_dp_advanced_paint)
 +
 +if __name__ == "__main__":
 +    register()
@@ -4025,12 +4032,12 @@ Index: source/blender/editors/space_buttons/buttons_context.c
 ===================================================================
 --- source/blender/editors/space_buttons/buttons_context.c	(revision 34669)
 +++ source/blender/editors/space_buttons/buttons_context.c	(working copy)
-@@ -617,7 +617,7 @@
- 			"world", "object", "mesh", "armature", "lattice", "curve",
- 			"meta_ball", "lamp", "camera", "material", "material_slot",
- 			"texture", "texture_slot", "bone", "edit_bone", "pose_bone", "particle_system", "particle_system_editable",
--			"cloth", "soft_body", "fluid", "smoke", "collision", "brush", NULL};
-+			"cloth", "soft_body", "fluid", "smoke", "collision", "brush", "dynamic_paint", NULL};
+@@ -644,7 +644,7 @@
+ 	"world", "object", "mesh", "armature", "lattice", "curve",
+ 	"meta_ball", "lamp", "camera", "material", "material_slot",
+ 	"texture", "texture_slot", "bone", "edit_bone", "pose_bone", "particle_system", "particle_system_editable",
+-	"cloth", "soft_body", "fluid", "smoke", "collision", "brush", NULL};
++	"cloth", "soft_body", "fluid", "smoke", "collision", "brush", "dynamic_paint", NULL};
  
  		CTX_data_dir_set(result, dir);
  		return 1;

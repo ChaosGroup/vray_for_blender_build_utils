@@ -81,6 +81,15 @@ parser.add_option(
 )
 
 parser.add_option(
+	'',
+	'--extern',
+	action= 'store_true',
+	dest= 'extern',
+	default= False,
+	help= 'Apply \"extern\" patches.'
+)
+
+parser.add_option(
 	'-d',
 	'--debug',
 	action= 'store_true',
@@ -573,6 +582,17 @@ if PLATFORM == "win32":
 os.chdir(working_directory)
 
 # Apply V-Ray/Blender patches if needed
+def run_patch(patch_file):
+	if PLATFORM == "win32":
+		cmd= "\"%s\" -Np0 -i %s" % (patch_cmd, patch_file)
+	else:
+		cmd= "patch -Np0 -i %s" % (patch_file)
+
+	if not options.test:
+		os.system(cmd)
+	else:
+		print cmd
+	
 patch_dir= os.path.join(working_directory,'vb25-patch')
 if not options.pure_blender:
 	if os.path.exists(patch_dir):
@@ -593,12 +613,19 @@ if not options.pure_blender:
 		if(os.path.exists(dst)):
 			shutil.rmtree(dst)
 		shutil.copytree(os.path.join(patch_dir, "exporter"), dst)
+
 		os.chdir(blender_dir)
 		sys.stdout.write("Applying vb25 patches...\n")
-		if PLATFORM == "win32":
-			os.system("\"%s\" -Np0 -i %s" % (patch_cmd, os.path.join(patch_dir,"vb25.patch")))
-		else:
-			os.system("patch -Np0 -i %s" % os.path.join(patch_dir,"vb25.patch"))
+		run_patch(os.path.join(patch_dir,"vb25.patch"))
+
+		if options.extern:
+			sys.stdout.write("Applying \"extern\" patches...\n")
+			extern_path= os.path.join(patch_dir,"extern")
+			for f in os.listdir(extern_path):
+				patch_file= os.path.join(extern_path, f)
+
+				run_patch(patch_file)
+			
 
 
 # Generate user settings file

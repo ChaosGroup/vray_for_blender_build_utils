@@ -455,12 +455,11 @@ def generate_user_config(filename):
 	#   'WITH_BF_FHS'
 	#   Use the Unix "Filesystem Hierarchy Standard" rather then a redistributable directory layout
 
-	# MS VC Express doesn't build 64bit apps.
-	# if PLATFORM == "win32" and ARCH == '64bit':
-	# 	build_options['False'].append('WITH_BF_JACK')
-	# 	build_options['False'].append('WITH_BF_SNDFILE')
-	# 	build_options['False'].append('WITH_BF_FFMPEG')
-	# 	build_options['False'].append('WITH_BF_OPENAL')
+	if PLATFORM == "win32" and ARCH == '64bit':
+		build_options['False'].append('WITH_BF_JACK')
+		build_options['False'].append('WITH_BF_SNDFILE')
+		build_options['False'].append('WITH_BF_FFMPEG')
+		build_options['False'].append('WITH_BF_OPENAL')
 
 	if options.with_collada:
 		build_options['True'].append('WITH_BF_COLLADA')
@@ -698,7 +697,7 @@ if not options.debug and options.archive:
 
 	archive_name= "%s-%s-%s%s-%s.tar.bz2" % (project,REV,LINUX,LINUX_VER,ARCH)
 	if PLATFORM == "win32":
-		archive_name= "%s-%s-win32.exe" % (project,REV)
+		archive_name= "%s-%s-win%s.exe" % (project,REV,ARCH[:-3])
 
 	if PLATFORM == "win32":
 		sys.stdout.write("Generating installer: %s\n" % (archive_name))

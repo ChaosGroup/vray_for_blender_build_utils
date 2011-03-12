@@ -28,7 +28,7 @@ Index: release/scripts/ui/properties_physics_dynamicpaint.py
 ===================================================================
 --- release/scripts/ui/properties_physics_dynamicpaint.py	(revision 0)
 +++ release/scripts/ui/properties_physics_dynamicpaint.py	(revision 0)
-@@ -0,0 +1,271 @@
+@@ -0,0 +1,276 @@
 +# ##### BEGIN GPL LICENSE BLOCK #####
 +#
 +#  This program is free software; you can redistribute it and/or
@@ -65,6 +65,11 @@ Index: release/scripts/ui/properties_physics_dynamicpaint.py
 +
 +class PHYSICS_PT_dynamic_paint(PhysicButtonsPanel, bpy.types.Panel):
 +    bl_label = "Dynamic Paint"
++
++    @classmethod
++    def poll(cls, context):
++        md = context.dynamic_paint
++        return md
 +
 +    def draw(self, context):
 +        layout = self.layout

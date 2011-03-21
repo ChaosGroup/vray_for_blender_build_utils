@@ -31,7 +31,7 @@ WITH_BUILDINFO = 'True'
 
 BF_OPENAL_LIB = 'openal alut'
 BF_TWEAK_MODE = 'false'
-BF_PYTHON_VERSION = '3.1'
+BF_PYTHON_VERSION = '3.2'
 BF_NUMJOBS = 4
 
 if PLATFORM == "win32":
@@ -39,8 +39,15 @@ if PLATFORM == "win32":
 	BF_SPLIT_SRC = 'true'
 	BF_BUILDDIR = "C:\\b"
 else:
-	BF_INSTALLDIR = "/opt/vb25"
-	BF_BUILDDIR = "/tmp/build-vb25"
+	SUFFIX =			"m"
+	BF_PYTHON =			"/usr"
+	BF_PYTHON_LIBPATH = "${BF_PYTHON}/lib"
+	BF_PYTHON_INC =		"${BF_PYTHON}/include/python${BF_PYTHON_VERSION}" + SUFFIX
+	BF_PYTHON_BINARY =	"${BF_PYTHON}/bin/python${BF_PYTHON_VERSION}"
+	BF_PYTHON_LIB =		"python${BF_PYTHON_VERSION}" + SUFFIX
+
+	BF_INSTALLDIR = "/opt/blender-2.5"
+	BF_BUILDDIR = "/tmp/build-b25"
 
 	CCFLAGS = ['-pipe','-fPIC','-funsigned-char','-fno-strict-aliasing']
 	CPPFLAGS = ['-DXP_UNIX']

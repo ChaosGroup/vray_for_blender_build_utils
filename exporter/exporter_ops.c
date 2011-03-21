@@ -940,6 +940,11 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
 	char	time_str[32];
 
 	if(!sce) {
+        // Since render context is NULL
+        // we need to get scene pointer from G
+        // when opertor is called from ops.render.render().
+        // If operator is called separetely we use scene
+        // from bContext.
 		// TODO: get current scene not first
 		sce= (Scene*)G.main->scene.first;
 	}
@@ -1055,7 +1060,7 @@ static int export_scene_modal(bContext *C, wmOperator *op, wmEvent *event)
 	switch(event->type) {
 		case ESCKEY:
 			/* cancel */
-			return OPERATOR_FINISHED;
+			return OPERATOR_CANCELLED;
 		default:
 			/* nothing to do */
 			return OPERATOR_RUNNING_MODAL;

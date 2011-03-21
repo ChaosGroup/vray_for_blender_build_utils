@@ -668,7 +668,7 @@ if options.docs:
 			sphinx_doc_gen= "doc/python_api/sphinx_doc_gen.py"
 			os.system("mkdir -p %s" % api_dir)
 			os.chdir(blender_dir)
-			os.system("%s -b -P %s 2>&1 /dev/null" % (os.path.join(install_dir,'blender'),sphinx_doc_gen))
+			os.system("%s -b -P %s" % (os.path.join(install_dir,'blender'), sphinx_doc_gen))
 			os.system("sphinx-build doc/python_api/sphinx-in %s" % api_dir)
 
 

@@ -195,15 +195,12 @@ else:
 (options, args) = parser.parse_args()
 
 
-DEFAULT_INSTALLPATH= ""
-DEFAULT_RELEASEDIR= ""
+DEFAULT_INSTALLPATH= os.path.join(os.getcwd(),"install")
+DEFAULT_RELEASEDIR=  os.path.join(os.getcwd(),"release")
 
 if PLATFORM == "win32":
-	DEFAULT_INSTALLPATH= "C:\\\\release\\\\"
-	DEFAULT_RELEASEDIR= "C:\\\\release\\\\"
-else:
-	DEFAULT_INSTALLPATH= os.path.join(os.getcwd(),"install")
-	DEFAULT_RELEASEDIR= os.path.join(os.getcwd(),"release")
+	DEFAULT_INSTALLPATH= os.path.join("C:\\", "vb25", "install")
+	DEFAULT_RELEASEDIR=  os.path.join("C:\\", "vb25", "release")
 
 LINUX= platform.linux_distribution()[0].lower().strip()
 LINUX_VER= platform.linux_distribution()[1].replace('.','_').strip()
@@ -221,7 +218,7 @@ def get_full_path(path):
 
 project= 'vb25'
 if options.pure_blender:
-	project= 'b25'
+	project= 'blender-2.5'
 
 install_dir= DEFAULT_INSTALLPATH
 if options.installdir:
@@ -624,7 +621,6 @@ if not options.pure_blender:
 				patch_file= os.path.join(extern_path, f)
 
 				run_patch(patch_file)
-			
 
 
 # Generate user settings file
@@ -632,9 +628,11 @@ sys.stdout.write("Generating user-config.py\n")
 if not options.test:
 	generate_user_config(os.path.join(blender_dir,'user-config.py'))
 
+
 # Cleaning release dir
 if PLATFORM == "win32":
 	os.system("rmdir /Q /S %s" % install_dir)
+
 
 # Finally build Blender
 sys.stdout.write("Building %s (%s)\n" % (project,REV))
@@ -679,7 +677,10 @@ if not options.pure_blender:
 	exporter_path= os.path.join(io_scripts_path,'vb25')
 	if not options.test:
 		if os.path.exists(exporter_path):
-			shutil.rmtree(exporter_path)
+			if PLATFORM == "win32":
+				os.system("rmdir /Q /S %s" % exporter_path)
+			else:
+				shutil.rmtree(exporter_path)
 		if options.devel and not options.archive:
 			if not options.test:
 				os.symlink(get_full_path('~/devel/vrayblender/exporter/symlinks'), exporter_path)

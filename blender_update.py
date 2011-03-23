@@ -202,7 +202,7 @@ def my_path_join(*args):
 	if PLATFORM == "win32":
 		path= '/'.join(args)
 		path= path.replace('//','/')
-		return path+'/'
+		return path
 	else:
 		path= os.path.join(*args)
 	return path

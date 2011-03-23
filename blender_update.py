@@ -200,9 +200,8 @@ LINUX_VER= platform.linux_distribution()[1].replace('.','_').strip()
 def my_path_join(*args):
 	path= None
 	if PLATFORM == "win32":
-		path= '\\'.join(args)
-		path= path.replace('\\\\','\\')
-		return path
+		path= '\\\\'.join(args)
+		path= path.replace('\\\\\\\\','\\\\')
 	else:
 		path= os.path.join(*args)
 	return path

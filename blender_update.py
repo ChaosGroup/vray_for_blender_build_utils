@@ -200,8 +200,8 @@ LINUX_VER= platform.linux_distribution()[1].replace('.','_').strip()
 def my_path_join(*args):
 	path= None
 	if PLATFORM == "win32":
-		path= '/'.join(args)
-		path= path.replace('//','/')
+		path= '\\'.join(args)
+		path= path.replace('\\\\','\\')
 		return path
 	else:
 		path= os.path.join(*args)
@@ -537,10 +537,9 @@ if os.path.exists(blender_svn_dir):
 			os.chdir(working_directory)
 			if PLATFORM == "win32":
 				os.system("rmdir /Q /S %s" % blender_dir)
-				os.system("svn export blender-svn blender")
 			else:
 				os.system("rm -rf %s" % blender_dir)
-				os.system("svn export blender-svn blender")
+			os.system("svn export blender-svn blender")
 
 	try:
 		entries= open(my_path_join(blender_svn_dir,'.svn','entries'), 'r').read()

@@ -958,23 +958,23 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
 	}
 
 	if(RNA_property_is_set(op->ptr, "use_active_layers")) {
-		active_layers= RNA_int_get(op->ptr, "use_active_layers");
+		active_layers= RNA_boolean_get(op->ptr, "use_active_layers");
 	}
 
 	if(RNA_property_is_set(op->ptr, "use_animation")) {
-		animation= RNA_int_get(op->ptr, "use_animation");
+		animation= RNA_boolean_get(op->ptr, "use_animation");
 	}
 
 	if(RNA_property_is_set(op->ptr, "use_instances")) {
-		instances= RNA_int_get(op->ptr, "use_instances");
+		instances= RNA_boolean_get(op->ptr, "use_instances");
 	}
 
 	if(RNA_property_is_set(op->ptr, "check_animated")) {
-		check_animated= RNA_int_get(op->ptr, "check_animated");
+		check_animated= RNA_boolean_get(op->ptr, "check_animated");
 	}
 
 	if(RNA_property_is_set(op->ptr, "debug")) {
-		debug= RNA_int_get(op->ptr, "debug");
+		debug= RNA_boolean_get(op->ptr, "debug");
 	}
 
 	time= PIL_check_seconds_timer();

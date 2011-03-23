@@ -194,16 +194,25 @@ else:
 
 (options, args) = parser.parse_args()
 
-
-DEFAULT_INSTALLPATH= os.path.join(os.getcwd(),"install")
-DEFAULT_RELEASEDIR=  os.path.join(os.getcwd(),"release")
-
-if PLATFORM == "win32":
-	DEFAULT_INSTALLPATH= os.path.join("C:\\", "vb25", "install")
-	DEFAULT_RELEASEDIR=  os.path.join("C:\\", "vb25", "release")
-
 LINUX= platform.linux_distribution()[0].lower().strip()
 LINUX_VER= platform.linux_distribution()[1].replace('.','_').strip()
+
+def my_path_join(*args):
+	path= None
+	if PLATFORM == "win32":
+		path= '/'.join(args)
+		path= path.replace('//','/')
+		return path+'/'
+	else:
+		path= os.path.join(*args)
+	return path
+
+DEFAULT_INSTALLPATH= my_path_join(os.getcwd(),"install")
+DEFAULT_RELEASEDIR=  my_path_join(os.getcwd(),"release")
+
+if PLATFORM == "win32":
+	DEFAULT_INSTALLPATH= my_path_join("C","vb25","install")
+	DEFAULT_RELEASEDIR=  my_path_join("C","vb25","release")
 
 
 '''
@@ -211,7 +220,7 @@ LINUX_VER= platform.linux_distribution()[1].replace('.','_').strip()
 '''
 def get_full_path(path):
 	if(path[0:1] == '~'):
-		path= os.path.join(os.environ["HOME"],path[2:])
+		path= my_path_join(os.environ["HOME"],path[2:])
 	elif(path[0:1] != '/'):
 		path= os.path.abspath(path)
 	return path
@@ -223,7 +232,7 @@ if options.pure_blender:
 install_dir= DEFAULT_INSTALLPATH
 if options.installdir:
 	install_dir= get_full_path(options.installdir)
-install_dir= os.path.join(install_dir,project)
+install_dir= my_path_join(install_dir,project)
 sys.stdout.write("Installation directory: %s\n" % install_dir)
 
 if not os.path.exists(install_dir):
@@ -249,7 +258,7 @@ def which(program):
 			return program
 	else:
 		for path in os.environ["PATH"].split(os.pathsep):
-			exe_file = os.path.join(path, program)
+			exe_file = my_path_join(path, program)
 			if is_exe(exe_file):
 				return exe_file
 
@@ -291,7 +300,7 @@ if PLATFORM == "win32":
 	for path in path_list:
 		if path.find('Git') != -1:
 			if path.find('cmd') != -1:
-				patch_cmd= os.path.join(os.path.normpath(os.path.join(path,'..','bin')),'patch.exe')
+				patch_cmd= my_path_join(os.path.normpath(my_path_join(path,'..','bin')),'patch.exe')
 				sys.stdout.write("Using patch from Git (%s)\n" % patch_cmd)
 				break
 
@@ -325,7 +334,7 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 	# based on official script by jesterKing
 	#
 
-	ns = open(os.path.join(patch_dir,'installer','template.nsi'),"r")
+	ns = open(my_path_join(patch_dir,'installer','template.nsi'),"r")
 	ns_cnt = str(ns.read())
 	ns.close()
 	
@@ -343,12 +352,12 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 	dot_blender_add= ""
 	dot_blender_del= ""
 	scripts_dirs= []
-	for root, dirs, files in os.walk(os.path.join(BF_INSTALLDIR)):
+	for root, dirs, files in os.walk(my_path_join(BF_INSTALLDIR)):
 		root_path= string.replace(root, BF_INSTALLDIR, "")
 		dot_blender_add+= "\n  SetOutPath \"$BLENDERHOME%s\"\n"%(root_path)
 		scripts_dirs.append(root_path)
 		for f in os.listdir(root):
-			f_path= os.path.join(root,f)
+			f_path= my_path_join(root,f)
 			if os.path.isdir(f_path) == 0:
 				dot_blender_del+= "  Delete \"$INSTDIR%s%s\"\n"%(root_path,f)
 				dot_blender_add+= "  File \"%s\"\n"%(f_path)
@@ -375,11 +384,11 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 	ns_cnt = string.replace(ns_cnt, "DISTDIR",  BF_INSTALLDIR)
 	ns_cnt = string.replace(ns_cnt, "SHORTVER", VERSION)
 	ns_cnt = string.replace(ns_cnt, "VERSION",  VERSION)
-	ns_cnt = string.replace(ns_cnt, "RELDIR",   os.path.join(patch_dir,'installer'))
+	ns_cnt = string.replace(ns_cnt, "RELDIR",   my_path_join(patch_dir,'installer'))
 	ns_cnt = string.replace(ns_cnt, "[INSTALLER_DIR]", release_dir)
 	ns_cnt = string.replace(ns_cnt, "[INSTALLER_NAME]", INSTALLER_NAME)
 
-	inst_nsis= os.path.join(working_directory,"installer.nsi")
+	inst_nsis= my_path_join(working_directory,"installer.nsi")
 	new_nsis = open(inst_nsis, 'w')
 	new_nsis.write(ns_cnt)
 	new_nsis.close()
@@ -517,8 +526,8 @@ notify("%s SVN update" % project, "Started...")
 os.chdir(working_directory)
 
 # Update or obtain Blender SVN
-blender_dir= os.path.join(working_directory,'blender')
-blender_svn_dir= os.path.join(working_directory,'blender-svn')
+blender_dir= my_path_join(working_directory,'blender')
+blender_svn_dir= my_path_join(working_directory,'blender-svn')
 if os.path.exists(blender_svn_dir):
 	os.chdir(blender_svn_dir)
 	if options.update:
@@ -534,7 +543,7 @@ if os.path.exists(blender_svn_dir):
 				os.system("svn export blender-svn blender")
 
 	try:
-		entries= open(os.path.join(blender_svn_dir,'.svn','entries'), 'r').read()
+		entries= open(my_path_join(blender_svn_dir,'.svn','entries'), 'r').read()
 	except IOError:
 		pass
 	else:
@@ -550,7 +559,7 @@ else:
 		os.system("mv blender blender-svn")
 		os.system("svn export blender-svn blender")
 
-#version_file= open(os.path.join(blender_svn_dir,"release","VERSION"),'r')
+#version_file= open(my_path_join(blender_svn_dir,"release","VERSION"),'r')
 #VERSION= version_file.read().split('-')[0]
 #version_file.close()
 
@@ -558,9 +567,9 @@ os.chdir(working_directory)
 
 # Update 'lib' on Windows
 if PLATFORM == "win32":
-	lib_dir= os.path.join(working_directory,'lib','windows')
+	lib_dir= my_path_join(working_directory,'lib','windows')
 	# if ARCH == '64bit':
-	# 	lib_dir= os.path.join(working_directory,'lib','win64')
+	# 	lib_dir= my_path_join(working_directory,'lib','win64')
 	if os.path.exists(lib_dir):
 		os.chdir(lib_dir)
 		if options.update:
@@ -589,7 +598,7 @@ def run_patch(patch_file):
 	else:
 		print cmd
 	
-patch_dir= os.path.join(working_directory,'vb25-patch')
+patch_dir= my_path_join(working_directory,'vb25-patch')
 if not options.pure_blender:
 	if os.path.exists(patch_dir):
 		os.chdir(patch_dir)
@@ -604,21 +613,21 @@ if not options.pure_blender:
 	os.chdir(working_directory)
 
 	if not options.test:
-		shutil.copy(os.path.join(patch_dir, "splash.png.c"), os.path.join(blender_dir,"source","blender","editors","datafiles"))
-		dst= os.path.join(blender_dir,"source","blender","exporter")
+		shutil.copy(my_path_join(patch_dir, "splash.png.c"), my_path_join(blender_dir,"source","blender","editors","datafiles"))
+		dst= my_path_join(blender_dir,"source","blender","exporter")
 		if(os.path.exists(dst)):
 			shutil.rmtree(dst)
-		shutil.copytree(os.path.join(patch_dir, "exporter"), dst)
+		shutil.copytree(my_path_join(patch_dir, "exporter"), dst)
 
 		os.chdir(blender_dir)
 		sys.stdout.write("Applying vb25 patches...\n")
-		run_patch(os.path.join(patch_dir,"vb25.patch"))
+		run_patch(my_path_join(patch_dir,"vb25.patch"))
 
 		if options.extern:
 			sys.stdout.write("Applying \"extern\" patches...\n")
-			extern_path= os.path.join(patch_dir,"extern")
+			extern_path= my_path_join(patch_dir,"extern")
 			for f in os.listdir(extern_path):
-				patch_file= os.path.join(extern_path, f)
+				patch_file= my_path_join(extern_path, f)
 
 				run_patch(patch_file)
 
@@ -626,7 +635,7 @@ if not options.pure_blender:
 # Generate user settings file
 sys.stdout.write("Generating user-config.py\n")
 if not options.test:
-	generate_user_config(os.path.join(blender_dir,'user-config.py'))
+	generate_user_config(my_path_join(blender_dir,'user-config.py'))
 
 
 # Cleaning release dir
@@ -648,7 +657,7 @@ if not options.test:
 
 # Generating .desktop file
 if PLATFORM == "linux2" and options.desktop:
-	desktop_file= os.path.join(working_directory, "%s.desktop" % project)
+	desktop_file= my_path_join(working_directory, "%s.desktop" % project)
 	sys.stdout.write("Generating .desktop file: %s\n" % (os.path.basename(desktop_file)))
 	if not options.test and not options.devel:
 		generate_desktop(desktop_file)
@@ -660,21 +669,21 @@ if options.docs:
 	if PLATFORM == "win32":
 		sys.stdout.write("Docs generation on Windows is not supported\n")
 	else:
-		api_dir= os.path.join(install_dir,'api')
+		api_dir= my_path_join(install_dir,'api')
 		sys.stdout.write("Generating docs: %s\n" % (api_dir))
 		if not options.test:
 			sphinx_doc_gen= "doc/python_api/sphinx_doc_gen.py"
 			os.system("mkdir -p %s" % api_dir)
 			os.chdir(blender_dir)
-			os.system("%s -b -P %s" % (os.path.join(install_dir,'blender'), sphinx_doc_gen))
+			os.system("%s -b -P %s" % (my_path_join(install_dir,'blender'), sphinx_doc_gen))
 			os.system("sphinx-build doc/python_api/sphinx-in %s" % api_dir)
 
 
 # Adding exporter
 if not options.pure_blender:
 	sys.stdout.write("Adding vb25 exporter...\n")
-	io_scripts_path= os.path.join(install_dir,VERSION,'scripts','io')
-	exporter_path= os.path.join(io_scripts_path,'vb25')
+	io_scripts_path= my_path_join(install_dir,VERSION,'scripts','startup')
+	exporter_path= my_path_join(io_scripts_path,'vb25')
 	if not options.test:
 		if os.path.exists(exporter_path):
 			if PLATFORM == "win32":
@@ -712,7 +721,7 @@ if not options.debug and options.archive:
 		else:
 			os.chdir(install_dir)
 			os.chdir('..')
-			os.system("tar jcf %s %s" % (os.path.join(release_dir,archive_name),project))
+			os.system("tar jcf %s %s" % (my_path_join(release_dir,archive_name),project))
 
 
 notify("%s SVN update" % project, "Finished!")

@@ -211,8 +211,8 @@ DEFAULT_INSTALLPATH= my_path_join(os.getcwd(),"install")
 DEFAULT_RELEASEDIR=  my_path_join(os.getcwd(),"release")
 
 if PLATFORM == "win32":
-	DEFAULT_INSTALLPATH= my_path_join("C","vb25","install")
-	DEFAULT_RELEASEDIR=  my_path_join("C","vb25","release")
+	DEFAULT_INSTALLPATH= my_path_join("C:","vb25","install")
+	DEFAULT_RELEASEDIR=  my_path_join("C:","vb25","release")
 
 
 '''

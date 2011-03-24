@@ -481,7 +481,12 @@ def generate_user_config(filename):
 	ofile.write("BF_PYTHON_VERSION = '%s'\n" % BF_PYTHON_VERSION)
 
 	if PLATFORM == "linux2":
-		ofile.write("SUFFIX = 'm'\n")
+		SUFFIX= ""
+		for s in ('m', 'mu', 'd', 'dmu'):
+			if os.path.exists("/usr/include/python3.2"+s):
+				SUFFIX= s
+				break
+		ofile.write("SUFFIX = '%s'\n" % SUFFIX)
 		LIB = "lib"
 		if LINUX == 'opensuse' and ARCH == '64bit':
 			LIB = "lib64"

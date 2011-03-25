@@ -682,7 +682,6 @@ static void append_object(Scene *sce, LinkNode **objects, LinkNode **meshes, Obj
 
 	PointerRNA	 rna_me;
 	PointerRNA	 VRayMesh;
-	PointerRNA	 GeomMeshFile;
 
 	if(ob->dup_group) {
 		gobject= (GroupObject*)ob->dup_group->gobject.first;
@@ -728,6 +727,10 @@ static void append_object(Scene *sce, LinkNode **objects, LinkNode **meshes, Obj
 		RNA_id_pointer_create(&me->id, &rna_me);
 		if(RNA_struct_find_property(&rna_me, "vray")) {
 			VRayMesh= RNA_pointer_get(&rna_me, "vray");
+			if(RNA_struct_find_property(&VRayMesh, "override")) {
+                if(RNA_boolean_get(&VRayMesh, "override"))
+                    return;
+            }
 			if(RNA_struct_find_property(&VRayMesh, "GeomMeshFile")) {
 				GeomMeshFile= RNA_pointer_get(&VRayMesh, "GeomMeshFile");
 				if(RNA_boolean_get(&GeomMeshFile, "use"))

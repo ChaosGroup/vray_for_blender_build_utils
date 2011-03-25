@@ -39,14 +39,13 @@
 #include "BKE_DerivedMesh.h"
 #include "BKE_fcurve.h"
 #include "BKE_animsys.h"
-
+#include "BKE_particle.h"
 #include "BKE_global.h"
 #include "BKE_report.h"
 #include "BKE_object.h"
 #include "BKE_mesh.h"
 #include "BKE_curve.h"
 #include "BKE_bvhutils.h"
-
 #include "BKE_customdata.h"
 #include "BKE_anim.h"
 #include "BKE_depsgraph.h"
@@ -71,6 +70,7 @@
 #include "DNA_armature_types.h"
 #include "DNA_modifier_types.h"
 #include "DNA_windowmanager_types.h"
+#include "DNA_particle_types.h"
 
 #include "BLI_fileops.h"
 #include "BLI_listbase.h"
@@ -218,7 +218,8 @@ static char *clean_string(char *str)
 }
 
 
-static int write_edge_visibility(FILE *gfile, int k, unsigned long int *ev)
+static int write_edge_visibility(FILE *gfile,
+                                 int k, unsigned long int *ev)
 {
 	if(k == 9) {
 		fprintf(gfile, "%08X", htonl(*(int*)ev));
@@ -226,6 +227,98 @@ static int write_edge_visibility(FILE *gfile, int k, unsigned long int *ev)
 		return 0;
 	}
 	return k + 1;
+}
+
+
+static void write_hair(FILE *gfile,
+                       Scene *sce, Object *ob)
+{
+    ModifierData *md;
+
+    ParticleSystem   *psys;
+    ParticleSettings *pset;
+
+    ParticleSystemModifierData *psmd= NULL;
+
+	ParticleData     *pa;
+	/* ChildParticle    *ch; */
+
+    HairKey *hkey;
+    
+    float    hairmat[4][4];
+    float    segment[3];
+    float    width;
+
+    int i, s;
+
+    for(md= ob->modifiers.first; md; md= md->next) {
+        if(md->type == eModifierType_ParticleSystem) {
+            psmd= (ParticleSystemModifierData*)md;
+
+            if(!psmd || !psmd->dm || !psmd->psys) {
+                return;
+            }
+
+            psys= psmd->psys;
+            pset= psys->part;
+
+            fprintf(gfile, "GeomMayaHair HAIR%s%s {", clean_string(ob->id.name+2), clean_string(psys->name));
+
+
+            fprintf(gfile, "\n\tnum_hair_vertices= interpolate((%d,ListIntHex(\"", sce->r.cfra);
+            for(i= 0, pa= psys->particles; i < psys->totpart; ++i, ++pa) {
+                fprintf(gfile, "%08X", htonl(*(int*)&(pa->totkey)));
+            }
+
+            /* for(i= 0, ch= psys->child; i < psys->totchild; ++i, ++ch) { */
+            /*     printf("\033[0;32mV-Ray/Blender:\033[0m Child: %i\n", psys->totchild); */
+
+            /* } */
+            fprintf(gfile,"\")));");
+
+
+            fprintf(gfile, "\n\thair_vertices= interpolate((%d,ListVectorHex(\"", sce->r.cfra);
+            for(i= 0, pa= psys->particles; i < psys->totpart; ++i, ++pa) {
+                if(debug) {
+                    printf("\033[0;32mV-Ray/Blender:\033[0m Particle system: %s => Hair: %i\r", psys->name, i + 1);
+                    fflush(stdout);
+                }
+
+                for(s= 0, hkey= pa->hair; s < pa->totkey; ++s, ++hkey) {
+                    psys_mat_hair_to_object(ob, psmd->dm, psmd->psys->part->from, pa, hairmat);
+
+                    copy_v3_v3(segment, hkey->co);
+                    mul_m4_v3(hairmat, segment);
+
+                    /* printf("\033[0;32mV-Ray/Blender:\033[0m   Global segment [%.2f,%.2f,%.2f]\n", */
+                    /*        segment[0], segment[1], segment[2]); */
+
+                    fprintf(gfile, "%08X%08X%08X",
+                            htonl(*(int*)&(segment[0])),
+                            htonl(*(int*)&(segment[1])),
+                            htonl(*(int*)&(segment[2])));
+                }
+            }
+            fprintf(gfile,"\")));");
+
+
+            fprintf(gfile, "\n\twidths= interpolate((%d,ListFloatHex(\"", sce->r.cfra);
+            for(i= 0, pa= psys->particles; i < psys->totpart; ++i, ++pa) {
+                for(s= 0, hkey= pa->hair; s < pa->totkey; ++s, ++hkey) {
+                    width= 0.002;
+
+                    fprintf(gfile, "%08X", htonl(*(int*)&(width)));
+                }
+            }
+            fprintf(gfile,"\")));\n");
+
+            if(debug) {
+                printf("\n");
+            }
+
+            fprintf(gfile,"}\n\n");
+        }
+    }
 }
 
 
@@ -647,6 +740,8 @@ static void *export_meshes_thread(void *ptr)
 			pthread_mutex_unlock(&mtx);
 
 			if(mesh) {
+                write_hair(gfile, sce, ob);
+
 				write_mesh(gfile, sce, ob, mesh, td->uvs, td->instances);
 			
 				pthread_mutex_lock(&mtx);

@@ -1,10 +1,22 @@
-Index: release/scripts/ui/properties_data_modifier.py
+Index: release/scripts/startup/bl_ui/__init__.py
 ===================================================================
---- release/scripts/ui/properties_data_modifier.py	(revision 34669)
-+++ release/scripts/ui/properties_data_modifier.py	(working copy)
-@@ -238,6 +238,9 @@
-         col = split.column()
-         col.prop(md, "strength")
+--- release/scripts/startup/bl_ui/__init__.py	(revision 35669)
++++ release/scripts/startup/bl_ui/__init__.py	(working copy)
+@@ -43,6 +43,7 @@
+     "properties_particle",
+     "properties_physics_cloth",
+     "properties_physics_common",
++    "properties_physics_dynamicpaint",
+     "properties_physics_field",
+     "properties_physics_fluid",
+     "properties_physics_smoke",
+Index: release/scripts/startup/bl_ui/properties_data_modifier.py
+===================================================================
+--- release/scripts/startup/bl_ui/properties_data_modifier.py	(revision 35669)
++++ release/scripts/startup/bl_ui/properties_data_modifier.py	(working copy)
+@@ -232,6 +232,9 @@
+         row.prop(md, "mid_level")
+         row.prop(md, "strength")
  
 +    def DYNAMIC_PAINT(self, layout, ob, md):
 +        layout.label(text="See Dynamic Paint panel.")
@@ -12,10 +24,10 @@ Index: release/scripts/ui/properties_data_modifier.py
      def EDGE_SPLIT(self, layout, ob, md):
          split = layout.split()
  
-Index: release/scripts/ui/properties_physics_common.py
+Index: release/scripts/startup/bl_ui/properties_physics_common.py
 ===================================================================
---- release/scripts/ui/properties_physics_common.py	(revision 34669)
-+++ release/scripts/ui/properties_physics_common.py	(working copy)
+--- release/scripts/startup/bl_ui/properties_physics_common.py	(revision 35669)
++++ release/scripts/startup/bl_ui/properties_physics_common.py	(working copy)
 @@ -64,6 +64,7 @@
          if(ob.type == 'MESH'):
              physics_add(self, col, context.collision, "Collision", 'COLLISION', 'MOD_PHYSICS', False)
@@ -24,11 +36,11 @@ Index: release/scripts/ui/properties_physics_common.py
  
          col = split.column()
  
-Index: release/scripts/ui/properties_physics_dynamicpaint.py
+Index: release/scripts/startup/bl_ui/properties_physics_dynamicpaint.py
 ===================================================================
---- release/scripts/ui/properties_physics_dynamicpaint.py	(revision 0)
-+++ release/scripts/ui/properties_physics_dynamicpaint.py	(revision 0)
-@@ -0,0 +1,276 @@
+--- release/scripts/startup/bl_ui/properties_physics_dynamicpaint.py	(revision 0)
++++ release/scripts/startup/bl_ui/properties_physics_dynamicpaint.py	(revision 0)
+@@ -0,0 +1,264 @@
 +# ##### BEGIN GPL LICENSE BLOCK #####
 +#
 +#  This program is free software; you can redistribute it and/or
@@ -60,16 +72,11 @@ Index: release/scripts/ui/properties_physics_dynamicpaint.py
 +    def poll(cls, context):
 +        ob = context.object
 +        rd = context.scene.render
-+        return (ob and ob.type == 'MESH') and (not rd.use_game_engine)
++        return (ob and ob.type == 'MESH') and (not rd.use_game_engine) and (context.dynamic_paint)
 +
 +
 +class PHYSICS_PT_dynamic_paint(PhysicButtonsPanel, bpy.types.Panel):
 +    bl_label = "Dynamic Paint"
-+
-+    @classmethod
-+    def poll(cls, context):
-+        md = context.dynamic_paint
-+        return md
 +
 +    def draw(self, context):
 +        layout = self.layout
@@ -290,26 +297,19 @@ Index: release/scripts/ui/properties_physics_dynamicpaint.py
 +                col.template_color_ramp(paint, "paint_ramp", expand=True)
 +
 +def register():
-+    bpy.utils.register_class(PHYSICS_PT_dynamic_paint)
-+    bpy.utils.register_class(PHYSICS_PT_dp_output)
-+    bpy.utils.register_class(PHYSICS_PT_dp_advanced_canvas)
-+    bpy.utils.register_class(PHYSICS_PT_dp_effects)
-+    bpy.utils.register_class(PHYSICS_PT_dp_advanced_paint)
++    bpy.utils.register_module(__name__)
++
 +
 +def unregister():
-+    bpy.utils.unregister_class(PHYSICS_PT_dynamic_paint)
-+    bpy.utils.unregister_class(PHYSICS_PT_dp_output)
-+    bpy.utils.unregister_class(PHYSICS_PT_dp_advanced_canvas)
-+    bpy.utils.unregister_class(PHYSICS_PT_dp_effects)
-+    bpy.utils.unregister_class(PHYSICS_PT_dp_advanced_paint)
++    bpy.utils.register_module(__name__)
 +
 +if __name__ == "__main__":
 +    register()
 Index: source/blender/blenkernel/BKE_bvhutils.h
 ===================================================================
---- source/blender/blenkernel/BKE_bvhutils.h	(revision 34669)
+--- source/blender/blenkernel/BKE_bvhutils.h	(revision 35669)
 +++ source/blender/blenkernel/BKE_bvhutils.h	(working copy)
-@@ -105,6 +105,11 @@
+@@ -108,6 +108,11 @@
   */
  void free_bvhtree_from_mesh(struct BVHTreeFromMesh *data);
  
@@ -416,9 +416,9 @@ Index: source/blender/blenkernel/BKE_dynamicpaint.h
 +#endif /* BKE_DYNAMIC_PAINT_H_ */
 Index: source/blender/blenkernel/CMakeLists.txt
 ===================================================================
---- source/blender/blenkernel/CMakeLists.txt	(revision 34669)
+--- source/blender/blenkernel/CMakeLists.txt	(revision 35669)
 +++ source/blender/blenkernel/CMakeLists.txt	(working copy)
-@@ -84,6 +84,7 @@
+@@ -85,6 +85,7 @@
  	intern/deform.c
  	intern/depsgraph.c
  	intern/displist.c
@@ -428,9 +428,9 @@ Index: source/blender/blenkernel/CMakeLists.txt
  	intern/fcurve.c
 Index: source/blender/blenkernel/intern/bvhutils.c
 ===================================================================
---- source/blender/blenkernel/intern/bvhutils.c	(revision 34669)
+--- source/blender/blenkernel/intern/bvhutils.c	(revision 35669)
 +++ source/blender/blenkernel/intern/bvhutils.c	(working copy)
-@@ -45,7 +45,7 @@
+@@ -50,7 +50,7 @@
  
  /* Math stuff for ray casting on mesh faces and for nearest surface */
  
@@ -439,7 +439,7 @@ Index: source/blender/blenkernel/intern/bvhutils.c
  {
  	float dist;
  
-@@ -78,7 +78,7 @@
+@@ -83,7 +83,7 @@
   * Function adapted from David Eberly's distance tools (LGPL)
   * http://www.geometrictools.com/LibFoundation/Distance/Distance.html
   */
@@ -1047,7 +1047,7 @@ Index: source/blender/blenkernel/intern/dynamicpaint.c
 +		BB2d *faceBB = NULL;
 +		char uvname[32];
 +
-+		if (!dm) { return 0;}
++		if (!dm) { dpError(canvas, "Canvas mesh not updated."); return 0;}
 +		numOfFaces = dm->getNumFaces(dm);
 +
 +
@@ -3533,7 +3533,7 @@ Index: source/blender/blenkernel/intern/dynamicpaint.c
 +	int frames;
 +
 +	canvas = pmd->canvas;
-+	if (!canvas) {printf("DynamicPaint bake failed: Invalid canvas.\n"); return 0;}
++	if (!canvas) {dpError(canvas, "Invalid canvas."); return 0;}
 +
 +	frames = canvas->end_frame - canvas->start_frame + 1;
 +	if (frames <= 0) {dpError(canvas, "No frames to bake."); return 0;}
@@ -3829,9 +3829,9 @@ Index: source/blender/blenkernel/intern/dynamicpaint.c
 +
 Index: source/blender/blenkernel/intern/particle.c
 ===================================================================
---- source/blender/blenkernel/intern/particle.c	(revision 34669)
+--- source/blender/blenkernel/intern/particle.c	(revision 35669)
 +++ source/blender/blenkernel/intern/particle.c	(working copy)
-@@ -44,6 +44,7 @@
+@@ -49,6 +49,7 @@
  #include "DNA_particle_types.h"
  #include "DNA_smoke_types.h"
  #include "DNA_scene_types.h"
@@ -3839,7 +3839,7 @@ Index: source/blender/blenkernel/intern/particle.c
  
  #include "BLI_blenlib.h"
  #include "BLI_math.h"
-@@ -3445,6 +3446,14 @@
+@@ -3462,6 +3463,14 @@
  				smd->flow->psys = NULL;
  	}
  
@@ -3856,9 +3856,9 @@ Index: source/blender/blenkernel/intern/particle.c
  	BLI_remlink(&ob->modifiers, psmd);
 Index: source/blender/blenlib/BLI_math_geom.h
 ===================================================================
---- source/blender/blenlib/BLI_math_geom.h	(revision 34669)
+--- source/blender/blenlib/BLI_math_geom.h	(revision 35669)
 +++ source/blender/blenlib/BLI_math_geom.h	(working copy)
-@@ -56,6 +56,7 @@
+@@ -60,6 +60,7 @@
  
  float dist_to_line_v2(float p[2], float l1[2], float l2[2]);
  float dist_to_line_segment_v2(float p[2], float l1[2], float l2[2]);
@@ -3868,9 +3868,9 @@ Index: source/blender/blenlib/BLI_math_geom.h
  float closest_to_line_v3(float r[3], const float p[3], const float l1[3], const float l2[3]);
 Index: source/blender/blenlib/intern/math_geom.c
 ===================================================================
---- source/blender/blenlib/intern/math_geom.c	(revision 34669)
+--- source/blender/blenlib/intern/math_geom.c	(revision 35669)
 +++ source/blender/blenlib/intern/math_geom.c	(working copy)
-@@ -206,6 +206,21 @@
+@@ -211,6 +211,21 @@
  	return (float)sqrt(rc[0]*rc[0]+ rc[1]*rc[1]);
  }
  
@@ -3894,9 +3894,9 @@ Index: source/blender/blenlib/intern/math_geom.c
  {
 Index: source/blender/blenloader/intern/readfile.c
 ===================================================================
---- source/blender/blenloader/intern/readfile.c	(revision 34669)
+--- source/blender/blenloader/intern/readfile.c	(revision 35669)
 +++ source/blender/blenloader/intern/readfile.c	(working copy)
-@@ -53,6 +53,7 @@
+@@ -58,6 +58,7 @@
  #include "DNA_cloth_types.h"
  #include "DNA_controller_types.h"
  #include "DNA_constraint_types.h"
@@ -3904,7 +3904,7 @@ Index: source/blender/blenloader/intern/readfile.c
  #include "DNA_effect_types.h"
  #include "DNA_fileglobal_types.h"
  #include "DNA_genfile.h"
-@@ -3890,6 +3891,33 @@
+@@ -4015,6 +4016,33 @@
  
  			}
  		}
@@ -3940,9 +3940,9 @@ Index: source/blender/blenloader/intern/readfile.c
  			CollisionModifierData *collmd = (CollisionModifierData*) md;
 Index: source/blender/blenloader/intern/writefile.c
 ===================================================================
---- source/blender/blenloader/intern/writefile.c	(revision 34669)
+--- source/blender/blenloader/intern/writefile.c	(revision 35669)
 +++ source/blender/blenloader/intern/writefile.c	(working copy)
-@@ -94,6 +94,7 @@
+@@ -99,6 +99,7 @@
  #include "DNA_cloth_types.h"
  #include "DNA_constraint_types.h"
  #include "DNA_controller_types.h"
@@ -3950,7 +3950,7 @@ Index: source/blender/blenloader/intern/writefile.c
  #include "DNA_genfile.h"
  #include "DNA_group_types.h"
  #include "DNA_gpencil_types.h"
-@@ -1236,6 +1237,20 @@
+@@ -1250,6 +1251,20 @@
  			FluidsimModifierData *fluidmd = (FluidsimModifierData*) md;
  			
  			writestruct(wd, DATA, "FluidsimSettings", 1, fluidmd->fss);
@@ -3973,17 +3973,17 @@ Index: source/blender/blenloader/intern/writefile.c
  			
 Index: source/blender/editors/interface/interface_templates.c
 ===================================================================
---- source/blender/editors/interface/interface_templates.c	(revision 34669)
+--- source/blender/editors/interface/interface_templates.c	(revision 35669)
 +++ source/blender/editors/interface/interface_templates.c	(working copy)
-@@ -723,7 +723,7 @@
+@@ -725,7 +725,7 @@
  		uiBlockBeginAlign(block);
  		/* Softbody not allowed in this situation, enforce! */
  		if ( ((md->type!=eModifierType_Softbody && md->type!=eModifierType_Collision) || !(ob->pd && ob->pd->deflect)) 
 -			&& (md->type!=eModifierType_Surface) ) 
 +			&& !ELEM(md->type, eModifierType_Surface, eModifierType_DynamicPaint) ) 
  		{
- 			uiItemR(row, &ptr, "show_render", 0, "", ICON_NULL);
- 			uiItemR(row, &ptr, "show_viewport", 0, "", ICON_NULL);
+ 			uiItemR(row, &ptr, "show_render", 0, "", ICON_NONE);
+ 			uiItemR(row, &ptr, "show_viewport", 0, "", ICON_NONE);
 @@ -777,7 +777,7 @@
  		box= uiLayoutBox(column);
  		row= uiLayoutRow(box, 0);
@@ -3995,9 +3995,9 @@ Index: source/blender/editors/interface/interface_templates.c
  			
 Index: source/blender/editors/physics/physics_intern.h
 ===================================================================
---- source/blender/editors/physics/physics_intern.h	(revision 34669)
+--- source/blender/editors/physics/physics_intern.h	(revision 35669)
 +++ source/blender/editors/physics/physics_intern.h	(working copy)
-@@ -91,6 +91,9 @@
+@@ -96,6 +96,9 @@
  /* physics_fluid.c */
  void FLUID_OT_bake(struct wmOperatorType *ot);
  
@@ -4009,9 +4009,9 @@ Index: source/blender/editors/physics/physics_intern.h
  void PTCACHE_OT_free_bake_all(struct wmOperatorType *ot);
 Index: source/blender/editors/physics/physics_ops.c
 ===================================================================
---- source/blender/editors/physics/physics_ops.c	(revision 34669)
+--- source/blender/editors/physics/physics_ops.c	(revision 35669)
 +++ source/blender/editors/physics/physics_ops.c	(working copy)
-@@ -152,6 +152,13 @@
+@@ -157,6 +157,13 @@
  	WM_operatortype_append(PTCACHE_OT_remove);
  }
  
@@ -4025,7 +4025,7 @@ Index: source/blender/editors/physics/physics_ops.c
  //static void keymap_pointcache(wmWindowManager *wm)
  //{
  //	wmKeyMap *keymap= WM_keymap_find(wm, "Pointcache", 0, 0);
-@@ -170,6 +177,7 @@
+@@ -175,6 +182,7 @@
  	operatortypes_boids();
  	operatortypes_fluid();
  	operatortypes_pointcache();
@@ -4035,18 +4035,18 @@ Index: source/blender/editors/physics/physics_ops.c
  void ED_keymap_physics(wmKeyConfig *keyconf)
 Index: source/blender/editors/space_buttons/buttons_context.c
 ===================================================================
---- source/blender/editors/space_buttons/buttons_context.c	(revision 34669)
+--- source/blender/editors/space_buttons/buttons_context.c	(revision 35669)
 +++ source/blender/editors/space_buttons/buttons_context.c	(working copy)
-@@ -644,7 +644,7 @@
+@@ -647,7 +647,7 @@
  	"world", "object", "mesh", "armature", "lattice", "curve",
  	"meta_ball", "lamp", "camera", "material", "material_slot",
  	"texture", "texture_slot", "bone", "edit_bone", "pose_bone", "particle_system", "particle_system_editable",
 -	"cloth", "soft_body", "fluid", "smoke", "collision", "brush", NULL};
 +	"cloth", "soft_body", "fluid", "smoke", "collision", "brush", "dynamic_paint", NULL};
  
- 		CTX_data_dir_set(result, dir);
- 		return 1;
-@@ -813,6 +813,16 @@
+ int buttons_context(const bContext *C, const char *member, bContextDataResult *result)
+ {
+@@ -859,6 +859,16 @@
  		set_pointer_type(path, result, &RNA_Brush);
  		return 1;
  	}
@@ -4065,9 +4065,9 @@ Index: source/blender/editors/space_buttons/buttons_context.c
  	}
 Index: source/blender/editors/space_outliner/outliner.c
 ===================================================================
---- source/blender/editors/space_outliner/outliner.c	(revision 34669)
+--- source/blender/editors/space_outliner/outliner.c	(revision 35669)
 +++ source/blender/editors/space_outliner/outliner.c	(working copy)
-@@ -4401,6 +4401,8 @@
+@@ -4420,6 +4420,8 @@
  						UI_icon_draw(x, y, ICON_MOD_SOLIDIFY); break;
  					case eModifierType_Screw:
  						UI_icon_draw(x, y, ICON_MOD_SCREW); break;
@@ -4215,9 +4215,9 @@ Index: source/blender/makesdna/DNA_dynamicpaint_types.h
 +#endif
 Index: source/blender/makesdna/DNA_modifier_types.h
 ===================================================================
---- source/blender/makesdna/DNA_modifier_types.h	(revision 34669)
+--- source/blender/makesdna/DNA_modifier_types.h	(revision 35669)
 +++ source/blender/makesdna/DNA_modifier_types.h	(working copy)
-@@ -69,6 +69,8 @@
+@@ -73,6 +73,8 @@
  	/* placeholder, keep this so durian files load in
  	 * trunk with the correct modifier once its merged */
  	eModifierType_Warp,
@@ -4226,7 +4226,7 @@ Index: source/blender/makesdna/DNA_modifier_types.h
  	NUM_MODIFIER_TYPES
  } ModifierType;
  
-@@ -724,5 +726,22 @@
+@@ -733,5 +735,22 @@
  #define MOD_SCREW_OBJECT_OFFSET	(1<<2)
  // #define MOD_SCREW_OBJECT_ANGLE	(1<<4)
  
@@ -4251,9 +4251,9 @@ Index: source/blender/makesdna/DNA_modifier_types.h
  #endif
 Index: source/blender/makesdna/intern/makesdna.c
 ===================================================================
---- source/blender/makesdna/intern/makesdna.c	(revision 34669)
+--- source/blender/makesdna/intern/makesdna.c	(revision 35669)
 +++ source/blender/makesdna/intern/makesdna.c	(working copy)
-@@ -128,6 +128,7 @@
+@@ -132,6 +132,7 @@
  	"DNA_anim_types.h",
  	"DNA_boid_types.h",
  	"DNA_smoke_types.h",
@@ -4261,7 +4261,7 @@ Index: source/blender/makesdna/intern/makesdna.c
  
  	// empty string to indicate end of includefiles
  	""
-@@ -1176,4 +1177,5 @@
+@@ -1183,4 +1184,5 @@
  #include "DNA_anim_types.h"
  #include "DNA_boid_types.h"
  #include "DNA_smoke_types.h"
@@ -4269,9 +4269,9 @@ Index: source/blender/makesdna/intern/makesdna.c
  /* end of list */
 Index: source/blender/makesrna/intern/makesrna.c
 ===================================================================
---- source/blender/makesrna/intern/makesrna.c	(revision 34669)
+--- source/blender/makesrna/intern/makesrna.c	(revision 35669)
 +++ source/blender/makesrna/intern/makesrna.c	(working copy)
-@@ -2375,6 +2375,7 @@
+@@ -2380,6 +2380,7 @@
  	{"rna_context.c", NULL, RNA_def_context},
  	{"rna_controller.c", "rna_controller_api.c", RNA_def_controller},
  	{"rna_curve.c", NULL, RNA_def_curve},
@@ -4723,9 +4723,9 @@ Index: source/blender/makesrna/intern/rna_dynamicpaint.c
 +#endif
 Index: source/blender/makesrna/intern/rna_internal.h
 ===================================================================
---- source/blender/makesrna/intern/rna_internal.h	(revision 34669)
+--- source/blender/makesrna/intern/rna_internal.h	(revision 35669)
 +++ source/blender/makesrna/intern/rna_internal.h	(working copy)
-@@ -133,6 +133,7 @@
+@@ -138,6 +138,7 @@
  void RNA_def_context(struct BlenderRNA *brna);
  void RNA_def_controller(struct BlenderRNA *brna);
  void RNA_def_curve(struct BlenderRNA *brna);
@@ -4735,9 +4735,9 @@ Index: source/blender/makesrna/intern/rna_internal.h
  void RNA_def_gameproperty(struct BlenderRNA *brna);
 Index: source/blender/makesrna/intern/rna_modifier.c
 ===================================================================
---- source/blender/makesrna/intern/rna_modifier.c	(revision 34669)
+--- source/blender/makesrna/intern/rna_modifier.c	(revision 35669)
 +++ source/blender/makesrna/intern/rna_modifier.c	(working copy)
-@@ -42,6 +42,7 @@
+@@ -47,6 +47,7 @@
  
  #include "BKE_animsys.h"
  #include "BKE_bmesh.h" /* For BevelModifierData */
@@ -4745,7 +4745,7 @@ Index: source/blender/makesrna/intern/rna_modifier.c
  #include "BKE_multires.h"
  #include "BKE_smoke.h" /* For smokeModifier_free & smokeModifier_createType */
  
-@@ -85,6 +86,7 @@
+@@ -90,6 +91,7 @@
  	{eModifierType_Smoke, "SMOKE", ICON_MOD_SMOKE, "Smoke", ""},
  	{eModifierType_Softbody, "SOFT_BODY", ICON_MOD_SOFT, "Soft Body", ""},
  	{eModifierType_Surface, "SURFACE", ICON_MOD_PHYSICS, "Surface", ""},
@@ -4753,7 +4753,7 @@ Index: source/blender/makesrna/intern/rna_modifier.c
  	{0, NULL, 0, NULL, NULL}};
  
  #ifdef RNA_RUNTIME
-@@ -175,6 +177,8 @@
+@@ -180,6 +182,8 @@
  			return &RNA_SolidifyModifier;
  		case eModifierType_Screw:
  			return &RNA_ScrewModifier;
@@ -4762,7 +4762,7 @@ Index: source/blender/makesrna/intern/rna_modifier.c
  		default:
  			return &RNA_Modifier;
  	}
-@@ -271,6 +275,21 @@
+@@ -276,6 +280,21 @@
  	rna_Modifier_dependency_update(bmain, scene, ptr);
  }
  
@@ -4784,7 +4784,7 @@ Index: source/blender/makesrna/intern/rna_modifier.c
  static void rna_ExplodeModifier_vgroup_get(PointerRNA *ptr, char *value)
  {
  	ExplodeModifierData *emd= (ExplodeModifierData*)ptr->data;
-@@ -1789,6 +1808,38 @@
+@@ -1818,6 +1837,38 @@
  	RNA_def_property_update(prop, 0, "rna_Smoke_set_type");
  }
  
@@ -4823,7 +4823,7 @@ Index: source/blender/makesrna/intern/rna_modifier.c
  static void rna_def_modifier_collision(BlenderRNA *brna)
  {
  	StructRNA *srna;
-@@ -2338,6 +2389,7 @@
+@@ -2377,6 +2428,7 @@
  	rna_def_modifier_smoke(brna);
  	rna_def_modifier_solidify(brna);
  	rna_def_modifier_screw(brna);
@@ -4833,9 +4833,9 @@ Index: source/blender/makesrna/intern/rna_modifier.c
  #endif
 Index: source/blender/makesrna/RNA_access.h
 ===================================================================
---- source/blender/makesrna/RNA_access.h	(revision 34669)
+--- source/blender/makesrna/RNA_access.h	(revision 35669)
 +++ source/blender/makesrna/RNA_access.h	(working copy)
-@@ -189,6 +189,9 @@
+@@ -193,6 +193,9 @@
  extern StructRNA RNA_DriverTarget;
  extern StructRNA RNA_DriverVariable;
  extern StructRNA RNA_DupliObject;
@@ -4844,12 +4844,12 @@ Index: source/blender/makesrna/RNA_access.h
 +extern StructRNA RNA_DynamicPaintPainterSettings;
  extern StructRNA RNA_EdgeSplitModifier;
  extern StructRNA RNA_EditBone;
- extern StructRNA RNA_EffectorWeights;
+ extern StructRNA RNA_EffectSequence;
 Index: source/blender/modifiers/CMakeLists.txt
 ===================================================================
---- source/blender/modifiers/CMakeLists.txt	(revision 34669)
+--- source/blender/modifiers/CMakeLists.txt	(revision 35669)
 +++ source/blender/modifiers/CMakeLists.txt	(working copy)
-@@ -48,6 +48,7 @@
+@@ -49,6 +49,7 @@
  	intern/MOD_curve.c
  	intern/MOD_decimate.c
  	intern/MOD_displace.c
@@ -4973,9 +4973,9 @@ Index: source/blender/modifiers/intern/MOD_dynamicpaint.c
 +};
 Index: source/blender/modifiers/intern/MOD_util.c
 ===================================================================
---- source/blender/modifiers/intern/MOD_util.c	(revision 34669)
+--- source/blender/modifiers/intern/MOD_util.c	(revision 35669)
 +++ source/blender/modifiers/intern/MOD_util.c	(working copy)
-@@ -185,5 +185,6 @@
+@@ -189,5 +189,6 @@
  	INIT_TYPE(ShapeKey);
  	INIT_TYPE(Solidify);
  	INIT_TYPE(Screw);
@@ -4984,9 +4984,9 @@ Index: source/blender/modifiers/intern/MOD_util.c
  }
 Index: source/blender/modifiers/MOD_modifiertypes.h
 ===================================================================
---- source/blender/modifiers/MOD_modifiertypes.h	(revision 34669)
+--- source/blender/modifiers/MOD_modifiertypes.h	(revision 35669)
 +++ source/blender/modifiers/MOD_modifiertypes.h	(working copy)
-@@ -67,6 +67,7 @@
+@@ -71,6 +71,7 @@
  extern ModifierTypeInfo modifierType_ShapeKey;
  extern ModifierTypeInfo modifierType_Solidify;
  extern ModifierTypeInfo modifierType_Screw;
@@ -4996,9 +4996,9 @@ Index: source/blender/modifiers/MOD_modifiertypes.h
  void modifier_type_init(ModifierTypeInfo *types[]);
 Index: source/blender/render/extern/include/RE_shader_ext.h
 ===================================================================
---- source/blender/render/extern/include/RE_shader_ext.h	(revision 34669)
+--- source/blender/render/extern/include/RE_shader_ext.h	(revision 35669)
 +++ source/blender/render/extern/include/RE_shader_ext.h	(working copy)
-@@ -196,6 +196,8 @@
+@@ -201,6 +201,8 @@
  int multitex_nodes(struct Tex *tex, float *texvec, float *dxt, float *dyt, int osatex, struct TexResult *texres,
  	short thread, short which_output, struct ShadeInput *shi, struct MTex *mtex);
  
@@ -5009,9 +5009,9 @@ Index: source/blender/render/extern/include/RE_shader_ext.h
  struct Image;
 Index: source/blender/render/intern/include/voxeldata.h
 ===================================================================
---- source/blender/render/intern/include/voxeldata.h	(revision 34669)
+--- source/blender/render/intern/include/voxeldata.h	(revision 35669)
 +++ source/blender/render/intern/include/voxeldata.h	(working copy)
-@@ -38,6 +38,7 @@
+@@ -43,6 +43,7 @@
  	int frames;
  } VoxelDataHeader;
  
@@ -5021,9 +5021,9 @@ Index: source/blender/render/intern/include/voxeldata.h
  int voxeldatatex(struct Tex *tex, float *texvec, struct TexResult *texres);
 Index: source/blender/render/intern/source/render_texture.c
 ===================================================================
---- source/blender/render/intern/source/render_texture.c	(revision 34669)
+--- source/blender/render/intern/source/render_texture.c	(revision 35669)
 +++ source/blender/render/intern/source/render_texture.c	(working copy)
-@@ -1667,6 +1667,21 @@
+@@ -1672,6 +1672,21 @@
  	}
  }
  
@@ -5047,9 +5047,9 @@ Index: source/blender/render/intern/source/render_texture.c
  typedef struct CompatibleBump {
 Index: source/blender/render/intern/source/voxeldata.c
 ===================================================================
---- source/blender/render/intern/source/voxeldata.c	(revision 34669)
+--- source/blender/render/intern/source/voxeldata.c	(revision 35669)
 +++ source/blender/render/intern/source/voxeldata.c	(working copy)
-@@ -266,7 +266,7 @@
+@@ -271,7 +271,7 @@
  	return;
  }
  
@@ -5058,7 +5058,7 @@ Index: source/blender/render/intern/source/voxeldata.c
  {	
  	VoxelData *vd = tex->vd;
  	FILE *fp;
-@@ -274,7 +274,7 @@
+@@ -279,7 +279,7 @@
  	char path[sizeof(vd->source_path)];
  	
  	/* only re-cache if dataset needs updating */
@@ -5067,7 +5067,7 @@ Index: source/blender/render/intern/source/voxeldata.c
  		if (vd->ok) return;
  	
  	/* clear out old cache, ready for new */
-@@ -286,7 +286,7 @@
+@@ -291,7 +291,7 @@
  	if (vd->flag & TEX_VD_STILL)
  		curframe = vd->still_frame;
  	else
@@ -5076,7 +5076,7 @@ Index: source/blender/render/intern/source/voxeldata.c
  	
  	BLI_strncpy(path, vd->source_path, sizeof(path));
  	
-@@ -295,7 +295,7 @@
+@@ -300,7 +300,7 @@
  			load_frame_image_sequence(vd, tex);
  			return;
  		case TEX_VD_SMOKE:
@@ -5085,7 +5085,7 @@ Index: source/blender/render/intern/source/voxeldata.c
  			return;
  		case TEX_VD_BLENDERVOXEL:
  			BLI_path_abs(path, G.main->name);
-@@ -334,7 +334,7 @@
+@@ -339,7 +339,7 @@
  	/* XXX: should be doing only textures used in this render */
  	for (tex= re->main->tex.first; tex; tex= tex->id.next) {
  		if(tex->id.us && tex->type==TEX_VOXELDATA) {
@@ -5096,9 +5096,9 @@ Index: source/blender/render/intern/source/voxeldata.c
  	
 Index: source/blenderplayer/bad_level_call_stubs/stubs.c
 ===================================================================
---- source/blenderplayer/bad_level_call_stubs/stubs.c	(revision 34669)
+--- source/blenderplayer/bad_level_call_stubs/stubs.c	(revision 35669)
 +++ source/blenderplayer/bad_level_call_stubs/stubs.c	(working copy)
-@@ -109,6 +109,7 @@
+@@ -114,6 +114,7 @@
  int multitex_ext(struct Tex *tex, float *texvec, float *dxt, float *dyt, int osatex, struct TexResult *texres){return 0;}
  int multitex_ext_safe(struct Tex *tex, float *texvec, struct TexResult *texres){return 0;}
  int multitex_nodes(struct Tex *tex, float *texvec, float *dxt, float *dyt, int osatex, struct TexResult *texres, short thread, short which_output, struct ShadeInput *shi, struct MTex *mtex) {return 0;}
@@ -5106,7 +5106,7 @@ Index: source/blenderplayer/bad_level_call_stubs/stubs.c
  
  /* nodes */
  struct RenderResult *RE_GetResult(struct Render *re){return (struct RenderResult *) NULL;}
-@@ -133,9 +134,12 @@
+@@ -138,9 +139,12 @@
  struct Render *RE_NewRender(const char *name){return (struct Render*) NULL;}
  void RE_SwapResult(struct Render *re, struct RenderResult **rr){}
  void RE_BlenderFrame(struct Render *re, struct Scene *scene, int frame){}
@@ -5119,7 +5119,7 @@ Index: source/blenderplayer/bad_level_call_stubs/stubs.c
  void WM_menutype_free(void){}
  void WM_menutype_freelink(struct MenuType* mt){}
  int WM_menutype_add(struct MenuType *mt) {return 0;}
-@@ -160,11 +164,13 @@
+@@ -165,11 +169,13 @@
  void object_test_constraints (struct Object *owner){}
  void ED_object_parent(struct Object *ob, struct Object *par, int type, const char *substr){}
  void ED_object_constraint_set_active(struct Object *ob, struct bConstraint *con){}

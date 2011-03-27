@@ -11,6 +11,7 @@ import re
 import string
 import glob
 import subprocess
+import tempfile
 
 from optparse import OptionParser
 
@@ -78,6 +79,15 @@ parser.add_option(
 	dest= 'desktop',
 	default= False,
 	help= 'Generate desktop file.'
+)
+
+parser.add_option(
+	'',
+	'--blend_files',
+	action= 'store_true',
+	dest= 'blend_files',
+	default= False,
+	help= 'Add custom default blend files.'
 )
 
 parser.add_option(
@@ -633,6 +643,23 @@ if not options.pure_blender:
 				patch_file= my_path_join(extern_path, f)
 
 				run_patch(patch_file)
+
+	if options.blend_files:
+		if options.test:
+			sys.stdout.write("Replacing startup and preview blend-files...\n")
+			editor_datafiles= my_path_join(blender_dir, "source", "blender", "editors", "datafiles")
+			datatoc=          my_path_join(blender_dir, "release", "datafiles", "datatoc.py")
+
+			# Doint all in TMP
+			os.chdir(tempfile.gettempdir())
+
+			for datafile in ("splash.png", "startup.blend", "preview.blend"):
+				datafile_path= my_path_join(patch_dir, datafile)
+				cmd= []
+				cmd.append(datatoc)
+				cmd.append(datafile_path)
+				print(' '.join(cmd))
+				#shutil.copy(datafile_path+'.c', editor_datafiles)
 
 
 # Generate user settings file

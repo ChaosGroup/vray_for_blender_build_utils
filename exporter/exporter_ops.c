@@ -231,7 +231,8 @@ static int write_edge_visibility(FILE *gfile,
 
 
 static void write_hair(FILE *gfile,
-                       Scene *sce, Object *ob)
+                       Scene *sce, Main *bmain,
+                       Object *ob)
 {
     ModifierData *md;
 
@@ -241,15 +242,29 @@ static void write_hair(FILE *gfile,
     ParticleSystemModifierData *psmd= NULL;
 
 	ParticleData     *pa;
-	/* ChildParticle    *ch; */
+
+    /* jahka: simple children are offset duplicates of the parent
+       particle's path, but interpolated children have locations
+       that are interpolated from multiple parent particles */
+    ParticleCacheKey *ckey;
+	ChildParticle    *ch;
 
     HairKey *hkey;
     
     float    hairmat[4][4];
     float    segment[3];
-    float    width;
+    float    width= 0.001;
 
-    int i, s;
+    int      display_percentage;
+
+    int      i, s;
+
+	PointerRNA rna_pset;
+	PointerRNA VRayParticleSettings;
+	PointerRNA VRayFur;
+
+	char *lib_file= (char*)malloc(FILE_MAX * sizeof(char));
+	char *cleared_string;
 
     for(md= ob->modifiers.first; md; md= md->next) {
         if(md->type == eModifierType_ParticleSystem) {
@@ -262,7 +277,41 @@ static void write_hair(FILE *gfile,
             psys= psmd->psys;
             pset= psys->part;
 
-            fprintf(gfile, "GeomMayaHair HAIR%s%s {", clean_string(ob->id.name+2), clean_string(psys->name));
+            RNA_id_pointer_create(&pset->id, &rna_pset);
+
+            if(RNA_struct_find_property(&rna_pset, "vray")) {
+                VRayParticleSettings= RNA_pointer_get(&rna_pset, "vray");
+
+                if(RNA_struct_find_property(&VRayParticleSettings, "VRayFur")) {
+                    VRayFur= RNA_pointer_get(&VRayParticleSettings, "VRayFur");
+
+                    // Get hair width
+                    width= RNA_float_get(&VRayFur, "width");
+                }
+            }
+            
+            // Store "Display percentage" setting
+            display_percentage= pset->disp;
+            pset->disp= 100;
+            ob->recalc |= OB_RECALC_DATA;
+            scene_update_tagged(bmain, sce);
+
+
+            cleared_string= clean_string(ob->id.name+2);
+            fprintf(gfile, "GeomMayaHair HAIROB%s", cleared_string);
+            free(cleared_string);
+
+            if(ob->id.lib) {
+                BLI_split_dirfile(ob->id.lib->name+2, NULL, lib_file);
+                cleared_string= clean_string(lib_file);
+                fprintf(gfile,"LI%s", cleared_string);
+                free(cleared_string);
+                free(lib_file);
+            }
+
+            cleared_string= clean_string(psys->name);
+            fprintf(gfile, "PS%s {", cleared_string);
+            free(cleared_string);
 
 
             fprintf(gfile, "\n\tnum_hair_vertices= interpolate((%d,ListIntHex(\"", sce->r.cfra);
@@ -272,8 +321,8 @@ static void write_hair(FILE *gfile,
 
             /* for(i= 0, ch= psys->child; i < psys->totchild; ++i, ++ch) { */
             /*     printf("\033[0;32mV-Ray/Blender:\033[0m Child: %i\n", psys->totchild); */
-
             /* } */
+
             fprintf(gfile,"\")));");
 
 
@@ -285,6 +334,7 @@ static void write_hair(FILE *gfile,
                 }
 
                 for(s= 0, hkey= pa->hair; s < pa->totkey; ++s, ++hkey) {
+
                     psys_mat_hair_to_object(ob, psmd->dm, psmd->psys->part->from, pa, hairmat);
 
                     copy_v3_v3(segment, hkey->co);
@@ -305,7 +355,6 @@ static void write_hair(FILE *gfile,
             fprintf(gfile, "\n\twidths= interpolate((%d,ListFloatHex(\"", sce->r.cfra);
             for(i= 0, pa= psys->particles; i < psys->totpart; ++i, ++pa) {
                 for(s= 0, hkey= pa->hair; s < pa->totkey; ++s, ++hkey) {
-                    width= 0.002;
 
                     fprintf(gfile, "%08X", htonl(*(int*)&(width)));
                 }
@@ -317,6 +366,11 @@ static void write_hair(FILE *gfile,
             }
 
             fprintf(gfile,"}\n\n");
+
+            // Restore "Display percentage" setting
+            pset->disp= display_percentage;
+            ob->recalc |= OB_RECALC_DATA;
+            scene_update_tagged(bmain, sce);
         }
     }
 }
@@ -357,10 +411,13 @@ static void write_mesh(FILE *gfile,
 	else
 		cleared_string= clean_string(ob->id.name+2);
 	fprintf(gfile,"GeomStaticMesh ME%s", cleared_string);
+    free(cleared_string);
+
 	if(me->id.lib) {
 		BLI_split_dirfile(me->id.lib->name+2, NULL, lib_file);
 		cleared_string= clean_string(lib_file);
 		fprintf(gfile,"LI%s", cleared_string);
+        free(cleared_string);
 		free(lib_file);
 		if(debug) {
 			printf("V-Ray/Blender: Object: %s\n", ob->id.name+2);
@@ -370,7 +427,6 @@ static void write_mesh(FILE *gfile,
 		}
 	}
 	fprintf(gfile," {\n");
-	free(cleared_string);
 
 
 	fprintf(gfile,"\tvertices= interpolate((%d, ListVectorHex(\"", sce->r.cfra);
@@ -710,11 +766,30 @@ static void *export_meshes_thread(void *ptr)
 	
 	LinkNode *tdl;
 
+    int       use_hair= 1;
+
+	PointerRNA rna_scene;
+	PointerRNA VRayScene;
+	PointerRNA VRayExporter;
+
 	td= (struct ThreadData*)ptr;
 
-	sce= td->sce;
+	sce=   td->sce;
 	bmain= td->bmain;
 	base= (Base*)sce->base.first;
+
+    // Get export parameters from RNA
+    RNA_id_pointer_create(&sce->id, &rna_scene);
+    if(RNA_struct_find_property(&rna_scene, "vray")) {
+        VRayScene= RNA_pointer_get(&rna_scene, "vray");
+
+        if(RNA_struct_find_property(&VRayScene, "exporter")) {
+            VRayExporter= RNA_pointer_get(&VRayScene, "exporter");
+            
+            // Export hair
+            use_hair= RNA_boolean_get(&VRayExporter, "use_hair");
+        }
+    }
 
 	time= PIL_check_seconds_timer();
 
@@ -733,6 +808,16 @@ static void *export_meshes_thread(void *ptr)
 		while(tdl) {
 			ob= tdl->link;
 
+            // Export hair
+            if(use_hair) {
+                pthread_mutex_lock(&mtx);
+                {
+                    write_hair(gfile, sce, bmain, ob);
+                }
+                pthread_mutex_unlock(&mtx);
+            }
+
+            // Export mesh
 			pthread_mutex_lock(&mtx);
 			{
 				mesh= get_render_mesh(sce, bmain, ob);
@@ -740,8 +825,6 @@ static void *export_meshes_thread(void *ptr)
 			pthread_mutex_unlock(&mtx);
 
 			if(mesh) {
-                write_hair(gfile, sce, ob);
-
 				write_mesh(gfile, sce, ob, mesh, td->uvs, td->instances);
 			
 				pthread_mutex_lock(&mtx);
@@ -1037,7 +1120,7 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
 	if(!sce) {
         // Since render context is NULL
         // we need to get scene pointer from G
-        // when opertor is called from ops.render.render().
+        // when operator is called from ops.render.render().
         // If operator is called separetely we use scene
         // from bContext.
 		// TODO: get current scene not first

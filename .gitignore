@@ -1,6 +1,8 @@
 *.bak
 *.orig
 *.c
+*.blend1
+*.blend2
 blender/
 space_api/
 installer/template_vray.nsi

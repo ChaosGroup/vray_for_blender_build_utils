@@ -627,7 +627,6 @@ if not options.pure_blender:
 	os.chdir(working_directory)
 
 	if not options.test:
-		shutil.copy(my_path_join(patch_dir, "splash.png.c"), my_path_join(blender_dir,"source","blender","editors","datafiles"))
 		dst= my_path_join(blender_dir,"source","blender","exporter")
 		if(os.path.exists(dst)):
 			shutil.rmtree(dst)
@@ -646,21 +645,31 @@ if not options.pure_blender:
 				run_patch(patch_file)
 
 	if options.blend_files:
-		if options.test:
-			sys.stdout.write("Replacing startup and preview blend-files...\n")
-			editor_datafiles= my_path_join(blender_dir, "source", "blender", "editors", "datafiles")
-			datatoc=          my_path_join(blender_dir, "release", "datafiles", "datatoc.py")
+		sys.stdout.write("Replacing datafiles...\n")
+		editor_datafiles= my_path_join(blender_dir, "source", "blender", "editors", "datafiles")
+		datatoc=          my_path_join(blender_dir, "release", "datafiles", "datatoc.py")
+		
+		# Doint all in TMP
+		datafiles_workdir= tempfile.gettempdir()
+		os.chdir(datafiles_workdir)
 
-			# Doint all in TMP
-			os.chdir(tempfile.gettempdir())
+		for datafile in ("splash.png", "startup.blend", "preview.blend"):
+			datafile_path= my_path_join(patch_dir, "datafiles", datafile)
+			datafile_c= datafile_path + '.c'
 
-			for datafile in ("splash.png", "startup.blend", "preview.blend"):
-				datafile_path= my_path_join(patch_dir, datafile)
-				cmd= []
-				cmd.append(datatoc)
-				cmd.append(datafile_path)
-				print(' '.join(cmd))
-				#shutil.copy(datafile_path+'.c', editor_datafiles)
+			cmd= []
+			cmd.append(datatoc)
+			cmd.append(datafile_path)
+			cmd= ' '.join(cmd)
+			
+			if options.test:
+				print(cmd)
+				print(datafile_c)
+				print("Moving: %s => %s" % (os.path.basename(datafile_c), editor_datafiles))
+			else:
+				os.system(cmd)
+				print("Moving: %s => %s" % (os.path.basename(datafile_c), editor_datafiles))
+				shutil.copy(datafile_c, editor_datafiles)
 
 
 # Generate user settings file

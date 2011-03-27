@@ -3,7 +3,6 @@
 *.c
 *.blend1
 *.blend2
-blender/
-space_api/
+patch_src/
 installer/template_vray.nsi
 

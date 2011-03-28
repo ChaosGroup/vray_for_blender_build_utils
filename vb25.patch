@@ -11,7 +11,7 @@
 
 --- source/blender/editors/space_api/spacetypes.c	2010-07-19 17:09:38.327627551 +0400
 +++ source/blender/editors/space_api/spacetypes.c	2010-07-19 17:21:13.397622897 +0400
-@@ -59,6 +59,8 @@
+@@ -64,6 +64,8 @@
  #include "ED_mball.h"
  #include "ED_logic.h"
  
@@ -20,7 +20,7 @@
  /* only call once on startup, storage is global in BKE kernel listbase */
  void ED_spacetypes_init(void)
  {
-@@ -104,7 +106,10 @@
+@@ -109,7 +111,10 @@
  	ED_operatortypes_sound();
  	ED_operatortypes_render();
  	ED_operatortypes_logic();
@@ -44,19 +44,18 @@
 
 --- source/blender/editors/render/render_internal.c   2011-01-06 14:51:55.000000000 +0300
 +++ source/blender/editors/render/render_internal.c   2011-01-06 16:08:02.447495042 +0300
-@@ -699,7 +699,7 @@ static int screen_render_invoke(bContext
+@@ -727,7 +727,7 @@ static int screen_render_invoke(bContext
  	// store spare
  
  	/* ensure at least 1 area shows result */
 -	screen_set_image_output(C, event->x, event->y);
 +	/* screen_set_image_output(C, event->x, event->y); */
  
- 	/* single layer re-render */
- 	if(RNA_property_is_set(op->ptr, "layer")) {
-
+ 	jobflag= WM_JOB_EXCL_RENDER|WM_JOB_PRIORITY|WM_JOB_PROGRESS;
+ 	
 --- source/blender/makesrna/intern/rna_texture.c	2011-01-06 14:51:10.000000000 +0300
 +++ source/blender/makesrna/intern/rna_texture.c	2011-01-06 15:10:08.536095042 +0300
-@@ -51,21 +51,22 @@ EnumPropertyItem texture_filter_items[] 
+@@ -56,21 +56,22 @@ EnumPropertyItem texture_filter_items[] 
  
  EnumPropertyItem texture_type_items[] = {
  	{0, "NONE", 0, "None", ""},
@@ -95,9 +94,9 @@
 
 --- source/blender/editors/space_api/CMakeLists.txt	2011-01-06 14:51:57.000000000 +0300
 +++ source/blender/editors/space_api/CMakeLists.txt	2011-01-14 18:03:57.457981234 +0300
-@@ -23,6 +23,7 @@
- 	../include
+@@ -24,6 +24,7 @@ set(INC
  	../../blenkernel
+ 	../../blenloader
  	../../blenlib
 +	../../exporter
  	../../makesdna
@@ -106,7 +105,7 @@
 
 --- source/blender/CMakeLists.txt	2011-01-06 14:52:13.000000000 +0300
 +++ source/blender/CMakeLists.txt	2011-01-14 17:53:03.215981234 +0300
-@@ -41,6 +41,7 @@
+@@ -101,6 +101,7 @@
  add_subdirectory(modifiers)
  add_subdirectory(makesdna)
  add_subdirectory(makesrna)
@@ -117,7 +116,7 @@
 
 --- source/creator/CMakeLists.txt	2011-01-06 14:48:46.000000000 +0300
 +++ source/creator/CMakeLists.txt	2011-01-14 19:05:58.851581234 +0300
-@@ -491,6 +491,7 @@
+@@ -681,6 +681,7 @@
 		bf_editor_space_time
 		bf_editor_space_userpref
 		bf_editor_space_view3d
@@ -128,7 +127,7 @@
 
 --- source/blender/editors/render/render_shading.c	2011-01-14 19:55:00.236281234 +0300
 +++ source/blender/editors/render/render_shading.c	2011-01-21 18:38:34.927359002 +0300
-@@ -579,8 +579,10 @@
+@@ -586,8 +586,10 @@
  	/* add or copy texture */
  	if(tex)
  		tex= copy_texture(tex);
@@ -143,7 +142,7 @@
 
 --- source/blender/makesdna/DNA_texture_types.h	2011-01-07 22:42:51.812373001 +0300
 +++ source/blender/makesdna/DNA_texture_types.h	2011-01-21 18:42:30.430959002 +0300
-@@ -298,6 +298,7 @@
+@@ -302,6 +302,7 @@
  #define TEX_DISTNOISE	13
  #define TEX_POINTDENSITY	14
  #define TEX_VOXELDATA		15
@@ -154,7 +153,7 @@
 
 --- source/blender/python/intern/bpy_rna.c	2010-12-17 05:44:53.302238004 +0300
 +++ source/blender/python/intern/bpy_rna.c	2010-12-17 19:59:02.645938003 +0300
-@@ -54,6 +54,6 @@
+@@ -72,7 +72,7 @@
  #include "../generic/IDProp.h" /* for IDprop lookups */
  #include "../generic/py_capi_utils.h"
  

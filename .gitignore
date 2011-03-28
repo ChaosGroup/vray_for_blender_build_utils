@@ -1,7 +1,8 @@
 *.bak
 *.orig
 *.c
-blender/
-space_api/
+*.blend1
+*.blend2
+patch_src/
 installer/template_vray.nsi
 

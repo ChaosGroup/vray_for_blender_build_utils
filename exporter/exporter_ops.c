@@ -246,8 +246,8 @@ static void write_hair(FILE *gfile,
     /* jahka: simple children are offset duplicates of the parent
        particle's path, but interpolated children have locations
        that are interpolated from multiple parent particles */
-    ParticleCacheKey *ckey;
-	ChildParticle    *ch;
+    /* ParticleCacheKey *ckey; */
+	/* ChildParticle    *ch; */
 
     HairKey *hkey;
     
@@ -909,11 +909,6 @@ static void append_object(Scene *sce, LinkNode **objects, LinkNode **meshes, Obj
                 if(RNA_boolean_get(&VRayMesh, "override"))
                     return;
             }
-			if(RNA_struct_find_property(&VRayMesh, "GeomMeshFile")) {
-				GeomMeshFile= RNA_pointer_get(&VRayMesh, "GeomMeshFile");
-				if(RNA_boolean_get(&GeomMeshFile, "use"))
-					return;
-			}
 		}
 	}
   

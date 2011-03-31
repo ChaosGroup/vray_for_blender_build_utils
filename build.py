@@ -1,31 +1,101 @@
-__author__ = "Andrey M. Izrantsev http://cgdo.ru"
-__version__ = "1.1"
+'''
 
-import sys
+  V-Ray/Blender Custom Build Compilation Script
+
+  http://vray.cgdo.ru
+
+  Time-stamp: "Thursday, 31 March 2011 [20:45]"
+
+  Author: Andrey M. Izrantsev (aka bdancer)
+  E-Mail: izrantsev@cgdo.ru
+
+  This program is free software; you can redistribute it and/or
+  modify it under the terms of the GNU General Public License
+  as published by the Free Software Foundation; either version 2
+  of the License, or (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+  All Rights Reserved. V-Ray(R) is a registered trademark of Chaos Software.
+
+'''
+
+
+import commands
+import getpass
+import glob
 import os
+import optparse
+import platform
+import re
 import shutil
 import socket
-import platform
-import getpass
-import re
+import sys
 import string
-import glob
 import subprocess
 import tempfile
 
-from optparse import OptionParser
 
-USER= getpass.getuser()
-PLATFORM= sys.platform
-HOSTNAME= socket.gethostname()
-ARCH= platform.architecture()[0]
-REV= 'current'
-VERSION= '2.56'
+'''
+  SOME USEFUL FUNCS
+'''
+def my_path_join(*args):
+	path= None
+	if PLATFORM == "win32":
+		path= '\\\\'.join(args)
+		path= path.replace('\\\\\\\\','\\\\')
+	else:
+		path= os.path.join(*args)
+	return path
+
+def get_full_path(path):
+	if(path[0:1] == '~'):
+		path= my_path_join(os.environ["HOME"],path[2:])
+	elif(path[0:1] != '/'):
+		path= os.path.abspath(path)
+	return path
+
+
+
+'''
+  GLOBALS AND DEFAULTS
+'''
+USER     = getpass.getuser()
+PLATFORM = sys.platform
+HOSTNAME = socket.gethostname()
+
+ARCH     = 'x86' if platform.architecture()[0] == '32bit' else 'x86_64'
+
+if PLATFORM == 'darwin':
+	MAC_CPU= commands.getoutput('uname -p')
+	ARCH= 'x86' if MAC_CPU == 'i386' else 'x86_64'
+
+OSX      = '10.6'
+
+REV      = 'current'
+VERSION  = '2.56'
+
+LINUX= platform.linux_distribution()[0].lower().strip()
+LINUX_VER= platform.linux_distribution()[1].replace('.','_').strip()
+
+DEFAULT_INSTALLPATH= my_path_join(os.getcwd(), "install")
+DEFAULT_RELEASEDIR=  my_path_join(os.getcwd(), "release")
+
+if PLATFORM == "win32":
+	DEFAULT_INSTALLPATH= my_path_join("C:", "vb25", "install")
+	DEFAULT_RELEASEDIR=  my_path_join("C:", "vb25", "release")
+
 
 '''
   COMMAND LINE OPTIONS
 '''
-parser= OptionParser(usage="python %prog [options]", version="blender_update %s by %s" % (__version__, __author__))
+parser= optparse.OptionParser(usage="python %prog [options]", version="1.0")
 
 parser.add_option(
 	'-b',
@@ -33,7 +103,7 @@ parser.add_option(
 	action= 'store_true',
 	dest= 'pure_blender',
 	default= False,
-	help= 'Build Blender 2.5 SVN (don\'t apply V-Ray/Blender patches).'
+	help= "Don't apply V-Ray/Blender patches."
 )
 
 parser.add_option(
@@ -42,7 +112,7 @@ parser.add_option(
 	action= 'store_true',
 	dest= 'archive',
 	default= False,
-	help= 'Create archive (Linux) or installer (Windows, NSIS required).'
+	help= "Create archive (Linux, Mac OS) or installer (Windows, NSIS required)."
 )
 
 parser.add_option(
@@ -74,18 +144,9 @@ parser.add_option(
 
 parser.add_option(
 	'',
-	'--desktop',
+	'--datafiles',
 	action= 'store_true',
-	dest= 'desktop',
-	default= False,
-	help= 'Generate desktop file.'
-)
-
-parser.add_option(
-	'',
-	'--blend_files',
-	action= 'store_true',
-	dest= 'blend_files',
+	dest= 'datafiles',
 	default= False,
 	help= 'Add custom default blend files.'
 )
@@ -171,7 +232,7 @@ parser.add_option(
 	help= 'Developer mode.'
 )
 
-if PLATFORM == "win32":
+if PLATFORM == 'win32':
 	parser.add_option(
 		'',
 		'--releasedir',
@@ -185,7 +246,42 @@ if PLATFORM == "win32":
 		dest= 'installdir',
 		help= "Installation directory."
 	)
-else:
+
+elif PLATFORM == 'linux2':
+	parser.add_option(
+		'',
+		'--desktop',
+		action= 'store_true',
+		dest= 'desktop',
+		default= False,
+		help= 'Generate desktop file.'
+	)
+
+	parser.add_option(
+		'',
+		'--releasedir',
+		metavar="FILE",
+		dest= 'releasedir',
+		help= "Directory for installer and archive."
+	)
+
+	parser.add_option(
+		'',
+		'--installdir',
+		metavar="FILE",
+		dest= 'installdir',
+		help= "Installation directory."
+	)
+
+else: # Mac
+	parser.add_option(
+		'',
+		'--osx',
+		dest=    'osx',
+		default= "10.6",
+		help=    "Mac OS X version."
+	)
+
 	parser.add_option(
 		'',
 		'--releasedir',
@@ -204,35 +300,29 @@ else:
 
 (options, args) = parser.parse_args()
 
-LINUX= platform.linux_distribution()[0].lower().strip()
-LINUX_VER= platform.linux_distribution()[1].replace('.','_').strip()
 
-def my_path_join(*args):
-	path= None
-	if PLATFORM == "win32":
-		path= '\\\\'.join(args)
-		path= path.replace('\\\\\\\\','\\\\')
+'''
+  OPTIONS
+'''
+if options.test:
+	OS= {
+		'win32':  'Windows',
+		'linux2': 'Linux',
+	}
+
+	if PLATFORM == 'darwin':
+		print("OS: Mac OS X %s" % (OSX))
 	else:
-		path= os.path.join(*args)
-	return path
+		print("OS: %s" % OS[PLATFORM])
 
-DEFAULT_INSTALLPATH= my_path_join(os.getcwd(),"install")
-DEFAULT_RELEASEDIR=  my_path_join(os.getcwd(),"release")
+		if PLATFORM == 'linux2':
+			print("Distribution: %s %s" % (platform.linux_distribution()[0], platform.linux_distribution()[1]))
 
-if PLATFORM == "win32":
-	DEFAULT_INSTALLPATH= my_path_join("C:","vb25","install")
-	DEFAULT_RELEASEDIR=  my_path_join("C:","vb25","release")
+	print("Arch: %s" % ARCH)
 
-
-'''
-  PATHS
-'''
-def get_full_path(path):
-	if(path[0:1] == '~'):
-		path= my_path_join(os.environ["HOME"],path[2:])
-	elif(path[0:1] != '/'):
-		path= os.path.abspath(path)
-	return path
+	print("Building: %s" % ("Blender 2.5" if options.pure_blender else "V-Ray/Blender 2.5"))
+	
+print("")
 
 project= 'vb25'
 if options.pure_blender:
@@ -409,7 +499,12 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 
 def generate_user_config(filename):
 	ofile= open(filename, 'w')
-	ofile.write("# This file is automatically generated: DON\'T EDIT!\n")
+	ofile.write("# This file is generated automatically. DON'T EDIT!\n")
+
+	build_options= {
+		'True':  [],
+		'False': [],
+	}
 
 	if PLATFORM == "win32":
 		build_options= {
@@ -435,7 +530,7 @@ def generate_user_config(filename):
 				'WITH_BF_FFTW3'
 			]
 		}
-	else:
+	elif PLATFORM == "linux2":
 		build_options= {
 			'True': [
 				'WITH_BF_INTERNATIONAL',
@@ -467,15 +562,45 @@ def generate_user_config(filename):
 		else:
 			build_options['True'].append('WITH_BF_FFMPEG')
 
-	# Check this option for Linux:
-	#   'WITH_BF_FHS'
-	#   Use the Unix "Filesystem Hierarchy Standard" rather then a redistributable directory layout
+	else: # Mac
+		#ofile.write("BF_QUIET= 0\n")
+		ofile.write("BF_BUILDDIR = \"/tmp/%s-build\"\n" % project)
+		ofile.write("BF_NUMJOBS  = 2\n")
 
-	if PLATFORM == "win32" and ARCH == '64bit':
-		build_options['False'].append('WITH_BF_JACK')
-		build_options['False'].append('WITH_BF_SNDFILE')
-		build_options['False'].append('WITH_BF_FFMPEG')
-		build_options['False'].append('WITH_BF_OPENAL')
+		ofile.write("MACOSX_ARCHITECTURE      = '%s'\n" % MAC_CPU)
+		ofile.write("MAC_CUR_VER              = '%s'\n" % OSX)
+		ofile.write("MAC_MIN_VERS             = '%s'\n" % OSX)
+		ofile.write("MACOSX_DEPLOYMENT_TARGET = '%s'\n" % OSX)
+		ofile.write("MACOSX_SDK               = '/Developer/SDKs/MacOSX%s.sdk'\n" % OSX)
+		ofile.write("LCGDIR                   = '#../lib/darwin-9.x.universal'\n")
+		ofile.write("LIBDIR                   = '#../lib/darwin-9.x.universal'\n")
+
+		ofile.write("CC                       = 'gcc-4.2'\n")
+		ofile.write("CXX                      = 'g++-4.2'\n")
+
+		ofile.write("USE_SDK                  = True\n")
+		ofile.write("WITH_GHOST_COCOA         = True\n")
+		ofile.write("WITH_BF_QUICKTIME        = False\n")
+		
+		ofile.write("ARCH_FLAGS = ['%s']\n" % ('-m32' if ARCH == 'x86' else '-m64'))
+
+		ofile.write("CFLAGS     = ['-pipe','-funsigned-char'] + ARCH_FLAGS\n")
+
+		ofile.write("CPPFLAGS   = [] + ARCH_FLAGS\n")
+		ofile.write("CCFLAGS    = ['-pipe','-funsigned-char'] + ARCH_FLAGS\n")
+		ofile.write("CXXFLAGS   = ['-pipe','-funsigned-char'] + ARCH_FLAGS\n")
+
+		ofile.write("SDK_FLAGS          = ['-isysroot', MACOSX_SDK, '-mmacosx-version-min='+MAC_MIN_VERS, '-arch', MACOSX_ARCHITECTURE]\n")
+		ofile.write("PLATFORM_LINKFLAGS = ['-fexceptions','-framework','CoreServices','-framework','Foundation','-framework','IOKit','-framework','AppKit','-framework','Cocoa','-framework','Carbon','-framework','AudioUnit','-framework','AudioToolbox','-framework','CoreAudio','-framework','OpenAL']+ARCH_FLAGS\n")
+		ofile.write("PLATFORM_LINKFLAGS = ['-mmacosx-version-min='+MAC_MIN_VERS, '-Wl', '-isysroot', MACOSX_SDK, '-arch', MACOSX_ARCHITECTURE] + PLATFORM_LINKFLAGS\n")
+		ofile.write("CCFLAGS  = SDK_FLAGS + CCFLAGS\n")
+		ofile.write("CXXFLAGS = SDK_FLAGS + CXXFLAGS\n")
+		ofile.write("REL_CFLAGS  = ['-DNDEBUG', '-O2','-ftree-vectorize','-msse','-msse2','-msse3','-mfpmath=sse']\n")
+		ofile.write("REL_CCFLAGS = ['-DNDEBUG', '-O2','-ftree-vectorize','-msse','-msse2','-msse3','-mfpmath=sse']\n")
+		ofile.write("REL_CFLAGS  = REL_CFLAGS + ['-march=core2','-mssse3','-with-tune=core2','-enable-threads']\n")
+		ofile.write("REL_CCFLAGS = REL_CCFLAGS + ['-march=core2','-mssse3','-with-tune=core2','-enable-threads']\n")
+
+	ofile.write("BF_INSTALLDIR = \"%s\"\n" % install_dir)
 
 	if options.with_collada:
 		build_options['True'].append('WITH_BF_COLLADA')
@@ -485,54 +610,64 @@ def generate_user_config(filename):
 	if options.debug:
 		build_options['True'].append('BF_DEBUG')
 
+	if PLATFORM in ('win32', 'linux2'):
+		if PLATFORM == "win32" and ARCH == '64bit':
+			build_options['False'].append('WITH_BF_JACK')
+			build_options['False'].append('WITH_BF_SNDFILE')
+			build_options['False'].append('WITH_BF_FFMPEG')
+			build_options['False'].append('WITH_BF_OPENAL')
+
+		ofile.write("BF_PYTHON_VERSION = '%s'\n" % BF_PYTHON_VERSION)
+
+		if PLATFORM == "linux2":
+			SUFFIX= ""
+			for s in ('m', 'mu', 'd', 'dmu'):
+				if os.path.exists("/usr/include/python3.2"+s):
+					SUFFIX= s
+					break
+			ofile.write("SUFFIX = '%s'\n" % SUFFIX)
+			LIB = "lib"
+			if LINUX == 'opensuse' and ARCH == '64bit':
+				LIB = "lib64"
+			ofile.write("BF_PYTHON            = '/usr'\n")
+			ofile.write("BF_PYTHON_LIBPATH    = '${BF_PYTHON}/%s'\n" % LIB)
+			ofile.write("BF_PYTHON_BINARY     = '${BF_PYTHON}/bin/python${BF_PYTHON_VERSION}'\n")
+			ofile.write("BF_PYTHON_INC        = '${BF_PYTHON}/include/python${BF_PYTHON_VERSION}' + SUFFIX\n")
+			ofile.write("BF_PYTHON_LIB        = 'python${BF_PYTHON_VERSION}' + SUFFIX\n")
+			ofile.write("BF_PYTHON_LINKFLAGS  = ['-Xlinker', '-export-dynamic']\n")
+			ofile.write("BF_PYTHON_LIB_STATIC = '${BF_PYTHON}/lib/libpython${BF_PYTHON_VERSION}' + SUFFIX + '.a'\n")
+
+			ofile.write("BF_OPENAL_LIB = \'openal alut\'\n")
+
+		ofile.write("BF_TWEAK_MODE = \'false\'\n")
+		ofile.write("BF_NUMJOBS = %i\n" % BF_NUMJOBS)
+
+		if PLATFORM == "win32" :
+			ofile.write("BF_SPLIT_SRC = \'true\'\n")
+			ofile.write("BF_BUILDDIR = \"C:\\\\b\"\n")
+
+		else:
+			ofile.write("BF_BUILDDIR = \"/tmp/build-%s\"\n" % project)
+
+			# Optimize for Intel Core
+			if options.optimize:
+				ofile.write("CCFLAGS = [\'-pipe\',\'-fPIC\',\'-march=nocona\',\'-msse3\',\'-mmmx\',\'-mfpmath=sse\',\'-funsigned-char\',\'-fno-strict-aliasing\',\'-ftracer\',\'-fomit-frame-pointer\',\'-finline-functions\',\'-ffast-math\']\n")
+				ofile.write("CXXFLAGS = CCFLAGS\n")
+				ofile.write("REL_CFLAGS = [\'-O3\',\'-fomit-frame-pointer\',\'-funroll-loops\']\n")
+				ofile.write("REL_CCFLAGS = REL_CFLAGS\n")
+			else:
+				ofile.write("CCFLAGS = [\'-pipe\',\'-fPIC\',\'-funsigned-char\',\'-fno-strict-aliasing\']\n")
+				ofile.write("CPPFLAGS = [\'-DXP_UNIX\']\n")
+				ofile.write("CXXFLAGS = [\'-pipe\',\'-fPIC\',\'-funsigned-char\',\'-fno-strict-aliasing\']\n")
+				ofile.write("REL_CFLAGS = [\'-O2\']\n")
+				ofile.write("REL_CCFLAGS = [\'-O2\']\n")
+
+			ofile.write("C_WARN = [\'-Wno-char-subscripts\', \'-Wdeclaration-after-statement\']\n")
+			ofile.write("CC_WARN = [\'-Wall\']\n")
+
 	for key in build_options:
 		for opt in build_options[key]:
 			ofile.write("%s = '%s'\n"%(opt,key))
-
-	ofile.write("BF_PYTHON_VERSION = '%s'\n" % BF_PYTHON_VERSION)
-
-	if PLATFORM == "linux2":
-		SUFFIX= ""
-		for s in ('m', 'mu', 'd', 'dmu'):
-			if os.path.exists("/usr/include/python3.2"+s):
-				SUFFIX= s
-				break
-		ofile.write("SUFFIX = '%s'\n" % SUFFIX)
-		LIB = "lib"
-		if LINUX == 'opensuse' and ARCH == '64bit':
-			LIB = "lib64"
-		ofile.write("BF_PYTHON =         '/usr'\n")
-		ofile.write("BF_PYTHON_LIBPATH = '${BF_PYTHON}/%s'\n" % LIB)
-		ofile.write("BF_PYTHON_INC =     '${BF_PYTHON}/include/python${BF_PYTHON_VERSION}' + SUFFIX\n")
-		ofile.write("BF_PYTHON_BINARY =  '${BF_PYTHON}/bin/python${BF_PYTHON_VERSION}'\n")
-		ofile.write("BF_PYTHON_LIB =     'python${BF_PYTHON_VERSION}' + SUFFIX\n")
-
-	if not PLATFORM == "win32":
-		ofile.write("BF_OPENAL_LIB = \'openal alut\'\n")
-	
-	ofile.write("BF_TWEAK_MODE = \'false\'\n")
-	ofile.write("BF_NUMJOBS = %i\n" % BF_NUMJOBS)
-
-	ofile.write("BF_INSTALLDIR = \"%s\"\n" % install_dir)
-	if PLATFORM == "win32" :
-		ofile.write("BF_SPLIT_SRC = \'true\'\n")
-		ofile.write("BF_BUILDDIR = \"C:\\\\b\"\n")
-	else:
-		ofile.write("BF_BUILDDIR = \"/tmp/build-%s\"\n" % project)
-		if options.optimize: # Optimize for Intel Core
-			ofile.write("CCFLAGS = [\'-pipe\',\'-fPIC\',\'-march=nocona\',\'-msse3\',\'-mmmx\',\'-mfpmath=sse\',\'-funsigned-char\',\'-fno-strict-aliasing\',\'-ftracer\',\'-fomit-frame-pointer\',\'-finline-functions\',\'-ffast-math\']\n")
-			ofile.write("CXXFLAGS = CCFLAGS\n")
-			ofile.write("REL_CFLAGS = [\'-O3\',\'-fomit-frame-pointer\',\'-funroll-loops\']\n")
-			ofile.write("REL_CCFLAGS = REL_CFLAGS\n")
-		else:
-			ofile.write("CCFLAGS = [\'-pipe\',\'-fPIC\',\'-funsigned-char\',\'-fno-strict-aliasing\']\n")
-			ofile.write("CPPFLAGS = [\'-DXP_UNIX\']\n")
-			ofile.write("CXXFLAGS = [\'-pipe\',\'-fPIC\',\'-funsigned-char\',\'-fno-strict-aliasing\']\n")
-			ofile.write("REL_CFLAGS = [\'-O2\']\n")
-			ofile.write("REL_CCFLAGS = [\'-O2\']\n")
-
-		ofile.write("C_WARN = [\'-Wno-char-subscripts\', \'-Wdeclaration-after-statement\']\n")
-		ofile.write("CC_WARN = [\'-Wall\']\n")
 
 	ofile.close()
 
@@ -579,25 +714,35 @@ else:
 
 os.chdir(working_directory)
 
-# Update 'lib' on Windows
-if PLATFORM == "win32":
-	lib_dir= my_path_join(working_directory,'lib','windows')
-	# if ARCH == '64bit':
-	# 	lib_dir= my_path_join(working_directory,'lib','win64')
+# Update 'lib' on Windows & Mac
+if PLATFORM in ('win32', 'darwin'):
+	if PLATFORM == 'win32':
+		if ARCH == 'x86_64':
+			lib_dir= my_path_join(working_directory,'lib','win64')
+		else:
+			lib_dir= my_path_join(working_directory,'lib','windows')
+	else:
+		lib_dir= my_path_join(working_directory,'lib','darwin-9.x.universal')
+		
 	if os.path.exists(lib_dir):
 		os.chdir(lib_dir)
 		if options.update:
 			sys.stdout.write("Updating lib sources\n")
 			if not options.test:
 				os.system("svn update")
+
 	else:
-		# if ARCH == '64bit':
-		# 	os.system("svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64 lib/win64")
-		# else:
 		sys.stdout.write("Getting lib sources\n")
 		if not options.test:
-			os.system("svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/windows lib/windows")
-
+			if PLATFORM == 'win32':
+				if ARCH == 'x86_64':
+					os.system("svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64 lib/win64")
+				else:
+					os.system("svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/windows lib/windows")
+			else:
+				os.system("svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/windows lib/darwin-9.x.universal")
+				
+				
 os.chdir(working_directory)
 
 # Apply V-Ray/Blender patches if needed
@@ -644,7 +789,7 @@ if not options.pure_blender:
 
 				run_patch(patch_file)
 
-	if options.blend_files:
+	if options.datafiles:
 		sys.stdout.write("Replacing datafiles...\n")
 		editor_datafiles= my_path_join(blender_dir, "source", "blender", "editors", "datafiles")
 		datatoc=          my_path_join(blender_dir, "release", "datafiles", "datatoc.py")
@@ -663,13 +808,14 @@ if not options.pure_blender:
 			cmd= ' '.join(cmd)
 			
 			if options.test:
-				print(cmd)
-				print(datafile_c)
 				print("Moving: %s => %s" % (os.path.basename(datafile_c), editor_datafiles))
 			else:
 				os.system(cmd)
 				print("Moving: %s => %s" % (os.path.basename(datafile_c), editor_datafiles))
-				shutil.copy(datafile_c, editor_datafiles)
+				if PLATFORM == "win32":
+					shutil.move(datafile_c, editor_datafiles)
+				else:
+					os.system("mv -f %s %s" % (datafile_c, editor_datafiles))
 
 
 # Generate user settings file
@@ -720,22 +866,24 @@ if options.docs:
 
 
 # Adding exporter
-if not options.pure_blender:
-	sys.stdout.write("Adding vb25 exporter...\n")
-	io_scripts_path= my_path_join(install_dir,VERSION,'scripts','startup')
-	exporter_path= my_path_join(io_scripts_path,'vb25')
-	if not options.test:
-		if os.path.exists(exporter_path):
-			if PLATFORM == "win32":
-				os.system("rmdir /Q /S %s" % exporter_path)
-			else:
-				shutil.rmtree(exporter_path)
-		if options.devel and not options.archive:
-			if not options.test:
-				os.symlink(get_full_path('~/devel/vrayblender/exporter/symlinks'), exporter_path)
+sys.stdout.write("Adding vb25 exporter...\n")
+io_scripts_path= my_path_join(install_dir,VERSION,'scripts','startup')
+if PLATFORM == 'darwin':
+	io_scripts_path= my_path_join(install_dir, 'blender.app', 'Contents', 'MacOS', VERSION, 'scripts', 'startup')
+exporter_path= my_path_join(io_scripts_path,'vb25')
+if not options.test:
+	if os.path.exists(exporter_path):
+		if PLATFORM == "win32":
+			os.system("rmdir /Q /S %s" % exporter_path)
 		else:
-			os.chdir(io_scripts_path)
-			os.system("git clone --depth=1 git://github.com/bdancer/vb25.git")
+			shutil.rmtree(exporter_path)
+	if options.devel and not options.archive:
+		if not options.test:
+			os.symlink(get_full_path('~/devel/vrayblender/exporter/symlinks'), exporter_path)
+	else:
+		os.chdir(io_scripts_path)
+		os.system("git clone --depth=1 git://github.com/bdancer/vb25.git")
+
 os.chdir(working_directory)
 
 
@@ -745,18 +893,22 @@ if not options.debug and options.archive:
 		sys.stdout.write("Release directory doesn\'t exist! Trying to create...\n")
 		os.makedirs(release_dir)
 
-	archive_name= "%s-%s-%s%s-%s.tar.bz2" % (project,REV,LINUX,LINUX_VER,ARCH)
-	if PLATFORM == "win32":
+	archive_name= "vb25"
+	if PLATFORM == 'win32':
 		archive_name= "%s-%s-win%s.exe" % (project,REV,ARCH[:-3])
+	elif PLATFORM == 'linux2':
+		archive_name= "%s-%s-%s%s-%s.tar.bz2" % (project, REV, LINUX, LINUX_VER, ARCH)
+	else:
+		archive_name= "%s-%s-osx%s-%s.tar.bz2" % (project, REV, OSX, ARCH)
 
-	if PLATFORM == "win32":
+	if PLATFORM == 'win32':
 		sys.stdout.write("Generating installer: %s\n" % (archive_name))
 	else:
 		sys.stdout.write("Generating archive: %s\n" % (archive_name))
 
 	os.chdir(working_directory)
 	if not options.test:
-		if PLATFORM == "win32":
+		if PLATFORM == 'win32':
 			generate_installer(patch_dir, install_dir, archive_name, VERSION)
 		else:
 			os.chdir(install_dir)

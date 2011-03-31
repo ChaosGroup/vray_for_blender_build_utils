@@ -710,17 +710,17 @@ static int mesh_animated(Object *ob)
 		Curve *cu= (Curve*)ob->data;
 		if(cu->adt) return 1;
 	}
-		break;
+    break;
 	case OB_MBALL: {
 		MetaBall *mb= (MetaBall*)ob->data;
 		if(mb->adt) return 1;
 	}
-		break;
+    break;
 	case OB_MESH: {
 		Mesh *me= (Mesh*)ob->data;
 		if(me->adt) return 1;
 	}
-		break;
+    break;
 	default:
 		break;
 	}

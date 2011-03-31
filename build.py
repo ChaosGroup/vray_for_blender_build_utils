@@ -4,7 +4,7 @@
 
   http://vray.cgdo.ru
 
-  Time-stamp: "Thursday, 31 March 2011 [20:45]"
+  Time-stamp: "Thursday, 31 March 2011 [20:50]"
 
   Author: Andrey M. Izrantsev (aka bdancer)
   E-Mail: izrantsev@cgdo.ru
@@ -304,24 +304,18 @@ else: # Mac
 '''
   OPTIONS
 '''
-if options.test:
-	OS= {
-		'win32':  'Windows',
-		'linux2': 'Linux',
-	}
-
-	if PLATFORM == 'darwin':
-		print("OS: Mac OS X %s" % (OSX))
-	else:
-		print("OS: %s" % OS[PLATFORM])
-
-		if PLATFORM == 'linux2':
-			print("Distribution: %s %s" % (platform.linux_distribution()[0], platform.linux_distribution()[1]))
-
-	print("Arch: %s" % ARCH)
-
-	print("Building: %s" % ("Blender 2.5" if options.pure_blender else "V-Ray/Blender 2.5"))
-	
+OS= {
+	'win32':  'Windows',
+	'linux2': 'Linux',
+}
+if PLATFORM == 'darwin':
+	print("OS: Mac OS X %s" % (OSX))
+else:
+	print("OS: %s" % OS[PLATFORM])
+	if PLATFORM == 'linux2':
+		print("Distribution: %s %s" % (platform.linux_distribution()[0], platform.linux_distribution()[1]))
+print("Arch: %s" % ARCH)
+print("Building: %s" % ("Blender 2.5" if options.pure_blender else "V-Ray/Blender 2.5"))
 print("")
 
 project= 'vb25'

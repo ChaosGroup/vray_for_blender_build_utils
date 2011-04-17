@@ -79,7 +79,7 @@ if PLATFORM == 'darwin':
 OSX      = '10.6'
 
 REV      = 'current'
-VERSION  = '2.56'
+VERSION  = '2.57'
 
 LINUX= platform.linux_distribution()[0].lower().strip()
 LINUX_VER= platform.linux_distribution()[1].replace('.','_').strip()

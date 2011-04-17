@@ -53,40 +53,12 @@
  
  	jobflag= WM_JOB_EXCL_RENDER|WM_JOB_PRIORITY|WM_JOB_PROGRESS;
  	
---- source/blender/makesrna/intern/rna_texture.c	2011-01-06 14:51:10.000000000 +0300
-+++ source/blender/makesrna/intern/rna_texture.c	2011-01-06 15:10:08.536095042 +0300
-@@ -56,21 +56,22 @@ EnumPropertyItem texture_filter_items[] 
- 
- EnumPropertyItem texture_type_items[] = {
- 	{0, "NONE", 0, "None", ""},
--	{TEX_BLEND, "BLEND", ICON_TEXTURE, "Blend", ""},
--	{TEX_CLOUDS, "CLOUDS", ICON_TEXTURE, "Clouds", ""},
--	{TEX_DISTNOISE, "DISTORTED_NOISE", ICON_TEXTURE, "Distorted Noise", ""},
--	{TEX_ENVMAP, "ENVIRONMENT_MAP", ICON_IMAGE_DATA, "Environment Map", ""},
-+	/* {TEX_BLEND, "BLEND", ICON_TEXTURE, "Blend", ""}, */
-+	/* {TEX_CLOUDS, "CLOUDS", ICON_TEXTURE, "Clouds", ""}, */
-+	/* {TEX_DISTNOISE, "DISTORTED_NOISE", ICON_TEXTURE, "Distorted Noise", ""}, */
-+	/* {TEX_ENVMAP, "ENVIRONMENT_MAP", ICON_IMAGE_DATA, "Environment Map", ""}, */
- 	{TEX_IMAGE, "IMAGE", ICON_IMAGE_DATA, "Image or Movie", ""},
--	{TEX_MAGIC, "MAGIC", ICON_TEXTURE, "Magic", ""},
--	{TEX_MARBLE, "MARBLE", ICON_TEXTURE, "Marble", ""},
--	{TEX_MUSGRAVE, "MUSGRAVE", ICON_TEXTURE, "Musgrave", ""},
--	{TEX_NOISE, "NOISE", ICON_TEXTURE, "Noise", ""},
-+	/* {TEX_MAGIC, "MAGIC", ICON_TEXTURE, "Magic", ""}, */
-+	/* {TEX_MARBLE, "MARBLE", ICON_TEXTURE, "Marble", ""}, */
-+	/* {TEX_MUSGRAVE, "MUSGRAVE", ICON_TEXTURE, "Musgrave", ""}, */
-+	/* {TEX_NOISE, "NOISE", ICON_TEXTURE, "Noise", ""}, */
- 	//{TEX_PLUGIN, "PLUGIN", ICON_PLUGIN, "Plugin", ""}, /* Nothing yet */
--	{TEX_POINTDENSITY, "POINT_DENSITY", ICON_TEXTURE, "Point Density", ""},
--	{TEX_STUCCI, "STUCCI", ICON_TEXTURE, "Stucci", ""},
--	{TEX_VORONOI, "VORONOI", ICON_TEXTURE, "Voronoi", ""},
--	{TEX_VOXELDATA, "VOXEL_DATA", ICON_TEXTURE, "Voxel Data", ""},
--	{TEX_WOOD, "WOOD", ICON_TEXTURE, "Wood", ""},
-+	/* {TEX_POINTDENSITY, "POINT_DENSITY", ICON_TEXTURE, "Point Density", ""}, */
-+	/* {TEX_STUCCI, "STUCCI", ICON_TEXTURE, "Stucci", ""}, */
-+	/* {TEX_VORONOI, "VORONOI", ICON_TEXTURE, "Voronoi", ""}, */
-+	/* {TEX_VOXELDATA, "VOXEL_DATA", ICON_TEXTURE, "Voxel Data", ""}, */
-+	/* {TEX_WOOD, "WOOD", ICON_TEXTURE, "Wood", ""}, */
+--- source/blender/makesrna/intern/rna_texture.c	2011-03-02 02:40:21.756845001 +0300
++++ source/blender/makesrna/intern/rna_texture.c	2011-04-04 01:51:36.334316052 +0400
+@@ -71,6 +71,7 @@ EnumPropertyItem texture_type_items[] = 
+ 	{TEX_VORONOI, "VORONOI", ICON_TEXTURE, "Voronoi", ""},
+ 	{TEX_VOXELDATA, "VOXEL_DATA", ICON_TEXTURE, "Voxel Data", ""},
+ 	{TEX_WOOD, "WOOD", ICON_TEXTURE, "Wood", ""},
 +	{TEX_VRAY, "VRAY", ICON_TEXTURE, "V-Ray", ""},
  	{0, NULL, 0, NULL, NULL}};
  
@@ -116,7 +88,7 @@
 
 --- source/creator/CMakeLists.txt	2011-01-06 14:48:46.000000000 +0300
 +++ source/creator/CMakeLists.txt	2011-01-14 19:05:58.851581234 +0300
-@@ -705,6 +705,7 @@
+@@ -706,6 +706,7 @@
 		bf_editor_space_time
 		bf_editor_space_userpref
 		bf_editor_space_view3d
@@ -124,21 +96,6 @@
  
 		bf_editor_text
 		bf_editor_transform
-
---- source/blender/editors/render/render_shading.c	2011-01-14 19:55:00.236281234 +0300
-+++ source/blender/editors/render/render_shading.c	2011-01-21 18:38:34.927359002 +0300
-@@ -586,8 +586,10 @@
- 	/* add or copy texture */
- 	if(tex)
- 		tex= copy_texture(tex);
--	else
-+	else {
- 		tex= add_texture("Texture");
-+		tex->type= TEX_IMAGE;
-+	}
- 
- 	/* hook into UI */
- 	uiIDContextProperty(C, &ptr, &prop);
 
 --- source/blender/makesdna/DNA_texture_types.h	2011-01-07 22:42:51.812373001 +0300
 +++ source/blender/makesdna/DNA_texture_types.h	2011-01-21 18:42:30.430959002 +0300

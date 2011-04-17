@@ -297,20 +297,28 @@ static void write_hair(FILE *gfile,
             scene_update_tagged(bmain, sce);
 
 
-            cleared_string= clean_string(ob->id.name+2);
-            fprintf(gfile, "GeomMayaHair HAIROB%s", cleared_string);
-            free(cleared_string);
+            /* cleared_string= clean_string(ob->id.name+2); */
+            /* fprintf(gfile, "GeomMayaHair HAIROB%s", cleared_string); */
+            /* free(cleared_string); */
 
-            if(ob->id.lib) {
-                BLI_split_dirfile(ob->id.lib->name+2, NULL, lib_file);
-                cleared_string= clean_string(lib_file);
-                fprintf(gfile,"LI%s", cleared_string);
-                free(cleared_string);
-                free(lib_file);
-            }
+            /* if(ob->id.lib) { */
+            /*     BLI_split_dirfile(ob->id.lib->name+2, NULL, lib_file); */
+            /*     cleared_string= clean_string(lib_file); */
+            /*     fprintf(gfile,"LI%s", cleared_string); */
+            /*     free(cleared_string); */
+            /*     free(lib_file); */
+            /* } */
+
+            /* cleared_string= clean_string(psys->name); */
+            /* fprintf(gfile, "PS%s {", cleared_string); */
+            /* free(cleared_string); */
 
             cleared_string= clean_string(psys->name);
-            fprintf(gfile, "PS%s {", cleared_string);
+            fprintf(gfile, "GeomMayaHair HAIR%s", cleared_string);
+            free(cleared_string);
+
+            cleared_string= clean_string(pset->id.name+2);
+            fprintf(gfile, "%s {", cleared_string);
             free(cleared_string);
 
 

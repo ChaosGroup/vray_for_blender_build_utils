@@ -4,7 +4,7 @@
 
   http://vray.cgdo.ru
 
-  Time-stamp: "Thursday, 31 March 2011 [20:50]"
+  Time-stamp: "Wednesday, 27 April 2011 [05:31]"
 
   Author: Andrey M. Izrantsev (aka bdancer)
   E-Mail: izrantsev@cgdo.ru
@@ -792,7 +792,8 @@ if not options.pure_blender:
 		datafiles_workdir= tempfile.gettempdir()
 		os.chdir(datafiles_workdir)
 
-		for datafile in ("splash.png", "startup.blend", "preview.blend"):
+		#for datafile in ("splash.png", "startup.blend", "preview.blend"):
+		for datafile in ["splash.png"]:
 			datafile_path= my_path_join(patch_dir, "datafiles", datafile)
 			datafile_c= datafile_path + '.c'
 

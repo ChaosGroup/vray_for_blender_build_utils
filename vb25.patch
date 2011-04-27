@@ -44,7 +44,7 @@
 
 --- source/blender/editors/render/render_internal.c   2011-01-06 14:51:55.000000000 +0300
 +++ source/blender/editors/render/render_internal.c   2011-01-06 16:08:02.447495042 +0300
-@@ -727,7 +727,7 @@ static int screen_render_invoke(bContext
+@@ -728,7 +728,7 @@ static int screen_render_invoke(bContext
  	// store spare
  
  	/* ensure at least 1 area shows result */
@@ -88,7 +88,7 @@
 
 --- source/creator/CMakeLists.txt	2011-01-06 14:48:46.000000000 +0300
 +++ source/creator/CMakeLists.txt	2011-01-14 19:05:58.851581234 +0300
-@@ -706,6 +706,7 @@
+@@ -731,6 +731,7 @@
 		bf_editor_space_time
 		bf_editor_space_userpref
 		bf_editor_space_view3d
@@ -118,3 +118,28 @@
 +//#define USE_PEDANTIC_WRITE
  #define USE_MATHUTILS
  #define USE_STRING_COERCE
+
+--- source/blender/windowmanager/intern/wm_window.c	2011-03-27 15:10:44.772710661 +0400
++++ source/blender/windowmanager/intern/wm_window.c	2011-04-27 05:50:54.479917001 +0400
+@@ -273,18 +273,18 @@
+ {
+ 	/* handle the 'temp' window */
+ 	if(win->screen && win->screen->temp) {
+-		GHOST_SetTitle(win->ghostwin, "Blender");
++		GHOST_SetTitle(win->ghostwin, "V-Ray/Blender");
+ 	}
+ 	else {
+ 		
+ 		/* this is set to 1 if you don't have startup.blend open */
+ 		if(G.save_over && G.main->name[0]) {
+ 			char str[sizeof(G.main->name) + 12];
+-			BLI_snprintf(str, sizeof(str), "Blender%s [%s]", wm->file_saved ? "":"*", G.main->name);
++			BLI_snprintf(str, sizeof(str), "V-Ray/Blender%s [%s]", wm->file_saved ? "":"*", G.main->name);
+ 			GHOST_SetTitle(win->ghostwin, str);
+ 		}
+ 		else
+-			GHOST_SetTitle(win->ghostwin, "Blender");
++			GHOST_SetTitle(win->ghostwin, "V-Ray/Blender");
+ 
+ 		/* Informs GHOST of unsaved changes, to set window modified visual indicator (MAC OS X)
+ 		 and to give hint of unsaved changes for a user warning mechanism

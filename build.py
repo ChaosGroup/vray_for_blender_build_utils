@@ -4,7 +4,7 @@
 
   http://vray.cgdo.ru
 
-  Time-stamp: "Friday, 29 April 2011 [10:39]"
+  Time-stamp: "Friday, 29 April 2011 [15:46]"
 
   Author: Andrey M. Izrantsev (aka bdancer)
   E-Mail: izrantsev@cgdo.ru
@@ -794,23 +794,26 @@ if not options.pure_blender:
 
 		#for datafile in ("splash.png", "startup.blend", "preview.blend"):
 		for datafile in ["splash.png"]:
+			datafile_c= datafile + '.c'
 			datafile_path= my_path_join(patch_dir, "datafiles", datafile)
-			datafile_c= datafile_path + '.c'
+			datafile_c_path= datafile_path + '.c'
 
 			cmd= []
 			cmd.append(datatoc)
 			cmd.append(datafile_path)
 			cmd= ' '.join(cmd)
 			
-			if options.test:
-				print("Moving: %s => %s" % (os.path.basename(datafile_c), editor_datafiles))
-			else:
+			if not options.test:
 				os.system(cmd)
-				print("Moving: %s => %s" % (os.path.basename(datafile_c), editor_datafiles))
 				if PLATFORM == "win32":
-					shutil.move(datafile_c, editor_datafiles)
+					os.remove(os.path.normpath(os.path.join(editor_datafiles,
+															datafile_c)))
+					shutil.move(os.path.normpath(datafile_c_path),
+								os.path.normpath(editor_datafiles))
 				else:
 					os.system("mv -f %s %s" % (datafile_c, editor_datafiles))
+			print("Moving: %s => %s" % (datafile_c, editor_datafiles))
+
 
 
 # Generate user settings file

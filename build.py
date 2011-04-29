@@ -4,7 +4,7 @@
 
   http://vray.cgdo.ru
 
-  Time-stamp: "Friday, 29 April 2011 [15:46]"
+  Time-stamp: "Friday, 29 April 2011 [16:57]"
 
   Author: Andrey M. Izrantsev (aka bdancer)
   E-Mail: izrantsev@cgdo.ru
@@ -811,7 +811,7 @@ if not options.pure_blender:
 					shutil.move(os.path.normpath(datafile_c_path),
 								os.path.normpath(editor_datafiles))
 				else:
-					os.system("mv -f %s %s" % (datafile_c, editor_datafiles))
+					os.system("mv -f %s %s" % (datafile_c_path, editor_datafiles))
 			print("Moving: %s => %s" % (datafile_c, editor_datafiles))
 
 
@@ -893,7 +893,7 @@ if not options.debug and options.archive:
 
 	archive_name= "vb25"
 	if PLATFORM == 'win32':
-		archive_name= "%s-%s-win%s.exe" % (project,REV,ARCH[:-3])
+		archive_name= "%s-%s-windows-%s.exe" % (project, REV, ARCH)
 	elif PLATFORM == 'linux2':
 		archive_name= "%s-%s-%s%s-%s.tar.bz2" % (project, REV, LINUX, LINUX_VER, ARCH)
 	else:

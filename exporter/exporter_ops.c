@@ -90,6 +90,7 @@
 #undef htons
 #undef ntohl
 #undef ntohs
+#define correctByteOrder(x) htonl(x)
 #endif
 #include <winsock.h>
 #endif

@@ -264,7 +264,7 @@ static void write_hair(FILE *gfile,
 	PointerRNA VRayParticleSettings;
 	PointerRNA VRayFur;
 
-	char *lib_file= (char*)malloc(FILE_MAX * sizeof(char));
+	//char *lib_file= (char*)malloc(FILE_MAX * sizeof(char));
 	char *cleared_string;
 
     for(md= ob->modifiers.first; md; md= md->next) {
@@ -277,6 +277,9 @@ static void write_hair(FILE *gfile,
 
             psys= psmd->psys;
             pset= psys->part;
+
+            if(pset->type != PART_HAIR)
+                continue;
 
             RNA_id_pointer_create(&pset->id, &rna_pset);
 
@@ -296,7 +299,6 @@ static void write_hair(FILE *gfile,
             pset->disp= 100;
             ob->recalc |= OB_RECALC_DATA;
             scene_update_tagged(bmain, sce);
-
 
             /* cleared_string= clean_string(ob->id.name+2); */
             /* fprintf(gfile, "GeomMayaHair HAIROB%s", cleared_string); */

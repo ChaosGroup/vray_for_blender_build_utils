@@ -42,23 +42,12 @@
  incs += ' ../../windowmanager ../../python ../../makesrna'
  incs += ' #/intern/guardedalloc #/extern/glew/include'
 
---- source/blender/editors/render/render_internal.c   2011-01-06 14:51:55.000000000 +0300
-+++ source/blender/editors/render/render_internal.c   2011-01-06 16:08:02.447495042 +0300
-@@ -728,7 +728,7 @@ static int screen_render_invoke(bContext
- 	// store spare
- 
- 	/* ensure at least 1 area shows result */
--	screen_set_image_output(C, event->x, event->y);
-+	/* screen_set_image_output(C, event->x, event->y); */
- 
- 	jobflag= WM_JOB_EXCL_RENDER|WM_JOB_PRIORITY|WM_JOB_PROGRESS;
- 	
 --- source/blender/makesrna/intern/rna_texture.c	2011-03-02 02:40:21.756845001 +0300
 +++ source/blender/makesrna/intern/rna_texture.c	2011-04-04 01:51:36.334316052 +0400
 @@ -71,6 +71,7 @@ EnumPropertyItem texture_type_items[] = 
- 	{TEX_VORONOI, "VORONOI", ICON_TEXTURE, "Voronoi", ""},
- 	{TEX_VOXELDATA, "VOXEL_DATA", ICON_TEXTURE, "Voxel Data", ""},
- 	{TEX_WOOD, "WOOD", ICON_TEXTURE, "Wood", ""},
+	{TEX_VORONOI, "VORONOI", ICON_TEXTURE, "Voronoi", "Procedural - Creates cell-like patterns based on Worley noise"},
+	{TEX_VOXELDATA, "VOXEL_DATA", ICON_TEXTURE, "Voxel Data", "Creates a 3d texture based on volumetric data"},
+	{TEX_WOOD, "WOOD", ICON_TEXTURE, "Wood", "Procedural - Wave generated bands or rings, with optional noise"},
 +	{TEX_VRAY, "VRAY", ICON_TEXTURE, "V-Ray", ""},
  	{0, NULL, 0, NULL, NULL}};
  
@@ -77,7 +66,7 @@
 
 --- source/blender/CMakeLists.txt	2011-01-06 14:52:13.000000000 +0300
 +++ source/blender/CMakeLists.txt	2011-01-14 17:53:03.215981234 +0300
-@@ -101,6 +101,7 @@
+@@ -100,6 +100,7 @@
  add_subdirectory(modifiers)
  add_subdirectory(makesdna)
  add_subdirectory(makesrna)
@@ -88,7 +77,7 @@
 
 --- source/creator/CMakeLists.txt	2011-01-06 14:48:46.000000000 +0300
 +++ source/creator/CMakeLists.txt	2011-01-14 19:05:58.851581234 +0300
-@@ -735,6 +735,7 @@
+@@ -754,6 +754,7 @@
 		bf_editor_space_time
 		bf_editor_space_userpref
 		bf_editor_space_view3d
@@ -99,7 +88,7 @@
 
 --- source/blender/makesdna/DNA_texture_types.h	2011-01-07 22:42:51.812373001 +0300
 +++ source/blender/makesdna/DNA_texture_types.h	2011-01-21 18:42:30.430959002 +0300
-@@ -302,6 +302,7 @@
+@@ -304,6 +304,7 @@
  #define TEX_DISTNOISE	13
  #define TEX_POINTDENSITY	14
  #define TEX_VOXELDATA		15

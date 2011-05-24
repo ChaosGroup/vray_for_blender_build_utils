@@ -4,7 +4,7 @@
 
   http://vray.cgdo.ru
 
-  Time-stamp: "Friday, 29 April 2011 [16:57]"
+  Time-stamp: "Sunday, 01 May 2011 [07:31]"
 
   Author: Andrey M. Izrantsev (aka bdancer)
   E-Mail: izrantsev@cgdo.ru
@@ -779,9 +779,9 @@ if not options.pure_blender:
 			sys.stdout.write("Applying \"extern\" patches...\n")
 			extern_path= my_path_join(patch_dir,"extern")
 			for f in os.listdir(extern_path):
-				patch_file= my_path_join(extern_path, f)
-
-				run_patch(patch_file)
+				if f.endswith('.patch'):
+					patch_file= my_path_join(extern_path, f)
+					run_patch(patch_file)
 
 	if options.datafiles:
 		sys.stdout.write("Replacing datafiles...\n")

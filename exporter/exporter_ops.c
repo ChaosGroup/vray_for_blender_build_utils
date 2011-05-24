@@ -102,8 +102,10 @@
 
 #include "exporter_ops.h"
 
+
 #define TYPE_UV			 5
 #define MAX_MESH_THREADS 16
+
 
 struct Material;
 struct MTex;
@@ -125,9 +127,10 @@ typedef struct ThreadData {
 	int		  instances;
 } ThreadData;
 
-pthread_mutex_t mtx= PTHREAD_MUTEX_INITIALIZER;
 
-ThreadData thread_data[MAX_MESH_THREADS];
+static pthread_mutex_t mtx= PTHREAD_MUTEX_INITIALIZER;
+
+static ThreadData thread_data[MAX_MESH_THREADS];
 
 static int debug= 0;
 
@@ -402,12 +405,18 @@ static void write_mesh(FILE *gfile,
 	float *ve[4];
 	float  no[3];
 
-	int matid= 0;
-	int hasUV= 0;
-	int maxLayer= 0;
+	int    matid= 0;
+	int    hasUV= 0;
+	int    maxLayer= 0;
 
-	char *lib_file= (char*)malloc(FILE_MAX * sizeof(char));
-	char *cleared_string;
+	char  *lib_file= (char*)malloc(FILE_MAX * sizeof(char));
+	char  *cleared_string;
+
+	PointerRNA	 rna_me;
+	PointerRNA	 VRayMesh;
+	PointerRNA	 GeomStaticMesh;
+
+    int          dynamic_geometry= 0;
 	
 	const int ft[6]= {0,1,2,2,3,0};
 
@@ -647,6 +656,19 @@ static void write_mesh(FILE *gfile,
 		}
 		fprintf(gfile,")));\n");
 	}
+
+    RNA_id_pointer_create(&me->id, &rna_me);
+    if(RNA_struct_find_property(&rna_me, "vray")) {
+        VRayMesh= RNA_pointer_get(&rna_me, "vray");
+        if(RNA_struct_find_property(&VRayMesh, "GeomStaticMesh")) {
+            GeomStaticMesh= RNA_pointer_get(&VRayMesh, "GeomStaticMesh");
+            if(RNA_struct_find_property(&GeomStaticMesh, "dynamic_geometry")) {
+                dynamic_geometry= RNA_boolean_get(&GeomStaticMesh, "dynamic_geometry");
+            }
+        }
+    }
+
+    fprintf(gfile,"\tdynamic_geometry= %i;\n", dynamic_geometry);
 
 	fprintf(gfile,"}\n\n");
 }

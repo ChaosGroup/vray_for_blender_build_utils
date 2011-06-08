@@ -238,7 +238,7 @@ static void write_hair(FILE *gfile,
                        Scene *sce, Main *bmain,
                        Object *ob)
 {
-    ModifierData *md;
+    ModifierData     *md;
 
     ParticleSystem   *psys;
     ParticleSettings *pset;
@@ -668,6 +668,10 @@ static void write_mesh(FILE *gfile,
         }
     }
 
+    // When this flag is true V-Ray will use dynamic geometry for this mesh.
+    // Instead of copying the mesh many times in the BSP tree, only the bounding
+    // box will be present many times and ray intersections will occur
+    // in a separate object space BSP tree.
     fprintf(gfile,"\tdynamic_geometry= %i;\n", dynamic_geometry);
 
 	fprintf(gfile,"}\n\n");
@@ -677,8 +681,8 @@ static void write_mesh(FILE *gfile,
 static Mesh *get_render_mesh(Scene *sce, Main *bmain, Object *ob)
 {
 	Object		   *tmpobj= NULL;
-	Curve		   *tmpcu= NULL;
-	Mesh		   *mesh= NULL;
+	Curve		   *tmpcu=  NULL;
+	Mesh		   *mesh=   NULL;
 	DerivedMesh	   *dm;
 	CustomDataMask	mask= CD_MASK_MESH; 
 
@@ -741,17 +745,20 @@ static int mesh_animated(Object *ob)
 	case OB_SURF:
 	case OB_FONT: {
 		Curve *cu= (Curve*)ob->data;
-		if(cu->adt) return 1;
+		if(cu->adt)
+            return 1;
 	}
     break;
 	case OB_MBALL: {
 		MetaBall *mb= (MetaBall*)ob->data;
-		if(mb->adt) return 1;
+		if(mb->adt)
+            return 1;
 	}
     break;
 	case OB_MESH: {
 		Mesh *me= (Mesh*)ob->data;
-		if(me->adt) return 1;
+		if(me->adt)
+            return 1;
 	}
     break;
 	default:
@@ -911,7 +918,7 @@ static void append_object(Scene *sce, LinkNode **objects, LinkNode **meshes, Obj
 		}
 	}
 
-	if(ob->data == NULL)
+	if(!ob->data)
 		return;
 
 	// TODO: geom_doHidden

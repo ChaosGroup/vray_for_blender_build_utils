@@ -9,8 +9,8 @@
              'makesdna/SConscript',
              'makesrna/SConscript',
 
---- source/blender/editors/space_api/spacetypes.c	2010-07-19 17:09:38.327627551 +0400
-+++ source/blender/editors/space_api/spacetypes.c	2010-07-19 17:21:13.397622897 +0400
+--- source/blender/editors/space_api/spacetypes.c	2011-06-05 16:57:09.124312000 +0400
++++ source/blender/editors/space_api/spacetypes.c	2011-06-08 10:51:47.875149901 +0400
 @@ -64,6 +64,8 @@
  #include "ED_mball.h"
  #include "ED_logic.h"
@@ -20,15 +20,12 @@
  /* only call once on startup, storage is global in BKE kernel listbase */
  void ED_spacetypes_init(void)
  {
-@@ -109,7 +111,10 @@
+@@ -112,6 +114,7 @@
  	ED_operatortypes_sound();
  	ED_operatortypes_render();
  	ED_operatortypes_logic();
--	
-+
-+	// V-Ray/Blender mesh export operator
-+	ED_operatortypes_exporter();
-+
++	ED_operatortypes_exporter(); // V-Ray/Blender
+ 	
  	UI_view2d_operatortypes();
  	UI_buttons_operatortypes();
  	
@@ -77,7 +74,7 @@
 
 --- source/creator/CMakeLists.txt	2011-01-06 14:48:46.000000000 +0300
 +++ source/creator/CMakeLists.txt	2011-01-14 19:05:58.851581234 +0300
-@@ -754,6 +754,7 @@
+@@ -731,6 +754,7 @@
 		bf_editor_space_time
 		bf_editor_space_userpref
 		bf_editor_space_view3d
@@ -97,38 +94,13 @@
  /* musgrave stype */
  #define TEX_MFRACTAL		0
 
---- source/blender/python/intern/bpy_rna.c	2010-12-17 05:44:53.302238004 +0300
-+++ source/blender/python/intern/bpy_rna.c	2010-12-17 19:59:02.645938003 +0300
+--- source/blender/python/intern/bpy_rna.c	2011-06-07 20:08:49.353294000 +0400
++++ source/blender/python/intern/bpy_rna.c	2011-06-08 10:49:16.776949902 +0400
 @@ -72,7 +72,7 @@
  #include "../generic/IDProp.h" /* for IDprop lookups */
  #include "../generic/py_capi_utils.h"
  
 -#define USE_PEDANTIC_WRITE
-+//#define USE_PEDANTIC_WRITE
++/*#define USE_PEDANTIC_WRITE*/
  #define USE_MATHUTILS
  #define USE_STRING_COERCE
-
---- source/blender/windowmanager/intern/wm_window.c	2011-03-27 15:10:44.772710661 +0400
-+++ source/blender/windowmanager/intern/wm_window.c	2011-04-27 05:50:54.479917001 +0400
-@@ -273,18 +273,18 @@
- {
- 	/* handle the 'temp' window */
- 	if(win->screen && win->screen->temp) {
--		GHOST_SetTitle(win->ghostwin, "Blender");
-+		GHOST_SetTitle(win->ghostwin, "V-Ray/Blender");
- 	}
- 	else {
- 		
- 		/* this is set to 1 if you don't have startup.blend open */
- 		if(G.save_over && G.main->name[0]) {
- 			char str[sizeof(G.main->name) + 12];
--			BLI_snprintf(str, sizeof(str), "Blender%s [%s]", wm->file_saved ? "":"*", G.main->name);
-+			BLI_snprintf(str, sizeof(str), "V-Ray/Blender%s [%s]", wm->file_saved ? "":"*", G.main->name);
- 			GHOST_SetTitle(win->ghostwin, str);
- 		}
- 		else
--			GHOST_SetTitle(win->ghostwin, "Blender");
-+			GHOST_SetTitle(win->ghostwin, "V-Ray/Blender");
- 
- 		/* Informs GHOST of unsaved changes, to set window modified visual indicator (MAC OS X)
- 		 and to give hint of unsaved changes for a user warning mechanism

@@ -1,6 +1,5 @@
 set(INC 
 	.
-	..
     ../blenlib
     ../blenkernel
     ../blenloader
@@ -16,4 +15,9 @@ set(SRC
     exporter_ops.h
 )
 
-blender_add_lib(vb_mesh_exporter "${SRC}" "${INC}")
+set(INC_SYS
+
+)
+
+blender_add_lib(vb_mesh_exporter "${SRC}" "${INC}" "${INC_SYS}")
+

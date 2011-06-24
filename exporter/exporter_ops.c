@@ -424,6 +424,12 @@ static void write_mesh(FILE *gfile,
 
 	int i, j, f, k, l;
 	int u;
+    
+    if(debug)
+        printf("Processing object \"%s\": mesh \"%s\"\n", ob->id.name, me->id.name);
+
+    if(!mesh->totface)
+        return;
 
 	// Name format: ME<meshname>LI<libname>
 	if(instances)
@@ -1018,7 +1024,7 @@ static void export_meshes_threaded(char *filepath, Scene *sce, Main *bmain,
 							VRayTexture= RNA_pointer_get(&rna_tex, "vray");
 							if(RNA_enum_get(&VRayTexture, "texture_coords")) { // 0 - object; 1 - UV
 								if(debug) {
-									printf("Texture: %s [UV: %s]\n", mtex->tex->id.name, mtex->uvname);
+									printf("Texture:    %s [UV layer: %s]\n", mtex->tex->id.name, mtex->uvname);
 								}
 								if(!(strcmp(mtex->uvname, "") == 0)) {
 									if(!uvs) {

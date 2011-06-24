@@ -4,7 +4,7 @@
 
   http://vray.cgdo.ru
 
-  Time-stamp: "Sunday, 01 May 2011 [07:31]"
+  Time-stamp: "Thursday, 23 June 2011 [19:59]"
 
   Author: Andrey M. Izrantsev (aka bdancer)
   E-Mail: izrantsev@cgdo.ru
@@ -79,7 +79,7 @@ if PLATFORM == 'darwin':
 OSX      = '10.6'
 
 REV      = 'current'
-VERSION  = '2.57'
+VERSION  = '2.58'
 
 LINUX= platform.linux_distribution()[0].lower().strip()
 LINUX_VER= platform.linux_distribution()[1].replace('.','_').strip()

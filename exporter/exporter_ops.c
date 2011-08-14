@@ -332,11 +332,6 @@ static void write_hair(FILE *gfile,
             for(i= 0, pa= psys->particles; i < psys->totpart; ++i, ++pa) {
                 fprintf(gfile, "%08X", htonl(*(int*)&(pa->totkey)));
             }
-
-            /* for(i= 0, ch= psys->child; i < psys->totchild; ++i, ++ch) { */
-            /*     printf("\033[0;32mV-Ray/Blender:\033[0m Child: %i\n", psys->totchild); */
-            /* } */
-
             fprintf(gfile,"\")));");
 
 
@@ -354,9 +349,6 @@ static void write_hair(FILE *gfile,
                     copy_v3_v3(segment, hkey->co);
                     mul_m4_v3(hairmat, segment);
 
-                    /* printf("\033[0;32mV-Ray/Blender:\033[0m   Global segment [%.2f,%.2f,%.2f]\n", */
-                    /*        segment[0], segment[1], segment[2]); */
-
                     fprintf(gfile, "%08X%08X%08X",
                             htonl(*(int*)&(segment[0])),
                             htonl(*(int*)&(segment[1])),
@@ -369,7 +361,6 @@ static void write_hair(FILE *gfile,
             fprintf(gfile, "\n\twidths= interpolate((%d,ListFloatHex(\"", sce->r.cfra);
             for(i= 0, pa= psys->particles; i < psys->totpart; ++i, ++pa) {
                 for(s= 0, hkey= pa->hair; s < pa->totkey; ++s, ++hkey) {
-
                     fprintf(gfile, "%08X", htonl(*(int*)&(width)));
                 }
             }

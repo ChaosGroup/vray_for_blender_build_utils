@@ -4,7 +4,7 @@
 
   http://vray.cgdo.ru
 
-  Time-stamp: "Thursday, 23 June 2011 [19:59]"
+  Time-stamp: "Friday, 12 August 2011 [04:21]"
 
   Author: Andrey M. Izrantsev (aka bdancer)
   E-Mail: izrantsev@cgdo.ru
@@ -79,7 +79,7 @@ if PLATFORM == 'darwin':
 OSX      = '10.6'
 
 REV      = 'current'
-VERSION  = '2.58'
+VERSION  = '2.59'
 
 LINUX= platform.linux_distribution()[0].lower().strip()
 LINUX_VER= platform.linux_distribution()[1].replace('.','_').strip()
@@ -113,6 +113,15 @@ parser.add_option(
 	dest= 'archive',
 	default= False,
 	help= "Create archive (Linux, Mac OS) or installer (Windows, NSIS required)."
+)
+
+parser.add_option(
+	'',
+	'--forcearch',
+	action=  'store_true',
+	dest=    'forcearch',
+	default= "x86",
+	help=    "Set preferred architecture (x86 or x64)."
 )
 
 parser.add_option(
@@ -362,7 +371,7 @@ if PLATFORM == "linux2":
 	if options.deps:
 		sys.stdout.write("Installing dependencies: ")
 		if LINUX == 'ubuntu':
-			packages= "subversion build-essential gettext libxi-dev libsndfile1-dev libpng12-dev libfftw3-dev libopenexr-dev libopenjpeg-dev libopenal-dev libalut-dev libvorbis-dev libglu1-mesa-dev libsdl-dev libfreetype6-dev libtiff4-dev libsamplerate0-dev libavdevice-dev libavformat-dev libavutil-dev libavcodec-dev libjack-dev libswscale-dev libx264-dev libmp3lame-dev python3.2-dev git-core libnotify-bin"
+			packages= "libspnav-dev subversion build-essential gettext libxi-dev libsndfile1-dev libpng12-dev libfftw3-dev libopenexr-dev libopenjpeg-dev libopenal-dev libalut-dev libvorbis-dev libglu1-mesa-dev libsdl-dev libfreetype6-dev libtiff4-dev libsamplerate0-dev libavdevice-dev libavformat-dev libavutil-dev libavcodec-dev libjack-dev libswscale-dev libx264-dev libmp3lame-dev python3.2-dev git-core libnotify-bin"
 			if options.docs:
 				packages+= " python-sphinx"
 			sys.stdout.write("%s\n" % packages)
@@ -501,6 +510,9 @@ def generate_user_config(filename):
 	}
 
 	if PLATFORM == "win32":
+		# if options.forcearch == 'x86':
+		ofile.write("MACOSX_ARCHITECTURE      = '%s'\n" % MAC_CPU)
+		
 		build_options= {
 			'True': [
 				'WITH_BF_FFMPEG',
@@ -874,7 +886,10 @@ if not options.test:
 		if PLATFORM == "win32":
 			os.system("rmdir /Q /S %s" % exporter_path)
 		else:
-			shutil.rmtree(exporter_path)
+			if os.path.islink(exporter_path):
+				os.remove(exporter_path)
+			else:
+				shutil.rmtree(exporter_path)
 	if options.devel and not options.archive:
 		if not options.test:
 			os.symlink(get_full_path('~/devel/vrayblender/exporter/symlinks'), exporter_path)

@@ -4,7 +4,7 @@
 
   http://vray.cgdo.ru
 
-  Time-stamp: "Friday, 12 August 2011 [04:21]"
+  Time-stamp: "Thursday, 08 September 2011 [09:00]"
 
   Author: Andrey M. Izrantsev (aka bdancer)
   E-Mail: izrantsev@cgdo.ru
@@ -511,7 +511,8 @@ def generate_user_config(filename):
 
 	if PLATFORM == "win32":
 		# if options.forcearch == 'x86':
-		ofile.write("MACOSX_ARCHITECTURE      = '%s'\n" % MAC_CPU)
+		# 	ofile.write("TARGET_ARCH= 'x86'\n")
+		# 	ofile.write("LINKFLAGS= ['/MACHINE:X86']\n")
 		
 		build_options= {
 			'True': [
@@ -549,7 +550,7 @@ def generate_user_config(filename):
 				'WITH_BF_FTGL',
 				'WITH_BF_RAYOPTIMIZATION',
 				'WITH_BUILDINFO',
-				'WITH_BF_OPENEXR'
+				'WITH_BF_OPENEXR',
 			],
 			'False': [
 				'WITH_BF_QUICKTIME',
@@ -558,7 +559,7 @@ def generate_user_config(filename):
 				'WITH_BF_STATICOPENGL',
 				'WITH_BF_VERSE',
 				'WITH_BF_GAMEENGINE',
-				'WITH_BF_PLAYER'
+				'WITH_BF_PLAYER',
 			]
 		}
 
@@ -566,7 +567,8 @@ def generate_user_config(filename):
 			build_options['False'].append('WITH_BF_FFMPEG')
 			build_options['True'].append('WITHOUT_BF_PYTHON_INSTALL')
 		else:
-			build_options['True'].append('WITH_BF_FFMPEG')
+			# build_options['True'].append('WITH_BF_FFMPEG')
+			build_options['False'].append('WITH_BF_FFMPEG')
 
 	else: # Mac
 		#ofile.write("BF_QUIET= 0\n")
@@ -643,8 +645,20 @@ def generate_user_config(filename):
 			ofile.write("BF_PYTHON_LINKFLAGS  = ['-Xlinker', '-export-dynamic']\n")
 			ofile.write("BF_PYTHON_LIB_STATIC = '${BF_PYTHON}/lib/libpython${BF_PYTHON_VERSION}' + SUFFIX + '.a'\n")
 
-			ofile.write("BF_OPENAL_LIB = \'openal alut\'\n")
+			ofile.write("BF_OPENAL_LIB        = \'openal alut\'\n")
 
+			ofile.write("BF_FFMPEG            = '/opt/ffmpeg-0.8.2'\n")
+			# ofile.write("BF_FFMPEG            = '/usr/local'\n")
+			# ofile.write("BF_FFMPEG_LIBPATH    = '${BF_FFMPEG}/lib'\n")
+			# ofile.write("BF_FFMPEG_INC        = '${BF_FFMPEG}/include'\n")
+			# ofile.write("BF_FFMPEG_LIB        = 'avformat avcodec swscale avutil avdevice'\n")
+
+			# ofile.write("WITH_BF_STATICFFMPEG = True\n")
+			# ofile.write("BF_FFMPEG            = '/opt/ffmpeg-0.8.2'\n")
+			# ofile.write("BF_FFMPEG_LIBPATH    = '${BF_FFMPEG}/lib'\n")
+			# ofile.write("BF_FFMPEG_INC        = '${BF_FFMPEG}/include'\n")
+			# ofile.write("BF_FFMPEG_LIB_STATIC = '${BF_FFMPEG_LIBPATH}/libavcodec.a ${BF_FFMPEG_LIBPATH}/libavdevice.a ${BF_FFMPEG_LIBPATH}/libavfilter.a ${BF_FFMPEG_LIBPATH}/libavformat.a ${BF_FFMPEG_LIBPATH}/libavutil.a ${BF_FFMPEG_LIBPATH}/libpostproc.a ${BF_FFMPEG_LIBPATH}/libswscale.a'\n")
+			
 		ofile.write("BF_TWEAK_MODE = \'false\'\n")
 		ofile.write("BF_NUMJOBS = %i\n" % BF_NUMJOBS)
 

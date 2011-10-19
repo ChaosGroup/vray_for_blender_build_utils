@@ -725,7 +725,10 @@ else:
 	sys.stdout.write("Getting Blender sources...\n")
 	if not options.test:
 		os.system("svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/blender")
-		os.system("mv blender blender-svn")
+		if PLATFORM == "win32":
+			os.system("move blender blender-svn")
+		else:
+			os.system("mv blender blender-svn")
 		os.system("svn export blender-svn blender")
 
 #version_file= open(my_path_join(blender_svn_dir,"release","VERSION"),'r')

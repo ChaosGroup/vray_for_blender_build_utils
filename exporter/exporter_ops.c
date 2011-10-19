@@ -431,7 +431,7 @@ static void write_mesh(FILE *gfile,
     free(cleared_string);
 
 	if(me->id.lib) {
-		BLI_split_dirfile(me->id.lib->name+2, NULL, lib_file);
+		BLI_split_dirfile(me->id.lib->name+2, NULL, lib_file, 0, sizeof(lib_file));
 		cleared_string= clean_string(lib_file);
 		fprintf(gfile,"LI%s", cleared_string);
         free(cleared_string);

@@ -72,6 +72,7 @@
 #include "DNA_windowmanager_types.h"
 #include "DNA_particle_types.h"
 
+#include "BLI_linklist.h"
 #include "BLI_fileops.h"
 #include "BLI_listbase.h"
 #include "BLI_math.h"

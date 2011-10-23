@@ -1303,12 +1303,12 @@ void VRAY_OT_export_meshes(wmOperatorType *ot)
 	ot->modal=	export_scene_modal;
 	ot->exec=	export_scene_exec;
 
-	RNA_def_string(ot->srna, "filepath", "", FILE_MAX, "Geometry filepath", "Geometry filepath.");
-	RNA_def_boolean(ot->srna, "use_active_layers", 0,  "Active layer",		"Export only active layers.");
-	RNA_def_boolean(ot->srna, "use_animation",	   0,  "Animation",			"Export animation.");
-	RNA_def_boolean(ot->srna, "use_instances",	   0,  "Instances",			"Use instances.");
-	RNA_def_boolean(ot->srna, "debug",			   0,  "Debug",				"Debug mode.");
-	RNA_def_boolean(ot->srna, "check_animated",	   0,  "Check animated",	"Try to detect if mesh is animated.");
+	RNA_def_string(ot->srna, "filepath", "", FILE_MAX, "Geometry filepath", "Geometry filepath");
+	RNA_def_boolean(ot->srna, "use_active_layers", 0,  "Active layer",		"Export only active layers");
+	RNA_def_boolean(ot->srna, "use_animation",	   0,  "Animation",			"Export animation");
+	RNA_def_boolean(ot->srna, "use_instances",	   0,  "Instances",			"Use instances");
+	RNA_def_boolean(ot->srna, "debug",			   0,  "Debug",				"Debug mode");
+	RNA_def_boolean(ot->srna, "check_animated",	   0,  "Check animated",	"Try to detect if mesh is animated");
 }
 
 void ED_operatortypes_exporter(void)

@@ -1,10 +1,8 @@
 '''
 
-  V-Ray/Blender Custom Build Compilation Script
+  V-Ray/Blender Build System
 
   http://vray.cgdo.ru
-
-  Time-stamp: "Thursday, 08 September 2011 [09:00]"
 
   Author: Andrey M. Izrantsev (aka bdancer)
   E-Mail: izrantsev@cgdo.ru
@@ -54,6 +52,7 @@ def my_path_join(*args):
 		path= os.path.join(*args)
 	return path
 
+
 def get_full_path(path):
 	if(path[0:1] == '~'):
 		path= my_path_join(os.environ["HOME"],path[2:])
@@ -69,7 +68,6 @@ def get_full_path(path):
 USER     = getpass.getuser()
 PLATFORM = sys.platform
 HOSTNAME = socket.gethostname()
-
 ARCH     = 'x86' if platform.architecture()[0] == '32bit' else 'x86_64'
 
 if PLATFORM == 'darwin':
@@ -79,7 +77,7 @@ if PLATFORM == 'darwin':
 OSX      = '10.6'
 
 REV      = 'current'
-VERSION  = '2.59'
+VERSION  = '2.60'
 
 LINUX= platform.linux_distribution()[0].lower().strip()
 LINUX_VER= platform.linux_distribution()[1].replace('.','_').strip()
@@ -442,6 +440,8 @@ def generate_installer(patch_dir, BF_INSTALLDIR, INSTALLER_NAME, VERSION):
 	ns.close()
 	
 	ns_cnt = string.replace(ns_cnt, "[PYTHON_VERSION]", BF_PYTHON_VERSION)
+	
+	shutil.copy(os.path.join(patch_dir, "non-gpl", "vcomp90.dll"), BF_INSTALLDIR)
 
 	# do root
 	rootlist = []
@@ -567,8 +567,8 @@ def generate_user_config(filename):
 			build_options['False'].append('WITH_BF_FFMPEG')
 			build_options['True'].append('WITHOUT_BF_PYTHON_INSTALL')
 		else:
-			# build_options['True'].append('WITH_BF_FFMPEG')
-			build_options['False'].append('WITH_BF_FFMPEG')
+			build_options['True'].append('WITH_BF_FFMPEG')
+			#build_options['False'].append('WITH_BF_FFMPEG')
 
 	else: # Mac
 		#ofile.write("BF_QUIET= 0\n")
@@ -644,10 +644,13 @@ def generate_user_config(filename):
 			ofile.write("BF_PYTHON_LIB        = 'python${BF_PYTHON_VERSION}' + SUFFIX\n")
 			ofile.write("BF_PYTHON_LINKFLAGS  = ['-Xlinker', '-export-dynamic']\n")
 			ofile.write("BF_PYTHON_LIB_STATIC = '${BF_PYTHON}/lib/libpython${BF_PYTHON_VERSION}' + SUFFIX + '.a'\n")
-
+			
+			# Since blender is linked over external python we don't need to install it
+			ofile.write("WITHOUT_BF_PYTHON_INSTALL = True\n")
+			
 			ofile.write("BF_OPENAL_LIB        = \'openal alut\'\n")
 
-			ofile.write("BF_FFMPEG            = '/opt/ffmpeg-0.8.2'\n")
+			ofile.write("BF_FFMPEG            = '/usr'\n")
 			# ofile.write("BF_FFMPEG            = '/usr/local'\n")
 			# ofile.write("BF_FFMPEG_LIBPATH    = '${BF_FFMPEG}/lib'\n")
 			# ofile.write("BF_FFMPEG_INC        = '${BF_FFMPEG}/include'\n")
@@ -909,7 +912,7 @@ if not options.test:
 				shutil.rmtree(exporter_path)
 	if options.devel and not options.archive:
 		if not options.test:
-			os.symlink(get_full_path('~/devel/vrayblender/exporter/symlinks'), exporter_path)
+			os.symlink("/home/bdancer/devel/vrayblender/exporter/symlinks", exporter_path)
 	else:
 		os.chdir(io_scripts_path)
 		os.system("git clone --depth=1 git://github.com/bdancer/vb25.git")

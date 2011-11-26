@@ -1,36 +1,50 @@
---- source/blender/SConscript 2011-01-06 14:52:13.000000000 +0300
-+++ source/blender/SConscript  2011-01-06 15:13:12.474295043 +0300
-@@ -9,6 +9,7 @@
-             'blenpluginapi/SConscript',
-             'gpu/SConscript',
-             'editors/SConscript',
-+            'exporter/SConscript',
-             'imbuf/SConscript',
-             'makesdna/SConscript',
-             'makesrna/SConscript',
-
---- source/blender/editors/space_api/spacetypes.c	2011-06-05 16:57:09.124312000 +0400
-+++ source/blender/editors/space_api/spacetypes.c	2011-06-08 10:51:47.875149901 +0400
-@@ -64,6 +64,8 @@
- #include "ED_mball.h"
- #include "ED_logic.h"
- 
-+#include "exporter_ops.h"
+--- source/creator/CMakeLists.txt	2011-11-26 18:38:40.120142539 +0400
++++ source/creator/CMakeLists.txt	2011-11-26 19:06:01.172090343 +0400
+@@ -830,6 +830,8 @@
+ 		cycles_kernel
+ 		cycles_util
+ 		cycles_subd
 +
- /* only call once on startup, storage is global in BKE kernel listbase */
- void ED_spacetypes_init(void)
- {
-@@ -112,6 +114,7 @@
- 	ED_operatortypes_sound();
- 	ED_operatortypes_render();
- 	ED_operatortypes_logic();
-+	ED_operatortypes_exporter(); // V-Ray/Blender
- 	
- 	UI_view2d_operatortypes();
- 	UI_buttons_operatortypes();
- 	
---- source/blender/editors/space_api/SConscript	2010-07-19 17:09:38.327627551 +0400
-+++ source/blender/editors/space_api/SConscript	2010-07-19 17:20:02.931373123 +0400
++		vb_mesh_exporter
+ 	)
+ 
+ 	if(WITH_LIBMV)
+
+--- source/blender/SConscript	2011-11-10 04:15:47.023294417 +0400
++++ source/blender/SConscript	2011-11-26 18:47:33.622125572 +0400
+@@ -3,6 +3,7 @@
+ import sys
+ 
+ SConscript(['avi/SConscript',
++            'exporter/SConscript',
+             'blenkernel/SConscript',
+             'blenlib/SConscript',
+             'blenloader/SConscript',
+
+--- source/blender/CMakeLists.txt	2011-11-20 00:30:15.210801416 +0400
++++ source/blender/CMakeLists.txt	2011-11-26 18:54:30.432112315 +0400
+@@ -87,6 +87,7 @@
+ 	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_tracking_types.h
+ )
+ 
++add_subdirectory(exporter)
+ add_subdirectory(editors)
+ add_subdirectory(windowmanager)
+ add_subdirectory(blenkernel)
+
+--- source/blender/editors/space_api/CMakeLists.txt	2011-10-25 11:38:16.371086801 +0400
++++ source/blender/editors/space_api/CMakeLists.txt	2011-11-26 18:52:03.095117001 +0400
+@@ -27,6 +27,7 @@
+ 	../../makesrna
+ 	../../windowmanager
+ 	../../../../intern/guardedalloc
++	../../exporter
+ )
+ 
+ set(INC_SYS
+
+--- source/blender/editors/space_api/SConscript	2011-10-25 11:38:16.371086801 +0400
++++ source/blender/editors/space_api/SConscript	2011-11-26 18:50:52.114119258 +0400
 @@ -4,6 +4,7 @@
  sources = env.Glob('*.c')
  
@@ -39,68 +53,56 @@
  incs += ' ../../windowmanager ../../python ../../makesrna'
  incs += ' #/intern/guardedalloc #/extern/glew/include'
 
---- source/blender/makesrna/intern/rna_texture.c	2011-03-02 02:40:21.756845001 +0300
-+++ source/blender/makesrna/intern/rna_texture.c	2011-04-04 01:51:36.334316052 +0400
-@@ -71,6 +71,7 @@ EnumPropertyItem texture_type_items[] = 
-	{TEX_VORONOI, "VORONOI", ICON_TEXTURE, "Voronoi", "Procedural - Creates cell-like patterns based on Worley noise"},
-	{TEX_VOXELDATA, "VOXEL_DATA", ICON_TEXTURE, "Voxel Data", "Creates a 3d texture based on volumetric data"},
-	{TEX_WOOD, "WOOD", ICON_TEXTURE, "Wood", "Procedural - Wave generated bands or rings, with optional noise"},
+--- source/blender/editors/space_api/spacetypes.c	2011-11-08 00:14:52.540502832 +0400
++++ source/blender/editors/space_api/spacetypes.c	2011-11-26 18:57:25.383106750 +0400
+@@ -63,6 +63,8 @@
+ #include "ED_logic.h"
+ #include "ED_clip.h"
+ 
++#include "exporter_ops.h"
++
+ /* only call once on startup, storage is global in BKE kernel listbase */
+ void ED_spacetypes_init(void)
+ {
+@@ -112,6 +114,9 @@
+ 	ED_operatortypes_render();
+ 	ED_operatortypes_logic();
+ 	
++	/* Register V-Ray/Blender operator */
++	ED_operatortypes_exporter();
++
+ 	UI_view2d_operatortypes();
+ 	UI_buttons_operatortypes();
+ 	
+--- source/blender/makesrna/intern/rna_texture.c	2011-11-26 18:38:44.088142414 +0400
++++ source/blender/makesrna/intern/rna_texture.c	2011-11-26 18:59:28.344102839 +0400
+@@ -55,6 +55,7 @@
+ 
+ EnumPropertyItem texture_type_items[] = {
+ 	{0, "NONE", 0, "None", ""},
 +	{TEX_VRAY, "VRAY", ICON_TEXTURE, "V-Ray", ""},
- 	{0, NULL, 0, NULL, NULL}};
+ 	{TEX_BLEND, "BLEND", ICON_TEXTURE, "Blend", "Procedural - create a ramp texture"},
+ 	{TEX_CLOUDS, "CLOUDS", ICON_TEXTURE, "Clouds", "Procedural - create a cloud-like fractal noise texture"},
+ 	{TEX_DISTNOISE, "DISTORTED_NOISE", ICON_TEXTURE,
+
+--- source/blender/makesdna/DNA_texture_types.h	2011-11-20 00:30:04.470801629 +0400
++++ source/blender/makesdna/DNA_texture_types.h	2011-11-26 19:00:38.076100621 +0400
+@@ -314,6 +314,7 @@
+ /* **************** TEX ********************* */
  
- #ifdef RNA_RUNTIME
-
---- source/blender/editors/space_api/CMakeLists.txt	2011-01-06 14:51:57.000000000 +0300
-+++ source/blender/editors/space_api/CMakeLists.txt	2011-01-14 18:03:57.457981234 +0300
-@@ -24,6 +24,7 @@ set(INC
-	../../blenkernel
-	../../blenlib
-	../../blenloader
-+	../../exporter
- 	../../makesdna
- 	../../makesrna
- 	../../windowmanager
-
---- source/blender/CMakeLists.txt	2011-01-06 14:52:13.000000000 +0300
-+++ source/blender/CMakeLists.txt	2011-01-14 17:53:03.215981234 +0300
-@@ -100,6 +100,7 @@
- add_subdirectory(modifiers)
- add_subdirectory(makesdna)
- add_subdirectory(makesrna)
-+add_subdirectory(exporter)
- 
- if(WITH_IMAGE_OPENEXR)
- 	add_subdirectory(imbuf/intern/openexr)
-
---- source/creator/CMakeLists.txt	2011-01-06 14:48:46.000000000 +0300
-+++ source/creator/CMakeLists.txt	2011-01-14 19:05:58.851581234 +0300
-@@ -744,6 +754,7 @@
-		bf_editor_space_time
-		bf_editor_space_userpref
-		bf_editor_space_view3d
-+		vb_mesh_exporter
- 
-		bf_editor_text
-		bf_editor_transform
-
---- source/blender/makesdna/DNA_texture_types.h	2011-01-07 22:42:51.812373001 +0300
-+++ source/blender/makesdna/DNA_texture_types.h	2011-01-21 18:42:30.430959002 +0300
-@@ -304,6 +304,7 @@
- #define TEX_DISTNOISE	13
- #define TEX_POINTDENSITY	14
- #define TEX_VOXELDATA		15
+ /* type */
 +#define TEX_VRAY		200
- 
- /* musgrave stype */
- #define TEX_MFRACTAL		0
+ #define TEX_CLOUDS		1
+ #define TEX_WOOD		2
+ #define TEX_MARBLE		3
 
---- source/blender/python/intern/bpy_rna.c	2011-06-07 20:08:49.353294000 +0400
-+++ source/blender/python/intern/bpy_rna.c	2011-06-08 10:49:16.776949902 +0400
-@@ -73,7 +73,7 @@
- #include "../generic/IDProp.h" /* for IDprop lookups */
- #include "../generic/py_capi_utils.h"
+--- source/blender/python/intern/bpy_rna.c	2011-11-26 18:38:41.178142507 +0400
++++ source/blender/python/intern/bpy_rna.c	2011-11-26 19:04:03.191094097 +0400
+@@ -81,7 +81,7 @@
+ #include "BLF_translation.h"
+ #endif
  
 -#define USE_PEDANTIC_WRITE
-+/*#define USE_PEDANTIC_WRITE*/
++//#define USE_PEDANTIC_WRITE
  #define USE_MATHUTILS
  #define USE_STRING_COERCE

@@ -26,9 +26,9 @@
 !include selections.nsh
 !include uninstall_log.nsh
 
-OutFile "{INSTALLER_OUTFILE}"
+OutFile "{INSTALLER_OUT_FILE}"
 
-Name "V-Ray/Blender {VERSION} [Rev. {REVISION}]"
+Name "V-Ray/Blender {VERSION}"
 
 RequestExecutionLevel admin
 
@@ -36,19 +36,17 @@ RequestExecutionLevel admin
 !define REG_APP_PATH   "Software\Microsoft\Windows\CurrentVersion\Uninstall\VRayBlender"
 !define UNINSTALL_PATH "Software\Microsoft\Windows\CurrentVersion\Uninstall\VRayBlender"
 
-!define MUI_ICON                       "{INSTALLER_SCRIPT_ROOT}\\style\\icon.ico"
-!define MUI_UNICON                     "{INSTALLER_SCRIPT_ROOT}\\style\\icon.ico"
+!define MUI_ICON                       "{INSTALLER_SCRIPT_ROOT}\style\icon.ico"
+!define MUI_UNICON                     "{INSTALLER_SCRIPT_ROOT}\style\icon.ico"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
-!define MUI_HEADERIMAGE_BITMAP         "{INSTALLER_SCRIPT_ROOT}\\style\\header.bmp"
-!define MUI_WELCOMEFINISHPAGE_BITMAP   "{INSTALLER_SCRIPT_ROOT}\\style\\installer.bmp"
-!define MUI_UNWELCOMEFINISHPAGE_BITMAP "{INSTALLER_SCRIPT_ROOT}\\style\\installer.bmp"
+!define MUI_HEADERIMAGE_BITMAP         "{INSTALLER_SCRIPT_ROOT}\style\header.bmp"
+!define MUI_WELCOMEFINISHPAGE_BITMAP   "{INSTALLER_SCRIPT_ROOT}\style\installer.bmp"
+!define MUI_UNWELCOMEFINISHPAGE_BITMAP "{INSTALLER_SCRIPT_ROOT}\style\installer.bmp"
 !define MUI_COMPONENTSPAGE_SMALLDESC
-!define MUI_FINISHPAGE_RUN "$INSTDIR\blender.exe"
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "license.rtf"
-!insertmacro MUI_PAGE_DIRECTORY
 !insertmacro MUI_PAGE_COMPONENTS
 !insertmacro MUI_PAGE_INSTFILES
 
@@ -58,17 +56,14 @@ RequestExecutionLevel admin
 
 !insertmacro MUI_LANGUAGE "English"
 
-BrandingText "V-Ray/Blender {VERSION} | http://vray.cgdo.ru/"
-
-InstallDir "$PROGRAMFILES{IF64}\VRayBlender-{VERSION}"
+BrandingText "V-Ray/Blender {VERSION} | http://vray.cgdo.ru"
 
 
-Var VB_TMP
-Var VB_UNINST
-
-
-Section "V-Ray/Blender" VBINST
-{INSTALLER_FILES}
+Section "V-Ray/Blender" VB
+	;StrCpy $VB_TMP "$INSTDIR\bin\plug-ins"
+	;${SetOutPath} $VB_TMP
+	;${File} "Z:\release\Maya2009x86\VRay15" "VRayScatter.mll" "$VB_TMP"
+	{FILES}
 SectionEnd
 
 
@@ -80,8 +75,8 @@ Section "Uninstaller" VBUNINST
 	WriteRegStr   HKLM $VB_UNINST "DisplayName"     "V-Ray/Blender"
 	WriteRegStr   HKLM $VB_UNINST "UninstallString" "$\"$INSTDIR\uninstaller.exe$\""
 	WriteRegStr   HKLM $VB_UNINST "Publisher"       "Andrey M. Izrantsev"
-	WriteRegStr   HKLM $VB_UNINST "URLInfoAbout"    "http://vray.cgdo.ru/"
-	WriteRegStr   HKLM $VB_UNINST "HelpLink"        "http://vray.cgdo.ru/"
+	WriteRegStr   HKLM $VB_UNINST "URLInfoAbout"    "http://vray.cgdo.ru"
+	WriteRegStr   HKLM $VB_UNINST "HelpLink"        "http://vray.cgdo.ru"
 	WriteRegDWORD HKLM $VB_UNINST "NoModify"  1
 	WriteRegDWORD HKLM $VB_UNINST "NoRepair " 1
 	
@@ -91,7 +86,7 @@ Section "Uninstaller" VBUNINST
 	${WriteRegStr} "${REG_ROOT}" "${REG_APP_PATH}" "Install Directory" "$INSTDIR"
 	
 	; Write the Uninstall information into the registry
-	${WriteRegStr} "${REG_ROOT}" "${UNINSTALL_PATH}" "UninstallString" "$INSTDIR\uninstaller.exe"
+	${WriteRegStr} ${REG_ROOT} "${UNINSTALL_PATH}" "UninstallString" "$INSTDIR\uninstaller.exe"
 SectionEnd
 
 
@@ -99,13 +94,10 @@ Section "Add Start Menu Shortcuts" VBSTART
 	SetShellVarContext all
   
 	; Menu section
-	${CreateDirectory} "$SMPROGRAMS\VRayBlender {VERSION}\"
-
-	; Blender
-	${CreateShortCut}  "$SMPROGRAMS\VRayBlender {VERSION}\VRayBlender.lnk" "$INSTDIR\blender.exe" "" "$INSTDIR\blender.exe" 0
+	${CreateDirectory} "$SMPROGRAMS\VRayBlender\"
 	
 	; Uninstaller
-	${CreateShortCut}  "$SMPROGRAMS\VRayBlender {VERSION}\Uninstall.lnk" "$INSTDIR\uninstaller.exe" "" "$INSTDIR\uninstaller.exe" 0
+	${CreateShortCut}  "$SMPROGRAMS\VRayBlender\Uninstall.lnk"    "$INSTDIR\VRayBlender\uninstaller.exe" "" "$INSTDIR\VRayBlender\uninstaller.exe" 0
 	
 	; Refresh icons
 	System::Call 'shell32.dll::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)'

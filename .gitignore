@@ -1,8 +1,8 @@
 *.bak
 *.orig
-*.c
 *.blend1
 *.blend2
-patch_src/
-installer/template_vray.nsi
+*.blend3
+tmp/
+archive/
 

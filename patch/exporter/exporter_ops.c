@@ -1296,7 +1296,7 @@ void VRAY_OT_export_meshes(wmOperatorType *ot)
 	/* identifiers */
 	ot->name=		 "Export meshes";
 	ot->idname=		 "VRAY_OT_export_meshes";
-	ot->description= "Export meshes in .vrscene format.";
+	ot->description= "Export meshes in .vrscene format";
 
 	/* api callbacks */
 	ot->invoke= export_scene_invoke;

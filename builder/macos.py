@@ -94,7 +94,7 @@ class MacBuilder(Builder):
 
 
 	def package(self):
-		release_path = os.path.join(self.dir_release, "macos", self.build_arch)
+		release_path = utils.path.join(self.dir_release, "macos", self.build_arch)
 		
 		if not self.mode_test:
 			utils.path_create(release_path)

@@ -1,5 +1,6 @@
 *.bak
 *.orig
+*.pyc
 *.blend1
 *.blend2
 *.blend3

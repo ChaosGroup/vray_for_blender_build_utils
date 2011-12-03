@@ -23,6 +23,7 @@
 #
 
 
+import os
 import sys
 
 from builder import utils
@@ -44,6 +45,9 @@ class MacBuilder(Builder):
 
 		uc.write("BF_INSTALLDIR = '%s'\n" % (self.dir_install_path))
 		uc.write("BF_BUILDDIR   = '/tmp/builder'\n")
+		uc.write("\n")
+
+		uc.write("WITH_BF_PLAYER = False\n")
 		uc.write("\n")
 
 		# Cycles
@@ -94,7 +98,7 @@ class MacBuilder(Builder):
 
 
 	def package(self):
-		release_path = utils.path.join(self.dir_release, "macos", self.build_arch)
+		release_path = utils.path_join(self.dir_release, "macos", self.build_arch)
 		
 		if not self.mode_test:
 			utils.path_create(release_path)

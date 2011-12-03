@@ -57,6 +57,7 @@ class Builder:
 	# or NSIS installer for Windows
 	generate_package = False
 	generate_desktop = False
+	generate_docs    = False
 
 	# Test mode - just print messages, does nothing
 	mode_test      = True
@@ -99,7 +100,6 @@ class Builder:
 	use_collada    = False
 	use_sys_python = True
 	use_sys_ffmpeg = True
-	use_docs       = False
 
 	# Build settings
 	build_arch          = host_arch
@@ -111,6 +111,9 @@ class Builder:
 
 	# user-config.py file path
 	user_config         = ""
+
+	# Max OS X specific
+	osx_sdk             = "10.6"
 
 
 	def __init__(self, params):
@@ -200,13 +203,21 @@ class Builder:
 				# Export sources
 				os.system("svn export blender-svn blender")
 
-		if not os.path.exists(self.dir_blender) and os.path.exists(self.dir_blender_svn):
-			sys.stdout.write("Exporting sources...\n")
-			if not self.mode_test:
-				os.chdir(self.dir_source)
-				
-				# Export sources
-				os.system("svn export blender-svn blender")
+			if not os.path.exists(self.dir_blender) and os.path.exists(self.dir_blender_svn):
+				sys.stdout.write("Exporting sources...\n")
+				if not self.mode_test:
+					os.chdir(self.dir_source)
+					
+					# Export sources
+					os.system("svn export blender-svn blender")
+		else:
+			if not os.path.exists(self.dir_blender):
+				sys.stdout.write("Exporting sources...\n")
+				if not self.mode_test:
+					os.chdir(self.dir_source)
+					
+					# Export sources
+					os.system("svn export blender-svn blender")
 
 		# Update Blender libs
 		if self.update_blender and self.host_os != utils.LNX:
@@ -263,14 +274,6 @@ class Builder:
 
 	
 	def patch(self):
-		# if not self.add_patches:
-		# 	return
-		
-		# # If we don"t update Blender
-		# # there is no need to patch sources
-		# if not self.update_blender:
-		# 	return
-		
 		patch_dir = utils.path_join(self.dir_source, "vb25-patch")
 
 		if not os.path.exists(patch_dir):
@@ -283,36 +286,29 @@ class Builder:
 			sys.stderr.write("Something wrong happened! Patch directory is incomplete!\n")
 			sys.exit(2)
 
-		sys.stdout.write("Adding V-Ray/Blender patches...\n")
+		if self.add_patches or self.add_extra:
+			# Blender clean exported souces
+			blender_dir = utils.path_join(self.dir_source, "blender")
+			if not os.path.exists(patch_dir):
+				sys.stderr.write("Fatal error!\n")
+				sys.stderr.write("Exported Blender sources (%s) not found!\n" % (blender_dir))
+				sys.exit(2)
+			
+			patch_cmd  = utils.find_patch()
 
-		# Blender clean exported souces
-		blender_dir = utils.path_join(self.dir_source, "blender")
-		if not os.path.exists(patch_dir):
-			sys.stderr.write("Fatal error!\n")
-			sys.stderr.write("Exported Blender sources (%s) not found!\n" % (blender_dir))
-			sys.exit(2)
-		
-		patch_cmd  = utils.find_patch()
-		
-		patches = [
-			utils.path_join(patch_dir, "patch", "vb25.patch"),
-		]
+			# Apply V-Ray/Blender patches
+			if self.add_patches:
+				sys.stdout.write("Adding V-Ray/Blender patches...\n")
 
-		if self.add_extra:
-			extra_dir = path_join(patch_dir, "patch", "extra")
-			for f in os.listdir(extra_dir):
-				if f.endswith(".patch"):
-					patches.append(utils.path_join(extra_dir), f)
+				cmd = "%s -Np0 -i %s" % (patch_cmd, utils.path_join(patch_dir, "patch", "vb25.patch"))
 
-		# Patching Blender sources
-		sys.stdout.write("Patching sources...\n")
-		sys.stdout.write("Patch command: %s\n" % (patch_cmd))
-		if not self.mode_test:
-			os.chdir(blender_dir)
-			for patch_file in patches:
-				cmd = "%s -Np0 -i %s" % (patch_cmd, patch_file)
-				os.system(cmd)
-		
+				# Patching Blender sources
+				sys.stdout.write("Patching sources...\n")
+				sys.stdout.write("Patch command: %s\n" % (cmd))
+				if not self.mode_test:
+					os.chdir(blender_dir)
+					os.system(cmd)
+			
 		# Adding exporter directory to Blender sources
 		sys.stdout.write("Adding exporter sources...\n")
 		
@@ -326,6 +322,21 @@ class Builder:
 			if os.path.exists(dst_dir):
 				shutil.rmtree(dst_dir)
 			shutil.copytree(src_dir, dst_dir)
+
+		# Apply extra patches
+		if self.add_extra:
+			extra_dir = path_join(patch_dir, "patch", "extra")
+
+			patches   = []
+			for f in os.listdir(extra_dir):
+				if f.endswith(".patch"):
+					patches.append(utils.path_join(extra_dir), f)
+			
+			if not self.mode_test:
+				os.chdir(blender_dir)
+				for patch_file in patches:
+					cmd = "%s -Np0 -i %s" % (patch_cmd, patch_file)
+					os.system(cmd)
 
 		# Add datafiles: splash, default scene etc
 		if self.add_datafiles:
@@ -354,11 +365,33 @@ class Builder:
 					shutil.move(os.path.normpath(datafile_c_path), os.path.normpath(editor_datafiles))
 
 
+	def docs(self):
+		if self.generate_docs:
+			api_dir = utils.path_join(self.dir_install_path, "api")
+
+			sys.stdout.write("Generating API documentation: %s\n" % (api_dir))
+
+			if self.host_os != utils.LNX:
+				sys.stdout.write("API documentation generation is not supported on this platform.\n")
+			
+			else:
+				if not self.mode_test:
+					sphinx_doc_gen = "doc/python_api/sphinx_doc_gen.py"
+					
+					# Create API directory
+					os.system("mkdir -p %s" % api_dir)
+
+					# Generate API docs
+					os.chdir(self.dir_blender)
+					os.system("%s -b -P %s" % (utils.path_join(self.dir_install_path, "blender"), sphinx_doc_gen))
+					os.system("sphinx-build doc/python_api/sphinx-in %s" % api_dir)
+
+
 	def post_init(self):
 		"""
 		  Override this method in subclass.
 		"""
-		sys.stderr.write("Base class method called: init() This souldn't happen.\n")
+		pass
 	
 
 	def init_paths(self):
@@ -424,25 +457,16 @@ class Builder:
 			# Remove old
 			if os.path.exists(exporter_path):
 				if self.host_os == utils.WIN:
-					# Don't know why but when deleting from python
-					# it fails to delete 'git' direcotry, so using
+					# Don't know why, but when deleting from python
+					# it fails to delete '.git' direcotry, so using
 					# shell command
 					os.system("rmdir /Q /S %s" % exporter_path)
-				
 				else:
-					if os.path.islink(exporter_path):
-						# In developer mode path is a symlink
-						os.remove(exporter_path)
-					else:
-						shutil.rmtree(exporter_path)
+					shutil.rmtree(exporter_path)
 			
 			# Add new
-			if self.mode_developer and not self.generate_package:
-				os.symlink("/home/bdancer/devel/vrayblender/exporter/symlinks", exporter_path)
-			
-			else:
-				os.chdir(scripts_path)
-				os.system("git clone --depth=1 git://github.com/bdancer/vb25.git")
+			os.chdir(scripts_path)
+			os.system("git clone --depth=1 git://github.com/bdancer/vb25.git")
 	
 
 	def package(self):
@@ -456,16 +480,19 @@ class Builder:
 		self.init_paths()
 		self.post_init()
 		
-		# self.update_sources()
+		self.update_sources()
 		self.update()
 		
-		# self.info()
+		self.info()
 		
-		# self.patch()
-		# self.config()
-		# self.compile()
+		self.patch()
+		self.config()
+		self.compile()
+		
+		if not self.mode_developer:
+			self.exporter()
 
-		# self.exporter()
+		self.docs()
 
 		if self.generate_package:
 			if self.mode_developer:

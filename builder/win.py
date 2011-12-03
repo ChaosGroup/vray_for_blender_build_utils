@@ -25,6 +25,7 @@
 
 import os
 import sys
+import subprocess
 
 from builder import utils
 from builder import Builder
@@ -84,6 +85,11 @@ class WindowsBuilder(Builder):
 		if self.use_debug:
 			build_options['True'].append('BF_DEBUG')
 
+		# Windows git/scons issue - scons can't clear installation directory
+		# when vb25 .git is installed
+		if os.path.exists(self.dir_install_path):
+			os.system("rmdir /Q /S %s" % (self.dir_install_path))
+
 		uc.write("BF_INSTALLDIR     = '%s'\n" % (self.dir_install_path))
 		uc.write("BF_BUILDDIR       = '%s'\n" % (self.dir_build))
 		uc.write("BF_SPLIT_SRC      = True\n")
@@ -97,7 +103,6 @@ class WindowsBuilder(Builder):
 		uc.write("WITH_BF_CYCLES    = True\n")
 		uc.write("WITH_BF_OIIO      = True\n")
 		uc.write("\n")
-
 
 		# Write boolean options
 		for key in build_options:
@@ -114,10 +119,15 @@ class WindowsBuilder(Builder):
 		if not self.mode_test:
 			utils.path_create(release_path)
 
+		director_size = 0
+		
 		# Example: vrayblender-2.60-42181-windows-x86_64.exe
 		installer_name = "%s-%s-%s-windows-%s.exe" % (self.project, self.version, self.revision, self.build_arch)
 		installer_path = utils.path_slashify(utils.path_join(release_path, installer_name))
-		installer_root = utils.path_join(self.dir_source, "vb25-patch", "installer.new")
+		installer_root = utils.path_join(self.dir_source, "vb25-patch", "installer")
+
+		# Use NSIS log plugin
+		installer_log  = False
 
 		sys.stdout.write("Generating installer: %s\n" % (installer_name))
 		sys.stdout.write("  in: %s\n" % (installer_path))
@@ -130,7 +140,8 @@ class WindowsBuilder(Builder):
 		nsis = nsis.replace('{VERSION}', self.version)
 		nsis = nsis.replace('{REVISION}', self.revision)
 		
-		installer_files = ""
+		installer_files   = ""
+		uninstaller_files = []
 
 		for dirpath, dirnames, filenames in os.walk(self.dir_install_path):
 			if dirpath.endswith('__pycache__'):
@@ -138,29 +149,50 @@ class WindowsBuilder(Builder):
 			
 			_dirpath = os.path.normpath(dirpath).replace( os.path.normpath(self.dir_install_path), "" )
 
-			installer_files += '\tStrCpy $VB_TMP "$INSTDIR%s"\n' % (_dirpath)
-			installer_files += '\t${SetOutPath} $VB_TMP\n'
+			if installer_log:
+				installer_files += '\tStrCpy $VB_TMP "$INSTDIR%s"\n' % (_dirpath)
+				installer_files += '\t${SetOutPath} $VB_TMP\n'
+			else:
+				installer_files += '\tSetOutPath "$INSTDIR%s"\n' % (_dirpath)
+				uninstaller_files.append( '\tRMDir "$INSTDIR%s"\n' % (os.path.normpath(_dirpath)) )
 
 			for f in os.listdir(dirpath):
 				f_path = os.path.join(dirpath, f)
+				
 				if os.path.isdir(f_path):
 					continue
+				
 				basepath, basename = os.path.split(f_path)
-				installer_files += '\t${File} "%s" "%s" "$VB_TMP"\n' % (basepath, basename)
+				
+				if installer_log:
+					installer_files += '\t${File} "%s" "%s" "$VB_TMP"\n' % (basepath, basename)
+				else:
+					installer_files += '\tFile "%s"\n' % (f_path)
+					uninstaller_files.append( '\tDelete "$INSTDIR%s\%s"\n' % (_dirpath, basename) )
+
+				director_size += os.path.getsize(f_path)
+
+		uninstaller_files.reverse()
 
 		nsis = nsis.replace('{INSTALLER_FILES}', installer_files)
+		nsis = nsis.replace('{UNINSTALLER_FILES}', ''.join(uninstaller_files))
+		nsis = nsis.replace('{SIZE}', str(director_size / 1024))
 
 		template = utils.path_join(self.dir_source, "installer.nsi")
 		
 		open(template, 'w').write(nsis)
 
-		cmd = 'makensis "%s"' % (template)
+		makensis_exe = utils.find_makensis()
 
-		sys.stdout.write("Calling: %s\n" % (cmd))
+		cmd= []
+		cmd.append(makensis_exe)
+		cmd.append(template)
+
+		sys.stdout.write("Calling: %s\n" % (' '.join(cmd)))
 
 		if not self.mode_test:
-			os.chdir(utils.path_join(self.dir_source, "vb25-patch", "installer.new"))
-			os.system(cmd)
+			os.chdir(utils.path_join(self.dir_source, "vb25-patch", "installer"))
+			proc = subprocess.call(cmd)
 	
 	
 	def post_init(self):

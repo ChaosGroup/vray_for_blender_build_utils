@@ -790,7 +790,7 @@ static void *export_meshes_thread(void *ptr)
 {
 	struct ThreadData *td;
    
-	double	  time;
+	double	  time = 0.0;
 	char	  time_str[32];
 
 	FILE	 *gfile= NULL;
@@ -829,9 +829,10 @@ static void *export_meshes_thread(void *ptr)
         }
     }
 
-	time= PIL_check_seconds_timer();
-
-	printf("V-Ray/Blender: Mesh export thread [%d]\n", td->id + 1);
+	if(debug) {
+		time= PIL_check_seconds_timer();
+		printf("V-Ray/Blender: Mesh export thread [%d]\n", td->id + 1);
+	}
 	sprintf(filepath, "%s_%.2d.vrscene", td->filepath, td->id);
 	if(td->animation) {
 		gfile= fopen(filepath, "a");
@@ -881,8 +882,10 @@ static void *export_meshes_thread(void *ptr)
 
 	fclose(gfile);
 
-	BLI_timestr(PIL_check_seconds_timer() - time, time_str);
-	printf("V-Ray/Blender: Mesh export thread [%d] done [%s]\n", td->id + 1, time_str);
+	if(debug) {
+		BLI_timestr(PIL_check_seconds_timer() - time, time_str);
+		printf("V-Ray/Blender: Mesh export thread [%d] done [%s]\n", td->id + 1, time_str);
+	}
 
 	return NULL;
 }
@@ -1151,6 +1154,7 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
 	int		instances= 0;
 
 	double	time;
+	double  frame_time;
 	char	time_str[32];
 
 	if(!sce) {
@@ -1198,9 +1202,9 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
 
 		if(animation) {
 			cfra= sce->r.cfra;
-			fra= sce->r.sfra;
+			fra=  sce->r.sfra;
 
-			printf("V-Ray/Blender: Exporting meshes for frame %-32i\n", fra);
+			printf("V-Ray/Blender: Exporting meshes for the first frame %-32i\n", fra);
 
 			/* Export meshes for the start frame */
 			sce->r.cfra= fra;
@@ -1211,13 +1215,24 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
 
 			/* Export meshes for the rest frames */
 			while(fra <= sce->r.efra) {
-				printf("V-Ray/Blender: Exporting meshes for frame %-32i\n", fra);
+				frame_time= PIL_check_seconds_timer();
+
+				if(debug) {
+					printf("V-Ray/Blender: Exporting meshes for frame %-32i\n", fra);
+				} else {
+					printf("V-Ray/Blender: Exporting meshes for frame %i...", fra);
+					fflush(stdout);
+				}
 
 				sce->r.cfra= fra;
 				CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
 				scene_update_for_newframe(bmain, sce, (1<<20) - 1);
-				
 				export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 1);
+
+				if(!debug) {
+					BLI_timestr(PIL_check_seconds_timer()-frame_time, time_str);
+					printf(" done [%s]\n", time_str, " ");
+				}
 
 				fra+= sce->r.frame_step;
 			}
@@ -1226,7 +1241,6 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
 			CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
 			scene_update_for_newframe(bmain, sce, (1<<20) - 1);
 		} else {
-			printf("V-Ray/Blender: Exporting meshes for frame %-32i\n", sce->r.cfra);
 			export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 0);
 		}
 		

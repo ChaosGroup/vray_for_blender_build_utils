@@ -34,35 +34,41 @@ host_os = build_system.utils.get_host_os()
 
 parser = optparse.OptionParser(usage="python %prog [options]", version="2.0")
 
-parser.add_option('', '--sourcedir',  metavar= 'FILE',      dest= 'sourcedir',                    help= "Source directory.")
-parser.add_option('', '--installdir', metavar= 'FILE',      dest= 'installdir',                   help= "Installation directory.")
-parser.add_option('', '--builddir',   metavar= 'FILE',      dest= 'builddir',                     help= "Build directory.")
-parser.add_option('', '--releasedir', metavar= 'FILE',      dest= 'releasedir',                   help= "Directory for package (installer or archive).")
-parser.add_option('', '--release',    action= 'store_true', dest= 'release',      default= False, help= "Release build.")
-parser.add_option('', '--package',    action= 'store_true', dest= 'package',      default= False, help= "Create archive (Linux, Mac OS) or installer (Windows, NSIS required).")
-parser.add_option('', '--upblender',  type= 'choice',       dest= 'upblender',    default= 'on',  help= "Update Blender sources.", choices=('on', 'off'))
-parser.add_option('', '--uppatch',    type= 'choice',       dest= 'uppatch',      default= 'on',  help= "Update patch sources.", choices=('on', 'off'))
-parser.add_option('', '--rebuild',    action= 'store_true', dest= 'rebuild',      default= False, help= "Full rebuild.")
-parser.add_option('', '--nopatches',  action= 'store_true', dest= 'nopatches',    default= False, help= "Don't apply V-Ray/Blender patches.")
-parser.add_option('', '--collada',    action= 'store_true', dest= 'collada',      default= False, help= "Add OpenCollada support.")
-parser.add_option('', '--player',     action= 'store_true', dest= 'player',       default= False, help= "Build Blender Player.")
-parser.add_option('', '--datafiles',  action= 'store_true', dest= 'datafiles',    default= False, help= "Add new splash screen.")
-parser.add_option('', '--extern',     action= 'store_true', dest= 'extern',       default= False, help= "Apply \"extern\" patches.")
-parser.add_option('', '--debug',      action= 'store_true', dest= 'debug',        default= False, help= "Debug build.")
-parser.add_option('', '--optimize',   action= 'store_true', dest= 'optimize',     default= False, help= "Use compiler optimizations.")
-parser.add_option('', '--jobs',                             dest= 'jobs',         default= 4,     help= "Number of build jobs.")
-parser.add_option('', '--test',       action= 'store_true', dest= 'mode_test',    default= False, help= "Test mode.")
+parser.add_option('', '--sourcedir',                         dest= 'sourcedir',                    help= "Source directory.", metavar= 'FILE')
+parser.add_option('', '--installdir',                        dest= 'installdir',                   help= "Installation directory.", metavar= 'FILE')
+parser.add_option('', '--builddir',                          dest= 'builddir',                     help= "Build directory.", metavar= 'FILE')
+parser.add_option('', '--releasedir',                        dest= 'releasedir',                   help= "Directory for package (installer or archive).", metavar= 'FILE')
+parser.add_option('', '--release',    action= 'store_true',  dest= 'release',     default= False,  help= "Release build.")
+parser.add_option('', '--package',    action= 'store_true',  dest= 'package',     default= False,  help= "Create archive (Linux, Mac OS) or installer (Windows, NSIS required).")
 
-if host_os == build_system.utils.LNX:
-	parser.add_option('', '--desktop', action= 'store_true', dest= 'desktop',     default= False, help= "Generate .desktop file.")
-	parser.add_option('', '--deps',    action= 'store_true', dest= 'deps',        default= False, help= "Install dependencies (Gentoo, OpenSuse, Fedora, Ubuntu).")
-	parser.add_option('', '--docs',    action= 'store_true', dest= 'docs',        default= False, help= "Build Python API documentation (python-sphinx required).")
+# Blender options
+parser.add_option('', '--collada',    action= 'store_true',  dest= 'collada',     default= False,  help= "Add OpenCollada support.")
+parser.add_option('', '--player',     action= 'store_true',  dest= 'player',      default= False,  help= "Build Blender Player.")
 
+# Updates
+parser.add_option('', '--upblender',                         dest= 'upblender',   default= 'on',   help= "Update Blender sources.", type= 'choice', choices=('on', 'off'))
+parser.add_option('', '--uppatch',                           dest= 'uppatch',     default= 'on',   help= "Update patch sources.", type= 'choice', choices=('on', 'off'))
+
+# Building options
+parser.add_option('', '--debug_build', action= 'store_true', dest= 'debug',       default= False,  help= "Debug build.")
+parser.add_option('', '--rebuild',     action= 'store_true', dest= 'rebuild',     default= False,  help= "Full rebuild.")
+parser.add_option('', '--nopatches',   action= 'store_true', dest= 'nopatches',   default= False,  help= "Don't apply V-Ray/Blender patches.")
+parser.add_option('', '--datafiles',   action= 'store_true', dest= 'datafiles',   default= True,   help= "Add splash screen.")
+parser.add_option('', '--extern',      action= 'store_true', dest= 'extern',      default= False,  help= "Apply \"extern\" patches.")
+parser.add_option('', '--optimize',    action= 'store_true', dest= 'optimize',    default= False,  help= "Use compiler optimizations.")
+parser.add_option('', '--jobs',                              dest= 'jobs',        default= 4,      help= "Number of build threads.")
 if host_os == build_system.utils.MAC:
 	parser.add_option('', '--osx',                           dest= 'osx',         default= "10.6", help= "Mac OS X version.")
+	parser.add_option('', '--osx_arch',                      dest= 'osx_arch',    default= "x86",  help= "Mac OS X architecture.", type= 'choice', choices=('x86', 'x86_64'))
+if host_os == build_system.utils.LNX:
+	parser.add_option('', '--deps',    action= 'store_true', dest= 'deps',        default= False,  help= "Install dependencies (Gentoo, OpenSuse, Fedora, Ubuntu).")
+	parser.add_option('', '--docs',    action= 'store_true', dest= 'docs',        default= False,  help= "Build Python API documentation (python-sphinx required).")
+	parser.add_option('', '--desktop', action= 'store_true', dest= 'desktop',     default= False,  help= "Generate .desktop file.")
 
-# Special option used only by me =)
-parser.add_option('', '--developer', action= 'store_true', dest= 'devel', default= False, help= optparse.SUPPRESS_HELP)
+# Script options
+parser.add_option('', '--debug',     action= 'store_true', dest= 'mode_debug', default= False, help= "Script debug output.")
+parser.add_option('', '--test',      action= 'store_true', dest= 'mode_test',  default= False, help= "Test mode.")
+parser.add_option('', '--developer', action= 'store_true', dest= 'mode_devel', default= False, help= optparse.SUPPRESS_HELP) # Special mode used only by me =)
 
 
 (options, args) = parser.parse_args()
@@ -77,6 +83,7 @@ if options.sourcedir:
 
 # Default build directory
 if host_os == build_system.utils.WIN:
+	# Its vital to use short path here like C:\b\
 	params['dir_build'] = "C:\\\\"
 else:
 	params['dir_build'] = "/tmp/builder/"
@@ -95,12 +102,20 @@ params['update_patch']   = True if options.uppatch == 'on' else False
 
 params['generate_package'] = options.package
 
+params['use_debug']  = options.debug
+
 params['build_release']  = options.release
 params['build_threads']  = int(options.jobs)
 
-params['mode_debug']     = False
-params['mode_developer'] = True
+params['mode_debug']     = options.mode_debug
+params['mode_developer'] = options.mode_devel
 params['mode_test']      = options.mode_test
+
+if host_os == build_system.utils.LNX:
+	params['generate_docs']  = options.docs
+
+if host_os == build_system.utils.MAC:
+	params['build_arch'] = options.osx_arch
 
 # Just for sure to disable debug for release build
 if params['build_release']:

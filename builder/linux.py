@@ -189,10 +189,6 @@ class LinuxBuilder(Builder):
 
 	
 	def package(self):
-		if self.mode_developer:
-			sys.stdout.write("Package generation is disabled in 'Developer' mode.\n")
-			return
-	
 		release_path = os.path.join(self.dir_release, "linux", self.build_arch)
 		
 		if not self.mode_test:

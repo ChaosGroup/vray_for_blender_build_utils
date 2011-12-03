@@ -167,6 +167,25 @@ def find_git_patch():
 	return None	
 
 
+def find_makensis():
+	common_paths = [
+		path_join("C:", "Program Files",       "NSIS", "makensis.exe"),
+		path_join("C:", "Program Files (x86)", "NSIS", "makensis.exe"),
+	]
+
+	for path in common_paths:
+		if os.path.exists(path):
+			return path
+
+	# Try to find patch.exe in %PATH%
+	if which("makensis.exe") is not None:
+		return "makensis.exe"
+
+	sys.stderr.write("Fatal error!\n")
+	sys.stderr.write("makensis.exe command not found!!\n")
+	sys.exit(2)
+
+
 def find_patch():
 	if get_host_os() == WIN:
 		# Try to use patch.exe from Git installation
@@ -175,9 +194,8 @@ def find_patch():
 			return '"%s"' % (patch_exe)
 		
 		# Try to find patch.exe in %PATH%
-		patch_exe = which("patch.exe")
-		if patch_exe is not None:
-			return '"%s"' % (patch_exe)
+		if which("patch.exe") is not None:
+			return "patch.exe"
 
 		# Try to find patch in Git installation
 		# without using environment variables
@@ -188,7 +206,7 @@ def find_patch():
 
 		for path in git_common_paths:
 			if os.path.exists(path):
-				return '"%s"' % (patch_exe)
+				return '"%s"' % (path)
 	
 	else:
 		if which("patch") is not None:

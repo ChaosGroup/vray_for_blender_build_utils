@@ -30,41 +30,87 @@ from builder import Builder
 
 
 class MacBuilder(Builder):
-	pass
+	def config(self):
+		sys.stdout.write("Generating build configuration:\n")
+		sys.stdout.write("  in: %s\n" % (self.user_config))
+		
+		if self.mode_test:
+			return
 
-# ofile.write("BF_QUIET    = 1\n")
-# ofile.write("BF_BUILDDIR = \"/tmp/%s-build\"\n" % project)
-# ofile.write("BF_NUMJOBS  = 2\n")
+		uc= open(self.user_config, 'w')
 
-# ofile.write("MACOSX_ARCHITECTURE      = '%s'\n" % MAC_CPU)
-# ofile.write("MAC_CUR_VER              = '%s'\n" % OSX)
-# ofile.write("MAC_MIN_VERS             = '%s'\n" % OSX)
-# ofile.write("MACOSX_DEPLOYMENT_TARGET = '%s'\n" % OSX)
-# ofile.write("MACOSX_SDK               = '/Developer/SDKs/MacOSX%s.sdk'\n" % OSX)
-# ofile.write("LCGDIR                   = '#../lib/darwin-9.x.universal'\n")
-# ofile.write("LIBDIR                   = '#../lib/darwin-9.x.universal'\n")
+		if self.use_debug:
+			uc.write("BF_DEBUG    = True\n")
 
-# ofile.write("CC                       = 'gcc-4.2'\n")
-# ofile.write("CXX                      = 'g++-4.2'\n")
+		uc.write("BF_INSTALLDIR = '%s'\n" % (self.dir_install_path))
+		uc.write("BF_BUILDDIR   = '/tmp/builder'\n")
+		uc.write("\n")
 
-# ofile.write("USE_SDK                  = True\n")
-# ofile.write("WITH_GHOST_COCOA         = True\n")
-# ofile.write("WITH_BF_QUICKTIME        = False\n")
+		# Cycles
+		#
+		uc.write("WITH_BF_CYCLES       = True\n")
+		uc.write("WITH_BF_OIIO         = True\n")
+		uc.write("\n")
 
-# ofile.write("ARCH_FLAGS = ['%s']\n" % ('-m32' if ARCH == 'x86' else '-m64'))
+		uc.write("BF_QUIET    = True\n")
+		uc.write("BF_NUMJOBS  = %s\n" % (self.build_threads))
+		uc.write("\n")
 
-# ofile.write("CFLAGS     = ['-pipe','-funsigned-char'] + ARCH_FLAGS\n")
+		uc.write("MACOSX_ARCHITECTURE      = '%s'\n" % ('i386' if self.build_arch == 'x86' else 'x86_64'))
+		uc.write("MAC_CUR_VER              = '%s'\n" % self.osx_sdk)
+		uc.write("MAC_MIN_VERS             = '%s'\n" % self.osx_sdk)
+		uc.write("MACOSX_DEPLOYMENT_TARGET = '%s'\n" % self.osx_sdk)
+		uc.write("MACOSX_SDK               = '/Developer/SDKs/MacOSX%s.sdk'\n" % self.osx_sdk)
+		uc.write("LCGDIR                   = '#../lib/darwin-9.x.universal'\n")
+		uc.write("LIBDIR                   = '#../lib/darwin-9.x.universal'\n")
 
-# ofile.write("CPPFLAGS   = [] + ARCH_FLAGS\n")
-# ofile.write("CCFLAGS    = ['-pipe','-funsigned-char'] + ARCH_FLAGS\n")
-# ofile.write("CXXFLAGS   = ['-pipe','-funsigned-char'] + ARCH_FLAGS\n")
+		uc.write("CC                       = 'gcc-4.2'\n")
+		uc.write("CXX                      = 'g++-4.2'\n")
 
-# ofile.write("SDK_FLAGS          = ['-isysroot', MACOSX_SDK, '-mmacosx-version-min='+MAC_MIN_VERS, '-arch', MACOSX_ARCHITECTURE]\n")
-# ofile.write("PLATFORM_LINKFLAGS = ['-fexceptions','-framework','CoreServices','-framework','Foundation','-framework','IOKit','-framework','AppKit','-framework','Cocoa','-framework','Carbon','-framework','AudioUnit','-framework','AudioToolbox','-framework','CoreAudio','-framework','OpenAL']+ARCH_FLAGS\n")
-# ofile.write("PLATFORM_LINKFLAGS = ['-mmacosx-version-min='+MAC_MIN_VERS, '-Wl', '-isysroot', MACOSX_SDK, '-arch', MACOSX_ARCHITECTURE] + PLATFORM_LINKFLAGS\n")
-# ofile.write("CCFLAGS  = SDK_FLAGS + CCFLAGS\n")
-# ofile.write("CXXFLAGS = SDK_FLAGS + CXXFLAGS\n")
-# ofile.write("REL_CFLAGS  = ['-DNDEBUG', '-O2','-ftree-vectorize','-msse','-msse2','-msse3','-mfpmath=sse']\n")
-# ofile.write("REL_CCFLAGS = ['-DNDEBUG', '-O2','-ftree-vectorize','-msse','-msse2','-msse3','-mfpmath=sse']\n")
-# ofile.write("REL_CFLAGS  = REL_CFLAGS + ['-march=core2','-mssse3','-with-tune=core2','-enable-threads']\n")
-# ofile.write("REL_CCFLAGS = REL_CCFLAGS + ['-march=core2','-mssse3','-with-tune=core2','-enable-threads']\n")
+		uc.write("USE_SDK                  = True\n")
+		uc.write("WITH_GHOST_COCOA         = True\n")
+		uc.write("WITH_BF_QUICKTIME        = False\n")
+
+		uc.write("ARCH_FLAGS = ['%s']\n" % ('-m32' if self.build_arch == 'x86' else '-m64'))
+
+		uc.write("CFLAGS     = ['-pipe','-funsigned-char'] + ARCH_FLAGS\n")
+
+		uc.write("CPPFLAGS   = [] + ARCH_FLAGS\n")
+		uc.write("CCFLAGS    = ['-pipe','-funsigned-char'] + ARCH_FLAGS\n")
+		uc.write("CXXFLAGS   = ['-pipe','-funsigned-char'] + ARCH_FLAGS\n")
+
+		uc.write("SDK_FLAGS          = ['-isysroot', MACOSX_SDK, '-mmacosx-version-min='+MAC_MIN_VERS, '-arch', MACOSX_ARCHITECTURE]\n")
+		uc.write("PLATFORM_LINKFLAGS = ['-fexceptions','-framework','CoreServices','-framework','Foundation','-framework','IOKit','-framework','AppKit','-framework','Cocoa','-framework','Carbon','-framework','AudioUnit','-framework','AudioToolbox','-framework','CoreAudio','-framework','OpenAL']+ARCH_FLAGS\n")
+		uc.write("PLATFORM_LINKFLAGS = ['-mmacosx-version-min='+MAC_MIN_VERS, '-Wl', '-isysroot', MACOSX_SDK, '-arch', MACOSX_ARCHITECTURE] + PLATFORM_LINKFLAGS\n")
+		uc.write("CCFLAGS  = SDK_FLAGS + CCFLAGS\n")
+		uc.write("CXXFLAGS = SDK_FLAGS + CXXFLAGS\n")
+		uc.write("REL_CFLAGS  = ['-DNDEBUG', '-O2','-ftree-vectorize','-msse','-msse2','-msse3','-mfpmath=sse']\n")
+		uc.write("REL_CCFLAGS = ['-DNDEBUG', '-O2','-ftree-vectorize','-msse','-msse2','-msse3','-mfpmath=sse']\n")
+		uc.write("REL_CFLAGS  = REL_CFLAGS + ['-march=core2','-mssse3','-with-tune=core2','-enable-threads']\n")
+		uc.write("REL_CCFLAGS = REL_CCFLAGS + ['-march=core2','-mssse3','-with-tune=core2','-enable-threads']\n")
+		
+		uc.write("\n")
+		uc.close()
+
+
+	def package(self):
+		release_path = os.path.join(self.dir_release, "macos", self.build_arch)
+		
+		if not self.mode_test:
+			utils.path_create(release_path)
+
+		# Example: vrayblender-2.60-42181-macos-10.6-x86_64.tar.bz2
+		archive_name = "%s-%s-%s-macos-%s-%s.tar.bz2" % (self.project, self.version, self.revision, self.osx_sdk, self.build_arch)
+		archive_path = utils.path_join(release_path, archive_name)
+
+		sys.stdout.write("Generating archive: %s\n" % (archive_name))
+		sys.stdout.write("  in: %s\n" % (release_path))
+
+		cmd = "tar jcf %s %s" % (archive_path, self.dir_install_name)
+
+		sys.stdout.write("Calling: %s\n" % (cmd))
+		sys.stdout.write("  in: %s\n" % (self.dir_install))
+
+		if not self.mode_test:
+			os.chdir(self.dir_install)
+			os.system(cmd)

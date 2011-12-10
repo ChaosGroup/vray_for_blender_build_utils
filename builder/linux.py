@@ -37,24 +37,24 @@ class LinuxBuilder(Builder):
 
 		sys.stdout.write("Installing dependencies: ")
 		
-		if self.host_linux['sort_name'] == 'ubuntu':
+		if self.host_linux['short_name'] == 'ubuntu':
 			packages = "libspnav-dev subversion build-essential gettext libxi-dev libsndfile1-dev libpng12-dev libfftw3-dev libopenexr-dev libopenjpeg-dev libopenal-dev libalut-dev libvorbis-dev libglu1-mesa-dev libsdl-dev libfreetype6-dev libtiff4-dev libsamplerate0-dev libavdevice-dev libavformat-dev libavutil-dev libavcodec-dev libjack-dev libswscale-dev libx264-dev libmp3lame-dev python3.2-dev git-core libnotify-bin"
 			if self.use_docs:
 				packages += " python-sphinx"
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo apt-get install %s" % packages)
 		
-		elif self.host_linux['sort_name']  == 'opensuse':
+		elif self.host_linux['short_name']  == 'opensuse':
 			packages = "scons gcc-c++ xorg-x11-devel Mesa-devel xorg-x11-libs zlib-devel libpng-devel xorg-x11 libjpeg-devel freetype2-devel libtiff-devel OpenEXR-devel SDL-devel openal-devel fftw3-devel libsamplerate-devel libjack-devel python3-devel libogg-devel libvorbis-devel freealut-devel update-desktop-files libtheora-devel subversion git-core gettext-tools"
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo zypper install %s" % packages)
 		
-		elif self.host_linux['sort_name']  == 'redhat' or self.host_linux['sort_name']  == 'fedora':
+		elif self.host_linux['short_name']  == 'redhat' or self.host_linux['sort_name']  == 'fedora':
 			packages = "gcc-c++ subversion libpng-devel libjpeg-devel libXi-devel openexr-devel openal-soft-devel freealut-devel SDL-devel fftw-devel libtiff-devel lame-libs libsamplerate-devel freetype-devel jack-audio-connection-kit-devel ffmpeg-libs ffmpeg-devel xvidcore-devel libogg-devel faac-devel faad2-devel x264-devel libvorbis-devel libtheora-devel lame-devel python3 python3-devel python3-libs git-core"
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo yum install %s" % packages)
 		
-		elif self.host_linux['sort_name']  == 'gentoo':
+		elif self.host_linux['short_name']  == 'gentoo':
 			sys.stdout.write("Not implemented yet :(\n")
 
 		else:

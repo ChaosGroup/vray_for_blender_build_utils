@@ -53,7 +53,7 @@ parser.add_option('', '--uppatch',                           dest= 'uppatch',   
 parser.add_option('', '--debug_build', action= 'store_true', dest= 'debug',       default= False,  help= "Debug build.")
 parser.add_option('', '--rebuild',     action= 'store_true', dest= 'rebuild',     default= False,  help= "Full rebuild.")
 parser.add_option('', '--nopatches',   action= 'store_true', dest= 'nopatches',   default= False,  help= "Don't apply V-Ray/Blender patches.")
-parser.add_option('', '--datafiles',   action= 'store_true', dest= 'datafiles',   default= True,   help= "Add splash screen.")
+parser.add_option('', '--nodatafiles', action= 'store_true', dest= 'nodatafiles', default= False,  help= "Don't add splash screen.")
 parser.add_option('', '--extern',      action= 'store_true', dest= 'extern',      default= False,  help= "Apply \"extern\" patches.")
 parser.add_option('', '--optimize',    action= 'store_true', dest= 'optimize',    default= False,  help= "Use compiler optimizations.")
 parser.add_option('', '--jobs',                              dest= 'jobs',        default= 4,      help= "Number of build threads.")
@@ -97,6 +97,8 @@ if options.installdir:
 if options.releasedir:
 	params['dir_release'] = build_system.utils.path_slashify(options.releasedir)
 
+params['install_deps']   = options.deps
+
 params['update_blender'] = True if options.upblender == 'on' else False
 params['update_patch']   = True if options.uppatch == 'on' else False
 
@@ -110,6 +112,8 @@ params['build_threads']  = int(options.jobs)
 params['mode_debug']     = options.mode_debug
 params['mode_developer'] = options.mode_devel
 params['mode_test']      = options.mode_test
+
+params['add_datafiles']  = not options.nodatafiles
 
 if host_os == build_system.utils.LNX:
 	params['generate_docs']  = options.docs

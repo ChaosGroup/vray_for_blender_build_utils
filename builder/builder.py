@@ -183,7 +183,7 @@ class Builder:
 					os.system("svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/blender")
 
 					# Move "blender" to "blender-svn"
-					shutil.move(blender_svn_dir, blender_dir)
+					shutil.move(self.dir_blender, self.dir_blender_svn)
 
 					# Export sources
 					os.system("svn export blender-svn blender")

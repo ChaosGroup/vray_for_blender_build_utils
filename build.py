@@ -97,8 +97,6 @@ if options.installdir:
 if options.releasedir:
 	params['dir_release'] = build_system.utils.path_slashify(options.releasedir)
 
-params['install_deps']   = options.deps
-
 params['update_blender'] = True if options.upblender == 'on' else False
 params['update_patch']   = True if options.uppatch == 'on' else False
 
@@ -117,6 +115,7 @@ params['add_datafiles']  = not options.nodatafiles
 
 if host_os == build_system.utils.LNX:
 	params['generate_docs']  = options.docs
+	params['install_deps']   = options.deps
 
 if host_os == build_system.utils.MAC:
 	params['build_arch'] = options.osx_arch

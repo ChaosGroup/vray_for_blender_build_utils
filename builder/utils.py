@@ -32,7 +32,7 @@ import socket
 import sys
 
 
-VERSION  = "2.60"
+VERSION  = "2.61"
 REVISION = "svn"
 
 WIN = "windows"

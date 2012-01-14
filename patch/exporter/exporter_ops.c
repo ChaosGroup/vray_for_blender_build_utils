@@ -365,12 +365,13 @@ write_hair (FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         {
             fprintf(gfile, "%08X", htonl(*(int*)&(segment_interp_count)));
         }
-        for(p= 0; p < child_total; ++p)
-        {
-            child_key   = child_cache[p];
-            child_steps = child_key->steps;
+        if(child_cache) {
+            for(p= 0; p < child_total; ++p) {
+                child_key   = child_cache[p];
+                child_steps = child_key->steps;
 
-            fprintf(gfile, "%08X", htonl(*(int*)&(child_steps)));
+                fprintf(gfile, "%08X", htonl(*(int*)&(child_steps)));
+            }
         }
         fprintf(gfile,"\")));");
 
@@ -444,21 +445,23 @@ write_hair (FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             printf("\n");
             fflush(stdout);
         }
-        for(p= 0; p < child_total; ++p) {
-            if(debug) {
-                printf("\033[0;32mV-Ray/Blender:\033[0m Particle system: %s => Child hair: %i\r", psys->name, p+1);
-                fflush(stdout);
-            }
+        if(child_cache) {
+            for(p= 0; p < child_total; ++p) {
+                if(debug) {
+                    printf("\033[0;32mV-Ray/Blender:\033[0m Particle system: %s => Child hair: %i\r", psys->name, p+1);
+                    fflush(stdout);
+                }
 
-            child_key   = child_cache[p];
-            child_steps = child_key->steps;
-            for(s= 0; s < child_steps; s++, child_key++)
-            {
-                //psys_mat_hair_to_object(ob, psmd->dm, psmd->psys->part->from, pa, hairmat);
-                fprintf(gfile, "%08X%08X%08X",
-                        htonl(*(int*)&(child_key->co[0])),
-                        htonl(*(int*)&(child_key->co[1])),
-                        htonl(*(int*)&(child_key->co[2])));
+                child_key   = child_cache[p];
+                child_steps = child_key->steps;
+                for(s= 0; s < child_steps; s++, child_key++)
+                {
+                    //psys_mat_hair_to_object(ob, psmd->dm, psmd->psys->part->from, pa, hairmat);
+                    fprintf(gfile, "%08X%08X%08X",
+                            htonl(*(int*)&(child_key->co[0])),
+                            htonl(*(int*)&(child_key->co[1])),
+                            htonl(*(int*)&(child_key->co[2])));
+                }
             }
         }
         fprintf(gfile,"\")));");
@@ -469,12 +472,14 @@ write_hair (FILE *gfile, Scene *sce, Main *bmain, Object *ob)
                 fprintf(gfile, "%08X", htonl(*(int*)&(width)));
             }
         }
-        for(p= 0; p < child_total; ++p) {
-            child_key   = child_cache[p];
-            child_steps = child_key->steps;
-            
-            for(s= 0; s < child_steps; ++s) {
-                fprintf(gfile, "%08X", htonl(*(int*)&(width)));
+        if(child_cache) {
+            for(p= 0; p < child_total; ++p) {
+                child_key   = child_cache[p];
+                child_steps = child_key->steps;
+                
+                for(s= 0; s < child_steps; ++s) {
+                    fprintf(gfile, "%08X", htonl(*(int*)&(width)));
+                }
             }
         }
         fprintf(gfile,"\")));\n");
@@ -1283,28 +1288,28 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
     if(!sce)
         return OPERATOR_CANCELLED;
 
-    if(RNA_property_is_set(op->ptr, "filepath")) {
+    if(RNA_struct_property_is_set(op->ptr, "filepath")) {
         filepath= (char*)malloc(FILE_MAX * sizeof(char));
         RNA_string_get(op->ptr, "filepath", filepath);
     }
 
-    if(RNA_property_is_set(op->ptr, "use_active_layers")) {
+    if(RNA_struct_property_is_set(op->ptr, "use_active_layers")) {
         active_layers= RNA_boolean_get(op->ptr, "use_active_layers");
     }
 
-    if(RNA_property_is_set(op->ptr, "use_animation")) {
-        animation= RNA_boolean_get(op->ptr, "use_animation");
-    }
+    /* if(RNA_struct_property_is_set(op->ptr, "use_animation")) { */
+    /*     animation= RNA_boolean_get(op->ptr, "use_animation"); */
+    /* } */
 
-    if(RNA_property_is_set(op->ptr, "use_instances")) {
+    if(RNA_struct_property_is_set(op->ptr, "use_instances")) {
         instances= RNA_boolean_get(op->ptr, "use_instances");
     }
 
-    if(RNA_property_is_set(op->ptr, "check_animated")) {
+    if(RNA_struct_property_is_set(op->ptr, "check_animated")) {
         check_animated= RNA_boolean_get(op->ptr, "check_animated");
     }
 
-    if(RNA_property_is_set(op->ptr, "debug")) {
+    if(RNA_struct_property_is_set(op->ptr, "debug")) {
         debug= RNA_boolean_get(op->ptr, "debug");
     }
 

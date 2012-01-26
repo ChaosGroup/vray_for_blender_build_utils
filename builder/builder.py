@@ -350,14 +350,19 @@ class Builder:
 				datafile_path   = utils.path_join(patch_dir, "datafiles", datafile)
 				datafile_c_path = datafile_path + ".c"
 
-				cmd = [datatoc]
+				cmd = []
+				if self.host_os == utils.WIN:
+					cmd.append(sys.executable)
+				cmd.append(datatoc)
 				cmd.append(datafile_path)
 				cmd = " ".join(cmd)
 				
 				if self.mode_debug:
 					sys.stderr.write("Moving:\n\t%s =>\n\t%s\n" % (datafile_c_path, editor_datafiles))
+					sys.stderr.write("Cmd: %s\n" % (cmd))
 				else:
 					sys.stderr.write("Replacing: %s\n" % (datafile_c))
+					sys.stderr.write("Cmd: %s\n" % (cmd))
 				
 				if not self.mode_test:
 					os.system(cmd)
@@ -431,7 +436,7 @@ class Builder:
 			
 			os.system(cmd)
 		
-		if self.host_os == utils.WIN:
+		if self.host_os == utils.WIN and not self.mode_test:
 			shutil.copy(utils.path_join(self.dir_source, "vb25-patch", "non-gpl", self.build_arch, "vcomp90.dll"), self.dir_install_path)
 	
 	

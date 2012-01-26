@@ -30,6 +30,7 @@
 #include <math.h>
 #include <pthread.h>
 #include <time.h>
+#include <ctype.h>
 
 #include "BKE_main.h"
 #include "BKE_scene.h"
@@ -130,12 +131,24 @@ typedef struct ThreadData {
     int       instances;
 } ThreadData;
 
-
 static pthread_mutex_t mtx= PTHREAD_MUTEX_INITIALIZER;
 
 static ThreadData thread_data[MAX_MESH_THREADS];
 
 static int debug= 0;
+
+
+// http://rosettacode.org/wiki/Determine_if_a_string_is_numeric
+// Used to check if UV layer name consist of digits
+//
+static int is_numeric(const char *s)
+{
+    char *p;
+    if (s == NULL || *s == '\0' || isspace(*s))
+        return 0;
+    strtod(s, &p);
+    return *p == '\0';
+}
 
 
 static int uvlayer_name_to_id(LinkNode *list, char *name)
@@ -382,7 +395,7 @@ write_hair (FILE *gfile, Scene *sce, Main *bmain, Object *ob)
                 printf("\033[0;32mV-Ray/Blender:\033[0m Particle system: %s => Hair: %i\r", psys->name, p + 1);
                 fflush(stdout);
             }
-            
+
             psys_mat_hair_to_object(ob, psmd->dm, psmd->psys->part->from, pa, hairmat);
 
             // B-spline interpolation
@@ -429,7 +442,7 @@ write_hair (FILE *gfile, Scene *sce, Main *bmain, Object *ob)
                     htonl(*(int*)&(segment[0])),
                     htonl(*(int*)&(segment[1])),
                     htonl(*(int*)&(segment[2])));
-            
+
             // Without interpolation
             // for(s= 0, hkey= pa->hair; s < pa->totkey; ++s, ++hkey) {
             //     psys_mat_hair_to_object(ob, psmd->dm, psmd->psys->part->from, pa, hairmat);
@@ -476,7 +489,7 @@ write_hair (FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             for(p= 0; p < child_total; ++p) {
                 child_key   = child_cache[p];
                 child_steps = child_key->steps;
-                
+
                 for(s= 0; s < child_steps; ++s) {
                     fprintf(gfile, "%08X", htonl(*(int*)&(width)));
                 }
@@ -513,9 +526,10 @@ static void write_mesh(FILE *gfile,
     float *ve[4];
     float  no[3];
 
-    int    matid= 0;
-    int    hasUV= 0;
-    int    maxLayer= 0;
+    int    matid       = 0;
+    int    has_uv      = 0;
+    int    uv_layer_id = 1;
+    int    maxLayer    = 0;
 
     char  *lib_filename= (char*)malloc(FILE_MAX * sizeof(char));
     char  *cleared_string;
@@ -551,7 +565,7 @@ static void write_mesh(FILE *gfile,
     if(me->id.lib) {
         BLI_split_file_part(me->id.lib->name+2, lib_filename, FILE_MAX);
         BLI_replace_extension(lib_filename, FILE_MAX, "");
-        
+
         cleared_string= clean_string(lib_filename);
         fprintf(gfile,"LI%s", cleared_string);
         if(debug) {
@@ -707,24 +721,30 @@ static void write_mesh(FILE *gfile,
 
     fdata= &mesh->fdata;
 
-    hasUV= 0;
+    has_uv= 0;
     maxLayer= 0;
     for(l= 1; l < fdata->totlayer; ++l) {
         if(fdata->layers[l].type == TYPE_UV) {
-            hasUV= 1;
+            has_uv= 1;
             maxLayer= l;
         }
     }
 
-    if(hasUV) {
+    if(has_uv) {
         fprintf(gfile,"\tmap_channels= interpolate((%d, List(", sce->r.cfra);
         for(l= 1; l < fdata->totlayer; ++l) {
             if(fdata->layers[l].type == TYPE_UV) {
                 CustomData_set_layer_active(fdata, TYPE_UV, l-1);
                 mesh_update_customdata_pointers(mesh);
 
-                fprintf(gfile,"\n\t\t// %s", fdata->layers[l].name);
-                fprintf(gfile,"\n\t\tList(%i,ListVectorHex(\"", uvlayer_name_to_id(uv_list, fdata->layers[l].name));
+                if(is_numeric(fdata->layers[l].name)) {
+                    uv_layer_id = atoi(fdata->layers[l].name);
+                } else {
+                    uv_layer_id = uvlayer_name_to_id(uv_list, fdata->layers[l].name);
+                }
+
+                fprintf(gfile,"\n\t\t// Name: %s", fdata->layers[l].name);
+                fprintf(gfile,"\n\t\tList(%i,ListVectorHex(\"", uv_layer_id);
 
                 face= mesh->mface;
                 for(f= 0; f < mesh->totface; ++face, ++f) {
@@ -1297,9 +1317,9 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
         active_layers= RNA_boolean_get(op->ptr, "use_active_layers");
     }
 
-    /* if(RNA_struct_property_is_set(op->ptr, "use_animation")) { */
-    /*     animation= RNA_boolean_get(op->ptr, "use_animation"); */
-    /* } */
+    if(RNA_struct_property_is_set(op->ptr, "use_animation")) {
+        animation= RNA_boolean_get(op->ptr, "use_animation");
+    }
 
     if(RNA_struct_property_is_set(op->ptr, "use_instances")) {
         instances= RNA_boolean_get(op->ptr, "use_instances");

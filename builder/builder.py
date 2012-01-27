@@ -203,13 +203,6 @@ class Builder:
 				# Export sources
 				os.system("svn export blender-svn blender")
 
-			if not os.path.exists(self.dir_blender) and os.path.exists(self.dir_blender_svn):
-				sys.stdout.write("Exporting sources...\n")
-				if not self.mode_test:
-					os.chdir(self.dir_source)
-					
-					# Export sources
-					os.system("svn export blender-svn blender")
 		else:
 			if not os.path.exists(self.dir_blender):
 				sys.stdout.write("Exporting sources...\n")
@@ -237,7 +230,7 @@ class Builder:
 			if not os.path.exists(lib_dir):
 				sys.stdout.write("Getting \"lib\" data...\n")
 				if not self.mode_test:
-					os.chdir(self.sources)
+					os.chdir(self.dir_source)
 					os.system(svn_cmd)
 			else:
 				sys.stdout.write("Updating \"lib\" data...\n")

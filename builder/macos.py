@@ -75,10 +75,9 @@ class MacBuilder(Builder):
 		uc.write("WITH_GHOST_COCOA         = True\n")
 		uc.write("WITH_BF_QUICKTIME        = False\n")
 
-		uc.write("ARCH_FLAGS = ['%s']\n" % ('-m32' if self.build_arch == 'x86' else '-m64'))
+		uc.write("ARCH_FLAGS = ['-arch', MACOSX_ARCHITECTURE]\n")
 
 		uc.write("CFLAGS     = ['-pipe','-funsigned-char'] + ARCH_FLAGS\n")
-
 		uc.write("CPPFLAGS   = [] + ARCH_FLAGS\n")
 		uc.write("CCFLAGS    = ['-pipe','-funsigned-char'] + ARCH_FLAGS\n")
 		uc.write("CXXFLAGS   = ['-pipe','-funsigned-char'] + ARCH_FLAGS\n")

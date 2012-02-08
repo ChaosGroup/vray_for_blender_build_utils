@@ -213,7 +213,7 @@ class Builder:
 					os.system("svn export blender-svn blender")
 
 		# Update Blender libs
-		if self.update_blender and self.host_os != utils.LNX:
+		if self.update_blender:
 			lib_dir = None
 			svn_cmd = None
 			if self.host_os == utils.WIN:
@@ -222,10 +222,15 @@ class Builder:
 				if self.host_arch == "x86_64":
 					lib_dir = utils.path_join(self.dir_source, "lib", "win64")
 					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64 lib/win64"
-
 			elif self.host_os == utils.MAC:
 				lib_dir = utils.path_join(self.dir_source, "lib", "darwin-9.x.universal")
 				svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/windows lib/darwin-9.x.universal"
+			else:
+				lib_dir = utils.path_join(self.dir_source, "lib", "linux")
+				svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/linux lib/linux"
+				if self.host_arch == "x86_64":
+					lib_dir = utils.path_join(self.dir_source, "lib", "linux64")
+					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/linux64 lib/linux64"
 			
 			if not os.path.exists(lib_dir):
 				sys.stdout.write("Getting \"lib\" data...\n")

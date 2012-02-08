@@ -97,11 +97,6 @@ class LinuxBuilder(Builder):
 			]
 		}
 
-		if self.host_linux['short_name'] == 'opensuse':
-			build_options['False'].append('WITH_BF_FFMPEG')
-		else:
-			build_options['True'].append('WITH_BF_FFMPEG')
-
 		if self.use_collada:
 			build_options['True'].append('WITH_BF_COLLADA')
 		else:
@@ -141,19 +136,8 @@ class LinuxBuilder(Builder):
 		uc.write("BF_PYTHON_LINKFLAGS  = ['-Xlinker', '-export-dynamic']\n")
 		uc.write("BF_PYTHON_LIB_STATIC = '/usr/lib/libpython%s%s.a'\n" % (python_version,python_suffix))
 	
-		# FFMPEG settings
-		#
-		uc.write("BF_FFMPEG            = '/usr'\n")
-		
 		uc.write("BF_TWEAK_MODE        = False\n")
 		uc.write("BF_NUMJOBS           = %i\n" % (self.build_threads))
-
-		## One day try to link ffmpeg statically
-		# uc.write("WITH_BF_STATICFFMPEG = True\n")
-		# uc.write("BF_FFMPEG            = '/opt/ffmpeg-0.8.2'\n")
-		# uc.write("BF_FFMPEG_LIBPATH    = '${BF_FFMPEG}/lib'\n")
-		# uc.write("BF_FFMPEG_INC        = '${BF_FFMPEG}/include'\n")
-		# uc.write("BF_FFMPEG_LIB_STATIC = '${BF_FFMPEG_LIBPATH}/libavcodec.a ${BF_FFMPEG_LIBPATH}/libavdevice.a ${BF_FFMPEG_LIBPATH}/libavfilter.a ${BF_FFMPEG_LIBPATH}/libavformat.a ${BF_FFMPEG_LIBPATH}/libavutil.a ${BF_FFMPEG_LIBPATH}/libpostproc.a ${BF_FFMPEG_LIBPATH}/libswscale.a'\n")
 
 		uc.write("\n")
 

@@ -333,6 +333,10 @@ write_hair (FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             continue;
         }
 
+        if(pset->ren_as != PART_DRAW_PATH) {
+            continue;
+        }
+
         psmd = psys_get_modifier(ob, psys);
 
         if(!psmd) {

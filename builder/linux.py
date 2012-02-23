@@ -70,7 +70,7 @@ class LinuxBuilder(Builder):
 		if self.mode_test:
 			return
 
-		uc= open(self.user_config, 'w')
+		uc = open(self.user_config, 'w')
 
 		build_options= {
 			'True': [
@@ -85,7 +85,6 @@ class LinuxBuilder(Builder):
 				'WITH_BF_RAYOPTIMIZATION',
 				'WITH_BUILDINFO',
 				'WITH_BF_OPENEXR',
-				'WITH_BF_GAMEENGINE',
 			],
 			'False': [
 				'WITH_BF_ICONV',
@@ -96,6 +95,15 @@ class LinuxBuilder(Builder):
 				'WITH_BF_PLAYER',
 			]
 		}
+
+		if self.mode_developer:
+			build_options['False'].append('WITH_BF_CYCLES')
+			build_options['False'].append('WITH_BF_OIIO')
+			build_options['False'].append('WITH_BF_GAMEENGINE')
+		else:
+			build_options['True'].append('WITH_BF_CYCLES')
+			build_options['True'].append('WITH_BF_OIIO')
+			build_options['True'].append('WITH_BF_GAMEENGINE')
 
 		if self.use_collada:
 			build_options['True'].append('WITH_BF_COLLADA')
@@ -110,12 +118,6 @@ class LinuxBuilder(Builder):
 		uc.write("\n")
 
 		uc.write("BF_OPENAL_LIB        = 'openal alut'\n")
-		uc.write("\n")
-
-		# Cycles
-		#
-		uc.write("WITH_BF_CYCLES       = True\n")
-		uc.write("WITH_BF_OIIO         = True\n")
 		uc.write("\n")
 
 		# Python settings
@@ -144,6 +146,7 @@ class LinuxBuilder(Builder):
 		# Since blender is linked over external python
 		# we don't need to embed it
 		uc.write("WITHOUT_BF_PYTHON_INSTALL = True\n")
+		uc.write("\n")
 
 		# Write boolean options
 		for key in build_options:

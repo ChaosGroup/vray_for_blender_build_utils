@@ -333,9 +333,9 @@ write_hair (FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             continue;
         }
 
-        if(pset->ren_as != PART_DRAW_PATH) {
-            continue;
-        }
+        // if(pset->ren_as != PART_DRAW_PATH) {
+        //     continue;
+        // }
 
         psmd = psys_get_modifier(ob, psys);
 
@@ -739,7 +739,7 @@ static void write_mesh(FILE *gfile,
         for(l= 1; l < fdata->totlayer; ++l) {
             if(fdata->layers[l].type == TYPE_UV) {
                 CustomData_set_layer_active(fdata, TYPE_UV, l-1);
-                mesh_update_customdata_pointers(mesh);
+                mesh_update_customdata_pointers(mesh, 1);
 
                 if(is_numeric(fdata->layers[l].name)) {
                     uv_layer_id = atoi(fdata->layers[l].name);
@@ -862,7 +862,7 @@ static Mesh *get_render_mesh(Scene *sce, Main *bmain, Object *ob)
         /* apply modifiers and create mesh */
         dm= mesh_create_derived_render(sce, ob, mask);
         mesh= add_mesh("Mesh");
-        DM_to_mesh(dm, mesh);
+        DM_to_mesh(dm, mesh, ob);
         dm->release(dm);
         break;
     default:
@@ -1011,7 +1011,7 @@ static void *export_meshes_thread(void *ptr)
                 pthread_mutex_lock(&mtx);
 
                 /* remove the temporary mesh */
-                free_mesh(mesh);
+                free_mesh(mesh, 1);
                 BLI_remlink(&bmain->mesh, mesh);
                 MEM_freeN(mesh);
 

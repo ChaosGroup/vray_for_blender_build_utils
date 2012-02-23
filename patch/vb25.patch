@@ -1,6 +1,6 @@
 --- source/creator/CMakeLists.txt	2011-11-26 18:38:40.120142539 +0400
 +++ source/creator/CMakeLists.txt	2011-11-26 19:06:01.172090343 +0400
-@@ -830,6 +830,8 @@
+@@ -859,6 +859,8 @@
  		cycles_kernel
  		cycles_util
  		cycles_subd
@@ -12,18 +12,18 @@
 
 --- source/blender/SConscript	2011-11-10 04:15:47.023294417 +0400
 +++ source/blender/SConscript	2011-11-26 18:47:33.622125572 +0400
-@@ -3,6 +3,7 @@
- import sys
- 
- SConscript(['avi/SConscript',
+@@ -10,6 +10,7 @@
+             'blenpluginapi/SConscript',
+             'gpu/SConscript',
+             'editors/SConscript',
 +            'exporter/SConscript',
-             'blenkernel/SConscript',
-             'blenlib/SConscript',
-             'blenloader/SConscript',
+             'imbuf/SConscript',
+             'makesdna/SConscript',
+             'render/SConscript',
 
 --- source/blender/CMakeLists.txt	2011-11-20 00:30:15.210801416 +0400
 +++ source/blender/CMakeLists.txt	2011-11-26 18:54:30.432112315 +0400
-@@ -87,6 +87,7 @@
+@@ -88,6 +88,7 @@
  	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_tracking_types.h
  )
  
@@ -34,7 +34,7 @@
 
 --- source/blender/editors/space_api/CMakeLists.txt	2011-10-25 11:38:16.371086801 +0400
 +++ source/blender/editors/space_api/CMakeLists.txt	2011-11-26 18:52:03.095117001 +0400
-@@ -27,6 +27,7 @@
+@@ -28,6 +28,7 @@
  	../../makesrna
  	../../windowmanager
  	../../../../intern/guardedalloc
@@ -45,13 +45,13 @@
 
 --- source/blender/editors/space_api/SConscript	2011-10-25 11:38:16.371086801 +0400
 +++ source/blender/editors/space_api/SConscript	2011-11-26 18:50:52.114119258 +0400
-@@ -4,6 +4,7 @@
- sources = env.Glob('*.c')
- 
+@@ -6,6 +6,7 @@
  incs = '../include ../../blenlib ../../blenkernel ../../blenloader ../../makesdna'
-+incs += ' ../../exporter'
- incs += ' ../../windowmanager ../../python ../../makesrna'
+ incs += ' ../../windowmanager ../../python ../../makesrna ../../bmesh'
  incs += ' #/intern/guardedalloc #/extern/glew/include'
++incs += ' ../../exporter'
+ 
+ defs = ''
 
 --- source/blender/editors/space_api/spacetypes.c	2011-11-08 00:14:52.540502832 +0400
 +++ source/blender/editors/space_api/spacetypes.c	2011-11-26 18:57:25.383106750 +0400
@@ -87,7 +87,7 @@
 
 --- source/blender/makesdna/DNA_texture_types.h	2011-11-20 00:30:04.470801629 +0400
 +++ source/blender/makesdna/DNA_texture_types.h	2011-11-26 19:00:38.076100621 +0400
-@@ -314,6 +314,7 @@
+@@ -316,6 +316,7 @@
  /* **************** TEX ********************* */
  
  /* type */

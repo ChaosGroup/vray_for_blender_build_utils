@@ -49,13 +49,18 @@ class LinuxBuilder(Builder):
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo zypper install %s" % packages)
 		
-		elif self.host_linux['short_name']  == 'redhat' or self.host_linux['sort_name']  == 'fedora':
+		elif self.host_linux['short_name']  == 'redhat' or self.host_linux['short_name']  == 'fedora':
 			packages = "gcc-c++ subversion libpng-devel libjpeg-devel libXi-devel openexr-devel openal-soft-devel freealut-devel SDL-devel fftw-devel libtiff-devel lame-libs libsamplerate-devel freetype-devel jack-audio-connection-kit-devel ffmpeg-libs ffmpeg-devel xvidcore-devel libogg-devel faac-devel faad2-devel x264-devel libvorbis-devel libtheora-devel lame-devel python3 python3-devel python3-libs git-core"
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo yum install %s" % packages)
 		
-		elif self.host_linux['short_name']  == 'gentoo':
-			sys.stdout.write("Not implemented yet :(\n")
+		elif self.host_linux['short_name']  == 'archlinux':
+			packages = "desktop-file-utils ffmpeg fftw freetype2 hicolor-icon-theme libgl libxi mesa openal openimageio python"
+			sys.stdout.write("%s\n" % packages)
+			os.system("pacman -Sy %s" % packages)
+
+		# elif self.host_linux['short_name']  == 'gentoo':
+		# 	sys.stdout.write("Not supported yet :(\n")
 
 		else:
 			sys.stdout.write("Your distribution doesn't support automatic dependencies installation.\n")

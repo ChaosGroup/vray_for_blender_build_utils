@@ -52,6 +52,7 @@ parser.add_option('', '--uppatch',                           dest= 'uppatch',   
 # Building options
 parser.add_option('', '--debug_build', action= 'store_true', dest= 'debug',       default= False,  help= "Debug build.")
 parser.add_option('', '--rebuild',     action= 'store_true', dest= 'rebuild',     default= False,  help= "Full rebuild.")
+parser.add_option('', '--revision',                          dest= 'revision',    default= "",     help= "Checkout particular SVN revision.")
 parser.add_option('', '--nopatches',   action= 'store_true', dest= 'nopatches',   default= False,  help= "Don't apply V-Ray/Blender patches.")
 parser.add_option('', '--nodatafiles', action= 'store_true', dest= 'nodatafiles', default= False,  help= "Don't add splash screen.")
 parser.add_option('', '--extern',      action= 'store_true', dest= 'extern',      default= False,  help= "Apply \"extern\" patches.")
@@ -127,6 +128,9 @@ if params['build_release']:
 # Just for sure to disable 'Developer' mode if OS is not Linux
 if host_os != build_system.utils.LNX:
 	params['mode_developer'] = False
+
+if options.revision:
+	params['checkout_revision'] = options.revision
 
 builder = build_system.Builder(params)
 builder.build()

@@ -55,6 +55,7 @@ class LinuxBuilder(Builder):
 			os.system("sudo yum install %s" % packages)
 		
 		elif self.host_linux['short_name']  == 'archlinux':
+			#spacenavd
 			packages = "desktop-file-utils ffmpeg fftw freetype2 hicolor-icon-theme libgl libxi mesa openal openimageio python"
 			sys.stdout.write("%s\n" % packages)
 			os.system("pacman -Sy %s" % packages)

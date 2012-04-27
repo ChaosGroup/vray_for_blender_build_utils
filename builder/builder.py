@@ -108,6 +108,7 @@ class Builder:
 	build_optimize_type = "INTEL"
 	build_clean         = False
 	build_release       = False
+	checkout_revision   = None
 
 	# user-config.py file path
 	user_config         = ""
@@ -195,6 +196,10 @@ class Builder:
 					
 					# Obtain sources
 					os.system("svn update")
+
+			if self.checkout_revision is not None:
+				sys.stdout.write("Checking out revision: %s\n" % (self.checkout_revision))
+				os.system("svn update -r%s" % (self.checkout_revision))
 
 			sys.stdout.write("Exporting sources...\n")
 			if not self.mode_test:
@@ -415,11 +420,9 @@ class Builder:
 
 	
 	def compile(self):
-		cmd = "python"
+		_python = sys.executable
 
-		if self.host_os == utils.WIN:
-			cmd = sys.executable
-
+		cmd = _python
 		cmd += " scons/scons.py"
 		if not self.build_clean:
 			cmd += " --implicit-deps-unchanged --max-drift=1"
@@ -430,7 +433,7 @@ class Builder:
 			os.chdir(self.dir_blender)
 			
 			if self.build_clean:
-				os.system("python scons/scons.py clean")
+				os.system("%s scons/scons.py clean" % (_python))
 			
 			os.system(cmd)
 		

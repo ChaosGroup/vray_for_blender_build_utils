@@ -105,11 +105,23 @@
 #include "exporter_ops.h"
 
 
-#define USE_HAIR_DEBUG   0
-#define BSPLINE_T(X)     ((X) * t_step)
+#define DEBUG_OUTPUT(use_debug, ...) \
+    if(use_debug) { \
+        fprintf(stdout, __VA_ARGS__); \
+        fflush(stdout); \
+    } \
+
+#define HEX(x) htonl(*(int*)&(x))
+#define WRITE_HEX_VALUE(f, v)  fprintf(f, "%08X", HEX(v))
+#define WRITE_HEX_VECTOR(f, v) fprintf(f, "%08X%08X%08X", HEX(v[0]), HEX(v[1]), HEX(v[2]))
+#define WRITE_HEX_QUADFACE(f, face) fprintf(gfile, "%08X%08X%08X%08X%08X%08X", HEX(face->v1), HEX(face->v2), HEX(face->v3), HEX(face->v3), HEX(face->v4), HEX(face->v1))
+#define WRITE_HEX_TRIFACE(f, face)  fprintf(gfile, "%08X%08X%08X", HEX(face->v1), HEX(face->v2), HEX(face->v3))
 
 #define TYPE_UV          5
 #define MAX_MESH_THREADS 16
+
+#define USE_HAIR_DEBUG   1
+#define USE_CHILD        1
 
 struct Material;
 struct MTex;
@@ -131,11 +143,13 @@ typedef struct ThreadData {
     int       instances;
 } ThreadData;
 
-static pthread_mutex_t mtx= PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
 
 static ThreadData thread_data[MAX_MESH_THREADS];
 
-static int debug= 0;
+static int debug = 0;
+
+static char clean_string[MAX_IDPROP_NAME];
 
 
 // http://rosettacode.org/wiki/Determine_if_a_string_is_numeric
@@ -144,7 +158,7 @@ static int debug= 0;
 static int is_numeric(const char *s)
 {
     char *p;
-    if (s == NULL || *s == '\0' || isspace(*s))
+    if(s == NULL || *s == '\0' || isspace(*s))
         return 0;
     strtod(s, &p);
     return *p == '\0';
@@ -214,35 +228,29 @@ static void *uvlayer_ptr(char *name, int id)
 }
 
 
-static char *clean_string(char *str)
+static void clear_string(char *str)
 {
-    char *tmp_str;
-    int   i;
+    int i;
 
-    tmp_str= (char*)malloc(MAX_IDPROP_NAME * sizeof(char));
-
-    strncpy(tmp_str, str, MAX_IDPROP_NAME);
+    strncpy(clean_string, str, MAX_IDPROP_NAME);
 
     for(i= 0; i < strlen(str); i++) {
-        if(tmp_str[i]) {
-            if(tmp_str[i] == '+')
-                tmp_str[i]= 'p';
-            else if(tmp_str[i] == '-')
-                tmp_str[i]= 'm';
-            else if(!((tmp_str[i] >= 'A' && tmp_str[i] <= 'Z') || (tmp_str[i] >= 'a' && tmp_str[i] <= 'z') || (tmp_str[i] >= '0' && tmp_str[i] <= '9')))
-                tmp_str[i]= '_';
+        if(clean_string[i]) {
+            if(clean_string[i] == '+')
+                clean_string[i]= 'p';
+            else if(clean_string[i] == '-')
+                clean_string[i]= 'm';
+            else if(!((clean_string[i] >= 'A' && clean_string[i] <= 'Z') || (clean_string[i] >= 'a' && clean_string[i] <= 'z') || (clean_string[i] >= '0' && clean_string[i] <= '9')))
+                clean_string[i]= '_';
         }
     }
-
-    return tmp_str;
 }
 
 
-static int write_edge_visibility(FILE *gfile,
-                                 int k, unsigned long int *ev)
+static int write_edge_visibility(FILE *gfile, int k, unsigned long int *ev)
 {
     if(k == 9) {
-        fprintf(gfile, "%08X", htonl(*(int*)ev));
+        WRITE_HEX_VALUE(gfile, *ev);
         *ev= 0;
         return 0;
     }
@@ -250,47 +258,260 @@ static int write_edge_visibility(FILE *gfile,
 }
 
 
-// B-Spline Interpolation
+// Spline Interpolation
 //
-//  Algorithm: http://mathworld.wolfram.com/B-Spline.html
-//
-// TODO:
-//  Simplify for degree = 2
+//  Code from: http://www.mech.uq.edu.au/staff/jacobs/nm_lib/doc/spline.html
 //
 
-static float
-bspline_N (const int i, const int j, const float t, const float t_step)
+// c_spline_init()
+//
+//   Evaluate the coefficients b[i], c[i], d[i], i = 0, 1, .. n-1 for
+//   a cubic interpolating spline
+//
+//   S(xx) = Y[i] + b[i] * w + c[i] * w**2 + d[i] * w**3
+//   where w = xx - x[i]
+//   and   x[i] <= xx <= x[i+1]
+//
+//   The n supplied data points are x[i], y[i], i = 0 ... n-1.
+//
+//   Input :
+//   -------
+//   n       : The number of data points or knots (n >= 2)
+//   end1,
+//   end2    : = 1 to specify the slopes at the end points
+//             = 0 to obtain the default conditions
+//   slope1,
+//   slope2  : the slopes at the end points x[0] and x[n-1]
+//             respectively
+//   x[]     : the abscissas of the knots in strictly
+//             increasing order
+//   y[]     : the ordinates of the knots
+//
+//   Output :
+//   --------
+//   b, c, d : arrays of spline coefficients as defined above
+//             (See note 2 for a definition.)
+//   iflag   : status flag
+//            = 0 normal return
+//            = 1 less than two data points; cannot interpolate
+//            = 2 x[] are not in ascending order
+//
+//   This C code written by ...  Peter & Nigel,
+//   ----------------------      Design Software,
+//                               42 Gubberley St,
+//                               Kenmore, 4069,
+//                               Australia.
+//
+//   Version ... 1.1, 30 September 1987
+//   -------     2.0, 6 April 1989    (start with zero subscript)
+//                                     remove ndim from parameter list
+//               2.1, 28 April 1989   (check on x[])
+//               2.2, 10 Oct   1989   change number order of matrix
+//
+//   Notes ...
+//   -----
+//   (1) The accompanying function seval() may be used to evaluate the
+//       spline while deriv will provide the first derivative.
+//   (2) Using p to denote differentiation
+//       y[i] = S(X[i])
+//       b[i] = Sp(X[i])
+//       c[i] = Spp(X[i])/2
+//       d[i] = Sppp(X[i])/6  ( Derivative from the right )
+//   (3) Since the zero elements of the arrays ARE NOW used here,
+//       all arrays to be passed from the main program should be
+//       dimensioned at least [n].  These routines will use elements
+//       [0 .. n-1].
+//   (4) Adapted from the text
+//       Forsythe, G.E., Malcolm, M.A. and Moler, C.B. (1977)
+//       "Computer Methods for Mathematical Computations"
+//       Prentice Hall
+//   (5) Note that although there are only n-1 polynomial segments,
+//       n elements are requird in b, c, d.  The elements b[n-1],
+//       c[n-1] and d[n-1] are set to continue the last segment
+//       past x[n-1].
+//
+static int c_spline_init(const int n, const int end1, const int end2, const double slope1, const double slope2,
+                         const double x[], const double y[],
+                         double b[], double c[], double d[], int *iflag)
 {
-    if(j == 0) {
-        if((BSPLINE_T(i) < BSPLINE_T(i+1)) && (BSPLINE_T(i) <= t && t < BSPLINE_T(i+1)))
-            return 1.0f;
-        return 0.0f;
+    int     nm1, ib, i;
+    double  t;
+    int     ascend;
+
+    nm1    = n - 1;
+    *iflag = 0;
+
+    /* no possible interpolation */
+    if(n < 2) {
+        *iflag = 1;
+        goto LeaveSpline;
     }
 
-    return bspline_N(i,j-1,t,t_step) * (t - BSPLINE_T(i)) / (BSPLINE_T(i+j) - BSPLINE_T(i)) + bspline_N(i+1,j-1,t,t_step) * ((BSPLINE_T(i+j+1) - t) / (BSPLINE_T(i+j+1) - BSPLINE_T(i+1)));
-}
+    ascend = 1;
+    for(i = 1; i < n; ++i)
+        if (x[i] <= x[i-1]) ascend = 0;
 
-static float
-bspline_C (const float P[], const int P_size, const int degree, const float t, const float t_step)
-{
-    int   i = 0;
-    float S = 0.0f;
-
-    for(i = 0; i <= P_size; ++i) {
-        S += P[i] * bspline_N(i,degree,t,t_step);
+    if(!ascend) {
+        *iflag = 2;
+        goto LeaveSpline;
     }
 
-    return S;
+    if(n >= 3)
+    {
+        /* At least quadratic */
+
+        /* Set up the symmetric tri-diagonal system
+           b = diagonal
+           d = offdiagonal
+           c = right-hand-side  */
+        d[0] = x[1] - x[0];
+        c[1] = (y[1] - y[0]) / d[0];
+        for (i = 1; i < nm1; ++i)
+        {
+            d[i]   = x[i+1] - x[i];
+            b[i]   = 2.0 * (d[i-1] + d[i]);
+            c[i+1] = (y[i+1] - y[i]) / d[i];
+            c[i]   = c[i+1] - c[i];
+        }
+
+        /* Default End conditions
+           Third derivatives at x[0] and x[n-1] obtained
+           from divided differences  */
+        b[0]   = -d[0];
+        b[nm1] = -d[n-2];
+        c[0]   = 0.0;
+        c[nm1] = 0.0;
+        if(n != 3) {
+            c[0]   = c[2] / (x[3] - x[1]) - c[1] / (x[2] - x[0]);
+            c[nm1] = c[n-2] / (x[nm1] - x[n-3]) - c[n-3] / (x[n-2] - x[n-4]);
+            c[0]   = c[0] * d[0] * d[0] / (x[3] - x[0]);
+            c[nm1] = -c[nm1] * d[n-2] * d[n-2] / (x[nm1] - x[n-4]);
+        }
+
+        /* Alternative end conditions -- known slopes */
+        if(end1 == 1) {
+            b[0] = 2.0 * (x[1] - x[0]);
+            c[0] = (y[1] - y[0]) / (x[1] - x[0]) - slope1;
+        }
+        if(end2 == 1) {
+            b[nm1] = 2.0 * (x[nm1] - x[n-2]);
+            c[nm1] = slope2 - (y[nm1] - y[n-2]) / (x[nm1] - x[n-2]);
+        }
+
+        /* Forward elimination */
+        for(i = 1; i < n; ++i) {
+            t    = d[i-1] / b[i-1];
+            b[i] = b[i] - t * d[i-1];
+            c[i] = c[i] - t * c[i-1];
+        }
+
+        /* Back substitution */
+        c[nm1] = c[nm1] / b[nm1];
+        for(ib = 0; ib < nm1; ++ib)
+        {
+            i    = n - ib - 2;
+            c[i] = (c[i] - d[i] * c[i+1]) / b[i];
+        }
+
+        /* c[i] is now the sigma[i] of the text */
+
+        /* Compute the polynomial coefficients */
+        b[nm1] = (y[nm1] - y[n-2]) / d[n-2] + d[n-2] * (c[n-2] + 2.0 * c[nm1]);
+        for(i = 0; i < nm1; ++i)
+        {
+            b[i] = (y[i+1] - y[i]) / d[i] - d[i] * (c[i+1] + 2.0 * c[i]);
+            d[i] = (c[i+1] - c[i]) / d[i];
+            c[i] = 3.0 * c[i];
+        }
+        c[nm1] = 3.0 * c[nm1];
+        d[nm1] = d[n-2];
+
+    }
+    else
+    {
+        /* linear segment only  */
+        b[0] = (y[1] - y[0]) / (x[1] - x[0]);
+        c[0] = 0.0;
+        d[0] = 0.0;
+        b[1] = b[0];
+        c[1] = 0.0;
+        d[1] = 0.0;
+    }
+
+LeaveSpline:
+    return 0;
 }
 
 
-// Write GeomMayaHair
+// c_spline_eval()
 //
-static void
-write_hair (FILE *gfile, Scene *sce, Main *bmain, Object *ob)
+//  Evaluate the cubic spline function
+//
+//  S(xx) = y[i] + b[i] * w + c[i] * w**2 + d[i] * w**3
+//  where w = u - x[i]
+//  and   x[i] <= u <= x[i+1]
+//  Note that Horner's rule is used.
+//  If u < x[0]   then i = 0 is used.
+//  If u > x[n-1] then i = n-1 is used.
+//
+//  Input :
+//  -------
+//  n       : The number of data points or knots (n >= 2)
+//  u       : the abscissa at which the spline is to be evaluated
+//  Last    : the segment that was last used to evaluate U
+//  x[]     : the abscissas of the knots in strictly increasing order
+//  y[]     : the ordinates of the knots
+//  b, c, d : arrays of spline coefficients computed by spline().
+//
+//  Output :
+//  --------
+//  seval   : the value of the spline function at u
+//  Last    : the segment in which u lies
+//
+//  Notes ...
+//  -----
+//  (1) If u is not in the same interval as the previous call then a
+//      binary search is performed to determine the proper interval.
+//
+static double c_spline_eval(int n, double u, double x[], double y[],
+                            double b[], double c[], double d[], int *last)
 {
-    int   c, i, p, s;
-    float t;
+    int    i, j, k;
+    double w;
+
+    i = *last;
+
+    if(i >= n-1) i = 0;
+    if(i < 0)  i = 0;
+
+    /* perform a binary search */
+    if((x[i] > u) || (x[i+1] < u))
+    {
+        i = 0;
+        j = n;
+        do
+        {
+            k = (i + j) / 2;         /* split the domain to search */
+            if (u < x[k])  j = k;    /* move the upper bound */
+            if (u >= x[k]) i = k;    /* move the lower bound */
+        }                            /* there are no more segments to search */
+        while (j > i+1);
+    }
+    *last = i;
+
+    /* Evaluate the spline */
+    w = u - x[i];
+    w = y[i] + w * (b[i] + w * (c[i] + w * d[i]));
+
+    return w;
+}
+
+
+static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
+{
+    int    i, c, p, s;
+    float  f;
+    float  t;
 
     ParticleSystem   *psys;
     ParticleSettings *pset;
@@ -305,25 +526,34 @@ write_hair (FILE *gfile, Scene *sce, Main *bmain, Object *ob)
     ParticleCacheKey  *child_key;
     int                child_total = 0;
     int                child_steps = 0;
+    float              child_key_co[3];
+    int                child_segment_counter;
 
     float     hairmat[4][4];
     float     segment[3];
     float     width= 0.001f;
 
-    const int bspline_degree = 2;
-    float     control_points[3][64]; // P
-    float     knot_vector_step;
-    int       segment_count;
-    int       segment_interp_count;
-    float     segment_step;
+    int       spline_init_flag;
+    int       interp_points_count;
+    float     interp_points_step;
+    int       data_points_count;
+    float     data_points_step;
+    double    data_points_ordinates[3][64];
+    double    data_points_abscissas[64];
 
-    PointerRNA rna_pset;
-    PointerRNA VRayParticleSettings;
-    PointerRNA VRayFur;
+    double    s_b[3][16];
+    double    s_c[3][16];
+    double    s_d[3][16];
 
-    char *cleared_string;
+    int       spline_last[3];
 
-    int display_percentage;
+    PointerRNA  rna_pset;
+    PointerRNA  VRayParticleSettings;
+    PointerRNA  VRayFur;
+
+    int  display_percentage;
+
+    int  tmp_cnt;
 
     for(psys = ob->particlesystem.first; psys; psys = psys->next)
     {
@@ -333,9 +563,9 @@ write_hair (FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             continue;
         }
 
-        // if(pset->ren_as != PART_DRAW_PATH) {
-        //     continue;
-        // }
+        if(pset->ren_as != PART_DRAW_PATH) {
+            continue;
+        }
 
         psmd = psys_get_modifier(ob, psys);
 
@@ -349,16 +579,12 @@ write_hair (FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             VRayParticleSettings= RNA_pointer_get(&rna_pset, "vray");
 
             if(RNA_struct_find_property(&VRayParticleSettings, "VRayFur")) {
-                VRayFur= RNA_pointer_get(&VRayParticleSettings, "VRayFur");
+                VRayFur = RNA_pointer_get(&VRayParticleSettings, "VRayFur");
 
                 // Get hair width
-                width= RNA_float_get(&VRayFur, "width");
+                width = RNA_float_get(&VRayFur, "width");
             }
         }
-
-        // B-spline interpolation
-        segment_count        = (int)pow(2.0, pset->ren_step);
-        segment_interp_count = segment_count + 2;
 
         // Store "Display percentage" setting
         display_percentage= pset->disp;
@@ -366,158 +592,264 @@ write_hair (FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         ob->recalc |= OB_RECALC_DATA;
         scene_update_tagged(bmain, sce);
 
-        child_total = psys->totchildcache;
+        // Spline interpolation
+        interp_points_count = (int)pow(2.0, pset->ren_step);
+        interp_points_step = 1.0 / (interp_points_count - 1);
+
+        DEBUG_OUTPUT(debug, "interp_points_step = %.3f\n", interp_points_step);
+
         child_cache = psys->childcache;
+        child_total = psys->totchildcache;
 
-        cleared_string= clean_string(psys->name);
-        fprintf(gfile, "GeomMayaHair HAIR%s", cleared_string);
-        free(cleared_string);
+        clear_string(psys->name);
+        fprintf(gfile, "GeomMayaHair HAIR%s", clean_string);
 
-        cleared_string= clean_string(pset->id.name+2);
-        fprintf(gfile, "%s {", cleared_string);
-        free(cleared_string);
+        clear_string(pset->id.name+2);
+        fprintf(gfile, "%s {", clean_string);
+
 
         fprintf(gfile, "\n\tnum_hair_vertices= interpolate((%d,ListIntHex(\"", sce->r.cfra);
         for(p= 0, pa= psys->particles; p < psys->totpart; ++p, ++pa)
         {
-            fprintf(gfile, "%08X", htonl(*(int*)&(segment_interp_count)));
-        }
-        if(child_cache) {
-            for(p= 0; p < child_total; ++p) {
-                child_key   = child_cache[p];
-                child_steps = child_key->steps;
+            DEBUG_OUTPUT(debug, "Pa[%i] : Segments: %i\n", p, interp_points_count);
 
-                fprintf(gfile, "%08X", htonl(*(int*)&(child_steps)));
+            WRITE_HEX_VALUE(gfile, interp_points_count);
+        }
+        if(pset->childtype && child_cache) {
+            for(p= 0; p < child_total; ++p) {
+                WRITE_HEX_VALUE(gfile, interp_points_count);
             }
         }
         fprintf(gfile,"\")));");
+
 
         fprintf(gfile, "\n\thair_vertices= interpolate((%d,ListVectorHex(\"", sce->r.cfra);
         for(p= 0, pa= psys->particles; p < psys->totpart; ++p, ++pa)
         {
-            if(debug) {
-                printf("\033[0;32mV-Ray/Blender:\033[0m Particle system: %s => Hair: %i\r", psys->name, p + 1);
-                fflush(stdout);
-            }
+            DEBUG_OUTPUT(debug, "\033[0;32mV-Ray/Blender:\033[0m Particle system: %s => Hair: %i\n", psys->name, p + 1);
 
             psys_mat_hair_to_object(ob, psmd->dm, psmd->psys->part->from, pa, hairmat);
 
-            // B-spline interpolation
-            segment_step     = 1.0f / segment_count;
-            knot_vector_step = 1.0f / pa->totkey;
+            // Spline interpolation
+            data_points_count = pa->totkey;
+            data_points_step  = 1.0f / (data_points_count - 1);
+
+            DEBUG_OUTPUT(debug, "data_points_count = %i\n", data_points_count);
+            DEBUG_OUTPUT(debug, "data_points_step = %.3f\n", data_points_step);
+
+            f = 0.0f;
+            for(i = 0; f <= 1.0; ++i, f += data_points_step) {
+                data_points_abscissas[i] = f;
+            }
 
             // Store control points
-            for(s= 0, hkey= pa->hair; s < pa->totkey; ++s, ++hkey) {
-                for(c= 0; c < 3; ++c) {
-                    control_points[c][s] = hkey->co[c];
+            for(s = 0, hkey = pa->hair; s < pa->totkey; ++s, ++hkey) {
+                for(c = 0; c < 3; ++c) {
+                    data_points_ordinates[c][s] = hkey->co[c];
                 }
-#if USE_HAIR_DEBUG
-                printf("Segment [%i] = %.3f,%.3f,%.3f\n", s, hkey->co[0], hkey->co[1], hkey->co[2]);
-#endif
+            }
+
+            // Init spline coefficients
+            for(c = 0; c < 3; ++c) {
+                c_spline_init(data_points_count, 0, 0, 0.0f, 0.0f,
+                              data_points_abscissas, data_points_ordinates[c],
+                              s_b[c], s_c[c], s_d[c], &spline_init_flag);
             }
 
             // Write interpolated points
-            for(t= 0.0f; t <= 1.0; t += segment_step) {
+            tmp_cnt = 0;
+
+            for(c = 0; c < 3; ++c)
+                spline_last[c] = 0;
+
+            for(t = 0.0f; t <= 1.0; t += interp_points_step) {
+                // Calculate interpolated coordinates
                 for(c= 0; c < 3; ++c) {
-                    // Calculate interpolated coord
-                    segment[c] = bspline_C(control_points[c], pa->totkey, bspline_degree, t, knot_vector_step);
+                    segment[c] = c_spline_eval(data_points_count, t, data_points_abscissas, data_points_ordinates[c],
+                                               s_b[c], s_c[c], s_d[c], &spline_last[c]);
                 }
-#if USE_HAIR_DEBUG
-                printf("Interpolated [%.3f] = %.3f,%.3f,%.3f\n", t, segment[0], segment[1], segment[2]);
-#endif
+
                 mul_m4_v3(hairmat, segment);
 
-                fprintf(gfile, "%08X%08X%08X",
-                        htonl(*(int*)&(segment[0])),
-                        htonl(*(int*)&(segment[1])),
-                        htonl(*(int*)&(segment[2])));
+                WRITE_HEX_VECTOR(gfile, segment);
             }
-
-            // Implicit last point
-            for(c= 0; c < 3; ++c) {
-                segment[c] = control_points[c][pa->totkey-1];
-            }
-#if USE_HAIR_DEBUG
-            printf("Implicit last point [%.3f] = %.3f,%.3f,%.3f\n", t, segment[0], segment[1], segment[2]);
-#endif
-            mul_m4_v3(hairmat, segment);
-
-            fprintf(gfile, "%08X%08X%08X",
-                    htonl(*(int*)&(segment[0])),
-                    htonl(*(int*)&(segment[1])),
-                    htonl(*(int*)&(segment[2])));
-
-            // Without interpolation
-            // for(s= 0, hkey= pa->hair; s < pa->totkey; ++s, ++hkey) {
-            //     psys_mat_hair_to_object(ob, psmd->dm, psmd->psys->part->from, pa, hairmat);
-            //     copy_v3_v3(segment, hkey->co);
-            //     mul_m4_v3(hairmat, segment);
-            //     fprintf(gfile, "%08X%08X%08X",
-            //             htonl(*(int*)&(segment[0])),
-            //             htonl(*(int*)&(segment[1])),
-            //             htonl(*(int*)&(segment[2])));
-            // }
         }
-        if(debug) {
-            printf("\n");
-            fflush(stdout);
-        }
-        if(child_cache) {
-            for(p= 0; p < child_total; ++p) {
-                if(debug) {
-                    printf("\033[0;32mV-Ray/Blender:\033[0m Particle system: %s => Child hair: %i\r", psys->name, p+1);
-                    fflush(stdout);
-                }
-
+        if(pset->childtype && child_cache) {
+            for(p = 0; p < child_total; ++p) {
                 child_key   = child_cache[p];
                 child_steps = child_key->steps;
-                for(s= 0; s < child_steps; s++, child_key++)
-                {
-                    //psys_mat_hair_to_object(ob, psmd->dm, psmd->psys->part->from, pa, hairmat);
-                    fprintf(gfile, "%08X%08X%08X",
-                            htonl(*(int*)&(child_key->co[0])),
-                            htonl(*(int*)&(child_key->co[1])),
-                            htonl(*(int*)&(child_key->co[2])));
+
+                // Spline interpolation
+                data_points_count = child_steps;
+                data_points_step  = 1.0f / (child_steps - 1);
+
+                f = 0.0f;
+                for(i = 0; f <= 1.0; ++i, f += data_points_step) {
+                    data_points_abscissas[i] = f;
+                }
+
+                // Store control points
+                for(s = 0; s < child_steps; s++, child_key++) {
+                    // We need to transform child points
+                    copy_v3_v3(child_key_co, child_key->co); // Store child segment location
+                    mul_m4_v3(ob->imat, child_key_co);       // Remove transform by applying inverse matrix
+
+                    for(c = 0; c < 3; ++c) {
+                        data_points_ordinates[c][s] = child_key_co[c];
+                    }
+                }
+
+                // Init spline coefficients
+                for(c = 0; c < 3; ++c) {
+                    c_spline_init(data_points_count, 0, 0, 0.0f, 0.0f,
+                                  data_points_abscissas, data_points_ordinates[c],
+                                  s_b[c], s_c[c], s_d[c], &spline_init_flag);
+                }
+
+                // Write interpolated child points
+                child_segment_counter = 0;
+
+                for(c = 0; c < 3; ++c)
+                    spline_last[c] = 0;
+
+                for(t = 0.0f; t <= 1.0; t += interp_points_step) {
+                    // Calculate interpolated coordinate
+                    for(c = 0; c < 3; ++c) {
+                        segment[c] = c_spline_eval(data_points_count, t, data_points_abscissas, data_points_ordinates[c],
+                                                   s_b[c], s_c[c], s_d[c], &spline_last[c]);
+                    }
+                    WRITE_HEX_VECTOR(gfile, segment);
                 }
             }
         }
         fprintf(gfile,"\")));");
 
+
         fprintf(gfile, "\n\twidths= interpolate((%d,ListFloatHex(\"", sce->r.cfra);
-        for(p= 0, pa= psys->particles; p < psys->totpart; ++p, ++pa) {
-            for(s= 0; s <= segment_interp_count; ++s) {
-                fprintf(gfile, "%08X", htonl(*(int*)&(width)));
+        for(p = 0, pa= psys->particles; p < psys->totpart; ++p, ++pa) {
+            for(s = 0; s < interp_points_count; ++s) {
+                WRITE_HEX_VALUE(gfile, width);
             }
         }
-        if(child_cache) {
-            for(p= 0; p < child_total; ++p) {
-                child_key   = child_cache[p];
-                child_steps = child_key->steps;
-
-                for(s= 0; s < child_steps; ++s) {
-                    fprintf(gfile, "%08X", htonl(*(int*)&(width)));
+        if(pset->childtype && child_cache) {
+            for(p = 0; p < child_total; ++p) {
+                for(s = 0; s < interp_points_count; ++s) {
+                    WRITE_HEX_VALUE(gfile, width);
                 }
             }
         }
-        fprintf(gfile,"\")));\n");
+        fprintf(gfile,"\")));");
 
-        if(debug) {
-            printf("\n");
-        }
-
-        fprintf(gfile,"}\n\n");
+        fprintf(gfile, "\n\tcolors= List();");
+        fprintf(gfile, "\n\tincandescence= List();");
+        fprintf(gfile, "\n\ttransparency= List();");
+        fprintf(gfile, "\n\tstrand_uvw= List();");
+        fprintf(gfile, "\n\topacity= 1;");
+        fprintf(gfile, "\n}\n\n");
 
         // Restore "Display percentage" setting
-        pset->disp= display_percentage;
+        pset->disp = display_percentage;
         ob->recalc |= OB_RECALC_DATA;
         scene_update_tagged(bmain, sce);
     }
 }
 
 
-static void write_mesh(FILE *gfile,
-                       Scene *sce, Object *ob, Mesh *mesh,
-                       LinkNode *uv_list, int instances)
+static Mesh *get_render_mesh(Scene *sce, Object *ob)
+{
+    Mesh *tmpmesh;
+    Curve *tmpcu = NULL, *copycu;
+    Object *tmpobj = NULL;
+    Object *basis_ob = NULL;
+    ListBase disp = {NULL, NULL};
+
+    /* Make a dummy mesh, saves copying */
+    DerivedMesh *dm;
+
+    CustomDataMask mask = CD_MASK_MESH|CD_MASK_MDEFORMVERT;
+
+    /* perform the mesh extraction based on type */
+    switch (ob->type) {
+    case OB_FONT:
+    case OB_CURVE:
+    case OB_SURF:
+        /* copies object and modifiers (but not the data) */
+        tmpobj = copy_object(ob);
+        tmpcu = (Curve *)tmpobj->data;
+        tmpcu->id.us--;
+
+        /* copies the data */
+        copycu = tmpobj->data = copy_curve( (Curve *) ob->data );
+
+        /* temporarily set edit so we get updates from edit mode, but
+         * also because for text datablocks copying it while in edit
+         * mode gives invalid data structures */
+        copycu->editfont = tmpcu->editfont;
+        copycu->editnurb = tmpcu->editnurb;
+
+        /* get updated display list, and convert to a mesh */
+        makeDispListCurveTypes( sce, tmpobj, 0 );
+
+        copycu->editfont = NULL;
+        copycu->editnurb = NULL;
+
+        nurbs_to_mesh( tmpobj );
+
+        /* nurbs_to_mesh changes the type to a mesh, check it worked */
+        if (tmpobj->type != OB_MESH) {
+            free_libblock_us( &(G.main->object), tmpobj );
+            return NULL;
+        }
+        tmpmesh = tmpobj->data;
+        free_libblock_us( &G.main->object, tmpobj );
+
+        break;
+
+    case OB_MBALL:
+        /* metaballs don't have modifiers, so just convert to mesh */
+        basis_ob = find_basis_mball(sce, ob);
+
+        /* todo, re-generatre for render-res */
+        /* metaball_polygonize(scene, ob) */
+
+        if (ob != basis_ob)
+            return NULL; /* only do basis metaball */
+
+        tmpmesh = add_mesh("Mesh");
+
+        makeDispListMBall_forRender(sce, ob, &disp);
+        mball_to_mesh(&disp, tmpmesh);
+        freedisplist(&disp);
+
+        break;
+
+    case OB_MESH:
+        /* Write the render mesh into the dummy mesh */
+        dm = mesh_create_derived_render(sce, ob, mask);
+
+        tmpmesh = add_mesh("Mesh");
+        DM_to_mesh(dm, tmpmesh, ob);
+        dm->release(dm);
+
+        break;
+
+    default:
+        return NULL;
+    }
+
+    /* cycles and exporters rely on this still */
+    BKE_mesh_tessface_ensure(tmpmesh);
+
+    /* we don't assign it to anything */
+    tmpmesh->id.us--;
+
+    return tmpmesh;
+}
+
+
+static void write_GeomStaticMesh(FILE *gfile,
+                                 Scene *sce, Object *ob, Mesh *mesh,
+                                 LinkNode *uv_list, int instances)
 {
     Mesh   *me= ob->data;
     MFace  *face;
@@ -535,8 +867,7 @@ static void write_mesh(FILE *gfile,
     int    uv_layer_id = 1;
     int    maxLayer    = 0;
 
-    char  *lib_filename= (char*)malloc(FILE_MAX * sizeof(char));
-    char  *cleared_string;
+    char  *lib_filename = NULL;
 
     PointerRNA   rna_me;
     PointerRNA   VRayMesh;
@@ -552,32 +883,35 @@ static void write_mesh(FILE *gfile,
     int u;
 
     if(debug)
-        printf("Processing object \"%s\": mesh \"%s\"\n", ob->id.name, me->id.name);
+        DEBUG_OUTPUT(debug, "Processing object \"%s\": mesh \"%s\"\n", ob->id.name, me->id.name);
 
-    if(!mesh->totface)
+    if(!(mesh->totface)) {
+        DEBUG_OUTPUT(debug, "No faces in mesh \"%s\"\n", me->id.name);
         return;
+    }
 
     // Name format: ME<meshname>LI<libname>
+    //
     if(instances)
-        cleared_string= clean_string(me->id.name+2);
+        clear_string(me->id.name+2);
     else
-        cleared_string= clean_string(ob->id.name+2);
-
-    fprintf(gfile,"GeomStaticMesh ME%s", cleared_string);
-    free(cleared_string);
+        clear_string(ob->id.name+2);
+    fprintf(gfile,"GeomStaticMesh ME%s", clean_string);
 
     if(me->id.lib) {
+        lib_filename = (char*)malloc(FILE_MAX * sizeof(char));
+
         BLI_split_file_part(me->id.lib->name+2, lib_filename, FILE_MAX);
         BLI_replace_extension(lib_filename, FILE_MAX, "");
 
-        cleared_string= clean_string(lib_filename);
-        fprintf(gfile,"LI%s", cleared_string);
+        clear_string(lib_filename);
+        fprintf(gfile,"LI%s", clean_string);
         if(debug) {
             printf("V-Ray/Blender: Object: %s\n", ob->id.name+2);
             printf("  Mesh: %s\n", me->id.name+2);
             printf("    Lib filename: %s\n", lib_filename);
         }
-        free(cleared_string);
+
         free(lib_filename);
     }
     fprintf(gfile," {\n");
@@ -586,10 +920,7 @@ static void write_mesh(FILE *gfile,
     fprintf(gfile,"\tvertices= interpolate((%d, ListVectorHex(\"", sce->r.cfra);
     vert= mesh->mvert;
     for(f= 0; f < mesh->totvert; ++vert, ++f) {
-        fprintf(gfile, "%08X%08X%08X",
-                htonl(*(int*)&(vert->co[0])),
-                htonl(*(int*)&(vert->co[1])),
-                htonl(*(int*)&(vert->co[2])));
+        WRITE_HEX_VECTOR(gfile, vert->co);
     }
     fprintf(gfile,"\")));\n");
 
@@ -598,18 +929,10 @@ static void write_mesh(FILE *gfile,
     face= mesh->mface;
     for(f= 0; f < mesh->totface; ++face, ++f) {
         if(face->v4)
-            fprintf(gfile, "%08X%08X%08X%08X%08X%08X",
-                    htonl(*(int*)&(face->v1)),
-                    htonl(*(int*)&(face->v2)),
-                    htonl(*(int*)&(face->v3)),
-                    htonl(*(int*)&(face->v3)),
-                    htonl(*(int*)&(face->v4)),
-                    htonl(*(int*)&(face->v1)));
+            WRITE_HEX_QUADFACE(gfile, face);
         else
-            fprintf(gfile, "%08X%08X%08X",
-                    htonl(*(int*)&(face->v1)),
-                    htonl(*(int*)&(face->v2)),
-                    htonl(*(int*)&(face->v3)));
+            WRITE_HEX_TRIFACE(gfile, face);
+
     }
     fprintf(gfile,"\")));\n");
 
@@ -799,11 +1122,11 @@ static void write_mesh(FILE *gfile,
 
     RNA_id_pointer_create(&me->id, &rna_me);
     if(RNA_struct_find_property(&rna_me, "vray")) {
-        VRayMesh= RNA_pointer_get(&rna_me, "vray");
+        VRayMesh = RNA_pointer_get(&rna_me, "vray");
         if(RNA_struct_find_property(&VRayMesh, "GeomStaticMesh")) {
-            GeomStaticMesh= RNA_pointer_get(&VRayMesh, "GeomStaticMesh");
+            GeomStaticMesh = RNA_pointer_get(&VRayMesh, "GeomStaticMesh");
             if(RNA_struct_find_property(&GeomStaticMesh, "dynamic_geometry")) {
-                dynamic_geometry= RNA_boolean_get(&GeomStaticMesh, "dynamic_geometry");
+                dynamic_geometry = RNA_boolean_get(&GeomStaticMesh, "dynamic_geometry");
             }
         }
     }
@@ -815,64 +1138,6 @@ static void write_mesh(FILE *gfile,
     fprintf(gfile,"\tdynamic_geometry= %i;\n", dynamic_geometry);
 
     fprintf(gfile,"}\n\n");
-}
-
-
-static Mesh *get_render_mesh(Scene *sce, Main *bmain, Object *ob)
-{
-    Object         *tmpobj= NULL;
-    Curve          *tmpcu=  NULL;
-    Mesh           *mesh=   NULL;
-    DerivedMesh    *dm;
-    CustomDataMask  mask= CD_MASK_MESH;
-
-    /* perform the mesh extraction based on type */
-    switch (ob->type) {
-    case OB_FONT:
-    case OB_CURVE:
-    case OB_SURF:
-        /* copies object and modifiers (but not the data) */
-        tmpobj= copy_object( ob );
-        tmpcu= (Curve *)tmpobj->data;
-        tmpcu->id.us--;
-
-        /* copies the data */
-        tmpobj->data= copy_curve((Curve *)ob->data);
-
-        /* get updated display list, and convert to a mesh */
-        makeDispListCurveTypes(sce, tmpobj, 0);
-        nurbs_to_mesh(tmpobj);
-
-        /* nurbs_to_mesh changes the type tp a mesh, check it worked */
-        if(tmpobj->type != OB_MESH) {
-            free_libblock_us(&bmain->object, tmpobj);
-            return NULL;
-        }
-
-        mesh= tmpobj->data;
-        free_libblock_us(&bmain->object, tmpobj);
-        break;
-    case OB_MBALL:
-        /* metaballs don't have modifiers, so just convert to mesh */
-        ob= find_basis_mball(sce, ob);
-        mesh= add_mesh("Mesh");
-        mball_to_mesh(&ob->disp, mesh);
-        break;
-    case OB_MESH:
-        /* apply modifiers and create mesh */
-        dm= mesh_create_derived_render(sce, ob, mask);
-        mesh= add_mesh("Mesh");
-        DM_to_mesh(dm, mesh, ob);
-        dm->release(dm);
-        break;
-    default:
-        return NULL;
-    }
-
-    /* we don't assign it to anything */
-    mesh->id.us--;
-
-    return mesh;
 }
 
 
@@ -977,9 +1242,9 @@ static void *export_meshes_thread(void *ptr)
     }
     sprintf(filepath, "%s_%.2d.vrscene", td->filepath, td->id);
     if(td->animation) {
-        gfile= fopen(filepath, "a");
+        gfile = fopen(filepath, "a");
     } else {
-        gfile= fopen(filepath, "w");
+        gfile = fopen(filepath, "w");
         fprintf(gfile,"// V-Ray/Blender 2.5\n");
         fprintf(gfile,"// Geometry file\n\n");
     }
@@ -992,8 +1257,11 @@ static void *export_meshes_thread(void *ptr)
             // Export hair
             if(use_hair) {
                 pthread_mutex_lock(&mtx);
-
+#if 1
+                write_GeomMayaHair(gfile, sce, bmain, ob);
+#else
                 write_hair(gfile, sce, bmain, ob);
+#endif
 
                 pthread_mutex_unlock(&mtx);
             }
@@ -1001,12 +1269,12 @@ static void *export_meshes_thread(void *ptr)
             // Export mesh
             pthread_mutex_lock(&mtx);
 
-            mesh= get_render_mesh(sce, bmain, ob);
+            mesh = get_render_mesh(sce, ob);
 
             pthread_mutex_unlock(&mtx);
 
             if(mesh) {
-                write_mesh(gfile, sce, ob, mesh, td->uvs, td->instances);
+                write_GeomStaticMesh(gfile, sce, ob, mesh, td->uvs, td->instances);
 
                 pthread_mutex_lock(&mtx);
 
@@ -1233,10 +1501,10 @@ static void export_meshes_threaded(char *filepath, Scene *sce, Main *bmain,
     /*
       Split object list to multiple lists
     */
-    t= 0;
+    t = 0;
     objects_iter= objects;
     while(objects_iter) {
-        ob= (Object*)objects_iter->link;
+        ob = (Object*)objects_iter->link;
 
         BLI_linklist_prepend(&(thread_data[t].objects), ob);
 
@@ -1244,22 +1512,22 @@ static void export_meshes_threaded(char *filepath, Scene *sce, Main *bmain,
         if(t < threads_count - 1)
             t++;
         else
-            t= 0;
+            t = 0;
 
         objects_iter= objects_iter->next;
     }
 
     if(debug) {
-        for(t= 0; t < threads_count; ++t) {
+        for(t = 0; t < threads_count; ++t) {
             if(BLI_linklist_length(thread_data[t].objects)) {
                 printf("Objects [%i]\n", t);
-                list_iter= thread_data[t].objects;
+                list_iter = thread_data[t].objects;
                 while(list_iter) {
-                    ob= list_iter->link;
+                    ob = list_iter->link;
                     if(ob) {
                         printf("  %s\n", ob->id.name);
                     }
-                    list_iter= list_iter->next;
+                    list_iter = list_iter->next;
                 }
             }
         }
@@ -1284,18 +1552,19 @@ static void export_meshes_threaded(char *filepath, Scene *sce, Main *bmain,
     return;
 }
 
+
 static int export_scene(Main *bmain, wmOperator *op)
 {
     Scene  *sce = NULL;
 
-    int     fra=   0;
-    int     cfra=  0;
+    int     fra  = 0;
+    int     cfra = 0;
 
-    char   *filepath= NULL;
-    int     active_layers= 0;
-    int     animation= 0;
-    int     check_animated= 0;
-    int     instances= 0;
+    char   *filepath       = NULL;
+    int     active_layers  = 0;
+    int     animation      = 0;
+    int     check_animated = 0;
+    int     instances      = 0;
 
     double  time;
     double  frame_time;
@@ -1310,51 +1579,51 @@ static int export_scene(Main *bmain, wmOperator *op)
     }
 
     if(RNA_struct_property_is_set(op->ptr, "filepath")) {
-        filepath= (char*)malloc(FILE_MAX * sizeof(char));
+        filepath = (char*)malloc(FILE_MAX * sizeof(char));
         RNA_string_get(op->ptr, "filepath", filepath);
     }
 
     if(RNA_struct_property_is_set(op->ptr, "use_active_layers")) {
-        active_layers= RNA_boolean_get(op->ptr, "use_active_layers");
+        active_layers = RNA_boolean_get(op->ptr, "use_active_layers");
     }
 
     if(RNA_struct_property_is_set(op->ptr, "use_animation")) {
-        animation= RNA_boolean_get(op->ptr, "use_animation");
+        animation = RNA_boolean_get(op->ptr, "use_animation");
     }
 
     if(RNA_struct_property_is_set(op->ptr, "use_instances")) {
-        instances= RNA_boolean_get(op->ptr, "use_instances");
+        instances = RNA_boolean_get(op->ptr, "use_instances");
     }
 
     if(RNA_struct_property_is_set(op->ptr, "check_animated")) {
-        check_animated= RNA_boolean_get(op->ptr, "check_animated");
+        check_animated = RNA_boolean_get(op->ptr, "check_animated");
     }
 
     if(RNA_struct_property_is_set(op->ptr, "debug")) {
-        debug= RNA_boolean_get(op->ptr, "debug");
+        debug = RNA_boolean_get(op->ptr, "debug");
     }
 
-    time= PIL_check_seconds_timer();
+    time = PIL_check_seconds_timer();
 
     if(filepath) {
         printf("V-Ray/Blender: Exporting meshes...\n");
 
         if(animation) {
-            cfra= sce->r.cfra;
-            fra=  sce->r.sfra;
+            cfra = sce->r.cfra;
+            fra  = sce->r.sfra;
 
             printf("V-Ray/Blender: Exporting meshes for the first frame %-32i\n", fra);
 
             /* Export meshes for the start frame */
-            sce->r.cfra= fra;
+            sce->r.cfra = fra;
             CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
             scene_update_for_newframe(bmain, sce, (1<<20) - 1);
             export_meshes_threaded(filepath, sce, bmain, active_layers, instances, 0, 0);
-            fra+= sce->r.frame_step;
+            fra += sce->r.frame_step;
 
             /* Export meshes for the rest frames */
             while(fra <= sce->r.efra) {
-                frame_time= PIL_check_seconds_timer();
+                frame_time = PIL_check_seconds_timer();
 
                 if(debug) {
                     printf("V-Ray/Blender: Exporting meshes for frame %-32i\n", fra);
@@ -1363,7 +1632,7 @@ static int export_scene(Main *bmain, wmOperator *op)
                     fflush(stdout);
                 }
 
-                sce->r.cfra= fra;
+                sce->r.cfra = fra;
                 CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
                 scene_update_for_newframe(bmain, sce, (1<<20) - 1);
                 export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 1);
@@ -1373,10 +1642,10 @@ static int export_scene(Main *bmain, wmOperator *op)
                     printf(" done [%s]\n", time_str);
                 }
 
-                fra+= sce->r.frame_step;
+                fra += sce->r.frame_step;
             }
 
-            sce->r.cfra= cfra;
+            sce->r.cfra = cfra;
             CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
             scene_update_for_newframe(bmain, sce, (1<<20) - 1);
         } else {
@@ -1401,59 +1670,42 @@ static int export_scene(Main *bmain, wmOperator *op)
 */
 static int export_scene_invoke(bContext *C, wmOperator *op, wmEvent *event)
 {
-    /* Scene *scene= CTX_data_scene(C); */
-
-    /* if(!scene) */
-    /*     return OPERATOR_CANCELLED; */
-
-    /* /\* only one render job at a time *\/ */
-    /* if(WM_jobs_test(CTX_wm_manager(C), scene)) */
-    /*  return OPERATOR_CANCELLED; */
-
-    /* /\* stop all running jobs, currently previews frustrate Render *\/ */
-    /* WM_jobs_stop_all(CTX_wm_manager(C)); */
-
-    /* /\* handle UI stuff *\/ */
-    /* WM_cursor_wait(1); */
-
-    /* /\* add modal handler for ESC *\/ */
-    /* WM_event_add_modal_handler(C, op); */
-
-    return OPERATOR_RUNNING_MODAL;
+     return OPERATOR_RUNNING_MODAL;
 }
+
 
 static int export_scene_modal(bContext *C, wmOperator *op, wmEvent *event)
 {
     switch(event->type) {
         case ESCKEY:
-            /* cancel */
             return OPERATOR_CANCELLED;
         default:
-            /* nothing to do */
             return OPERATOR_RUNNING_MODAL;
     }
 
     return OPERATOR_RUNNING_MODAL;
 }
 
+
 static int export_scene_exec(bContext *C, wmOperator *op)
 {
-    Main   *bmain= CTX_data_main(C);
+    Main *bmain = CTX_data_main(C);
 
     return export_scene(bmain, op);
 }
 
+
 void VRAY_OT_export_meshes(wmOperatorType *ot)
 {
     /* identifiers */
-    ot->name=        "Export meshes";
-    ot->idname=      "VRAY_OT_export_meshes";
-    ot->description= "Export meshes in .vrscene format";
+    ot->name        = "Export meshes";
+    ot->idname      = "VRAY_OT_export_meshes";
+    ot->description = "Export meshes in .vrscene format";
 
     /* api callbacks */
-    ot->invoke= export_scene_invoke;
-    ot->modal=  export_scene_modal;
-    ot->exec=   export_scene_exec;
+    ot->invoke = export_scene_invoke;
+    ot->modal  = export_scene_modal;
+    ot->exec   = export_scene_exec;
 
     RNA_def_string(ot->srna, "filepath", "", FILE_MAX, "Geometry filepath", "Geometry filepath");
     RNA_def_boolean(ot->srna, "use_active_layers", 0,  "Active layer",      "Export only active layers");

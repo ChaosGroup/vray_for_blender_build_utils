@@ -1284,8 +1284,10 @@ static void export_meshes_threaded(char *filepath, Scene *sce, Main *bmain,
     return;
 }
 
-static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
+static int export_scene(Main *bmain, wmOperator *op)
 {
+    Scene  *sce = NULL;
+
     int     fra=   0;
     int     cfra=  0;
 
@@ -1300,17 +1302,12 @@ static int export_scene(Scene *sce, Main *bmain, wmOperator *op)
     char    time_str[32];
 
     if(!sce) {
-        // Since render context is NULL
-        // we need to get scene pointer from G
-        // when operator is called from ops.render.render().
-        // If operator is called separetely we use scene
-        // from bContext.
-        // TODO: get current scene not first
-        sce= (Scene*)G.main->scene.first;
+        sce = (Scene*)G.main->scene.first;
     }
 
-    if(!sce)
-        return OPERATOR_CANCELLED;
+    if(RNA_struct_property_is_set(op->ptr, "scene")) {
+        sce = RNA_int_get(op->ptr, "scene");
+    }
 
     if(RNA_struct_property_is_set(op->ptr, "filepath")) {
         filepath= (char*)malloc(FILE_MAX * sizeof(char));
@@ -1442,9 +1439,8 @@ static int export_scene_modal(bContext *C, wmOperator *op, wmEvent *event)
 static int export_scene_exec(bContext *C, wmOperator *op)
 {
     Main   *bmain= CTX_data_main(C);
-    Scene  *sce=   CTX_data_scene(C);
 
-    return export_scene(sce, bmain, op);
+    return export_scene(bmain, op);
 }
 
 void VRAY_OT_export_meshes(wmOperatorType *ot)
@@ -1465,6 +1461,7 @@ void VRAY_OT_export_meshes(wmOperatorType *ot)
     RNA_def_boolean(ot->srna, "use_instances",     0,  "Instances",         "Use instances");
     RNA_def_boolean(ot->srna, "debug",             0,  "Debug",             "Debug mode");
     RNA_def_boolean(ot->srna, "check_animated",    0,  "Check animated",    "Try to detect if mesh is animated");
+    RNA_def_int(ot->srna, "scene", 0, INT_MIN, INT_MAX, "Scene", "Scene pointer", INT_MIN, INT_MAX);
 }
 
 void ED_operatortypes_exporter(void)

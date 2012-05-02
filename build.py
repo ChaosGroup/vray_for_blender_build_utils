@@ -50,6 +50,7 @@ parser.add_option('', '--upblender',                         dest= 'upblender', 
 parser.add_option('', '--uppatch',                           dest= 'uppatch',     default= 'on',   help= "Update patch sources.", type= 'choice', choices=('on', 'off'))
 
 # Building options
+parser.add_option('', '--with_cycles', action= 'store_true', dest= 'with_cycles', default= False,  help= "Add Cycles.")
 parser.add_option('', '--debug_build', action= 'store_true', dest= 'debug',       default= False,  help= "Debug build.")
 parser.add_option('', '--rebuild',     action= 'store_true', dest= 'rebuild',     default= False,  help= "Full rebuild.")
 parser.add_option('', '--revision',                          dest= 'revision',    default= "",     help= "Checkout particular SVN revision.")
@@ -131,6 +132,8 @@ if host_os != build_system.utils.LNX:
 
 if options.revision:
 	params['checkout_revision'] = options.revision
+
+params['with_cycles'] = options.with_cycles
 
 builder = build_system.Builder(params)
 builder.build()

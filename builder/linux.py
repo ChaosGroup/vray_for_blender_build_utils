@@ -107,8 +107,9 @@ class LinuxBuilder(Builder):
 			build_options['False'].append('WITH_BF_OIIO')
 			build_options['False'].append('WITH_BF_GAMEENGINE')
 		else:
-			build_options['True'].append('WITH_BF_CYCLES')
-			build_options['True'].append('WITH_BF_OIIO')
+			if not self.with_cycles:
+				build_options['False'].append('WITH_BF_CYCLES')
+				build_options['False'].append('WITH_BF_OIIO')
 			build_options['True'].append('WITH_BF_GAMEENGINE')
 
 		if self.use_collada:

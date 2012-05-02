@@ -116,6 +116,8 @@ class Builder:
 	# Max OS X specific
 	osx_sdk             = "10.6"
 
+	with_cycles         = False
+
 
 	def __init__(self, params):
 		if not params:

@@ -100,9 +100,10 @@ class WindowsBuilder(Builder):
 
 		# Cycles
 		#
-		uc.write("WITH_BF_CYCLES    = True\n")
-		uc.write("WITH_BF_OIIO      = True\n")
-		uc.write("\n")
+		if not self.with_cycles:
+			uc.write("WITH_BF_CYCLES    = False\n")
+			uc.write("WITH_BF_OIIO      = False\n")
+			uc.write("\n")
 
 		# Write boolean options
 		for key in build_options:
@@ -178,7 +179,9 @@ class WindowsBuilder(Builder):
 		nsis = nsis.replace('{UNINSTALLER_FILES}', ''.join(uninstaller_files))
 		nsis = nsis.replace('{SIZE}', str(director_size / 1024))
 
-		template = utils.path_join(self.dir_source, "installer.nsi")
+		installer_dir = utils.path_join(self.dir_source, "vb25-patch", "installer")
+
+		template = utils.path_join(installer_dir, "installer.nsi")
 		
 		open(template, 'w').write(nsis)
 
@@ -191,7 +194,7 @@ class WindowsBuilder(Builder):
 		sys.stdout.write("Calling: %s\n" % (' '.join(cmd)))
 
 		if not self.mode_test:
-			os.chdir(utils.path_join(self.dir_source, "vb25-patch", "installer"))
+			os.chdir(installer_dir)
 			proc = subprocess.call(cmd)
 	
 	

@@ -765,6 +765,9 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 }
 
 
+// Taken from: source/blender/makesrna/intern/rna_object_api.c
+// with a slight modifications
+//
 static Mesh *get_render_mesh(Scene *sce, Object *ob)
 {
     Mesh *tmpmesh;
@@ -819,9 +822,6 @@ static Mesh *get_render_mesh(Scene *sce, Object *ob)
         /* metaballs don't have modifiers, so just convert to mesh */
         basis_ob = BKE_metaball_basis_find(sce, ob);
 
-        /* todo, re-generatre for render-res */
-        /* metaball_polygonize(scene, ob) */
-
         if (ob != basis_ob)
             return NULL; /* only do basis metaball */
 
@@ -861,7 +861,7 @@ static void write_GeomStaticMesh(FILE *gfile,
                                  Scene *sce, Object *ob, Mesh *mesh,
                                  LinkNode *uv_list, int instances)
 {
-    Mesh   *me= ob->data;
+    Mesh   *me = ob->data;
     MFace  *face;
     MTFace *mtface;
     MVert  *vert;

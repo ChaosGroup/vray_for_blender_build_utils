@@ -789,7 +789,7 @@ static Mesh *get_render_mesh(Scene *sce, Object *ob)
         tmpcu->id.us--;
 
         /* copies the data */
-        copycu = tmpobj->data = copy_curve( (Curve *) ob->data );
+        copycu = tmpobj->data = BKE_curve_copy( (Curve *) ob->data );
 
         /* temporarily set edit so we get updates from edit mode, but
          * also because for text datablocks copying it while in edit
@@ -817,7 +817,7 @@ static Mesh *get_render_mesh(Scene *sce, Object *ob)
 
     case OB_MBALL:
         /* metaballs don't have modifiers, so just convert to mesh */
-        basis_ob = find_basis_mball(sce, ob);
+        basis_ob = BKE_metaball_basis_find(sce, ob);
 
         /* todo, re-generatre for render-res */
         /* metaball_polygonize(scene, ob) */

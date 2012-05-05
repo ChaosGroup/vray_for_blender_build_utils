@@ -117,11 +117,7 @@
 #define WRITE_HEX_QUADFACE(f, face) fprintf(gfile, "%08X%08X%08X%08X%08X%08X", HEX(face->v1), HEX(face->v2), HEX(face->v3), HEX(face->v3), HEX(face->v4), HEX(face->v1))
 #define WRITE_HEX_TRIFACE(f, face)  fprintf(gfile, "%08X%08X%08X", HEX(face->v1), HEX(face->v2), HEX(face->v3))
 
-#define TYPE_UV          5
 #define MAX_MESH_THREADS 16
-
-#define USE_HAIR_DEBUG   1
-#define USE_CHILD        1
 
 struct Material;
 struct MTex;
@@ -516,7 +512,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
     ParticleSystem   *psys;
     ParticleSettings *pset;
 
-    ParticleSystemModifierData *psmd= NULL;
+    ParticleSystemModifierData *psmd = NULL;
 
     ParticleData     *pa;
 
@@ -531,7 +527,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 
     float     hairmat[4][4];
     float     segment[3];
-    float     width= 0.001f;
+    float     width = 0.001f;
 
     int       spline_init_flag;
     int       interp_points_count;
@@ -547,11 +543,14 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 
     int       spline_last[3];
 
+    int       use_child;
+
     PointerRNA  rna_pset;
     PointerRNA  VRayParticleSettings;
     PointerRNA  VRayFur;
 
     int  display_percentage;
+    int  display_percentage_child;
 
     int  tmp_cnt;
 
@@ -586,10 +585,13 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             }
         }
 
-        // Store "Display percentage" setting
-        display_percentage= pset->disp;
-        pset->disp= 100;
-        ob->recalc |= OB_RECALC_DATA;
+        // Store "Display percentage" setting and recalc
+        display_percentage       = pset->disp;
+        display_percentage_child = pset->child_nbr;
+        pset->disp      = 100;
+        pset->child_nbr = pset->ren_child_nbr;
+        psys->recalc |= PSYS_RECALC;
+        ob->recalc   |= OB_RECALC_ALL;
         scene_update_tagged(bmain, sce);
 
         // Spline interpolation
@@ -600,23 +602,25 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 
         child_cache = psys->childcache;
         child_total = psys->totchildcache;
+        use_child   = (pset->childtype && child_cache);
 
         clear_string(psys->name);
         fprintf(gfile, "GeomMayaHair HAIR%s", clean_string);
-
         clear_string(pset->id.name+2);
         fprintf(gfile, "%s {", clean_string);
 
 
         fprintf(gfile, "\n\tnum_hair_vertices= interpolate((%d,ListIntHex(\"", sce->r.cfra);
-        for(p= 0, pa= psys->particles; p < psys->totpart; ++p, ++pa)
-        {
-            DEBUG_OUTPUT(debug, "Pa[%i] : Segments: %i\n", p, interp_points_count);
-
-            WRITE_HEX_VALUE(gfile, interp_points_count);
-        }
-        if(pset->childtype && child_cache) {
+        if(use_child) {
             for(p= 0; p < child_total; ++p) {
+                WRITE_HEX_VALUE(gfile, interp_points_count);
+            }
+        }
+        else {
+            for(p= 0, pa= psys->particles; p < psys->totpart; ++p, ++pa)
+            {
+                DEBUG_OUTPUT(debug, "Pa[%i] : Segments: %i\n", p, interp_points_count);
+
                 WRITE_HEX_VALUE(gfile, interp_points_count);
             }
         }
@@ -624,57 +628,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 
 
         fprintf(gfile, "\n\thair_vertices= interpolate((%d,ListVectorHex(\"", sce->r.cfra);
-        for(p= 0, pa= psys->particles; p < psys->totpart; ++p, ++pa)
-        {
-            DEBUG_OUTPUT(debug, "\033[0;32mV-Ray/Blender:\033[0m Particle system: %s => Hair: %i\n", psys->name, p + 1);
-
-            psys_mat_hair_to_object(ob, psmd->dm, psmd->psys->part->from, pa, hairmat);
-
-            // Spline interpolation
-            data_points_count = pa->totkey;
-            data_points_step  = 1.0f / (data_points_count - 1);
-
-            DEBUG_OUTPUT(debug, "data_points_count = %i\n", data_points_count);
-            DEBUG_OUTPUT(debug, "data_points_step = %.3f\n", data_points_step);
-
-            f = 0.0f;
-            for(i = 0; f <= 1.0; ++i, f += data_points_step) {
-                data_points_abscissas[i] = f;
-            }
-
-            // Store control points
-            for(s = 0, hkey = pa->hair; s < pa->totkey; ++s, ++hkey) {
-                for(c = 0; c < 3; ++c) {
-                    data_points_ordinates[c][s] = hkey->co[c];
-                }
-            }
-
-            // Init spline coefficients
-            for(c = 0; c < 3; ++c) {
-                c_spline_init(data_points_count, 0, 0, 0.0f, 0.0f,
-                              data_points_abscissas, data_points_ordinates[c],
-                              s_b[c], s_c[c], s_d[c], &spline_init_flag);
-            }
-
-            // Write interpolated points
-            tmp_cnt = 0;
-
-            for(c = 0; c < 3; ++c)
-                spline_last[c] = 0;
-
-            for(t = 0.0f; t <= 1.0; t += interp_points_step) {
-                // Calculate interpolated coordinates
-                for(c= 0; c < 3; ++c) {
-                    segment[c] = c_spline_eval(data_points_count, t, data_points_abscissas, data_points_ordinates[c],
-                                               s_b[c], s_c[c], s_d[c], &spline_last[c]);
-                }
-
-                mul_m4_v3(hairmat, segment);
-
-                WRITE_HEX_VECTOR(gfile, segment);
-            }
-        }
-        if(pset->childtype && child_cache) {
+        if(use_child) {
             for(p = 0; p < child_total; ++p) {
                 child_key   = child_cache[p];
                 child_steps = child_key->steps;
@@ -722,17 +676,71 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
                 }
             }
         }
+        else {
+            for(p = 0, pa = psys->particles; p < psys->totpart; ++p, ++pa)
+            {
+                DEBUG_OUTPUT(debug, "\033[0;32mV-Ray/Blender:\033[0m Particle system: %s => Hair: %i\n", psys->name, p + 1);
+
+                psys_mat_hair_to_object(ob, psmd->dm, psmd->psys->part->from, pa, hairmat);
+
+                // Spline interpolation
+                data_points_count = pa->totkey;
+                data_points_step  = 1.0f / (data_points_count - 1);
+
+                DEBUG_OUTPUT(debug, "data_points_count = %i\n", data_points_count);
+                DEBUG_OUTPUT(debug, "data_points_step = %.3f\n", data_points_step);
+
+                f = 0.0f;
+                for(i = 0; f <= 1.0; ++i, f += data_points_step) {
+                    data_points_abscissas[i] = f;
+                }
+
+                // Store control points
+                for(s = 0, hkey = pa->hair; s < pa->totkey; ++s, ++hkey) {
+                    for(c = 0; c < 3; ++c) {
+                        data_points_ordinates[c][s] = hkey->co[c];
+                    }
+                }
+
+                // Init spline coefficients
+                for(c = 0; c < 3; ++c) {
+                    c_spline_init(data_points_count, 0, 0, 0.0f, 0.0f,
+                                  data_points_abscissas, data_points_ordinates[c],
+                                  s_b[c], s_c[c], s_d[c], &spline_init_flag);
+                }
+
+                // Write interpolated points
+                tmp_cnt = 0;
+
+                for(c = 0; c < 3; ++c)
+                    spline_last[c] = 0;
+
+                for(t = 0.0f; t <= 1.0; t += interp_points_step) {
+                    // Calculate interpolated coordinates
+                    for(c= 0; c < 3; ++c) {
+                        segment[c] = c_spline_eval(data_points_count, t, data_points_abscissas, data_points_ordinates[c],
+                                                   s_b[c], s_c[c], s_d[c], &spline_last[c]);
+                    }
+
+                    mul_m4_v3(hairmat, segment);
+
+                    WRITE_HEX_VECTOR(gfile, segment);
+                }
+            }
+        }
         fprintf(gfile,"\")));");
 
 
         fprintf(gfile, "\n\twidths= interpolate((%d,ListFloatHex(\"", sce->r.cfra);
-        for(p = 0, pa= psys->particles; p < psys->totpart; ++p, ++pa) {
-            for(s = 0; s < interp_points_count; ++s) {
-                WRITE_HEX_VALUE(gfile, width);
+        if(use_child) {
+            for(p = 0; p < child_total; ++p) {
+                for(s = 0; s < interp_points_count; ++s) {
+                    WRITE_HEX_VALUE(gfile, width);
+                }
             }
         }
-        if(pset->childtype && child_cache) {
-            for(p = 0; p < child_total; ++p) {
+        else {
+            for(p = 0; p < psys->totpart; ++p) {
                 for(s = 0; s < interp_points_count; ++s) {
                     WRITE_HEX_VALUE(gfile, width);
                 }
@@ -747,9 +755,11 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         fprintf(gfile, "\n\topacity= 1;");
         fprintf(gfile, "\n}\n\n");
 
-        // Restore "Display percentage" setting
-        pset->disp = display_percentage;
-        ob->recalc |= OB_RECALC_DATA;
+        // Restore "Display percentage" setting and recalc
+        pset->disp      = display_percentage;
+        pset->child_nbr = display_percentage_child;
+        psys->recalc |= PSYS_RECALC;
+        ob->recalc   |= OB_RECALC_ALL;
         scene_update_tagged(bmain, sce);
     }
 }
@@ -766,7 +776,7 @@ static Mesh *get_render_mesh(Scene *sce, Object *ob)
     /* Make a dummy mesh, saves copying */
     DerivedMesh *dm;
 
-    CustomDataMask mask = CD_MASK_MESH|CD_MASK_MDEFORMVERT;
+    CustomDataMask mask = CD_MASK_MESH;
 
     /* perform the mesh extraction based on type */
     switch (ob->type) {
@@ -779,7 +789,7 @@ static Mesh *get_render_mesh(Scene *sce, Object *ob)
         tmpcu->id.us--;
 
         /* copies the data */
-        copycu = tmpobj->data = BKE_curve_copy( (Curve *) ob->data );
+        copycu = tmpobj->data = copy_curve( (Curve *) ob->data );
 
         /* temporarily set edit so we get updates from edit mode, but
          * also because for text datablocks copying it while in edit
@@ -807,7 +817,7 @@ static Mesh *get_render_mesh(Scene *sce, Object *ob)
 
     case OB_MBALL:
         /* metaballs don't have modifiers, so just convert to mesh */
-        basis_ob = BKE_metaball_basis_find(sce, ob);
+        basis_ob = find_basis_mball(sce, ob);
 
         /* todo, re-generatre for render-res */
         /* metaball_polygonize(scene, ob) */
@@ -865,7 +875,7 @@ static void write_GeomStaticMesh(FILE *gfile,
     int    matid       = 0;
     int    has_uv      = 0;
     int    uv_layer_id = 1;
-    int    maxLayer    = 0;
+    int    max_layer    = 0;
 
     char  *lib_filename = NULL;
 
@@ -1046,23 +1056,25 @@ static void write_GeomStaticMesh(FILE *gfile,
     fprintf(gfile,"\");\n");
 
 
-    fdata= &mesh->fdata;
+    fdata = &mesh->fdata;
 
-    has_uv= 0;
-    maxLayer= 0;
-    for(l= 1; l < fdata->totlayer; ++l) {
-        if(fdata->layers[l].type == TYPE_UV) {
-            has_uv= 1;
-            maxLayer= l;
+    has_uv    = 0;
+    max_layer = 0;
+    for(l = 0; l < fdata->totlayer; ++l) {
+        if(fdata->layers[l].type == CD_MTFACE) {
+            has_uv    = 1;
+            max_layer = l;
+            break;
         }
     }
 
     if(has_uv) {
         fprintf(gfile,"\tmap_channels= interpolate((%d, List(", sce->r.cfra);
-        for(l= 1; l < fdata->totlayer; ++l) {
-            if(fdata->layers[l].type == TYPE_UV) {
-                CustomData_set_layer_active(fdata, TYPE_UV, l-1);
-                mesh_update_customdata_pointers(mesh, 1);
+        for(l = 0; l < fdata->totlayer; ++l) {
+            if(fdata->layers[l].type == CD_MTFACE) {
+                CustomData_set_layer_active(fdata, CD_MTFACE, l);
+
+                mesh_update_customdata_pointers(mesh, FALSE);
 
                 if(is_numeric(fdata->layers[l].name)) {
                     uv_layer_id = atoi(fdata->layers[l].name);
@@ -1073,13 +1085,13 @@ static void write_GeomStaticMesh(FILE *gfile,
                 fprintf(gfile,"\n\t\t// Name: %s", fdata->layers[l].name);
                 fprintf(gfile,"\n\t\tList(%i,ListVectorHex(\"", uv_layer_id);
 
-                face= mesh->mface;
-                for(f= 0; f < mesh->totface; ++face, ++f) {
+                face = mesh->mface;
+                for(f = 0; f < mesh->totface; ++face, ++f) {
                     if(face->v4)
-                        verts= 4;
+                        verts = 4;
                     else
-                        verts= 3;
-                    for(i= 0; i < verts; i++) {
+                        verts = 3;
+                    for(i = 0; i < verts; i++) {
                         fprintf(gfile, "%08X%08X00000000",
                                 htonl(*(int*)&(mesh->mtface[f].uv[i][0])),
                                 htonl(*(int*)&(mesh->mtface[f].uv[i][1])));
@@ -1088,32 +1100,32 @@ static void write_GeomStaticMesh(FILE *gfile,
                 fprintf(gfile,"\"),");
 
                 fprintf(gfile,"ListIntHex(\"");
-                u= 0;
-                face= mesh->mface;
+                u = 0;
+                face = mesh->mface;
                 for(f = 0; f < mesh->totface; ++face, ++f) {
                     if(face->v4) {
                         fprintf(gfile, "%08X", htonl(*(int*)&u));
-                        k= u+1;
+                        k = u+1;
                         fprintf(gfile, "%08X", htonl(*(int*)&k));
-                        k= u+2;
+                        k = u+2;
                         fprintf(gfile, "%08X", htonl(*(int*)&k));
                         fprintf(gfile, "%08X", htonl(*(int*)&k));
-                        k= u+3;
+                        k = u+3;
                         fprintf(gfile, "%08X", htonl(*(int*)&k));
                         fprintf(gfile, "%08X", htonl(*(int*)&u));
-                        u+= 4;
+                        u += 4;
                     } else {
                         fprintf(gfile, "%08X", htonl(*(int*)&u));
-                        k= u+1;
+                        k = u+1;
                         fprintf(gfile, "%08X", htonl(*(int*)&k));
-                        k= u+2;
+                        k = u+2;
                         fprintf(gfile, "%08X", htonl(*(int*)&k));
-                        u+= 3;
+                        u += 3;
                     }
                 }
                 fprintf(gfile,"\"))");
 
-                if(l != maxLayer)
+                if(l < max_layer)
                     fprintf(gfile,",");
             }
         }

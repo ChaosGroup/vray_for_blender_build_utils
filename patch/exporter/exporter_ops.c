@@ -863,6 +863,7 @@ static void write_GeomStaticMesh(FILE *gfile,
 {
     Mesh   *me= ob->data;
     MFace  *face;
+    MTFace *mtface;
     MVert  *vert;
 
     CustomData *fdata;
@@ -873,9 +874,8 @@ static void write_GeomStaticMesh(FILE *gfile,
     float  no[3];
 
     int    matid       = 0;
-    int    has_uv      = 0;
+    int    uv_count    = 0;
     int    uv_layer_id = 1;
-    int    max_layer    = 0;
 
     char  *lib_filename = NULL;
 
@@ -1058,24 +1058,12 @@ static void write_GeomStaticMesh(FILE *gfile,
 
     fdata = &mesh->fdata;
 
-    has_uv    = 0;
-    max_layer = 0;
-    for(l = 0; l < fdata->totlayer; ++l) {
-        if(fdata->layers[l].type == CD_MTFACE) {
-            has_uv    = 1;
-            max_layer = l;
-            break;
-        }
-    }
+    uv_count = CustomData_number_of_layers(fdata, CD_MTFACE);
 
-    if(has_uv) {
+    if(uv_count) {
         fprintf(gfile,"\tmap_channels= interpolate((%d, List(", sce->r.cfra);
         for(l = 0; l < fdata->totlayer; ++l) {
             if(fdata->layers[l].type == CD_MTFACE) {
-                CustomData_set_layer_active(fdata, CD_MTFACE, l);
-
-                mesh_update_customdata_pointers(mesh, FALSE);
-
                 if(is_numeric(fdata->layers[l].name)) {
                     uv_layer_id = atoi(fdata->layers[l].name);
                 } else {
@@ -1085,7 +1073,8 @@ static void write_GeomStaticMesh(FILE *gfile,
                 fprintf(gfile,"\n\t\t// Name: %s", fdata->layers[l].name);
                 fprintf(gfile,"\n\t\tList(%i,ListVectorHex(\"", uv_layer_id);
 
-                face = mesh->mface;
+                face   = mesh->mface;
+                mtface = (MTFace*)fdata->layers[l].data;
                 for(f = 0; f < mesh->totface; ++face, ++f) {
                     if(face->v4)
                         verts = 4;
@@ -1093,8 +1082,8 @@ static void write_GeomStaticMesh(FILE *gfile,
                         verts = 3;
                     for(i = 0; i < verts; i++) {
                         fprintf(gfile, "%08X%08X00000000",
-                                htonl(*(int*)&(mesh->mtface[f].uv[i][0])),
-                                htonl(*(int*)&(mesh->mtface[f].uv[i][1])));
+                                htonl(*(int*)&(mtface[f].uv[i][0])),
+                                htonl(*(int*)&(mtface[f].uv[i][1])));
                     }
                 }
                 fprintf(gfile,"\"),");
@@ -1125,7 +1114,7 @@ static void write_GeomStaticMesh(FILE *gfile,
                 }
                 fprintf(gfile,"\"))");
 
-                if(l < max_layer)
+                if(l < uv_count)
                     fprintf(gfile,",");
             }
         }

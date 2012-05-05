@@ -592,7 +592,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         pset->child_nbr = pset->ren_child_nbr;
         psys->recalc |= PSYS_RECALC;
         ob->recalc   |= OB_RECALC_ALL;
-        scene_update_tagged(bmain, sce);
+        BKE_scene_update_tagged(bmain, sce);
 
         // Spline interpolation
         interp_points_count = (int)pow(2.0, pset->ren_step);
@@ -760,7 +760,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         pset->child_nbr = display_percentage_child;
         psys->recalc |= PSYS_RECALC;
         ob->recalc   |= OB_RECALC_ALL;
-        scene_update_tagged(bmain, sce);
+        BKE_scene_update_tagged(bmain, sce);
     }
 }
 
@@ -784,7 +784,7 @@ static Mesh *get_render_mesh(Scene *sce, Object *ob)
     case OB_CURVE:
     case OB_SURF:
         /* copies object and modifiers (but not the data) */
-        tmpobj = copy_object(ob);
+        tmpobj = BKE_object_copy(ob);
         tmpcu = (Curve *)tmpobj->data;
         tmpcu->id.us--;
 
@@ -803,15 +803,15 @@ static Mesh *get_render_mesh(Scene *sce, Object *ob)
         copycu->editfont = NULL;
         copycu->editnurb = NULL;
 
-        nurbs_to_mesh( tmpobj );
+        BKE_mesh_from_nurbs( tmpobj );
 
         /* nurbs_to_mesh changes the type to a mesh, check it worked */
         if (tmpobj->type != OB_MESH) {
-            free_libblock_us( &(G.main->object), tmpobj );
+            BKE_libblock_free_us( &(G.main->object), tmpobj );
             return NULL;
         }
         tmpmesh = tmpobj->data;
-        free_libblock_us( &G.main->object, tmpobj );
+        BKE_libblock_free_us( &G.main->object, tmpobj );
 
         break;
 
@@ -825,10 +825,10 @@ static Mesh *get_render_mesh(Scene *sce, Object *ob)
         if (ob != basis_ob)
             return NULL; /* only do basis metaball */
 
-        tmpmesh = add_mesh("Mesh");
+        tmpmesh = BKE_mesh_add("Mesh");
 
         makeDispListMBall_forRender(sce, ob, &disp);
-        mball_to_mesh(&disp, tmpmesh);
+        BKE_mesh_from_metaball(&disp, tmpmesh);
         freedisplist(&disp);
 
         break;
@@ -837,7 +837,7 @@ static Mesh *get_render_mesh(Scene *sce, Object *ob)
         /* Write the render mesh into the dummy mesh */
         dm = mesh_create_derived_render(sce, ob, mask);
 
-        tmpmesh = add_mesh("Mesh");
+        tmpmesh = BKE_mesh_add("Mesh");
         DM_to_mesh(dm, tmpmesh, ob);
         dm->release(dm);
 
@@ -1280,7 +1280,7 @@ static void *export_meshes_thread(void *ptr)
                 pthread_mutex_lock(&mtx);
 
                 /* remove the temporary mesh */
-                free_mesh(mesh, 1);
+                BKE_mesh_free(mesh, TRUE);
                 BLI_remlink(&bmain->mesh, mesh);
                 MEM_freeN(mesh);
 
@@ -1618,7 +1618,7 @@ static int export_scene(Main *bmain, wmOperator *op)
             /* Export meshes for the start frame */
             sce->r.cfra = fra;
             CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-            scene_update_for_newframe(bmain, sce, (1<<20) - 1);
+            BKE_scene_update_tagged(bmain, sce);
             export_meshes_threaded(filepath, sce, bmain, active_layers, instances, 0, 0);
             fra += sce->r.frame_step;
 
@@ -1635,7 +1635,7 @@ static int export_scene(Main *bmain, wmOperator *op)
 
                 sce->r.cfra = fra;
                 CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-                scene_update_for_newframe(bmain, sce, (1<<20) - 1);
+                BKE_scene_update_tagged(bmain, sce);
                 export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 1);
 
                 if(!debug) {
@@ -1648,7 +1648,7 @@ static int export_scene(Main *bmain, wmOperator *op)
 
             sce->r.cfra = cfra;
             CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-            scene_update_for_newframe(bmain, sce, (1<<20) - 1);
+            BKE_scene_update_tagged(bmain, sce);
         } else {
             export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 0);
         }

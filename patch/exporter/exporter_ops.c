@@ -41,6 +41,7 @@
 #include "BKE_fcurve.h"
 #include "BKE_animsys.h"
 #include "BKE_particle.h"
+#include "BKE_pointcache.h"
 #include "BKE_global.h"
 #include "BKE_report.h"
 #include "BKE_object.h"
@@ -523,7 +524,6 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
     int                child_total = 0;
     int                child_steps = 0;
     float              child_key_co[3];
-    int                child_segment_counter;
 
     float     hairmat[4][4];
     float     segment[3];
@@ -544,6 +544,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
     int       spline_last[3];
 
     int       use_child;
+    int       free_edit;
 
     PointerRNA  rna_pset;
     PointerRNA  VRayParticleSettings;
@@ -551,8 +552,6 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 
     int  display_percentage;
     int  display_percentage_child;
-
-    int  tmp_cnt;
 
     for(psys = ob->particlesystem.first; psys; psys = psys->next)
     {
@@ -585,13 +584,22 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             }
         }
 
-        // Store "Display percentage" setting and recalc
+        // Store "Display percentage" setting
         display_percentage       = pset->disp;
         display_percentage_child = pset->child_nbr;
-        pset->disp      = 100;
+
+        // Check if particles are edited
+        free_edit = (psys->edit && psys->edit->edited);
+
+        if(!free_edit) {
+            pset->disp = 100;
+            psys->recalc |= PSYS_RECALC;
+        }
         pset->child_nbr = pset->ren_child_nbr;
-        psys->recalc |= PSYS_RECALC;
-        ob->recalc   |= OB_RECALC_ALL;
+        psys->recalc |= PSYS_RECALC_CHILD;
+
+        // Recalc hair with render settings
+        ob->recalc |= OB_RECALC_ALL;
         BKE_scene_update_tagged(bmain, sce);
 
         // Spline interpolation
@@ -661,8 +669,6 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
                 }
 
                 // Write interpolated child points
-                child_segment_counter = 0;
-
                 for(c = 0; c < 3; ++c)
                     spline_last[c] = 0;
 
@@ -710,8 +716,6 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
                 }
 
                 // Write interpolated points
-                tmp_cnt = 0;
-
                 for(c = 0; c < 3; ++c)
                     spline_last[c] = 0;
 
@@ -755,10 +759,16 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         fprintf(gfile, "\n\topacity= 1;");
         fprintf(gfile, "\n}\n\n");
 
-        // Restore "Display percentage" setting and recalc
+        // Restore "Display percentage" setting
         pset->disp      = display_percentage;
         pset->child_nbr = display_percentage_child;
-        psys->recalc |= PSYS_RECALC;
+
+        if(!free_edit) {
+            psys->recalc |= PSYS_RECALC;
+        }
+        psys->recalc |= PSYS_RECALC_CHILD;
+
+        // Recalc hair back with viewport settings
         ob->recalc   |= OB_RECALC_ALL;
         BKE_scene_update_tagged(bmain, sce);
     }
@@ -801,7 +811,7 @@ static Mesh *get_render_mesh(Scene *sce, Object *ob)
         copycu->editnurb = tmpcu->editnurb;
 
         /* get updated display list, and convert to a mesh */
-        makeDispListCurveTypes( sce, tmpobj, 0 );
+        BKE_displist_make_curveTypes( sce, tmpobj, 0 );
 
         copycu->editfont = NULL;
         copycu->editnurb = NULL;
@@ -820,16 +830,16 @@ static Mesh *get_render_mesh(Scene *sce, Object *ob)
 
     case OB_MBALL:
         /* metaballs don't have modifiers, so just convert to mesh */
-        basis_ob = BKE_metaball_basis_find(sce, ob);
+        basis_ob = BKE_mball_basis_find(sce, ob);
 
         if (ob != basis_ob)
             return NULL; /* only do basis metaball */
 
         tmpmesh = BKE_mesh_add("Mesh");
-
-        makeDispListMBall_forRender(sce, ob, &disp);
+        
+        BKE_displist_make_mball_forRender(sce, ob, &disp);
         BKE_mesh_from_metaball(&disp, tmpmesh);
-        freedisplist(&disp);
+        BKE_displist_free(&disp);
 
         break;
 

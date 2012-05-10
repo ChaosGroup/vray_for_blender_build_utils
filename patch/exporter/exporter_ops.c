@@ -545,6 +545,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 
     int       use_child;
     int       free_edit;
+    int       need_recalc;
 
     PointerRNA  rna_pset;
     PointerRNA  VRayParticleSettings;
@@ -555,6 +556,8 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 
     for(psys = ob->particlesystem.first; psys; psys = psys->next)
     {
+        need_recalc = 0;
+
         pset = psys->part;
 
         if(pset->type != PART_HAIR) {
@@ -584,33 +587,46 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             }
         }
 
+        child_cache = psys->childcache;
+        child_total = psys->totchildcache;
+        use_child   = (pset->childtype && child_cache);
+
         // Store "Display percentage" setting
         display_percentage       = pset->disp;
         display_percentage_child = pset->child_nbr;
 
         // Check if particles are edited
-        free_edit = (psys->edit && psys->edit->edited);
+        free_edit = psys_check_edited(psys);
 
+        // Recalc parent hair only if they are not
+        // manually edited
         if(!free_edit) {
+            need_recalc = 1;
             pset->disp = 100;
             psys->recalc |= PSYS_RECALC;
         }
-        pset->child_nbr = pset->ren_child_nbr;
-        psys->recalc |= PSYS_RECALC_CHILD;
+
+        if(use_child) {
+            need_recalc = 1;
+            pset->child_nbr = pset->ren_child_nbr;
+            psys->recalc |= PSYS_RECALC_CHILD;
+        }
 
         // Recalc hair with render settings
-        ob->recalc |= OB_RECALC_ALL;
-        BKE_scene_update_tagged(bmain, sce);
+        if(need_recalc) {
+            ob->recalc |= OB_RECALC_ALL;
+            BKE_scene_update_tagged(bmain, sce);
+        }
+
+        // Get new child data pointers
+        if(use_child) {
+            child_cache = psys->childcache;
+            child_total = psys->totchildcache;
+        }
 
         // Spline interpolation
         interp_points_count = (int)pow(2.0, pset->ren_step);
         interp_points_step = 1.0 / (interp_points_count - 1);
-
-        DEBUG_OUTPUT(debug, "interp_points_step = %.3f\n", interp_points_step);
-
-        child_cache = psys->childcache;
-        child_total = psys->totchildcache;
-        use_child   = (pset->childtype && child_cache);
 
         clear_string(psys->name);
         fprintf(gfile, "GeomMayaHair HAIR%s", clean_string);
@@ -620,15 +636,13 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 
         fprintf(gfile, "\n\tnum_hair_vertices= interpolate((%d,ListIntHex(\"", sce->r.cfra);
         if(use_child) {
-            for(p= 0; p < child_total; ++p) {
+            for(p = 0; p < child_total; ++p) {
                 WRITE_HEX_VALUE(gfile, interp_points_count);
             }
         }
         else {
-            for(p= 0, pa= psys->particles; p < psys->totpart; ++p, ++pa)
+            for(p = 0, pa = psys->particles; p < psys->totpart; ++p, ++pa)
             {
-                DEBUG_OUTPUT(debug, "Pa[%i] : Segments: %i\n", p, interp_points_count);
-
                 WRITE_HEX_VALUE(gfile, interp_points_count);
             }
         }
@@ -652,7 +666,8 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 
                 // Store control points
                 for(s = 0; s < child_steps; s++, child_key++) {
-                    // We need to transform child points
+                    // Child particles are stored in world space,
+                    // but we need then in object space
                     copy_v3_v3(child_key_co, child_key->co); // Store child segment location
                     mul_m4_v3(ob->imat, child_key_co);       // Remove transform by applying inverse matrix
 
@@ -692,9 +707,6 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
                 // Spline interpolation
                 data_points_count = pa->totkey;
                 data_points_step  = 1.0f / (data_points_count - 1);
-
-                DEBUG_OUTPUT(debug, "data_points_count = %i\n", data_points_count);
-                DEBUG_OUTPUT(debug, "data_points_step = %.3f\n", data_points_step);
 
                 f = 0.0f;
                 for(i = 0; f <= 1.0; ++i, f += data_points_step) {
@@ -766,11 +778,15 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         if(!free_edit) {
             psys->recalc |= PSYS_RECALC;
         }
-        psys->recalc |= PSYS_RECALC_CHILD;
+        if(use_child) {
+            psys->recalc |= PSYS_RECALC_CHILD;
+        }
 
         // Recalc hair back with viewport settings
-        ob->recalc   |= OB_RECALC_ALL;
-        BKE_scene_update_tagged(bmain, sce);
+        if(need_recalc) {
+            ob->recalc   |= OB_RECALC_ALL;
+            BKE_scene_update_tagged(bmain, sce);
+        }
     }
 }
 
@@ -836,7 +852,7 @@ static Mesh *get_render_mesh(Scene *sce, Object *ob)
             return NULL; /* only do basis metaball */
 
         tmpmesh = BKE_mesh_add("Mesh");
-        
+
         BKE_displist_make_mball_forRender(sce, ob, &disp);
         BKE_mesh_from_metaball(&disp, tmpmesh);
         BKE_displist_free(&disp);
@@ -1268,11 +1284,8 @@ static void *export_meshes_thread(void *ptr)
             // Export hair
             if(use_hair) {
                 pthread_mutex_lock(&mtx);
-#if 1
+
                 write_GeomMayaHair(gfile, sce, bmain, ob);
-#else
-                write_hair(gfile, sce, bmain, ob);
-#endif
 
                 pthread_mutex_unlock(&mtx);
             }

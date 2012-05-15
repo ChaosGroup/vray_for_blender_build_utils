@@ -1641,7 +1641,7 @@ static int export_scene(Main *bmain, wmOperator *op)
             /* Export meshes for the start frame */
             sce->r.cfra = fra;
             CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-            BKE_scene_update_tagged(bmain, sce);
+            BKE_scene_update_for_newframe(bmain, sce, (1<<20)-1);
             export_meshes_threaded(filepath, sce, bmain, active_layers, instances, 0, 0);
             fra += sce->r.frame_step;
 
@@ -1658,7 +1658,7 @@ static int export_scene(Main *bmain, wmOperator *op)
 
                 sce->r.cfra = fra;
                 CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-                BKE_scene_update_tagged(bmain, sce);
+                BKE_scene_update_for_newframe(bmain, sce, (1<<20)-1);
                 export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 1);
 
                 if(!debug) {
@@ -1671,7 +1671,7 @@ static int export_scene(Main *bmain, wmOperator *op)
 
             sce->r.cfra = cfra;
             CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-            BKE_scene_update_tagged(bmain, sce);
+            BKE_scene_update_for_newframe(bmain, sce, (1<<20)-1);
         } else {
             export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 0);
         }

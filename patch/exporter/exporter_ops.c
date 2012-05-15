@@ -527,6 +527,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 
     float     hairmat[4][4];
     float     segment[3];
+    float     color[3] = {0.5f,0.5f,0.5f};
     float     width = 0.001f;
 
     int       spline_init_flag;
@@ -764,11 +765,29 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         }
         fprintf(gfile,"\")));");
 
-        fprintf(gfile, "\n\tcolors= List();");
-        fprintf(gfile, "\n\tincandescence= List();");
-        fprintf(gfile, "\n\ttransparency= List();");
-        fprintf(gfile, "\n\tstrand_uvw= List();");
-        fprintf(gfile, "\n\topacity= 1;");
+
+        fprintf(gfile, "\n\tcolors= interpolate((%d,ListColorHex(\"", sce->r.cfra);
+        if(use_child) {
+            for(p = 0; p < child_total; ++p) {
+                for(s = 0; s < interp_points_count; ++s) {
+                    WRITE_HEX_VECTOR(gfile, color);
+                }
+            }
+        }
+        else {
+            for(p = 0; p < psys->totpart; ++p) {
+                for(s = 0; s < interp_points_count; ++s) {
+                    WRITE_HEX_VECTOR(gfile, color);
+                }
+            }
+        }
+        fprintf(gfile,"\")));");
+
+        // fprintf(gfile, "\n\tincandescence=List();");
+        // fprintf(gfile, "\n\ttransparency=List();");
+        // fprintf(gfile, "\n\tstrand_uvw=List();");
+
+        fprintf(gfile, "\n\topacity=1.0;");
         fprintf(gfile, "\n}\n\n");
 
         // Restore "Display percentage" setting

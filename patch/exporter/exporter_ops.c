@@ -660,8 +660,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
                 data_points_count = child_steps;
                 data_points_step  = 1.0f / (child_steps - 1);
 
-                f = 0.0f;
-                for(i = 0; f <= 1.0; ++i, f += data_points_step) {
+                for(i = 0, f = 0.0f; i < data_points_count; ++i, f += data_points_step) {
                     data_points_abscissas[i] = f;
                 }
 
@@ -699,8 +698,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             }
         }
         else {
-            for(p = 0, pa = psys->particles; p < psys->totpart; ++p, ++pa)
-            {
+            LOOP_PARTICLES {
                 DEBUG_OUTPUT(debug, "\033[0;32mV-Ray/Blender:\033[0m Particle system: %s => Hair: %i\n", psys->name, p + 1);
 
                 psys_mat_hair_to_object(ob, psmd->dm, psmd->psys->part->from, pa, hairmat);
@@ -709,15 +707,17 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
                 data_points_count = pa->totkey;
                 data_points_step  = 1.0f / (data_points_count - 1);
 
-                f = 0.0f;
-                for(i = 0; f <= 1.0; ++i, f += data_points_step) {
+                for(i = 0, f = 0.0f; i < data_points_count; ++i, f += data_points_step) {
                     data_points_abscissas[i] = f;
                 }
 
                 // Store control points
                 for(s = 0, hkey = pa->hair; s < pa->totkey; ++s, ++hkey) {
+                    copy_v3_v3(segment, hkey->co);
+                    mul_m4_v3(hairmat, segment);
+
                     for(c = 0; c < 3; ++c) {
-                        data_points_ordinates[c][s] = hkey->co[c];
+                        data_points_ordinates[c][s] = segment[c];
                     }
                 }
 
@@ -738,9 +738,6 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
                         segment[c] = c_spline_eval(data_points_count, t, data_points_abscissas, data_points_ordinates[c],
                                                    s_b[c], s_c[c], s_d[c], &spline_last[c]);
                     }
-
-                    mul_m4_v3(hairmat, segment);
-
                     WRITE_HEX_VECTOR(gfile, segment);
                 }
             }

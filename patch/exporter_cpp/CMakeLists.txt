@@ -1,5 +1,5 @@
 set(INC
-	.
+    .
     ../blenlib
     ../blenkernel
     ../blenloader
@@ -7,11 +7,19 @@ set(INC
     ../makesrna
     ../windowmanager
     ../../../intern/guardedalloc
+    ../../../intern/smoke/extern
 )
 
 set(SRC
+    exporter_geometry.c
+    exporter_nodes.c
+    exporter_socket.c
     exporter_ops.c
 
+    exporter_includes.h
+    exporter_geometry.h
+    exporter_socket.h
+    exporter_nodes.h
     exporter_ops.h
 )
 

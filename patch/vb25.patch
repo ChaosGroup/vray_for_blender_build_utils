@@ -1,14 +1,14 @@
---- source/creator/CMakeLists.txt	2011-11-26 18:38:40.120142539 +0400
-+++ source/creator/CMakeLists.txt	2011-11-26 19:06:01.172090343 +0400
-@@ -859,6 +859,8 @@
- 		cycles_kernel
- 		cycles_util
- 		cycles_subd
-+
-+		vb_mesh_exporter
- 	)
+--- source/creator/CMakeLists.txt   2012-08-29 15:27:23.861123455 +0400
++++ source/creator/CMakeLists.txt   2012-08-29 15:25:51.541125000 +0400
+@@ -841,6 +841,8 @@
+ 		bf_editor_mask
+ 		bf_editor_io
  
- 	if(WITH_LIBMV)
++		vb_exporter
++
+ 		bf_render
+ 		bf_intern_opennl
+ 		bf_python
 
 --- source/blender/SConscript	2011-11-10 04:15:47.023294417 +0400
 +++ source/blender/SConscript	2011-11-26 18:47:33.622125572 +0400
@@ -23,25 +23,45 @@
 
 --- source/blender/CMakeLists.txt	2011-11-20 00:30:15.210801416 +0400
 +++ source/blender/CMakeLists.txt	2011-11-26 18:54:30.432112315 +0400
-@@ -88,6 +88,7 @@
- 	${CMAKE_CURRENT_SOURCE_DIR}/makesdna/DNA_tracking_types.h
- )
- 
+@@ -106,6 +106,7 @@
+ add_subdirectory(modifiers)
+ add_subdirectory(makesdna)
+ add_subdirectory(makesrna)
 +add_subdirectory(exporter)
- add_subdirectory(editors)
- add_subdirectory(windowmanager)
- add_subdirectory(blenkernel)
+ 
+ if(WITH_COMPOSITOR)
+ 	add_subdirectory(opencl)  # later on this may be used more generally
 
 --- source/blender/editors/space_api/CMakeLists.txt	2011-10-25 11:38:16.371086801 +0400
 +++ source/blender/editors/space_api/CMakeLists.txt	2011-11-26 18:52:03.095117001 +0400
-@@ -28,6 +28,7 @@
+@@ -29,6 +29,7 @@
  	../../makesrna
  	../../windowmanager
  	../../../../intern/guardedalloc
 +	../../exporter
  )
- 
+
  set(INC_SYS
+
+--- source/blender/editors/space_api/spacetypes.c   2012-08-29 15:35:17.173114053 +0400
++++ source/blender/editors/space_api/spacetypes.c   2012-09-06 15:07:51.672606940 +0400
+@@ -65,6 +65,8 @@
+ #include "ED_mask.h"
+ #include "ED_sequencer.h"
+ 
++#include "ED_exporter.h"
++
+ #include "io_ops.h"
+ 
+ /* only call once on startup, storage is global in BKE kernel listbase */
+@@ -98,6 +100,7 @@
+ //	...
+ 	
+ 	/* register operator types for screen and all spaces */
++	ED_operatortypes_exporter();
+ 	ED_operatortypes_screen();
+ 	ED_operatortypes_anim();
+ 	ED_operatortypes_animchannels();
 
 --- source/blender/editors/space_api/SConscript	2011-10-25 11:38:16.371086801 +0400
 +++ source/blender/editors/space_api/SConscript	2011-11-26 18:50:52.114119258 +0400
@@ -50,34 +70,13 @@
  incs += ' ../../windowmanager ../../python ../../makesrna ../../bmesh'
  incs += ' #/intern/guardedalloc #/extern/glew/include'
 +incs += ' ../../exporter'
- 
+
  defs = ''
 
---- source/blender/editors/space_api/spacetypes.c	2011-11-08 00:14:52.540502832 +0400
-+++ source/blender/editors/space_api/spacetypes.c	2011-11-26 18:57:25.383106750 +0400
-@@ -63,6 +63,8 @@
- #include "ED_logic.h"
- #include "ED_clip.h"
- 
-+#include "exporter_ops.h"
-+
- /* only call once on startup, storage is global in BKE kernel listbase */
- void ED_spacetypes_init(void)
- {
-@@ -112,6 +114,9 @@
- 	ED_operatortypes_render();
- 	ED_operatortypes_logic();
- 	
-+	/* Register V-Ray/Blender operator */
-+	ED_operatortypes_exporter();
-+
- 	UI_view2d_operatortypes();
- 	UI_buttons_operatortypes();
- 	
 --- source/blender/makesrna/intern/rna_texture.c	2011-11-26 18:38:44.088142414 +0400
 +++ source/blender/makesrna/intern/rna_texture.c	2011-11-26 18:59:28.344102839 +0400
-@@ -55,6 +55,7 @@
- 
+@@ -56,6 +56,7 @@
+
  EnumPropertyItem texture_type_items[] = {
  	{0, "NONE", 0, "None", ""},
 +	{TEX_VRAY, "VRAY", ICON_TEXTURE, "V-Ray", ""},
@@ -87,9 +86,9 @@
 
 --- source/blender/makesdna/DNA_texture_types.h	2011-11-20 00:30:04.470801629 +0400
 +++ source/blender/makesdna/DNA_texture_types.h	2011-11-26 19:00:38.076100621 +0400
-@@ -316,6 +316,7 @@
+@@ -290,6 +290,7 @@
  /* **************** TEX ********************* */
- 
+
  /* type */
 +#define TEX_VRAY		200
  #define TEX_CLOUDS		1
@@ -101,8 +100,9 @@
 @@ -81,7 +81,7 @@
  #include "BLF_translation.h"
  #endif
- 
+
 -#define USE_PEDANTIC_WRITE
 +//#define USE_PEDANTIC_WRITE
  #define USE_MATHUTILS
  #define USE_STRING_COERCE
+

@@ -24,97 +24,8 @@
 
 */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-#include <pthread.h>
-#include <time.h>
-#include <ctype.h>
+#include "exporter_geometry.h"
 
-#include "BKE_main.h"
-#include "BKE_scene.h"
-#include "BKE_context.h"
-#include "BKE_utildefines.h"
-#include "BKE_library.h"
-#include "BKE_DerivedMesh.h"
-#include "BKE_fcurve.h"
-#include "BKE_animsys.h"
-#include "BKE_particle.h"
-#include "BKE_pointcache.h"
-#include "BKE_global.h"
-#include "BKE_report.h"
-#include "BKE_object.h"
-#include "BKE_mesh.h"
-#include "BKE_curve.h"
-#include "BKE_bvhutils.h"
-#include "BKE_customdata.h"
-#include "BKE_anim.h"
-#include "BKE_depsgraph.h"
-#include "BKE_displist.h"
-#include "BKE_font.h"
-#include "BKE_mball.h"
-
-#include "DNA_scene_types.h"
-#include "DNA_object_types.h"
-#include "DNA_group_types.h"
-#include "DNA_meshdata_types.h"
-#include "DNA_mesh_types.h"
-#include "DNA_meta_types.h"
-#include "DNA_image_types.h"
-#include "DNA_material_types.h"
-#include "DNA_texture_types.h"
-#include "DNA_camera_types.h"
-#include "DNA_lamp_types.h"
-#include "DNA_anim_types.h"
-#include "DNA_action_types.h"
-#include "DNA_curve_types.h"
-#include "DNA_armature_types.h"
-#include "DNA_modifier_types.h"
-#include "DNA_windowmanager_types.h"
-#include "DNA_particle_types.h"
-
-#include "BLI_linklist.h"
-#include "BLI_fileops.h"
-#include "BLI_listbase.h"
-#include "BLI_math.h"
-#include "BLI_path_util.h"
-#include "BLI_string.h"
-#include "BLI_threads.h"
-
-#include "PIL_time.h"
-
-#include "RNA_access.h"
-#include "RNA_define.h"
-
-#ifdef WIN32
-#ifdef htonl
-#undef htonl
-#undef htons
-#undef ntohl
-#undef ntohs
-#define correctByteOrder(x) htonl(x)
-#endif
-#include <winsock.h>
-#endif
-
-#include "WM_api.h"
-#include "WM_types.h"
-
-#include "MEM_guardedalloc.h"
-
-#include "exporter_ops.h"
-
-
-#define DEBUG_OUTPUT(use_debug, ...) \
-    if(use_debug) { \
-        fprintf(stdout, __VA_ARGS__); \
-        fflush(stdout); \
-    } \
-
-#define HEX(x) htonl(*(int*)&(x))
-#define WRITE_HEX_VALUE(f, v)  fprintf(f, "%08X", HEX(v))
-#define WRITE_HEX_VECTOR(f, v) fprintf(f, "%08X%08X%08X", HEX(v[0]), HEX(v[1]), HEX(v[2]))
 #define WRITE_HEX_QUADFACE(f, face) fprintf(gfile, "%08X%08X%08X%08X%08X%08X", HEX(face->v1), HEX(face->v2), HEX(face->v3), HEX(face->v3), HEX(face->v4), HEX(face->v1))
 #define WRITE_HEX_TRIFACE(f, face)  fprintf(gfile, "%08X%08X%08X", HEX(face->v1), HEX(face->v2), HEX(face->v3))
 
@@ -529,6 +440,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
     float     segment[3];
     float     color[3] = {0.5f,0.5f,0.5f};
     float     width = 0.001f;
+    float     cone_width = 0.001f;
 
     int       spline_init_flag;
     int       interp_points_count;
@@ -544,6 +456,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 
     int       spline_last[3];
 
+    short     use_cone    = 0;
     short     use_child   = 0;
     short     free_edit   = 0;
     short     need_recalc = 0;
@@ -565,7 +478,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             continue;
         }
 
-        if(pset->ren_as != PART_DRAW_PATH) {
+        if(psys->part->ren_as != PART_DRAW_PATH) {
             continue;
         }
 
@@ -613,8 +526,8 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             psys->recalc |= PSYS_RECALC_CHILD;
         }
 
-        // if(psys->flag & PSYS_HAIR_DYNAMICS)
-        //     need_recalc = 0;
+//        if(psys->flag & PSYS_HAIR_DYNAMICS)
+//            need_recalc = 0;
 
         // Recalc hair with render settings
         if(need_recalc) {
@@ -700,6 +613,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
                         segment[c] = c_spline_eval(data_points_count, t, data_points_abscissas, data_points_ordinates[c],
                                                    s_b[c], s_c[c], s_d[c], &spline_last[c]);
                     }
+
                     WRITE_HEX_VECTOR(gfile, segment);
                 }
             }
@@ -757,15 +671,23 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         fprintf(gfile, "\n\twidths= interpolate((%d,ListFloatHex(\"", sce->r.cfra);
         if(use_child) {
             for(p = 0; p < child_total; ++p) {
+                cone_width = width;
                 for(s = 0; s < interp_points_count; ++s) {
-                    WRITE_HEX_VALUE(gfile, width);
+                    if(use_cone && s > 0) {
+                        cone_width = width / s;
+                    }
+                    WRITE_HEX_VALUE(gfile, cone_width);
                 }
             }
         }
         else {
             for(p = 0; p < psys->totpart; ++p) {
                 for(s = 0; s < interp_points_count; ++s) {
-                    WRITE_HEX_VALUE(gfile, width);
+                    cone_width = width;
+                    if(use_cone && s > 0) {
+                        cone_width = width / s;
+                    }
+                    WRITE_HEX_VALUE(gfile, cone_width);
                 }
             }
         }
@@ -807,7 +729,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 
         // Recalc hair back with viewport settings
         if(need_recalc) {
-            ob->recalc   |= OB_RECALC_ALL;
+            ob->recalc |= OB_RECALC_ALL;
             BKE_scene_update_tagged(bmain, sce);
         }
     }
@@ -955,7 +877,7 @@ static void write_GeomStaticMesh(FILE *gfile,
         clear_string(me->id.name+2);
     else
         clear_string(ob->id.name+2);
-    fprintf(gfile,"GeomStaticMesh ME%s", clean_string);
+    fprintf(gfile,"\nGeomStaticMesh ME%s", clean_string);
 
     if(me->id.lib) {
         lib_filename = (char*)malloc(FILE_MAX * sizeof(char));
@@ -1191,6 +1113,114 @@ static void write_GeomStaticMesh(FILE *gfile,
 }
 
 
+static void write_TexVoxelData(FILE *gfile, const Scene *sce, const Object *ob, const SmokeModifierData *smd, short hires)
+{
+    VoxelData *vd = NULL;
+
+    size_t i;
+    size_t tot_res_high;
+    size_t tot_res_low;
+
+    int    x,y,z;
+    float *density_data = NULL;
+    float *heat_data    = NULL;
+    float  density;
+    float  heat;
+    float  co[3];
+    int    res_high[3];
+    int    res_low[3];
+    float  uvw_tm[4][4];
+    float  rot_tm[4][4];
+
+    if(!(smd->domain && smd->domain->fluid)) {
+        return;
+    }
+
+    // Blender smoke uses 2.0 x 2.0 x 2.0 box domain for smoke
+    // but we need UVWs in 0.0-1.0 ans also some rotation
+    // so we need to transform UVWs
+    unit_m4(uvw_tm);
+    unit_m4(rot_tm);
+
+    // Apply transforms
+    mult_m4_m4m4(uvw_tm, uvw_tm, ob->imat);
+
+    // Debug transform
+    DEBUG_OUTPUT(TRUE, "TexVoxelData: uvw_transform\n");
+    PRINT_TRANSFORM(uvw_tm);
+
+    if(smd->domain->flags & MOD_SMOKE_HIGHRES) {
+        COPY_VECTOR_3_3(res_low,  smd->domain->res);
+
+        // Don't know why but hires[0] is not equal to
+        // others so simply use hires[1] for all
+        res_high[0] = smd->domain->res_wt[1];
+        res_high[1] = smd->domain->res_wt[1];
+        res_high[2] = smd->domain->res_wt[1];
+
+        density_data = smoke_turbulence_get_density(smd->domain->wt);
+    }
+    else {
+        COPY_VECTOR_3_3(res_low,  smd->domain->res);
+        COPY_VECTOR_3_3(res_high, smd->domain->res);
+
+        density_data = smoke_get_density(smd->domain->fluid);
+    }
+
+    heat_data = smoke_get_heat(smd->domain->fluid);
+
+    tot_res_high = (size_t)res_high[0] * (size_t)res_high[1] * (size_t)res_high[2];
+    tot_res_low  = (size_t)res_low[0] * (size_t)res_low[1] * (size_t)res_low[2];
+
+    // Take VoxelData from texture
+    // vd = ob->mat[0]->mtex[0]->tex->vd;
+
+    fprintf(gfile, "\nUVWGenPlanarWorld TestVoxelDataPlanarWorld {");
+    fprintf(gfile, "\n\tuvw_transform = interpolate((%d,", sce->r.cfra);
+    WRITE_TRANSFORM(gfile, uvw_tm);
+    fprintf(gfile, "));");
+
+    fprintf(gfile, "\n\tnsamples=0;");
+    fprintf(gfile, "\n}\n");
+
+    fprintf(gfile, "\nTexVoxelData TestVoxelData {");
+    fprintf(gfile, "\n\tuvwgen = TestVoxelDataPlanarWorld;");
+    fprintf(gfile, "\n\tdebug = %i;", debug);
+    if(vd) {
+        fprintf(gfile, "\n\tinterpolation = %i;", vd->interp_type);
+    }
+    fprintf(gfile, "\n\tresolution = Vector(%i,%i,%i);", res_high[0], res_high[1], res_high[2]);
+    fprintf(gfile, "\n\tresolution_low = Vector(%i,%i,%i);", res_low[0], res_low[1], res_low[2]);
+
+    // Density
+    //
+    fprintf(gfile, "\n\tdensity = interpolate((%d, ListFloatHex(\"", sce->r.cfra);
+    for(i = 0; i < tot_res_high; ++i) {
+        density = density_data[i];
+
+        WRITE_HEX_VALUE(gfile, density);
+    }
+    fprintf(gfile, "\")));");
+
+    // Heat
+    //  Always low res
+    //
+    fprintf(gfile, "\n\theat = interpolate((%d, ListFloatHex(\"", sce->r.cfra);
+    for(i = 0; i < tot_res_low; ++i) {
+        heat = (heat_data[i]+2.0f)/4.0f;
+
+        if(vd) {
+            heat *= vd->int_multiplier;
+        }
+
+        WRITE_HEX_VALUE(gfile, heat);
+    }
+    fprintf(gfile, "\")));");
+
+    fprintf(gfile, "\n}\n");
+}
+
+
 static int mesh_animated(Object *ob)
 {
     ModifierData *mod;
@@ -1255,23 +1285,26 @@ static void *export_meshes_thread(void *ptr)
 
     Scene    *sce;
     Main     *bmain;
-    Base     *base;
     Object   *ob;
     Mesh     *mesh;
 
     LinkNode *tdl;
 
-    int       use_hair= 1;
+    short     use_hair  = 1;
+    short     use_smoke = 1;
+    short     use_smoke_hires = 1;
 
     PointerRNA rna_scene;
     PointerRNA VRayScene;
     PointerRNA VRayExporter;
 
+    ModifierData      *md;
+    SmokeModifierData *smd;
+
     td= (struct ThreadData*)ptr;
 
     sce=   td->sce;
     bmain= td->bmain;
-    base= (Base*)sce->base.first;
 
     // Get export parameters from RNA
     RNA_id_pointer_create(&sce->id, &rna_scene);
@@ -1281,8 +1314,9 @@ static void *export_meshes_thread(void *ptr)
         if(RNA_struct_find_property(&VRayScene, "exporter")) {
             VRayExporter= RNA_pointer_get(&VRayScene, "exporter");
 
-            // Export hair
-            use_hair= RNA_boolean_get(&VRayExporter, "use_hair");
+            use_hair = RNA_boolean_get(&VRayExporter, "use_hair");
+            use_smoke       = RNA_boolean_get(&VRayExporter, "use_smoke");
+            use_smoke_hires = RNA_boolean_get(&VRayExporter, "use_smoke_hires");
         }
     }
 
@@ -1295,20 +1329,31 @@ static void *export_meshes_thread(void *ptr)
         gfile = fopen(filepath, "a");
     } else {
         gfile = fopen(filepath, "w");
-        fprintf(gfile,"// V-Ray/Blender 2.5\n");
+        fprintf(gfile,"// V-Ray/Blender\n");
         fprintf(gfile,"// Geometry file\n\n");
     }
 
     if(BLI_linklist_length(td->objects)) {
-        tdl= td->objects;
+        tdl = td->objects;
         while(tdl) {
-            ob= tdl->link;
+            ob = tdl->link;
 
-            // Export hair
             if(use_hair) {
                 pthread_mutex_lock(&mtx);
 
                 write_GeomMayaHair(gfile, sce, bmain, ob);
+
+                pthread_mutex_unlock(&mtx);
+            }
+
+            if(use_smoke) {
+                pthread_mutex_lock(&mtx);
+
+                if((md = modifiers_findByType(ob, eModifierType_Smoke))) {
+                    smd = (SmokeModifierData*)md;
+
+                    write_TexVoxelData(gfile, sce, ob, smd, use_smoke_hires);
+                }
 
                 pthread_mutex_unlock(&mtx);
             }
@@ -1333,7 +1378,7 @@ static void *export_meshes_thread(void *ptr)
                 pthread_mutex_unlock(&mtx);
             }
 
-            tdl= tdl->next;
+            tdl = tdl->next;
         }
     }
 
@@ -1580,15 +1625,15 @@ static void export_meshes_threaded(char *filepath, Scene *sce, Main *bmain,
         }
     }
 
-    for(t= 0; t < threads_count; ++t) {
+    for(t = 0; t < threads_count; ++t) {
         pthread_create(&threads[t], NULL, export_meshes_thread, (void*) &thread_data[t]);
     }
 
-    for(t= 0; t < threads_count; ++t) {
+    for(t = 0; t < threads_count; ++t) {
         pthread_join(threads[t], NULL);
     }
 
-    for(t= 0; t < MAX_MESH_THREADS; ++t) {
+    for(t = 0; t < MAX_MESH_THREADS; ++t) {
         BLI_linklist_free(thread_data[t].objects, NULL);
     }
 
@@ -1600,9 +1645,10 @@ static void export_meshes_threaded(char *filepath, Scene *sce, Main *bmain,
 }
 
 
-static int export_scene(Main *bmain, wmOperator *op)
+static int export_scene_exec(bContext *C, wmOperator *op)
 {
-    Scene  *sce = NULL;
+    Main   *bmain = CTX_data_main(C);
+    Scene  *sce   = NULL;
 
     int     fra  = 0;
     int     cfra = 0;
@@ -1711,10 +1757,6 @@ static int export_scene(Main *bmain, wmOperator *op)
 }
 
 
-
-/*
-  OPERATOR
-*/
 static int export_scene_invoke(bContext *C, wmOperator *op, wmEvent *event)
 {
      return OPERATOR_RUNNING_MODAL;
@@ -1723,29 +1765,14 @@ static int export_scene_invoke(bContext *C, wmOperator *op, wmEvent *event)
 
 static int export_scene_modal(bContext *C, wmOperator *op, wmEvent *event)
 {
-    switch(event->type) {
-        case ESCKEY:
-            return OPERATOR_CANCELLED;
-        default:
-            return OPERATOR_RUNNING_MODAL;
-    }
-
     return OPERATOR_RUNNING_MODAL;
-}
-
-
-static int export_scene_exec(bContext *C, wmOperator *op)
-{
-    Main *bmain = CTX_data_main(C);
-
-    return export_scene(bmain, op);
 }
 
 
 void VRAY_OT_export_meshes(wmOperatorType *ot)
 {
     /* identifiers */
-    ot->name        = "Export meshes";
+    ot->name        = "Export Meshes";
     ot->idname      = "VRAY_OT_export_meshes";
     ot->description = "Export meshes in .vrscene format";
 
@@ -1754,16 +1781,11 @@ void VRAY_OT_export_meshes(wmOperatorType *ot)
     ot->modal  = export_scene_modal;
     ot->exec   = export_scene_exec;
 
+    RNA_def_int(ot->srna, "scene", 0, INT_MIN, INT_MAX, "Scene", "Scene pointer", INT_MIN, INT_MAX);
     RNA_def_string(ot->srna, "filepath", "", FILE_MAX, "Geometry filepath", "Geometry filepath");
     RNA_def_boolean(ot->srna, "use_active_layers", 0,  "Active layer",      "Export only active layers");
     RNA_def_boolean(ot->srna, "use_animation",     0,  "Animation",         "Export animation");
     RNA_def_boolean(ot->srna, "use_instances",     0,  "Instances",         "Use instances");
     RNA_def_boolean(ot->srna, "debug",             0,  "Debug",             "Debug mode");
     RNA_def_boolean(ot->srna, "check_animated",    0,  "Check animated",    "Try to detect if mesh is animated");
-    RNA_def_int(ot->srna, "scene", 0, INT_MIN, INT_MAX, "Scene", "Scene pointer", INT_MIN, INT_MAX);
-}
-
-void ED_operatortypes_exporter(void)
-{
-    WM_operatortype_append(VRAY_OT_export_meshes);
 }

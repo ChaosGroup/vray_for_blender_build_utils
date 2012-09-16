@@ -103,7 +103,7 @@
 
 #include "MEM_guardedalloc.h"
 
-#include "exporter_ops.h"
+#include "ED_exporter.h"
 
 
 #define DEBUG_OUTPUT(use_debug, ...) \

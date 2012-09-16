@@ -24,11 +24,11 @@
 
 */
 
-#ifndef EXPORTER_OPS_H
-#define EXPORTER_OPS_H
+#ifndef ED_EXPORTER_H
+#define ED_EXPORTER_H
 
 struct wmOperatorType;
 
 void ED_operatortypes_exporter(void);
 
-#endif /* EXPORTER_OPS_H */
+#endif /* ED_EXPORTER_H */

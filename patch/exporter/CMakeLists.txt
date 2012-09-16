@@ -12,7 +12,7 @@ set(INC
 set(SRC
     exporter_ops.c
 
-    exporter_ops.h
+    ED_exporter.h
 )
 
 set(INC_SYS

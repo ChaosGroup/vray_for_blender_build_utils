@@ -20,7 +20,8 @@ set(SRC
     exporter_geometry.h
     exporter_socket.h
     exporter_nodes.h
-    exporter_ops.h
+
+    ED_exporter.h
 )
 
 set(INC_SYS

@@ -555,7 +555,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         fprintf(gfile, "%s {", clean_string);
 
 
-        fprintf(gfile, "\n\tnum_hair_vertices= interpolate((%d,ListIntHex(\"", sce->r.cfra);
+        fprintf(gfile, "\n\tnum_hair_vertices=interpolate((%d,ListIntHex(\"", sce->r.cfra);
         if(use_child) {
             for(p = 0; p < child_total; ++p) {
                 WRITE_HEX_VALUE(gfile, interp_points_count);
@@ -570,7 +570,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         fprintf(gfile,"\")));");
 
 
-        fprintf(gfile, "\n\thair_vertices= interpolate((%d,ListVectorHex(\"", sce->r.cfra);
+        fprintf(gfile, "\n\thair_vertices=interpolate((%d,ListVectorHex(\"", sce->r.cfra);
         if(use_child) {
             for(p = 0; p < child_total; ++p) {
                 child_key   = child_cache[p];
@@ -668,7 +668,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         fprintf(gfile,"\")));");
 
 
-        fprintf(gfile, "\n\twidths= interpolate((%d,ListFloatHex(\"", sce->r.cfra);
+        fprintf(gfile, "\n\twidths=interpolate((%d,ListFloatHex(\"", sce->r.cfra);
         if(use_child) {
             for(p = 0; p < child_total; ++p) {
                 cone_width = width;
@@ -694,7 +694,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         fprintf(gfile,"\")));");
 
 
-        fprintf(gfile, "\n\tcolors= interpolate((%d,ListColorHex(\"", sce->r.cfra);
+        fprintf(gfile, "\n\tcolors=interpolate((%d,ListColorHex(\"", sce->r.cfra);
         if(use_child) {
             for(p = 0; p < child_total; ++p) {
                 for(s = 0; s < interp_points_count; ++s) {

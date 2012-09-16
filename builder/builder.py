@@ -352,34 +352,43 @@ class Builder:
 		if self.add_datafiles:
 			sys.stdout.write("Adding datafiles...\n")
 
-			editor_datafiles = utils.path_join(blender_dir, "source", "blender", "editors", "datafiles")
-			datatoc          = utils.path_join(blender_dir, "release", "datafiles", "datatoc.py")
+			datafiles_path = utils.path_join(blender_dir, "release", "datafiles")
 
-			for datafile in ["splash.png"]: # , "startup.blend", "preview.blend"]:
-				datafile_c      = datafile + ".c"
-				datafile_path   = utils.path_join(patch_dir, "datafiles", datafile)
-				datafile_c_path = datafile_path + ".c"
+			# Change splash
+			splash_filename = "splash.png"
+			splash_path_src = utils.path_join(patch_dir, "datafiles", splash_filename)
+			splash_path_dst = utils.path_join(datafiles_path, splash_filename)
 
-				cmd = []
-				if self.host_os == utils.WIN:
-					cmd.append(sys.executable)
-				cmd.append(datatoc)
-				cmd.append(datafile_path)
-				cmd = " ".join(cmd)
+			shutil.copyfile(splash_path_src, splash_path_dst)
 
-				if self.mode_debug:
-					sys.stderr.write("Moving:\n\t%s =>\n\t%s\n" % (datafile_c_path, editor_datafiles))
-					sys.stderr.write("Cmd: %s\n" % (cmd))
-				else:
-					sys.stderr.write("Replacing: %s\n" % (datafile_c))
-					sys.stderr.write("Cmd: %s\n" % (cmd))
+			# editor_datafiles = utils.path_join(blender_dir, "source", "blender", "editors", "datafiles")
+			# datatoc          = utils.path_join(blender_dir, "release", "datafiles", "datatoc.py")
 
-				if not self.mode_test:
-					os.system(cmd)
-					datatoc_filepath = os.path.normpath(os.path.join(editor_datafiles, datafile_c))
-					if os.path.exists(datatoc_filepath):
-						os.remove(datatoc_filepath)
-					shutil.move(os.path.normpath(datafile_c_path), os.path.normpath(editor_datafiles))
+			# for datafile in ["splash.png"]: # , "startup.blend", "preview.blend"]:
+			# 	datafile_c      = datafile + ".c"
+			# 	datafile_path   = utils.path_join(patch_dir, "datafiles", datafile)
+			# 	datafile_c_path = datafile_path + ".c"
+
+			# 	cmd = []
+			# 	if self.host_os == utils.WIN:
+			# 		cmd.append(sys.executable)
+			# 	cmd.append(datatoc)
+			# 	cmd.append(datafile_path)
+			# 	cmd = " ".join(cmd)
+
+			# 	if self.mode_debug:
+			# 		sys.stderr.write("Moving:\n\t%s =>\n\t%s\n" % (datafile_c_path, editor_datafiles))
+			# 		sys.stderr.write("Cmd: %s\n" % (cmd))
+			# 	else:
+			# 		sys.stderr.write("Replacing: %s\n" % (datafile_c))
+			# 		sys.stderr.write("Cmd: %s\n" % (cmd))
+
+			# 	if not self.mode_test:
+			# 		os.system(cmd)
+			# 		datatoc_filepath = os.path.normpath(os.path.join(editor_datafiles, datafile_c))
+			# 		if os.path.exists(datatoc_filepath):
+			# 			os.remove(datatoc_filepath)
+			# 		shutil.move(os.path.normpath(datafile_c_path), os.path.normpath(editor_datafiles))
 
 
 	def docs(self):

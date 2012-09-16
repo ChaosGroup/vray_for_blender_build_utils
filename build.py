@@ -57,7 +57,7 @@ parser.add_option('', '--rebuild',     action= 'store_true', dest= 'rebuild',   
 parser.add_option('', '--revision',                          dest= 'revision',    default= "",     help= "Checkout particular SVN revision.")
 parser.add_option('', '--nopatches',   action= 'store_true', dest= 'nopatches',   default= False,  help= "Don't apply V-Ray/Blender patches.")
 parser.add_option('', '--nodatafiles', action= 'store_true', dest= 'nodatafiles', default= False,  help= "Don't add splash screen.")
-parser.add_option('', '--extern',      action= 'store_true', dest= 'extern',      default= False,  help= "Apply \"extern\" patches.")
+parser.add_option('', '--addextra',    action= 'store_true', dest= 'addextra',    default= False,  help= "Apply \"extra\" patches.")
 parser.add_option('', '--optimize',    action= 'store_true', dest= 'optimize',    default= False,  help= "Use compiler optimizations.")
 parser.add_option('', '--jobs',                              dest= 'jobs',        default= 4,      help= "Number of build threads.")
 if host_os == build_system.utils.MAC:
@@ -115,6 +115,7 @@ params['mode_developer'] = options.mode_devel
 params['mode_test']      = options.mode_test
 
 params['add_datafiles']  = not options.nodatafiles
+params['add_extra']      = options.addextra
 
 params['exporter_cpp']   = options.exporter_cpp
 

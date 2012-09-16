@@ -87,7 +87,7 @@ if options.sourcedir:
 # Default build directory
 if host_os == build_system.utils.WIN:
 	# Its vital to use short path here like C:\b\
-	params['dir_build'] = "C:\\\\"
+	params['dir_build'] = "C:\\b\\"
 else:
 	params['dir_build'] = "/tmp/builder/"
 

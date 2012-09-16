@@ -138,9 +138,6 @@ class Builder:
 			sys.stderr.write("Source directory not specified!\n")
 			sys.exit(2)
 
-		if self.host_os == utils.WIN:
-			self.dir_build = "C:\\vb_%s" % (self.build_arch)
-
 		if not self.add_patches:
 			self.project = "blender"
 
@@ -400,6 +397,7 @@ class Builder:
 				utils.path_create(self.dir_release)
 
 		self.dir_build       = utils.path_slashify(self.dir_build)
+		self.dir_source      = utils.path_slashify(self.dir_source)
 
 		self.dir_blender     = utils.path_join(self.dir_source, "blender")
 		self.dir_blender_svn = utils.path_join(self.dir_source, "blender-svn")

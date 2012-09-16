@@ -138,6 +138,9 @@ class Builder:
 			sys.stderr.write("Source directory not specified!\n")
 			sys.exit(2)
 
+		if self.host_os == utils.WIN:
+			self.dir_build = "C:\\vb_%s" % (self.build_arch)
+
 		if not self.add_patches:
 			self.project = "blender"
 
@@ -361,35 +364,6 @@ class Builder:
 
 			shutil.copyfile(splash_path_src, splash_path_dst)
 
-			# editor_datafiles = utils.path_join(blender_dir, "source", "blender", "editors", "datafiles")
-			# datatoc          = utils.path_join(blender_dir, "release", "datafiles", "datatoc.py")
-
-			# for datafile in ["splash.png"]: # , "startup.blend", "preview.blend"]:
-			# 	datafile_c      = datafile + ".c"
-			# 	datafile_path   = utils.path_join(patch_dir, "datafiles", datafile)
-			# 	datafile_c_path = datafile_path + ".c"
-
-			# 	cmd = []
-			# 	if self.host_os == utils.WIN:
-			# 		cmd.append(sys.executable)
-			# 	cmd.append(datatoc)
-			# 	cmd.append(datafile_path)
-			# 	cmd = " ".join(cmd)
-
-			# 	if self.mode_debug:
-			# 		sys.stderr.write("Moving:\n\t%s =>\n\t%s\n" % (datafile_c_path, editor_datafiles))
-			# 		sys.stderr.write("Cmd: %s\n" % (cmd))
-			# 	else:
-			# 		sys.stderr.write("Replacing: %s\n" % (datafile_c))
-			# 		sys.stderr.write("Cmd: %s\n" % (cmd))
-
-			# 	if not self.mode_test:
-			# 		os.system(cmd)
-			# 		datatoc_filepath = os.path.normpath(os.path.join(editor_datafiles, datafile_c))
-			# 		if os.path.exists(datatoc_filepath):
-			# 			os.remove(datatoc_filepath)
-			# 		shutil.move(os.path.normpath(datafile_c_path), os.path.normpath(editor_datafiles))
-
 
 	def docs(self):
 		if self.generate_docs:
@@ -424,6 +398,8 @@ class Builder:
 		if self.generate_package:
 			if not self.mode_test:
 				utils.path_create(self.dir_release)
+
+		self.dir_build       = utils.path_slashify(self.dir_build)
 
 		self.dir_blender     = utils.path_join(self.dir_source, "blender")
 		self.dir_blender_svn = utils.path_join(self.dir_source, "blender-svn")

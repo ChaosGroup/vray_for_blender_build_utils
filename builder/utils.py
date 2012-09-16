@@ -47,17 +47,17 @@ def get_host_os():
 		return LNX
 	elif sys.platform == "darwin":
 		return MAC
-	
+
 	sys.stderr.write("Unknown platform!\n")
 	sys.exit(2)
 
 
 def get_host_architecture():
 	arch = 'x86' if platform.architecture()[0] == '32bit' else 'x86_64'
-	
+
 	if get_host_os() == "macos":
 		arch = 'x86' if commands.getoutput('uname -p') == 'i386' else 'x86_64'
-	
+
 	return arch
 
 
@@ -75,7 +75,7 @@ def path_basename(path):
 	"""
 	if path.endswith(os.sep):
 		path = path[:-1]
-	
+
 	return os.path.basename(path)
 
 
@@ -85,15 +85,14 @@ def path_join(*args):
 	  Windows paths will contain double back-slashes
 	"""
 	path = None
-	
+
 	if get_host_os() == WIN:
-		path = '\\\\'.join(args)
-		path = path.replace('\\\\\\\\','\\\\')
-		path = path.replace('\\\\\\','\\\\')
+	    path = '\\\\'.join(args)
+	    path = path.replace('\\\\\\\\','\\\\')
+	    path = path.replace('\\\\\\','\\\\')
 	else:
-		path = os.path.join(*args)
-	
-	#return os.path.normpath(path)
+	    path = os.path.join(*args)
+
 	return path
 
 
@@ -107,12 +106,12 @@ def path_expand(path):
 	"""
 	  Expands some special chars to real values
 	"""
-	if(path[0:1] == '~'):
-		path = my_path_join(os.environ["HOME"],path[2:])
-	
-	elif(path[0:1] != '/'):
+	if path.startswith('~'):
+		path = os.path.expanduser(path)
+
+	elif not path.startswith('/'):
 		path = os.path.abspath(path)
-	
+
 	return path
 
 
@@ -122,12 +121,12 @@ def path_slashify(path):
 	"""
 	if get_host_os() != WIN:
 		return path
-	
+
 	path = os.path.normpath(path)
 	path = path.replace('\\','\\\\')
 
 	return path
-	
+
 
 def which(program):
 	"""
@@ -152,19 +151,19 @@ def which(program):
 
 def find_git_patch():
 	env_paths = os.getenv('PATH').split(';')
-	
+
 	for path in env_paths:
 		if path.find('Git') == -1 and path.find('cmd') == -1:
 			continue
-		
+
 		full_path = path_join(path, "..", "bin", "patch.exe")
 		full_path = os.path.normpath(full_path)
-		
+
 		sys.stdout.write("Using \"patch.exe\" from Git (%s)\n" % (full_path))
 
 		return full_path
-	
-	return None	
+
+	return None
 
 
 def find_makensis():
@@ -192,7 +191,7 @@ def find_patch():
 		patch_exe = find_git_patch()
 		if patch_exe is not None:
 			return '"%s"' % (patch_exe)
-		
+
 		# Try to find patch.exe in %PATH%
 		if which("patch.exe") is not None:
 			return "patch.exe"
@@ -207,7 +206,7 @@ def find_patch():
 		for path in git_common_paths:
 			if os.path.exists(path):
 				return '"%s"' % (path)
-	
+
 	else:
 		if which("patch") is not None:
 			return "patch"
@@ -225,9 +224,9 @@ def notify(title, message):
 
 
 def create_desktop_file(filepath = "/usr/share/applications/vrayblender.desktop",
-                        name     = "V-Ray/Blender",
-                        execpath = "blender",
-                        iconpath = "blender.svg"):
+						name     = "V-Ray/Blender",
+						execpath = "blender",
+						iconpath = "blender.svg"):
 	"""
 	  Creates Freedesktop .desktop file
 	"""
@@ -273,14 +272,14 @@ def get_blender_version(root_dir):
 			version        = version_number[:1] + "." + version_number[1:]
 
 			return version
-	
+
 	return VERSION
 
 
 def get_linux_distribution():
 	long_info  = platform.linux_distribution()
 	short_info = platform.dist()
-	
+
 	info = {}
 	info['long_name']  = long_info[0].strip()
 	info['short_name'] = short_info[0].lower().replace(' ','_').strip()

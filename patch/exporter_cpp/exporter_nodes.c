@@ -82,7 +82,7 @@ static int write_dupli_node(const ExportThreadData *edata, const DupliObject *do
     Object   *ob = edata->ob;
     NodeData  node;
 
-    DEBUG_OUTPUT(TRUE, "Writing dupli %i for node %s\n", dob->index, ob->id.name+2);
+    DEBUG_OUTPUT(TRUE, "Writing dupli %i for node %s", dob->index, ob->id.name+2);
 
     node.ob = dob->ob;
     copy_m4_m4(node.obmat, dob->omat);
@@ -154,7 +154,7 @@ static int export_nodes_exec(bContext *C, wmOperator *op)
 
     // Start measuring time
     time = PIL_check_seconds_timer();
-    DEBUG_OUTPUT(TRUE, "Exporting nodes...\n");
+    DEBUG_OUTPUT(TRUE, "Exporting nodes...");
 
     // Setup some common function data
     edata.nfile = nfile;
@@ -165,7 +165,7 @@ static int export_nodes_exec(bContext *C, wmOperator *op)
     while(base) {
         ob = base->object;
 
-        DEBUG_OUTPUT(TRUE, "Processing object: %s\n", ob->id.name+2);
+        DEBUG_OUTPUT(TRUE, "Processing object: %s", ob->id.name+2);
 
         edata.ob = ob;
 
@@ -176,7 +176,7 @@ static int export_nodes_exec(bContext *C, wmOperator *op)
 
     // Measure time
     BLI_timestr(PIL_check_seconds_timer()-time, time_str);
-    DEBUG_OUTPUT(TRUE, "Exporting nodes done [%s]%-32s\n", time_str, " ");
+    DEBUG_OUTPUT(TRUE, "Exporting nodes done [%s]%-32s", time_str, " ");
 
     // Clean up
     fclose(nfile);

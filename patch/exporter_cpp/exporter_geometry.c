@@ -526,8 +526,8 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             psys->recalc |= PSYS_RECALC_CHILD;
         }
 
-//        if(psys->flag & PSYS_HAIR_DYNAMICS)
-//            need_recalc = 0;
+        if(psys->flag & PSYS_HAIR_DYNAMICS)
+            need_recalc = 0;
 
         // Recalc hair with render settings
         if(need_recalc) {
@@ -540,14 +540,14 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             child_cache = psys->childcache;
             child_total = psys->totchildcache;
 
-            DEBUG_OUTPUT(debug, "child_total = %i\n", child_total);
+            DEBUG_OUTPUT(debug, "child_total = %i", child_total);
         }
 
         // Spline interpolation
         interp_points_count = (int)pow(2.0, pset->ren_step);
         interp_points_step = 1.0 / (interp_points_count - 1);
 
-        DEBUG_OUTPUT(debug, "interp_points_count = %i\n", interp_points_count);
+        DEBUG_OUTPUT(debug, "interp_points_count = %i", interp_points_count);
 
         clear_string(psys->name);
         fprintf(gfile, "GeomMayaHair HAIR%s", clean_string);
@@ -562,8 +562,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             }
         }
         else {
-            for(p = 0, pa = psys->particles; p < psys->totpart; ++p, ++pa)
-            {
+            LOOP_PARTICLES {
                 WRITE_HEX_VALUE(gfile, interp_points_count);
             }
         }
@@ -628,8 +627,8 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
                 data_points_count = pa->totkey;
                 data_points_step  = 1.0f / (data_points_count - 1);
 
-                DEBUG_OUTPUT(debug, "data_points_count = %i\n", data_points_count);
-                DEBUG_OUTPUT(debug, "data_points_step = %.3f\n", data_points_step);
+                DEBUG_OUTPUT(debug, "data_points_count = %i", data_points_count);
+                DEBUG_OUTPUT(debug, "data_points_step = %.3f", data_points_step);
 
                 for(i = 0, f = 0.0f; i < data_points_count; ++i, f += data_points_step) {
                     data_points_abscissas[i] = f;
@@ -863,11 +862,10 @@ static void write_GeomStaticMesh(FILE *gfile,
     int i, j, f, k, l;
     int u;
 
-    if(debug)
-        DEBUG_OUTPUT(debug, "Processing object \"%s\": mesh \"%s\"\n", ob->id.name, me->id.name);
+    DEBUG_OUTPUT(debug, "Processing object \"%s\": mesh \"%s\"", ob->id.name, me->id.name);
 
     if(!(mesh->totface)) {
-        DEBUG_OUTPUT(debug, "No faces in mesh \"%s\"\n", me->id.name);
+        DEBUG_OUTPUT(debug, "No faces in mesh \"%s\"", me->id.name);
         return;
     }
 
@@ -1113,10 +1111,10 @@ static void write_GeomStaticMesh(FILE *gfile,
 }
 
 
-static void write_TexVoxelData(FILE *gfile, const Scene *sce, const Object *ob, const SmokeModifierData *smd, short hires)
+static void write_TexVoxelData(FILE *gfile, const Scene *sce, const Object *ob, const SmokeModifierData *smd, short use_smoke_hires)
 {
     VoxelData *vd   = NULL;
-    Material  *mat  = NULL;
+    Material  *ma   = NULL;
     MTex      *mtex = NULL;
     Tex       *tex  = NULL;
 
@@ -1124,65 +1122,75 @@ static void write_TexVoxelData(FILE *gfile, const Scene *sce, const Object *ob, 
     size_t tot_res_high;
     size_t tot_res_low;
 
-    int    x,y,z;
     float *density_data = NULL;
     float *heat_data    = NULL;
     float  density;
     float  heat;
-    float  co[3];
+
     int    res_high[3];
     int    res_low[3];
-    float  uvw_tm[4][4];
 
-    int    interp = 0;
+    float  ob_imat[4][4];
+
+    int    interp_type    = 0;
+    float  int_multiplier = 1.0;
+
+    char   uvwgen_name[255];
+    char   tex_name[255];
 
     if(!(smd->domain && smd->domain->fluid)) {
+        DEBUG_OUTPUT(TRUE, "Smoke modifier not found!");
         return;
     }
 
-    // Take VoxelData from texture
-    //   vd = ob->mat[0]->mtex[0]->tex->vd;
-    for(m = 0; m < ob->totcol; ++m) {
-        mat = ob->mat[m];
-        if(!(mat))
-            continue;
-
-        for(t = 0; t < 18; ++t) {
-            mtex = mat->mtex[t];
-            if(!(mtex))
+    // Take VoxelData pointer from texture
+    //
+    if(ob->mat) {
+        for(m = 1; m <= ob->totcol; ++m) {
+            ma = give_current_material(ob, m);
+            if(!(ma))
                 continue;
 
-            tex = mtex->tex;
-            if(!(tex))
-                continue;
+            for(t = 0; t < MAX_MTEX; ++t) {
+                mtex = ma->mtex[t];
+                if(!(mtex))
+                    continue;
 
-            if(!(tex->type == TEX_VOXELDATA))
-                continue;
+                tex = mtex->tex;
+                if(!(tex))
+                    continue;
 
-            vd = tex->vd;
+                if(tex->type != TEX_VOXELDATA)
+                    continue;
+
+                vd = tex->vd;
+
+                break;
+            }
+
+            if(vd)
+                break;
         }
     }
 
+    if(!(vd)) {
+        DEBUG_OUTPUT(TRUE, "VoxelData texture not found!");
+        return;
+    }
 
-    // Blender smoke uses 2.0 x 2.0 x 2.0 domain,
-    // but we need UVWs in 0.0-1.0 ranges so we need to transform UVWs
-    unit_m4(uvw_tm);
+    interp_type    = vd->interp_type;
+    int_multiplier = vd->int_multiplier;
 
-    // Apply transforms
-    mult_m4_m4m4(uvw_tm, uvw_tm, ob->imat);
+    clear_string(tex->id.name+2);
+    sprintf(tex_name, "TE%s", clean_string);
+    sprintf(uvwgen_name, "UVWGenWorldTE%s", clean_string);
 
-    // Debug transform
-    DEBUG_OUTPUT(TRUE, "TexVoxelData: uvw_transform\n");
-    PRINT_TRANSFORM(uvw_tm);
+    // Store object invert matrix
+    invert_m4_m4(ob_imat, ob->obmat);
 
-    if(smd->domain->flags & MOD_SMOKE_HIGHRES) {
+    if(use_smoke_hires && (smd->domain->flags & MOD_SMOKE_HIGHRES)) {
         COPY_VECTOR_3_3(res_low,  smd->domain->res);
-
-        // Don't know why but hires[0] is not equal to
-        // others so simply use hires[1] for all
-        res_high[0] = smd->domain->res_wt[1];
-        res_high[1] = smd->domain->res_wt[1];
-        res_high[2] = smd->domain->res_wt[1];
+        COPY_VECTOR_3_3(res_high, smd->domain->res_wt);
 
         density_data = smoke_turbulence_get_density(smd->domain->wt);
     }
@@ -1196,27 +1204,22 @@ static void write_TexVoxelData(FILE *gfile, const Scene *sce, const Object *ob, 
     heat_data = smoke_get_heat(smd->domain->fluid);
 
     tot_res_high = (size_t)res_high[0] * (size_t)res_high[1] * (size_t)res_high[2];
-    tot_res_low  = (size_t)res_low[0] * (size_t)res_low[1] * (size_t)res_low[2];
+    tot_res_low  = (size_t)res_low[0]  * (size_t)res_low[1]  * (size_t)res_low[2];
 
-    if(vd) {
-        interp = vd->interp_type;
-    }
+    fprintf(gfile, "\nUVWGenPlanarWorld %s {", uvwgen_name);
 
-    // Take VoxelData from texture
-    // vd = ob->mat[0]->mtex[0]->tex->vd;
-
-    fprintf(gfile, "\nUVWGenPlanarWorld TestVoxelDataPlanarWorld {");
+    // Blender smoke uses 2.0 x 2.0 x 2.0 mesh domain and then transform to form the final
+    // smoke domain, so we need to transform UVWs
     fprintf(gfile, "\n\tuvw_transform = interpolate((%d,", sce->r.cfra);
-    WRITE_TRANSFORM(gfile, uvw_tm);
+    WRITE_TRANSFORM(gfile, ob_imat);
     fprintf(gfile, "));");
 
-    fprintf(gfile, "\n\tnsamples=0;");
     fprintf(gfile, "\n}\n");
 
-    fprintf(gfile, "\nTexVoxelData TestVoxelData {");
-    fprintf(gfile, "\n\tuvwgen = TestVoxelDataPlanarWorld;");
+    fprintf(gfile, "\nTexVoxelData %s {", tex_name);
+    fprintf(gfile, "\n\tuvwgen = %s;", uvwgen_name);
     fprintf(gfile, "\n\tdebug = %i;", debug);
-    fprintf(gfile, "\n\tinterpolation = %i;", interp);
+    fprintf(gfile, "\n\tinterpolation = %i;", interp_type);
     fprintf(gfile, "\n\tresolution = Vector(%i,%i,%i);", res_high[0], res_high[1], res_high[2]);
     fprintf(gfile, "\n\tresolution_low = Vector(%i,%i,%i);", res_low[0], res_low[1], res_low[2]);
 
@@ -1235,11 +1238,8 @@ static void write_TexVoxelData(FILE *gfile, const Scene *sce, const Object *ob, 
     //
     fprintf(gfile, "\n\theat = interpolate((%d, ListFloatHex(\"", sce->r.cfra);
     for(i = 0; i < tot_res_low; ++i) {
-        heat = (heat_data[i]+2.0f)/4.0f;
-
-        if(vd) {
-            heat *= vd->int_multiplier;
-        }
+        heat  = (heat_data[i]+2.0f)/4.0f;
+        heat *= int_multiplier;
 
         WRITE_HEX_VALUE(gfile, heat);
     }

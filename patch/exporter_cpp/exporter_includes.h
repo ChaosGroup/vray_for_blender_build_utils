@@ -58,6 +58,7 @@
 #include "BKE_font.h"
 #include "BKE_mball.h"
 #include "BKE_modifier.h"
+#include "BKE_material.h"
 
 #include "DNA_scene_types.h"
 #include "DNA_object_types.h"
@@ -116,10 +117,11 @@
 
 #include "MEM_guardedalloc.h"
 
-#define USE_DEBUG  0
+#define USE_DEBUG  1
+#define QTCREATOR  0
 
 // scons -Q define=QTCREATOR
-#ifdef QTCREATOR
+#if QTCREATOR
 #   define VRAY_PROMPT "V-Ray/Blender: "
 #else
 #   ifdef __linux__
@@ -130,14 +132,15 @@
 #endif
 
 #if USE_DEBUG
-#define DEBUG_OUTPUT(use_debug, ...) \
+#  define DEBUG_OUTPUT(use_debug, ...) \
     if(use_debug) { \
         fprintf(stdout, VRAY_PROMPT); \
         fprintf(stdout, __VA_ARGS__); \
+        fprintf(stdout, "\n"); \
         fflush(stdout); \
     }
 #else
-#   define DEBUG_OUTPUT(use_debug, ...)
+#  define DEBUG_OUTPUT(use_debug, ...)
 #endif
 
 #define COPY_VECTOR_3_3(a, b) \
@@ -150,29 +153,28 @@
 #define WRITE_HEX_VECTOR(f, v) fprintf(f, "%08X%08X%08X", HEX(v[0]), HEX(v[1]), HEX(v[2]))
 
 #define WRITE_TRANSFORM(f, m) fprintf(f, "Transform(Matrix(Vector(%f, %f, %f),Vector(%f, %f, %f),Vector(%f, %f, %f)),Vector(%f, %f, %f))", \
-    m[0][0], m[1][0], m[2][0],\
-    m[0][1], m[1][1], m[2][1],\
-    m[0][2], m[1][2], m[2][2],\
-    m[0][3], m[1][3], m[2][3])
+    m[0][0], m[0][1], m[0][2],\
+    m[1][0], m[1][1], m[1][2],\
+    m[2][0], m[2][1], m[2][2],\
+    m[3][0], m[3][1], m[3][2]);
 
 #define WRITE_TRANSFORM_HEX(f, m) fprintf(f, "TransformHex(\"%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X\")", \
-    HEX(m[0][0]), HEX(m[1][0]), HEX(m[2][0]),\
-    HEX(m[0][1]), HEX(m[1][1]), HEX(m[2][1]),\
-    HEX(m[0][2]), HEX(m[1][2]), HEX(m[2][2]),\
-    HEX(m[0][3]), HEX(m[1][3]), HEX(m[2][3]))
+    HEX(m[0][0]), HEX(m[0][1]), HEX(m[0][2]),\
+    HEX(m[1][0]), HEX(m[1][1]), HEX(m[1][2]),\
+    HEX(m[2][0]), HEX(m[2][1]), HEX(m[2][2]),\
+    HEX(m[3][0]), HEX(m[3][1]), HEX(m[3][2]))
 
 #define PRINT_TRANSFORM(m) printf("Transform(Matrix(Vector(%f, %f, %f),Vector(%f, %f, %f),Vector(%f, %f, %f)),Vector(%f, %f, %f))\n", \
-    m[0][0], m[1][0], m[2][0],\
-    m[0][1], m[1][1], m[2][1],\
-    m[0][2], m[1][2], m[2][2],\
-    m[0][3], m[1][3], m[2][3]);\
+    m[0][0], m[0][1], m[0][2],\
+    m[1][0], m[1][1], m[1][2],\
+    m[2][0], m[2][1], m[2][2],\
+    m[3][0], m[3][1], m[3][2]);\
     fflush(stdout)
 
-#define PRINT_HEX_TRANSFORM(m) printf("TransformHex(\"%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X\")\n", \
-    HEX(m[0][0]), HEX(m[1][0]), HEX(m[2][0]),\
-    HEX(m[0][1]), HEX(m[1][1]), HEX(m[2][1]),\
-    HEX(m[0][2]), HEX(m[1][2]), HEX(m[2][2]),\
-    HEX(m[0][3]), HEX(m[1][3]), HEX(m[2][3]));\
-    fflush(stdout)
+#define PRINT_TRANSFORM_HEX(f, m) printf("TransformHex(\"%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X\")", \
+    HEX(m[0][0]), HEX(m[0][1]), HEX(m[0][2]),\
+    HEX(m[1][0]), HEX(m[1][1]), HEX(m[1][2]),\
+    HEX(m[2][0]), HEX(m[2][1]), HEX(m[2][2]),\
+    HEX(m[3][0]), HEX(m[3][1]), HEX(m[3][2]))
 
 #endif // EXPORTER_INCLUDES_H

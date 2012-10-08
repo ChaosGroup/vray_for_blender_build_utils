@@ -108,7 +108,7 @@ static int write_dupli(ExportThreadData *edata)
         ob->duplilist = NULL;
     }
 
-    ob->duplilist = object_duplilist(edata->sce, ob);
+    ob->duplilist = object_duplilist(edata->sce, ob, TRUE);
 
     // Process dupli objects
     for(dob = ob->duplilist->first; dob; dob = dob->next) {

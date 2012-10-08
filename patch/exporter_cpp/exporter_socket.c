@@ -31,13 +31,13 @@
 
 static int transfer_exec(bContext *C, wmOperator *op)
 {
-
+    return OPERATOR_FINISHED;
 }
 
 
 static int transfer_invoke(bContext *C, wmOperator *op, wmEvent *event)
 {
-     return OPERATOR_RUNNING_MODAL;
+    return OPERATOR_RUNNING_MODAL;
 }
 
 

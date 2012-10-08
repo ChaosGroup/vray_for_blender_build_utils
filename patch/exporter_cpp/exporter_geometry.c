@@ -1115,9 +1115,12 @@ static void write_GeomStaticMesh(FILE *gfile,
 
 static void write_TexVoxelData(FILE *gfile, const Scene *sce, const Object *ob, const SmokeModifierData *smd, short hires)
 {
-    VoxelData *vd = NULL;
+    VoxelData *vd   = NULL;
+    Material  *mat  = NULL;
+    MTex      *mtex = NULL;
+    Tex       *tex  = NULL;
 
-    size_t i;
+    size_t i, m, t;
     size_t tot_res_high;
     size_t tot_res_low;
 
@@ -1130,17 +1133,40 @@ static void write_TexVoxelData(FILE *gfile, const Scene *sce, const Object *ob, 
     int    res_high[3];
     int    res_low[3];
     float  uvw_tm[4][4];
-    float  rot_tm[4][4];
+
+    int    interp = 0;
 
     if(!(smd->domain && smd->domain->fluid)) {
         return;
     }
 
-    // Blender smoke uses 2.0 x 2.0 x 2.0 box domain for smoke
-    // but we need UVWs in 0.0-1.0 ans also some rotation
-    // so we need to transform UVWs
+    // Take VoxelData from texture
+    //   vd = ob->mat[0]->mtex[0]->tex->vd;
+    for(m = 0; m < ob->totcol; ++m) {
+        mat = ob->mat[m];
+        if(!(mat))
+            continue;
+
+        for(t = 0; t < 18; ++t) {
+            mtex = mat->mtex[t];
+            if(!(mtex))
+                continue;
+
+            tex = mtex->tex;
+            if(!(tex))
+                continue;
+
+            if(!(tex->type == TEX_VOXELDATA))
+                continue;
+
+            vd = tex->vd;
+        }
+    }
+
+
+    // Blender smoke uses 2.0 x 2.0 x 2.0 domain,
+    // but we need UVWs in 0.0-1.0 ranges so we need to transform UVWs
     unit_m4(uvw_tm);
-    unit_m4(rot_tm);
 
     // Apply transforms
     mult_m4_m4m4(uvw_tm, uvw_tm, ob->imat);
@@ -1172,6 +1198,10 @@ static void write_TexVoxelData(FILE *gfile, const Scene *sce, const Object *ob, 
     tot_res_high = (size_t)res_high[0] * (size_t)res_high[1] * (size_t)res_high[2];
     tot_res_low  = (size_t)res_low[0] * (size_t)res_low[1] * (size_t)res_low[2];
 
+    if(vd) {
+        interp = vd->interp_type;
+    }
+
     // Take VoxelData from texture
     // vd = ob->mat[0]->mtex[0]->tex->vd;
 
@@ -1186,9 +1216,7 @@ static void write_TexVoxelData(FILE *gfile, const Scene *sce, const Object *ob, 
     fprintf(gfile, "\nTexVoxelData TestVoxelData {");
     fprintf(gfile, "\n\tuvwgen = TestVoxelDataPlanarWorld;");
     fprintf(gfile, "\n\tdebug = %i;", debug);
-    if(vd) {
-        fprintf(gfile, "\n\tinterpolation = %i;", vd->interp_type);
-    }
+    fprintf(gfile, "\n\tinterpolation = %i;", interp);
     fprintf(gfile, "\n\tresolution = Vector(%i,%i,%i);", res_high[0], res_high[1], res_high[2]);
     fprintf(gfile, "\n\tresolution_low = Vector(%i,%i,%i);", res_low[0], res_low[1], res_low[2]);
 

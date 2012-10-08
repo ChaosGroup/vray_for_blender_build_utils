@@ -79,23 +79,6 @@ def path_basename(path):
 	return os.path.basename(path)
 
 
-def path_join(*args):
-	"""
-	  Joins path components for sure that
-	  Windows paths will contain double back-slashes
-	"""
-	path = None
-
-	if get_host_os() == WIN:
-	    path = '\\\\'.join(args)
-	    path = path.replace('\\\\\\\\','\\\\')
-	    path = path.replace('\\\\\\','\\\\')
-	else:
-	    path = os.path.join(*args)
-
-	return path
-
-
 def path_create(path):
 	if not os.path.exists(path):
 		sys.stdout.write("Directory (%s) doesn\'t exist! Trying to create...\n" % (path))
@@ -124,6 +107,19 @@ def path_slashify(path):
 
 	path = os.path.normpath(path)
 	path = path.replace('\\','\\\\')
+
+	return path
+
+
+def path_join(*args):
+	"""
+	  Joins path components for sure that
+	  Windows paths will contain double back-slashes
+	"""
+	path = os.path.join(*args)
+
+	if get_host_os() == WIN:
+		path = path_slashify(path)
 
 	return path
 

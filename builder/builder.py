@@ -396,12 +396,13 @@ class Builder:
 			if not self.mode_test:
 				utils.path_create(self.dir_release)
 
-		self.dir_build       = utils.path_slashify(self.dir_build)
-		self.dir_source      = utils.path_slashify(self.dir_source)
+		self.dir_build        = utils.path_slashify(self.dir_build)
+		self.dir_source       = utils.path_slashify(self.dir_source)
+		self.dir_install_path = utils.path_slashify(self.dir_install_path)
 
-		self.dir_blender     = utils.path_join(self.dir_source, "blender")
-		self.dir_blender_svn = utils.path_join(self.dir_source, "blender-svn")
-		self.user_config     = utils.path_join(self.dir_blender, "user-config.py")
+		self.dir_blender      = utils.path_join(self.dir_source, "blender")
+		self.dir_blender_svn  = utils.path_join(self.dir_source, "blender-svn")
+		self.user_config      = utils.path_join(self.dir_blender, "user-config.py")
 
 
 	def config(self):

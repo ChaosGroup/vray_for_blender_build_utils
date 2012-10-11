@@ -233,7 +233,7 @@ class Builder:
 					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64 lib/win64"
 			elif self.host_os == utils.MAC:
 				lib_dir = utils.path_join(self.dir_source, "lib", "darwin-9.x.universal")
-				svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/windows lib/darwin-9.x.universal"
+				svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal"
 			else:
 				lib_dir = utils.path_join(self.dir_source, "lib", "linux")
 				svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/linux lib/linux"

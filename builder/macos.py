@@ -34,7 +34,7 @@ class MacBuilder(Builder):
 	def config(self):
 		sys.stdout.write("Generating build configuration:\n")
 		sys.stdout.write("  in: %s\n" % (self.user_config))
-		
+
 		if self.mode_test:
 			return
 
@@ -52,9 +52,10 @@ class MacBuilder(Builder):
 
 		# Cycles
 		#
-		uc.write("WITH_BF_CYCLES       = True\n")
-		uc.write("WITH_BF_OIIO         = True\n")
-		uc.write("\n")
+		if self.with_cycles:
+			uc.write("WITH_BF_CYCLES       = True\n")
+			uc.write("WITH_BF_OIIO         = True\n")
+			uc.write("\n")
 
 		uc.write("BF_QUIET    = True\n")
 		uc.write("BF_NUMJOBS  = %s\n" % (self.build_threads))
@@ -68,8 +69,8 @@ class MacBuilder(Builder):
 		uc.write("LCGDIR                   = '#../lib/darwin-9.x.universal'\n")
 		uc.write("LIBDIR                   = '#../lib/darwin-9.x.universal'\n")
 
-		uc.write("CC                       = 'gcc-4.2'\n")
-		uc.write("CXX                      = 'g++-4.2'\n")
+		uc.write("CC                       = 'gcc'\n")
+		uc.write("CXX                      = 'g++'\n")
 
 		uc.write("USE_SDK                  = True\n")
 		uc.write("WITH_GHOST_COCOA         = True\n")
@@ -91,14 +92,14 @@ class MacBuilder(Builder):
 		uc.write("REL_CCFLAGS = ['-DNDEBUG', '-O2','-ftree-vectorize','-msse','-msse2','-msse3','-mfpmath=sse']\n")
 		uc.write("REL_CFLAGS  = REL_CFLAGS + ['-march=core2','-mssse3','-with-tune=core2','-enable-threads']\n")
 		uc.write("REL_CCFLAGS = REL_CCFLAGS + ['-march=core2','-mssse3','-with-tune=core2','-enable-threads']\n")
-		
+
 		uc.write("\n")
 		uc.close()
 
 
 	def package(self):
 		release_path = utils.path_join(self.dir_release, "macos", self.build_arch)
-		
+
 		if not self.mode_test:
 			utils.path_create(release_path)
 

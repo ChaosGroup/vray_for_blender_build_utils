@@ -44,7 +44,7 @@ class MacBuilder(Builder):
 			uc.write("BF_DEBUG    = True\n")
 
 		uc.write("BF_INSTALLDIR = '%s'\n" % (self.dir_install_path))
-		uc.write("BF_BUILDDIR   = '/tmp/builder'\n")
+		uc.write("BF_BUILDDIR   = '/tmp/builder_%s'\n" % (self.build_arch))
 		uc.write("\n")
 
 		uc.write("WITH_BF_PLAYER = False\n")

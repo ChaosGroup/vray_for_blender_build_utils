@@ -36,24 +36,24 @@ class LinuxBuilder(Builder):
 			return
 
 		sys.stdout.write("Installing dependencies: ")
-		
+
 		if self.host_linux['short_name'] == 'ubuntu':
 			packages = "libspnav-dev subversion build-essential gettext libxi-dev libsndfile1-dev libpng12-dev libfftw3-dev libopenexr-dev libopenjpeg-dev libopenal-dev libalut-dev libvorbis-dev libglu1-mesa-dev libsdl-dev libfreetype6-dev libtiff4-dev libsamplerate0-dev libavdevice-dev libavformat-dev libavutil-dev libavcodec-dev libjack-dev libswscale-dev libx264-dev libmp3lame-dev python3.2-dev git-core libnotify-bin"
 			if self.generate_docs:
 				packages += " python-sphinx"
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo apt-get install %s" % packages)
-		
+
 		elif self.host_linux['short_name']  == 'opensuse':
 			packages = "scons gcc-c++ xorg-x11-devel Mesa-devel xorg-x11-libs zlib-devel libpng-devel xorg-x11 libjpeg-devel freetype2-devel libtiff-devel OpenEXR-devel SDL-devel openal-devel fftw3-devel libsamplerate-devel libjack-devel python3-devel libogg-devel libvorbis-devel freealut-devel update-desktop-files libtheora-devel subversion git-core gettext-tools"
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo zypper install %s" % packages)
-		
+
 		elif self.host_linux['short_name']  == 'redhat' or self.host_linux['short_name']  == 'fedora':
 			packages = "gcc-c++ subversion libpng-devel libjpeg-devel libXi-devel openexr-devel openal-soft-devel freealut-devel SDL-devel fftw-devel libtiff-devel lame-libs libsamplerate-devel freetype-devel jack-audio-connection-kit-devel ffmpeg-libs ffmpeg-devel xvidcore-devel libogg-devel faac-devel faad2-devel x264-devel libvorbis-devel libtheora-devel lame-devel python3 python3-devel python3-libs git-core"
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo yum install %s" % packages)
-		
+
 		elif self.host_linux['short_name']  == 'archlinux':
 			#spacenavd
 			packages = "desktop-file-utils ffmpeg fftw freetype2 hicolor-icon-theme libgl libxi mesa openal openimageio python"
@@ -65,14 +65,14 @@ class LinuxBuilder(Builder):
 
 		else:
 			sys.stdout.write("Your distribution doesn't support automatic dependencies installation.\n")
-		
+
 		sys.exit(0)
-	
+
 
 	def config(self):
 		sys.stdout.write("Generating build configuration:\n")
 		sys.stdout.write("  in: %s\n" % (self.user_config))
-		
+
 		if self.mode_test:
 			return
 
@@ -121,7 +121,7 @@ class LinuxBuilder(Builder):
 			build_options['True'].append('BF_DEBUG')
 
 		uc.write("BF_INSTALLDIR = '%s'\n" % (self.dir_install_path))
-		uc.write("BF_BUILDDIR   = '%s'\n" % (self.dir_build))
+		uc.write("BF_BUILDDIR   = '/tmp/builder_%s'\n" % (self.build_arch))
 		uc.write("\n")
 
 		uc.write("BF_OPENAL_LIB        = 'openal alut'\n")
@@ -132,7 +132,7 @@ class LinuxBuilder(Builder):
 		libpath = "/usr/lib"
 		if self.host_linux['short_name'] == 'opensuse':
 			libpath = "/usr/lib64"
-		
+
 		python_version = "3.2"
 		python_suffix  = utils.python_get_suffix("/usr/include/python", python_version)
 
@@ -144,7 +144,7 @@ class LinuxBuilder(Builder):
 		uc.write("BF_PYTHON_LIB        = 'python%s%s'\n" % (python_version,python_suffix))
 		uc.write("BF_PYTHON_LINKFLAGS  = ['-Xlinker', '-export-dynamic']\n")
 		uc.write("BF_PYTHON_LIB_STATIC = '/usr/lib/libpython%s%s.a'\n" % (python_version,python_suffix))
-	
+
 		uc.write("BF_TWEAK_MODE        = False\n")
 		uc.write("BF_NUMJOBS           = %i\n" % (self.build_threads))
 
@@ -181,10 +181,10 @@ class LinuxBuilder(Builder):
 
 		uc.close()
 
-	
+
 	def package(self):
 		release_path = os.path.join(self.dir_release, "linux", self.build_arch)
-		
+
 		if not self.mode_test:
 			utils.path_create(release_path)
 

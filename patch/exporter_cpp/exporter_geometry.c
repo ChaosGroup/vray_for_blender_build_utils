@@ -29,7 +29,8 @@
 #define WRITE_HEX_QUADFACE(f, face) fprintf(gfile, "%08X%08X%08X%08X%08X%08X", HEX(face->v1), HEX(face->v2), HEX(face->v3), HEX(face->v3), HEX(face->v4), HEX(face->v1))
 #define WRITE_HEX_TRIFACE(f, face)  fprintf(gfile, "%08X%08X%08X", HEX(face->v1), HEX(face->v2), HEX(face->v3))
 
-#define MAX_MESH_THREADS 16
+#define MAX_MESH_THREADS    16
+#define USE_STRING_POINTER  1
 
 struct Material;
 struct MTex;
@@ -1676,7 +1677,9 @@ static void export_meshes_threaded(char *filepath, Scene *sce, Main *bmain,
 static int export_scene_exec(bContext *C, wmOperator *op)
 {
     Main   *bmain = CTX_data_main(C);
-    Scene  *sce   = NULL;
+
+    Scene  *sce     = NULL;
+    char   *sce_ptr = NULL;
 
     int     fra  = 0;
     int     cfra = 0;
@@ -1691,12 +1694,19 @@ static int export_scene_exec(bContext *C, wmOperator *op)
     double  frame_time;
     char    time_str[32];
 
-    if(!sce) {
-        sce = (Scene*)G.main->scene.first;
+    if(RNA_struct_property_is_set(op->ptr, "scene")) {
+#if USE_STRING_POINTER
+        sce_ptr = (char*)malloc(32 * sizeof(char));
+        RNA_string_get(op->ptr, "scene", sce_ptr);
+        sce = atol(sce_ptr);
+        free(sce_ptr);
+#else
+        sce = RNA_int_get(op->ptr, "scene");
+#endif
     }
 
-    if(RNA_struct_property_is_set(op->ptr, "scene")) {
-        sce = RNA_int_get(op->ptr, "scene");
+    if(!sce) {
+        sce = (Scene*)G.main->scene.first;
     }
 
     if(RNA_struct_property_is_set(op->ptr, "filepath")) {
@@ -1809,8 +1819,14 @@ void VRAY_OT_export_meshes(wmOperatorType *ot)
     ot->modal  = export_scene_modal;
     ot->exec   = export_scene_exec;
 
+#if USE_STRING_POINTER
+    RNA_def_string(ot->srna, "scene", "", 32, "Scene", "Scene pointer");
+#else
     RNA_def_int(ot->srna, "scene", 0, INT_MIN, INT_MAX, "Scene", "Scene pointer", INT_MIN, INT_MAX);
+#endif
+
     RNA_def_string(ot->srna, "filepath", "", FILE_MAX, "Geometry filepath", "Geometry filepath");
+
     RNA_def_boolean(ot->srna, "use_active_layers", 0,  "Active layer",      "Export only active layers");
     RNA_def_boolean(ot->srna, "use_animation",     0,  "Animation",         "Export animation");
     RNA_def_boolean(ot->srna, "use_instances",     0,  "Instances",         "Use instances");

@@ -141,7 +141,7 @@ if options.revision:
 
 params['with_cycles'] = options.with_cycles
 
-params['use_deps_script'] = options.use_deps_scripts
+params['use_deps_script'] = options.use_deps_script
 
 builder = build_system.Builder(params)
 builder.build()

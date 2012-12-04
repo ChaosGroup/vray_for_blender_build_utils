@@ -82,7 +82,7 @@ static int write_dupli_node(const ExportThreadData *edata, const DupliObject *do
     Object   *ob = edata->ob;
     NodeData  node;
 
-    DEBUG_OUTPUT(TRUE, "Writing dupli %i for node %s", dob->index, ob->id.name+2);
+    // DEBUG_OUTPUT(TRUE, "Writing dupli %i for node %s", dob->index, ob->id.name+2);
 
     node.ob = dob->ob;
     copy_m4_m4(node.obmat, dob->omat);

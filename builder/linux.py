@@ -41,7 +41,7 @@ class LinuxBuilder(Builder):
 			packages = "libspnav-dev subversion build-essential gettext libxi-dev libsndfile1-dev libpng12-dev libfftw3-dev libopenexr-dev libopenjpeg-dev libopenal-dev libalut-dev libvorbis-dev libglu1-mesa-dev libsdl-dev libfreetype6-dev libtiff4-dev libsamplerate0-dev libavdevice-dev libavformat-dev libavutil-dev libavcodec-dev libjack-dev libswscale-dev libx264-dev libmp3lame-dev python3.2-dev git-core libnotify-bin"
 			if self.generate_docs:
 				packages += " python-sphinx"
-            packages += " libboost1.48-dev libboost-locale1.48-dev"
+			packages += " libboost1.48-dev libboost-locale1.48-dev"
 			sys.stdout.write("%s\n" % packages)
 			os.system("sudo apt-get install %s" % packages)
 

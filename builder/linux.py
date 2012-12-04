@@ -125,26 +125,35 @@ class LinuxBuilder(Builder):
 		uc.write("BF_BUILDDIR   = '/tmp/builder_%s'\n" % (self.build_arch))
 		uc.write("\n")
 
-		uc.write("BF_OPENAL_LIB        = 'openal alut'\n")
+		uc.write("BF_OPENAL_LIB = 'openal alut'\n")
 		uc.write("\n")
 
-		# Python settings
-		#
-		libpath = "/usr/lib"
-		if self.host_linux['short_name'] == 'opensuse':
-			libpath = "/usr/lib64"
+		if self.use_deps_script:
+			uc.write("BF_PYTHON = '/opt/python-3.3'\n")
+			uc.write("BF_PYTHON_ABI_FLAGS = 'm'\n")
+			uc.write("BF_OCIO = '/opt/ocio'\n")
+			uc.write("BF_OIIO = '/opt/oiio'\n")
+			uc.write("BF_FFMPEG = '/opt/ffmpeg'\n")
+			uc.write("BF_FFMPEG_LIB = 'avformat avcodec swscale avutil avdevice theoraenc theora theoradec vorbisenc vorbisfile vorbis xvidcore vpx mp3lame x264 openjpeg schroedinger-1.0'\n")
 
-		python_version = "3.2"
-		python_suffix  = utils.python_get_suffix("/usr/include/python", python_version)
+		else:
+			# Python settings
+			#
+			libpath = "/usr/lib"
+			if self.host_linux['short_name'] == 'opensuse':
+				libpath = "/usr/lib64"
 
-		uc.write("BF_PYTHON_VERSION    = '%s'\n" % (python_version))
-		uc.write("BF_PYTHON            = '/usr'\n")
-		uc.write("BF_PYTHON_LIBPATH    = '%s'\n" % (libpath))
-		uc.write("BF_PYTHON_BINARY     = '/usr/bin/python%s'\n" % (python_version))
-		uc.write("BF_PYTHON_INC        = '/usr/include/python%s%s'\n" % (python_version,python_suffix))
-		uc.write("BF_PYTHON_LIB        = 'python%s%s'\n" % (python_version,python_suffix))
-		uc.write("BF_PYTHON_LINKFLAGS  = ['-Xlinker', '-export-dynamic']\n")
-		uc.write("BF_PYTHON_LIB_STATIC = '/usr/lib/libpython%s%s.a'\n" % (python_version,python_suffix))
+			python_version = "3.2"
+			python_suffix  = utils.python_get_suffix("/usr/include/python", python_version)
+
+			uc.write("BF_PYTHON_VERSION    = '%s'\n" % (python_version))
+			uc.write("BF_PYTHON            = '/usr'\n")
+			uc.write("BF_PYTHON_LIBPATH    = '%s'\n" % (libpath))
+			uc.write("BF_PYTHON_BINARY     = '/usr/bin/python%s'\n" % (python_version))
+			uc.write("BF_PYTHON_INC        = '/usr/include/python%s%s'\n" % (python_version,python_suffix))
+			uc.write("BF_PYTHON_LIB        = 'python%s%s'\n" % (python_version,python_suffix))
+			uc.write("BF_PYTHON_LINKFLAGS  = ['-Xlinker', '-export-dynamic']\n")
+			uc.write("BF_PYTHON_LIB_STATIC = '/usr/lib/libpython%s%s.a'\n" % (python_version,python_suffix))
 
 		uc.write("BF_TWEAK_MODE        = False\n")
 		uc.write("BF_NUMJOBS           = %i\n" % (self.build_threads))

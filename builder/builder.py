@@ -120,6 +120,8 @@ class Builder:
 
 	exporter_cpp        = False
 
+	use_deps_script     = False
+
 
 	def __init__(self, params):
 		if not params:

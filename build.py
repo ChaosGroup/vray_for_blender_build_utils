@@ -73,6 +73,8 @@ parser.add_option('', '--debug',     action= 'store_true', dest= 'mode_debug', d
 parser.add_option('', '--test',      action= 'store_true', dest= 'mode_test',  default= False, help= "Test mode.")
 parser.add_option('', '--developer', action= 'store_true', dest= 'mode_devel', default= False, help= optparse.SUPPRESS_HELP) # Special mode used only by me =)
 
+parser.add_option('', '--use_deps_script', action='store_true', dest='use_deps_script', default=False, help="Use BF deps build script")
+
 
 (options, args) = parser.parse_args()
 
@@ -138,6 +140,8 @@ if options.revision:
 	params['checkout_revision'] = options.revision
 
 params['with_cycles'] = options.with_cycles
+
+params['use_deps_script'] = options.use_deps_scripts
 
 builder = build_system.Builder(params)
 builder.build()

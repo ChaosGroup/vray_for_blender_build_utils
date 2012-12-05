@@ -89,6 +89,7 @@ class Builder:
 
 	# Install dependencies
 	install_deps   = False
+	build_deps     = False
 
 	# Update sources
 	update_blender = True
@@ -117,10 +118,11 @@ class Builder:
 	osx_sdk             = "10.6"
 
 	with_cycles         = False
+	with_tracker        = False
+	with_cuda           = False
+	with_osl            = False
 
 	exporter_cpp        = False
-
-	use_deps_script     = False
 
 
 	def __init__(self, params):
@@ -227,32 +229,33 @@ class Builder:
 		if self.update_blender:
 			lib_dir = None
 			svn_cmd = None
-			if self.host_os == utils.WIN:
-				lib_dir = utils.path_join(self.dir_source, "lib", "windows")
-				svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/windows lib/windows"
-				if self.host_arch == "x86_64":
-					lib_dir = utils.path_join(self.dir_source, "lib", "win64")
-					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64 lib/win64"
-			elif self.host_os == utils.MAC:
-				lib_dir = utils.path_join(self.dir_source, "lib", "darwin-9.x.universal")
-				svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal"
-			else:
-				lib_dir = utils.path_join(self.dir_source, "lib", "linux")
-				svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/linux lib/linux"
-				if self.host_arch == "x86_64":
-					lib_dir = utils.path_join(self.dir_source, "lib", "linux64")
-					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/linux64 lib/linux64"
+			if self.host_os != utils.LNX:
+				if self.host_os == utils.WIN:
+					lib_dir = utils.path_join(self.dir_source, "lib", "windows")
+					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/windows lib/windows"
+					if self.host_arch == "x86_64":
+						lib_dir = utils.path_join(self.dir_source, "lib", "win64")
+						svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64 lib/win64"
+				elif self.host_os == utils.MAC:
+					lib_dir = utils.path_join(self.dir_source, "lib", "darwin-9.x.universal")
+					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal"
+				# else:
+				# 	lib_dir = utils.path_join(self.dir_source, "lib", "linux")
+				# 	svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/linux lib/linux"
+				# 	if self.host_arch == "x86_64":
+				# 		lib_dir = utils.path_join(self.dir_source, "lib", "linux64")
+				# 		svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/linux64 lib/linux64"
 
-			if not os.path.exists(lib_dir):
-				sys.stdout.write("Getting \"lib\" data...\n")
-				if not self.mode_test:
-					os.chdir(self.dir_source)
-					os.system(svn_cmd)
-			else:
-				sys.stdout.write("Updating \"lib\" data...\n")
-				if not self.mode_test:
-					os.chdir(lib_dir)
-					os.system("svn update")
+				if not os.path.exists(lib_dir):
+					sys.stdout.write("Getting \"lib\" data...\n")
+					if not self.mode_test:
+						os.chdir(self.dir_source)
+						os.system(svn_cmd)
+				else:
+					sys.stdout.write("Updating \"lib\" data...\n")
+					if not self.mode_test:
+						os.chdir(lib_dir)
+						os.system("svn update")
 
 		# Update V-Ray/Blender patchset
 		if self.update_patch and not self.mode_developer:
@@ -360,8 +363,9 @@ class Builder:
 			splash_filename = "splash.png"
 			splash_path_src = utils.path_join(patch_dir, "datafiles", splash_filename)
 			splash_path_dst = utils.path_join(datafiles_path, splash_filename)
-
-			shutil.copyfile(splash_path_src, splash_path_dst)
+			
+			if not self.mode_test:
+				shutil.copyfile(splash_path_src, splash_path_dst)
 
 
 	def docs(self):

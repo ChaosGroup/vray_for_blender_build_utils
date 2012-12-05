@@ -42,8 +42,12 @@ parser.add_option('', '--release',    action= 'store_true',  dest= 'release',   
 parser.add_option('', '--package',    action= 'store_true',  dest= 'package',     default= False,  help= "Create archive (Linux, Mac OS) or installer (Windows, NSIS required).")
 
 # Blender options
-parser.add_option('', '--collada',    action= 'store_true',  dest= 'collada',     default= False,  help= "Add OpenCollada support.")
-parser.add_option('', '--player',     action= 'store_true',  dest= 'player',      default= False,  help= "Build Blender Player.")
+parser.add_option('', '--with_collada', action= 'store_true',  dest= 'collada',      default= False,  help= "Add OpenCollada support.")
+parser.add_option('', '--with_player',  action= 'store_true',  dest= 'player',       default= False,  help= "Build Blender Player.")
+parser.add_option('', '--with_cycles',  action= 'store_true',  dest= 'with_cycles',  default= False,  help= "Add Cycles.")
+parser.add_option('', '--with_cuda',    action= 'store_true',  dest= 'with_cuda',    default= False,  help= "Build Cycles with CUDA kernels.")
+parser.add_option('', '--with_osl',     action= 'store_true',  dest= 'with_osl',     default= False,  help= "Build Cycles with OSL support.")
+parser.add_option('', '--with_tracker', action= 'store_true',  dest= 'with_tracker', default= False,  help= "Add motion tracker support.")
 
 # Updates
 parser.add_option('', '--upblender',                         dest= 'upblender',   default= 'on',   help= "Update Blender sources.", type= 'choice', choices=('on', 'off'))
@@ -51,7 +55,6 @@ parser.add_option('', '--uppatch',                           dest= 'uppatch',   
 
 # Building options
 parser.add_option('', '--exporter_cpp',action= 'store_true', dest= 'exporter_cpp',default= False,  help= "Use new cpp exporter.")
-parser.add_option('', '--with_cycles', action= 'store_true', dest= 'with_cycles', default= False,  help= "Add Cycles.")
 parser.add_option('', '--debug_build', action= 'store_true', dest= 'debug',       default= False,  help= "Debug build.")
 parser.add_option('', '--rebuild',     action= 'store_true', dest= 'rebuild',     default= False,  help= "Full rebuild.")
 parser.add_option('', '--revision',                          dest= 'revision',    default= "",     help= "Checkout particular SVN revision.")
@@ -64,16 +67,15 @@ if host_os == build_system.utils.MAC:
 	parser.add_option('', '--osx',                           dest= 'osx',         default= "10.6", help= "Mac OS X version.")
 	parser.add_option('', '--osx_arch',                      dest= 'osx_arch',    default= "x86",  help= "Mac OS X architecture.", type= 'choice', choices=('x86', 'x86_64'))
 if host_os == build_system.utils.LNX:
-	parser.add_option('', '--deps',    action= 'store_true', dest= 'deps',        default= False,  help= "Install dependencies (Gentoo, OpenSuse, Fedora, Ubuntu).")
-	parser.add_option('', '--docs',    action= 'store_true', dest= 'docs',        default= False,  help= "Build Python API documentation (python-sphinx required).")
-	parser.add_option('', '--desktop', action= 'store_true', dest= 'desktop',     default= False,  help= "Generate .desktop file.")
+	parser.add_option('', '--install_deps', action='store_true', dest='deps',       default=False,  help="Install dependencies (Gentoo, OpenSuse, Fedora, Ubuntu).")
+	parser.add_option('', '--build_deps',   action='store_true', dest='build_deps', default=False,  help="Bulid dependencies using BF build script.")
+	parser.add_option('', '--docs',         action='store_true', dest='docs',       default=False,  help="Build Python API documentation (python-sphinx required).")
+	parser.add_option('', '--desktop',      action='store_true', dest='desktop',    default=False,  help="Generate .desktop file.")
 
 # Script options
 parser.add_option('', '--debug',     action= 'store_true', dest= 'mode_debug', default= False, help= "Script debug output.")
 parser.add_option('', '--test',      action= 'store_true', dest= 'mode_test',  default= False, help= "Test mode.")
 parser.add_option('', '--developer', action= 'store_true', dest= 'mode_devel', default= False, help= optparse.SUPPRESS_HELP) # Special mode used only by me =)
-
-parser.add_option('', '--use_deps_script', action='store_true', dest='use_deps_script', default=False, help="Use BF deps build script")
 
 
 (options, args) = parser.parse_args()
@@ -124,6 +126,7 @@ params['exporter_cpp']   = options.exporter_cpp
 if host_os == build_system.utils.LNX:
 	params['generate_docs']  = options.docs
 	params['install_deps']   = options.deps
+	params['build_deps']     = options.build_deps
 
 if host_os == build_system.utils.MAC:
 	params['build_arch'] = options.osx_arch
@@ -140,8 +143,9 @@ if options.revision:
 	params['checkout_revision'] = options.revision
 
 params['with_cycles'] = options.with_cycles
+params['with_cuda']   = options.with_cuda
+params['with_osl']    = options.with_osl
 
-params['use_deps_script'] = options.use_deps_script
 
 builder = build_system.Builder(params)
 builder.build()

@@ -136,7 +136,7 @@ class LinuxBuilder(Builder):
 		uc.write("BF_OPENAL_LIB = 'openal alut'\n")
 		uc.write("\n")
 
-		if self.use_deps_script:
+		if self.use_build_deps:
 			uc.write("BF_PYTHON = '/opt/python-3.3'\n")
 			uc.write("BF_PYTHON_ABI_FLAGS = 'm'\n")
 			uc.write("BF_OCIO = '/opt/ocio'\n")

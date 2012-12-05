@@ -90,6 +90,7 @@ class Builder:
 	# Install dependencies
 	install_deps   = False
 	build_deps     = False
+	use_build_deps = False
 
 	# Update sources
 	update_blender = True

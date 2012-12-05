@@ -65,6 +65,8 @@ class LinuxBuilder(Builder):
 			else:
 				sys.stdout.write("Your distribution doesn't support automatic dependencies installation.\n")
 
+			sys.exit(0)
+
 		if self.build_deps:
 			os.chdir(self.dir_blender_svn)
 			cmd = "sudo ./build_files/build_environment/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source, "blender-deps"))
@@ -75,7 +77,7 @@ class LinuxBuilder(Builder):
 			os.system('sudo sh -c \"echo \"/opt/boost/lib\" > /etc/ld.so.conf.d/boost.conf\"')
 			os.system('sudo ldconfig')
 
-		sys.exit(0)
+			sys.exit(0)
 
 
 	def config(self):

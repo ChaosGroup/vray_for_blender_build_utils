@@ -141,6 +141,7 @@ class LinuxBuilder(Builder):
 			uc.write("BF_PYTHON_ABI_FLAGS = 'm'\n")
 			uc.write("BF_OCIO = '/opt/ocio'\n")
 			uc.write("BF_OIIO = '/opt/oiio'\n")
+			uc.write("BF_BOOST = '/opt/boost'\n")
 			uc.write("BF_FFMPEG = '/opt/ffmpeg'\n")
 			uc.write("BF_FFMPEG_LIB = 'avformat avcodec swscale avutil avdevice theoraenc theora theoradec vorbisenc vorbisfile vorbis xvidcore vpx mp3lame x264 openjpeg schroedinger-1.0'\n")
 

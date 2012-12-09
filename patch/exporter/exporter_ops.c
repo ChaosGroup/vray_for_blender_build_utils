@@ -32,6 +32,15 @@
 #include <time.h>
 #include <ctype.h>
 
+#include "BLI_utildefines.h"
+#include "BLI_linklist.h"
+#include "BLI_fileops.h"
+#include "BLI_listbase.h"
+#include "BLI_math.h"
+#include "BLI_path_util.h"
+#include "BLI_string.h"
+#include "BLI_threads.h"
+
 #include "BKE_main.h"
 #include "BKE_scene.h"
 #include "BKE_context.h"
@@ -73,14 +82,6 @@
 #include "DNA_modifier_types.h"
 #include "DNA_windowmanager_types.h"
 #include "DNA_particle_types.h"
-
-#include "BLI_linklist.h"
-#include "BLI_fileops.h"
-#include "BLI_listbase.h"
-#include "BLI_math.h"
-#include "BLI_path_util.h"
-#include "BLI_string.h"
-#include "BLI_threads.h"
 
 #include "PIL_time.h"
 

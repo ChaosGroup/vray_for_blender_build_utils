@@ -70,12 +70,20 @@ class LinuxBuilder(Builder):
 		if self.build_deps:
 			os.chdir(self.dir_blender_svn)
 			cmd = "sudo ./build_files/build_environment/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source, "blender-deps"))
+
 			if self.with_osl:
 				cmd += "  --with-osl"
-			os.system(cmd)
 
-			os.system('sudo sh -c \"echo \"/opt/boost/lib\" > /etc/ld.so.conf.d/boost.conf\"')
-			os.system('sudo ldconfig')
+			if self.mode_developer:
+				cmd += "  --all-static"
+
+			if self.mode_test:
+				print cmd
+			else:
+				os.system(cmd)
+
+				os.system('sudo sh -c \"echo \"/opt/boost/lib\" > /etc/ld.so.conf.d/boost.conf\"')
+				os.system('sudo ldconfig')
 
 			sys.exit(0)
 
@@ -143,9 +151,17 @@ class LinuxBuilder(Builder):
 			uc.write("BF_PYTHON_ABI_FLAGS = 'm'\n")
 			uc.write("BF_OCIO = '/opt/ocio'\n")
 			uc.write("BF_OIIO = '/opt/oiio'\n")
+
 			uc.write("BF_BOOST = '/opt/boost'\n")
+			uc.write("BF_BOOST_INC = '/opt/boost/include'\n")
+			uc.write("BF_BOOST_LIBPATH = '/opt/boost/lib'\n")
+
+			uc.write("WITH_BF_STATICFFMPEG = False\n") # FIXME!
+			#BF_FFMPEG_LIBPATH = '/opt/ffmpeg/lib'
+			#BF_FFMPEG_LIB_STATIC = '${BF_FFMPEG_LIBPATH}/libavcodec.a ${BF_FFMPEG_LIBPATH}/libavdevice.a ${BF_FFMPEG_LIBPATH}/libavfilter.a ${BF_FFMPEG_LIBPATH}/libavformat.a ${BF_FFMPEG_LIBPATH}/libavutil.a ${BF_FFMPEG_LIBPATH}/libswresample.a ${BF_FFMPEG_LIBPATH}/libswscale.a'
+
 			uc.write("BF_FFMPEG = '/opt/ffmpeg'\n")
-			uc.write("BF_FFMPEG_LIB = 'avformat avcodec swscale avutil avdevice theoraenc theora theoradec vorbisenc vorbisfile vorbis xvidcore vpx mp3lame x264 openjpeg schroedinger-1.0'\n")
+			uc.write("BF_FFMPEG_LIB = 'avformat avcodec swscale avutil avdevice theoraenc theora theoradec vorbisenc vorbisfile vorbis xvidcore vpx mp3lame x264 openjpeg'\n")
 
 		else:
 			# Python settings

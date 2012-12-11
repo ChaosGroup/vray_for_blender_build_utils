@@ -46,6 +46,7 @@ parser.add_option('', '--with_collada', action= 'store_true',  dest= 'collada', 
 parser.add_option('', '--with_player',  action= 'store_true',  dest= 'player',       default= False,  help= "Build Blender Player.")
 parser.add_option('', '--with_cycles',  action= 'store_true',  dest= 'with_cycles',  default= False,  help= "Add Cycles.")
 parser.add_option('', '--with_cuda',    action= 'store_true',  dest= 'with_cuda',    default= False,  help= "Build Cycles with CUDA kernels.")
+parser.add_option('', '--cuda_gpu',                            dest= 'cuda_gpu',     default= "sm_21",help= "CUDA GPU version.")
 parser.add_option('', '--with_osl',     action= 'store_true',  dest= 'with_osl',     default= False,  help= "Build Cycles with OSL support.")
 parser.add_option('', '--with_tracker', action= 'store_true',  dest= 'with_tracker', default= False,  help= "Add motion tracker support.")
 
@@ -146,6 +147,7 @@ if options.revision:
 
 params['with_cycles'] = options.with_cycles
 params['with_cuda']   = options.with_cuda
+params['cuda_gpu']    = options.cuda_gpu
 params['with_osl']    = options.with_osl
 
 

@@ -121,6 +121,7 @@ class Builder:
 	with_cycles         = False
 	with_tracker        = False
 	with_cuda           = False
+	cuda_gpu            = "sm_21"
 	with_osl            = False
 
 	exporter_cpp        = False
@@ -364,7 +365,7 @@ class Builder:
 			splash_filename = "splash.png"
 			splash_path_src = utils.path_join(patch_dir, "datafiles", splash_filename)
 			splash_path_dst = utils.path_join(datafiles_path, splash_filename)
-			
+
 			if not self.mode_test:
 				shutil.copyfile(splash_path_src, splash_path_dst)
 

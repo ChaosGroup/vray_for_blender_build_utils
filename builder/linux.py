@@ -126,10 +126,14 @@ class LinuxBuilder(Builder):
 			build_options['False'].append('WITH_BF_OIIO')
 			build_options['False'].append('WITH_BF_GAMEENGINE')
 		else:
+			build_options['True'].append('WITH_BF_GAMEENGINE')
 			if not self.with_cycles:
 				build_options['False'].append('WITH_BF_CYCLES')
 				build_options['False'].append('WITH_BF_OIIO')
-			build_options['True'].append('WITH_BF_GAMEENGINE')
+			else:
+				if self.with_cuda:
+					build_options['True'].append('WITH_BF_CYCLES_CUDA_BINARIES')
+					uc.write("BF_CYCLES_CUDA_BINARIES_ARCH = ['%s']\n" % (self.cuda_gpu))
 
 		if self.use_collada:
 			build_options['True'].append('WITH_BF_COLLADA')
@@ -182,8 +186,10 @@ class LinuxBuilder(Builder):
 			uc.write("BF_PYTHON_LINKFLAGS  = ['-Xlinker', '-export-dynamic']\n")
 			uc.write("BF_PYTHON_LIB_STATIC = '/usr/lib/libpython%s%s.a'\n" % (python_version,python_suffix))
 
-		uc.write("BF_TWEAK_MODE        = False\n")
-		uc.write("BF_NUMJOBS           = %i\n" % (self.build_threads))
+		uc.write("\n")
+
+		uc.write("BF_TWEAK_MODE = False\n")
+		uc.write("BF_NUMJOBS = %i\n" % (self.build_threads))
 
 		uc.write("\n")
 

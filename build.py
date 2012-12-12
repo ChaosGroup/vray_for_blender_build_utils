@@ -55,7 +55,7 @@ parser.add_option('', '--upblender',                         dest= 'upblender', 
 parser.add_option('', '--uppatch',                           dest= 'uppatch',     default= 'on',   help= "Update patch sources.", type= 'choice', choices=('on', 'off'))
 
 # Building options
-parser.add_option('', '--exporter_cpp',action= 'store_true', dest= 'exporter_cpp',default= False,  help= "Use new cpp exporter.")
+parser.add_option('', '--exporter_cpp',action= 'store_true', dest= 'exporter_cpp',default= True,   help= "Use new cpp exporter.")
 parser.add_option('', '--debug_build', action= 'store_true', dest= 'debug',       default= False,  help= "Debug build.")
 parser.add_option('', '--rebuild',     action= 'store_true', dest= 'rebuild',     default= False,  help= "Full rebuild.")
 parser.add_option('', '--revision',                          dest= 'revision',    default= "",     help= "Checkout particular SVN revision.")

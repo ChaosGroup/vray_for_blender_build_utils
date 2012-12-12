@@ -69,7 +69,7 @@ if host_os == build_system.utils.MAC:
 	parser.add_option('', '--osx_arch',                      dest= 'osx_arch',    default= "x86",  help= "Mac OS X architecture.", type= 'choice', choices=('x86', 'x86_64'))
 if host_os == build_system.utils.LNX:
 	parser.add_option('', '--build_deps',     action='store_true', dest='build_deps',     default=False,  help="Build dependencies using BF build script.")
-	parser.add_option('', '--use_build_deps', action='store_true', dest='use_build_deps', default=False,  help="Use builded dependencies.")
+	parser.add_option('', '--use_build_deps', action='store_true', dest='use_build_deps', default=True,   help="Use builded dependencies.")
 	parser.add_option('', '--install_deps', action='store_true', dest='deps',       default=False,  help="Install dependencies (Gentoo, OpenSuse, Fedora, Ubuntu).")
 	parser.add_option('', '--docs',         action='store_true', dest='docs',       default=False,  help="Build Python API documentation (python-sphinx required).")
 	parser.add_option('', '--desktop',      action='store_true', dest='desktop',    default=False,  help="Generate .desktop file.")

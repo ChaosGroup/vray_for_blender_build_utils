@@ -74,7 +74,7 @@ class LinuxBuilder(Builder):
 			if self.with_osl:
 				cmd += "  --with-osl"
 
-			if self.mode_developer:
+			if self.mode_release:
 				cmd += "  --all-static"
 
 			if self.mode_test:
@@ -133,7 +133,7 @@ class LinuxBuilder(Builder):
 			else:
 				if self.with_cuda:
 					build_options['True'].append('WITH_BF_CYCLES_CUDA_BINARIES')
-					uc.write("BF_CYCLES_CUDA_BINARIES_ARCH = ['%s']\n" % (self.cuda_gpu))
+					uc.write("BF_CYCLES_CUDA_BINARIES_ARCH = [%s]\n" % (','.join([ '"%s"'%(a) for a in self.cuda_gpu.split(',')])))
 
 		if self.use_collada:
 			build_options['True'].append('WITH_BF_COLLADA')
@@ -155,17 +155,28 @@ class LinuxBuilder(Builder):
 			uc.write("BF_PYTHON_ABI_FLAGS = 'm'\n")
 			uc.write("BF_OCIO = '/opt/ocio'\n")
 			uc.write("BF_OIIO = '/opt/oiio'\n")
-
 			uc.write("BF_BOOST = '/opt/boost'\n")
-			uc.write("BF_BOOST_INC = '/opt/boost/include'\n")
-			uc.write("BF_BOOST_LIBPATH = '/opt/boost/lib'\n")
-
-			uc.write("WITH_BF_STATICFFMPEG = False\n") # FIXME!
-			#BF_FFMPEG_LIBPATH = '/opt/ffmpeg/lib'
-			#BF_FFMPEG_LIB_STATIC = '${BF_FFMPEG_LIBPATH}/libavcodec.a ${BF_FFMPEG_LIBPATH}/libavdevice.a ${BF_FFMPEG_LIBPATH}/libavfilter.a ${BF_FFMPEG_LIBPATH}/libavformat.a ${BF_FFMPEG_LIBPATH}/libavutil.a ${BF_FFMPEG_LIBPATH}/libswresample.a ${BF_FFMPEG_LIBPATH}/libswscale.a'
 
 			uc.write("BF_FFMPEG = '/opt/ffmpeg'\n")
 			uc.write("BF_FFMPEG_LIB = 'avformat avcodec swscale avutil avdevice theoraenc theora theoradec vorbisenc vorbisfile vorbis xvidcore vpx mp3lame x264 openjpeg'\n")
+
+			uc.write("WITH_BF_STATICFFMPEG = False\n")
+			#BF_FFMPEG_LIBPATH = '/opt/ffmpeg/lib'
+			#BF_FFMPEG_LIB_STATIC = '${BF_FFMPEG_LIBPATH}/libavcodec.a ${BF_FFMPEG_LIBPATH}/libavdevice.a ${BF_FFMPEG_LIBPATH}/libavfilter.a ${BF_FFMPEG_LIBPATH}/libavformat.a ${BF_FFMPEG_LIBPATH}/libavutil.a ${BF_FFMPEG_LIBPATH}/libswresample.a ${BF_FFMPEG_LIBPATH}/libswscale.a'
+
+			if self.build_release:
+				uc.write("WITH_BF_OIIO = True\n")
+				uc.write("WITH_BF_STATICOIIO = True\n")
+				uc.write("BF_OIIO_LIBPATH = '${BF_OIIO}/lib'\n")
+				uc.write("BF_OIIO_LIB_STATIC = '${BF_OIIO_LIBPATH}/libOpenImageIO.a'\n")
+
+				uc.write("WITH_BF_BOOST = True\n")
+				uc.write("WITH_BF_STATICBOOST = True\n")
+				uc.write("BF_BOOST_INC = '/opt/boost/include'\n")
+				uc.write("BF_BOOST_LIBPATH = '/opt/boost/lib'\n")
+				uc.write("BF_BOOST_LIB_STATIC = '${BF_BOOST_LIBPATH}/libboost_regex.a ${BF_BOOST_LIBPATH}/libboost_date_time.a ${BF_BOOST_LIBPATH}/libboost_filesystem.a ${BF_BOOST_LIBPATH}/libboost_system.a ${BF_BOOST_LIBPATH}/libboost_thread.a ${BF_BOOST_LIBPATH}/libboost_locale.a'\n")
+			else:
+				uc.write("WITHOUT_BF_PYTHON_INSTALL = True\n")
 
 		else:
 			# Python settings
@@ -186,16 +197,16 @@ class LinuxBuilder(Builder):
 			uc.write("BF_PYTHON_LINKFLAGS  = ['-Xlinker', '-export-dynamic']\n")
 			uc.write("BF_PYTHON_LIB_STATIC = '/usr/lib/libpython%s%s.a'\n" % (python_version,python_suffix))
 
+			# Since blender is linked over external python
+			# we don't need to embed it
+			uc.write("WITHOUT_BF_PYTHON_INSTALL = True\n")
+			uc.write("\n")
 		uc.write("\n")
 
+		# uc.write("BF_QUIET = False\n")
 		uc.write("BF_TWEAK_MODE = False\n")
 		uc.write("BF_NUMJOBS = %i\n" % (self.build_threads))
 
-		uc.write("\n")
-
-		# Since blender is linked over external python
-		# we don't need to embed it
-		uc.write("WITHOUT_BF_PYTHON_INSTALL = True\n")
 		uc.write("\n")
 
 		# Write boolean options

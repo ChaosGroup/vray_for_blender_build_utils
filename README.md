@@ -1,4 +1,4 @@
-V-Ray/Blender 2.5 patchset
+V-Ray/Blender Patchset
+======================
 
 Documentation: http://github.com/bdancer/vb25-patch/wiki
-

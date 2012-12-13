@@ -74,7 +74,7 @@ class LinuxBuilder(Builder):
 			if self.with_osl:
 				cmd += "  --with-osl"
 
-			if self.mode_release:
+			if self.build_release:
 				cmd += "  --all-static"
 
 			if self.mode_test:

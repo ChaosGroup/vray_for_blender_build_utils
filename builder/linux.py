@@ -158,7 +158,7 @@ class LinuxBuilder(Builder):
 			uc.write("BF_BOOST = '/opt/boost'\n")
 
 			uc.write("BF_FFMPEG = '/opt/ffmpeg'\n")
-			uc.write("BF_FFMPEG_LIB = 'avformat avcodec swscale avutil avdevice theoraenc theora theoradec vorbisenc vorbisfile vorbis xvidcore vpx mp3lame x264 openjpeg'\n")
+			uc.write("BF_FFMPEG_LIB = 'avformat avcodec swscale avutil avdevice theoraenc theora theoradec vorbisenc vorbisfile vorbis x264 openjpeg'\n")
 
 			uc.write("WITH_BF_STATICFFMPEG = False\n")
 			#BF_FFMPEG_LIBPATH = '/opt/ffmpeg/lib'

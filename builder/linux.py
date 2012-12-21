@@ -77,6 +77,9 @@ class LinuxBuilder(Builder):
 			if self.build_release:
 				cmd += "  --all-static"
 
+			# if self.build_release:
+			# 	cmd += " --force-all"
+
 			if self.mode_test:
 				print cmd
 			else:
@@ -156,6 +159,7 @@ class LinuxBuilder(Builder):
 			uc.write("BF_OCIO = '/opt/ocio'\n")
 			uc.write("BF_OIIO = '/opt/oiio'\n")
 			uc.write("BF_BOOST = '/opt/boost'\n")
+			uc.write("WITH_BF_BOOST = True\n")
 
 			uc.write("BF_FFMPEG = '/opt/ffmpeg'\n")
 			uc.write("BF_FFMPEG_LIB = 'avformat avcodec swscale avutil avdevice theoraenc theora theoradec vorbisenc vorbisfile vorbis x264 openjpeg'\n")
@@ -170,7 +174,6 @@ class LinuxBuilder(Builder):
 				uc.write("BF_OIIO_LIBPATH = '${BF_OIIO}/lib'\n")
 				uc.write("BF_OIIO_LIB_STATIC = '${BF_OIIO_LIBPATH}/libOpenImageIO.a'\n")
 
-				uc.write("WITH_BF_BOOST = True\n")
 				uc.write("WITH_BF_STATICBOOST = True\n")
 				uc.write("BF_BOOST_INC = '/opt/boost/include'\n")
 				uc.write("BF_BOOST_LIBPATH = '/opt/boost/lib'\n")

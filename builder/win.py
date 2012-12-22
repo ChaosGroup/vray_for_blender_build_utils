@@ -35,7 +35,7 @@ class WindowsBuilder(Builder):
 	def config(self):
 		sys.stdout.write("Generating build configuration:\n")
 		sys.stdout.write("  in: %s\n" % (self.user_config))
-		
+
 		if self.mode_test:
 			return
 
@@ -71,7 +71,7 @@ class WindowsBuilder(Builder):
 			build_options['False'].append('WITH_BF_SNDFILE')
 			build_options['False'].append('WITH_BF_FFMPEG')
 			build_options['False'].append('WITH_BF_OPENAL')
-			
+
 			uc.write("LCGDIR = '#../lib/win64'\n")
 			uc.write("LIBDIR = '${LCGDIR}'\n")
 			uc.write("BF_PNG_LIB = 'libpng'\n")
@@ -96,8 +96,6 @@ class WindowsBuilder(Builder):
 		uc.write("BF_TWEAK_MODE     = False\n")
 		uc.write("BF_NUMJOBS        = %s\n" % (self.build_threads))
 
-		uc.write("BF_PYTHON_VERSION = '3.2'\n")
-
 		# Cycles
 		#
 		if not self.with_cycles:
@@ -109,19 +107,19 @@ class WindowsBuilder(Builder):
 		for key in build_options:
 			for opt in build_options[key]:
 				uc.write("{0:25} = {1}\n".format(opt, key))
-		
+
 		uc.write("\n")
 		uc.close()
 
 
 	def package(self):
 		release_path = os.path.join(self.dir_release, "windows", self.build_arch)
-		
+
 		if not self.mode_test:
 			utils.path_create(release_path)
 
 		director_size = 0
-		
+
 		# Example: vrayblender-2.60-42181-windows-x86_64.exe
 		installer_name = "%s-%s-%s-windows-%s.exe" % (self.project, self.version, self.revision, self.build_arch)
 		installer_path = utils.path_slashify(utils.path_join(release_path, installer_name))
@@ -140,14 +138,14 @@ class WindowsBuilder(Builder):
 		nsis = nsis.replace('{INSTALLER_OUTFILE}', installer_path)
 		nsis = nsis.replace('{VERSION}', self.version)
 		nsis = nsis.replace('{REVISION}', self.revision)
-		
+
 		installer_files   = ""
 		uninstaller_files = []
 
 		for dirpath, dirnames, filenames in os.walk(self.dir_install_path):
 			if dirpath.endswith('__pycache__'):
 				continue
-			
+
 			_dirpath = os.path.normpath(dirpath).replace( os.path.normpath(self.dir_install_path), "" )
 
 			if installer_log:
@@ -159,12 +157,12 @@ class WindowsBuilder(Builder):
 
 			for f in os.listdir(dirpath):
 				f_path = os.path.join(dirpath, f)
-				
+
 				if os.path.isdir(f_path):
 					continue
-				
+
 				basepath, basename = os.path.split(f_path)
-				
+
 				if installer_log:
 					installer_files += '\t${File} "%s" "%s" "$VB_TMP"\n' % (basepath, basename)
 				else:
@@ -182,7 +180,7 @@ class WindowsBuilder(Builder):
 		installer_dir = utils.path_join(self.dir_source, "vb25-patch", "installer")
 
 		template = utils.path_join(installer_dir, "installer.nsi")
-		
+
 		open(template, 'w').write(nsis)
 
 		makensis_exe = utils.find_makensis()
@@ -196,7 +194,7 @@ class WindowsBuilder(Builder):
 		if not self.mode_test:
 			os.chdir(installer_dir)
 			proc = subprocess.call(cmd)
-	
-	
+
+
 	def post_init(self):
 		pass

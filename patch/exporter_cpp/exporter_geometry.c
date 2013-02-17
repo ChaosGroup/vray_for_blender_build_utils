@@ -739,7 +739,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 // Taken from: source/blender/makesrna/intern/rna_object_api.c
 // with a slight modifications
 //
-static Mesh *get_render_mesh(Scene *sce, Object *ob)
+static Mesh *get_render_mesh(Scene *sce, Main *bmain, Object *ob)
 {
     Mesh *tmpmesh;
     Curve *tmpcu = NULL, *copycu;
@@ -796,7 +796,7 @@ static Mesh *get_render_mesh(Scene *sce, Object *ob)
         if (ob != basis_ob)
             return NULL; /* only do basis metaball */
 
-        tmpmesh = BKE_mesh_add("Mesh");
+        tmpmesh = BKE_mesh_add(bmain, "Mesh");
 
         BKE_displist_make_mball_forRender(sce, ob, &disp);
         BKE_mesh_from_metaball(&disp, tmpmesh);
@@ -808,7 +808,7 @@ static Mesh *get_render_mesh(Scene *sce, Object *ob)
         /* Write the render mesh into the dummy mesh */
         dm = mesh_create_derived_render(sce, ob, mask);
 
-        tmpmesh = BKE_mesh_add("Mesh");
+        tmpmesh = BKE_mesh_add(bmain, "Mesh");
         DM_to_mesh(dm, tmpmesh, ob);
         dm->release(dm);
 
@@ -1390,7 +1390,7 @@ static void *export_meshes_thread(void *ptr)
             // Export mesh
             pthread_mutex_lock(&mtx);
 
-            mesh = get_render_mesh(sce, ob);
+            mesh = get_render_mesh(sce, bmain, ob);
 
             pthread_mutex_unlock(&mtx);
 

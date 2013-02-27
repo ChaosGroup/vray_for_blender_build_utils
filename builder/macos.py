@@ -38,6 +38,10 @@ class MacBuilder(Builder):
 		if self.mode_test:
 			return
 
+		if self.user_user_config:
+			open(self.user_config, 'w').write(open(self.user_user_config, 'r').read())
+			return
+
 		uc= open(self.user_config, 'w')
 
 		if self.use_debug:

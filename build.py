@@ -79,6 +79,8 @@ parser.add_option('', '--debug',     action= 'store_true', dest= 'mode_debug', d
 parser.add_option('', '--test',      action= 'store_true', dest= 'mode_test',  default= False, help= "Test mode.")
 parser.add_option('', '--developer', action= 'store_true', dest= 'mode_devel', default= False, help= optparse.SUPPRESS_HELP) # Special mode used only by me =)
 
+parser.add_option('', '--user_config', dest='user_user_config', default="", help="User defined user-config.py")
+
 
 (options, args) = parser.parse_args()
 
@@ -150,6 +152,8 @@ params['with_cuda']   = options.with_cuda
 params['cuda_gpu']    = options.cuda_gpu
 params['with_osl']    = options.with_osl
 
+if options.user_user_config:
+	params['user_user_config'] = options.user_user_config
 
 builder = build_system.Builder(params)
 builder.build()

@@ -115,6 +115,9 @@ class Builder:
 	# user-config.py file path
 	user_config         = ""
 
+	# Use user defined user-config.py
+	user_user_config    = ""
+
 	# Max OS X specific
 	osx_sdk             = "10.6"
 
@@ -411,6 +414,9 @@ class Builder:
 		self.dir_blender      = utils.path_join(self.dir_source, "blender")
 		self.dir_blender_svn  = utils.path_join(self.dir_source, "blender-svn")
 		self.user_config      = utils.path_join(self.dir_blender, "user-config.py")
+
+		if self.user_user_config:
+			self.user_user_config = utils.pathExpand(self.user_user_config)
 
 
 	def config(self):

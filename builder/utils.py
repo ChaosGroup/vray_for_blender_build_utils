@@ -124,6 +124,19 @@ def path_join(*args):
 	return path
 
 
+def pathExpand(path):
+	path = os.path.expanduser(path)
+
+	if path.startswith("./"):
+		path = os.path.normpath(os.path.join(os.getcwd(), path))
+
+	if get_host_os() != WIN:
+		if not path.startswith("/"):
+			path = os.path.normpath(os.path.join(os.getcwd(), path))
+
+	return path
+
+
 def which(program):
 	"""
 	  Returns full path of "program" or None

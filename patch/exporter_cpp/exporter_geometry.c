@@ -713,6 +713,9 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 
 
         fprintf(gfile, "\n\topacity=1.0;");
+        if(psys->part->flag & PART_HAIR_BSPLINE) {
+            fprintf(gfile, "\n\tgeom_splines=1;");
+        }
         fprintf(gfile, "\n}\n\n");
 
 

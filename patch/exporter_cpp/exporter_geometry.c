@@ -1417,7 +1417,7 @@ static void *export_meshes_thread(void *ptr)
     fclose(gfile);
 
     if(debug) {
-        BLI_timestr(PIL_check_seconds_timer() - time, time_str);
+        BLI_timestr(PIL_check_seconds_timer() - time, time_str, sizeof(time_str));
         printf("V-Ray/Blender: Mesh export thread [%d] done [%s]\n", td->id + 1, time_str);
     }
 
@@ -1772,7 +1772,7 @@ static int export_scene_exec(bContext *C, wmOperator *op)
                 export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 1);
 
                 if(!debug) {
-                    BLI_timestr(PIL_check_seconds_timer()-frame_time, time_str);
+                    BLI_timestr(PIL_check_seconds_timer()-frame_time, time_str, sizeof(time_str));
                     printf(" done [%s]\n", time_str);
                 }
 
@@ -1786,7 +1786,7 @@ static int export_scene_exec(bContext *C, wmOperator *op)
             export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 0);
         }
 
-        BLI_timestr(PIL_check_seconds_timer()-time, time_str);
+        BLI_timestr(PIL_check_seconds_timer()-time, time_str, sizeof(time_str));
         printf("V-Ray/Blender: Exporting meshes done [%s]%-32s\n", time_str, " ");
 
         free(filepath);

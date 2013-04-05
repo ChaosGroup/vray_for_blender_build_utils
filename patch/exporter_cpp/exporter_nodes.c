@@ -175,7 +175,7 @@ static int export_nodes_exec(bContext *C, wmOperator *op)
     }
 
     // Measure time
-    BLI_timestr(PIL_check_seconds_timer()-time, time_str);
+    BLI_timestr(PIL_check_seconds_timer()-time, time_str, sizeof(time_str));
     DEBUG_OUTPUT(TRUE, "Exporting nodes done [%s]%-32s", time_str, " ");
 
     // Clean up

@@ -66,10 +66,11 @@ static char clean_string[MAX_IDPROP_NAME];
 //
 static int is_numeric(const char *s)
 {
+    int res = 0;
     char *p;
     if(s == NULL || *s == '\0' || isspace(*s))
         return 0;
-    strtod(s, &p);
+    res = strtod(s, &p);
     return *p == '\0';
 }
 
@@ -1115,7 +1116,7 @@ static void write_GeomStaticMesh(FILE *gfile,
 }
 
 
-static void write_TexVoxelData(FILE *gfile, const Scene *sce, const Object *ob, const SmokeModifierData *smd, short use_smoke_hires)
+static void write_TexVoxelData(FILE *gfile, const Scene *sce, Object *ob, const SmokeModifierData *smd, short use_smoke_hires)
 {
     VoxelData *vd   = NULL;
     Material  *ma   = NULL;
@@ -1510,7 +1511,8 @@ static void export_meshes_threaded(char *filepath, Scene *sce, Main *bmain,
     Tex      *tex;
 
     pthread_t threads[MAX_MESH_THREADS];
-    int       threads_count= 1;
+    int       threads_count = 1;
+    int       _threadsCount = 0;
     int       t;
 
     UVLayer  *uv_layer;
@@ -1525,15 +1527,36 @@ static void export_meshes_threaded(char *filepath, Scene *sce, Main *bmain,
     LinkNode *meshes= NULL;
 
     PointerRNA rna_tex;
+    PointerRNA rna_scene;
+
+    PointerRNA VRayScene;
+    PointerRNA VRayExporter;
     PointerRNA VRayTexture;
 
-    if(sce->r.mode & R_FIXED_THREADS)
-        threads_count= sce->r.threads;
-    else
-        threads_count= BLI_system_thread_count();
+    if(sce->r.mode & R_FIXED_THREADS) {
+        threads_count = sce->r.threads;
+    }
+    else {
+        threads_count = BLI_system_thread_count();
+    }
+
+    // Get mesh exporter threads cout override from RNA
+    RNA_id_pointer_create(&sce->id, &rna_scene);
+    if(RNA_struct_find_property(&rna_scene, "vray")) {
+        VRayScene = RNA_pointer_get(&rna_scene, "vray");
+
+        if(RNA_struct_find_property(&VRayScene, "exporter")) {
+            VRayExporter = RNA_pointer_get(&VRayScene, "exporter");
+
+            _threadsCount = RNA_int_get(&VRayExporter, "meshExportThreads");
+            if(_threadsCount) {
+                threads_count = _threadsCount;
+            }
+        }
+    }
 
     if(threads_count > MAX_MESH_THREADS)
-        threads_count= MAX_MESH_THREADS;
+        threads_count = MAX_MESH_THREADS;
 
     /*
       Preprocess textures to find proper UV channel indexes

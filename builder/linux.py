@@ -164,7 +164,11 @@ class LinuxBuilder(Builder):
 		uc.write("BF_BOOST = '/opt/boost'\n")
 		uc.write("WITH_BF_BOOST = True\n")
 
-		uc.write("BF_FFMPEG = '/opt/ffmpeg'\n")
+		if self.mode_developer:
+			# uc.write("BF_FFMPEG = '/usr/local'\n")
+			uc.write("BF_FFMPEG = '/opt/ffmpeg'\n")
+		else:
+			uc.write("BF_FFMPEG = '/opt/ffmpeg'\n")
 		uc.write("BF_FFMPEG_LIB = 'avformat avcodec swscale avutil avdevice theoraenc theora theoradec vorbisenc vorbisfile vorbis x264 openjpeg'\n")
 
 		uc.write("WITH_BF_STATICFFMPEG = False\n")

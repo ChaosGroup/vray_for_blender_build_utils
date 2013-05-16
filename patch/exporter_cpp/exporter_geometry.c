@@ -813,7 +813,7 @@ static Mesh *get_render_mesh(Scene *sce, Main *bmain, Object *ob)
         dm = mesh_create_derived_render(sce, ob, mask);
 
         tmpmesh = BKE_mesh_add(bmain, "Mesh");
-        DM_to_mesh(dm, tmpmesh, ob);
+        DM_to_mesh(dm, tmpmesh, ob, mask);
         dm->release(dm);
 
         break;

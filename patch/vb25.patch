@@ -63,15 +63,16 @@
  	ED_operatortypes_anim();
  	ED_operatortypes_animchannels();
 
---- source/blender/editors/space_api/SConscript	2011-10-25 11:38:16.371086801 +0400
-+++ source/blender/editors/space_api/SConscript	2011-11-26 18:50:52.114119258 +0400
-@@ -6,6 +6,7 @@
- incs = '../include ../../blenlib ../../blenkernel ../../blenloader ../../makesdna'
- incs += ' ../../windowmanager ../../python ../../makesrna ../../bmesh'
- incs += ' #/intern/guardedalloc #/extern/glew/include'
-+incs += ' ../../exporter'
-
- defs = ''
+--- source/blender/editors/space_api/SConscript	2013-05-26 17:22:25.962599458 +0400
++++ source/blender/editors/space_api/SConscript	2013-05-26 17:27:31.125898040 +0400
+@@ -42,6 +42,7 @@
+     '../../makesrna',
+     '../../python',
+     '../../windowmanager',
++    '../../exporter'
+     ]
+ incs = ' '.join(incs)
+ 
 
 --- source/blender/makesrna/intern/rna_texture.c	2011-11-26 18:38:44.088142414 +0400
 +++ source/blender/makesrna/intern/rna_texture.c	2011-11-26 18:59:28.344102839 +0400

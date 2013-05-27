@@ -372,6 +372,13 @@ class Builder:
 			if not self.mode_test:
 				shutil.copyfile(splash_path_src, splash_path_dst)
 
+				# Change icons
+				for icons_filename in ["blender_icons16.png", "blender_icons32.png"]:
+					icons_path_src = utils.path_join(patch_dir, "datafiles", icons_filename)
+					icons_path_dst = utils.path_join(datafiles_path, icons_filename)
+
+					shutil.copyfile(icons_path_src,  icons_path_dst)
+
 
 	def docs(self):
 		if self.generate_docs:

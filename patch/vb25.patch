@@ -3,7 +3,7 @@
 @@ -841,6 +841,8 @@
  		bf_editor_mask
  		bf_editor_io
- 
+
 +		vb_exporter
 +
  		bf_render
@@ -28,7 +28,7 @@
  add_subdirectory(makesdna)
  add_subdirectory(makesrna)
 +add_subdirectory(exporter)
- 
+
  if(WITH_COMPOSITOR)
  	add_subdirectory(opencl)  # later on this may be used more generally
 
@@ -48,15 +48,15 @@
 @@ -65,6 +65,8 @@
  #include "ED_mask.h"
  #include "ED_sequencer.h"
- 
+
 +#include "ED_exporter.h"
 +
  #include "io_ops.h"
- 
+
  /* only call once on startup, storage is global in BKE kernel listbase */
 @@ -98,6 +100,7 @@
  //	...
- 	
+
  	/* register operator types for screen and all spaces */
 +	ED_operatortypes_exporter();
  	ED_operatortypes_screen();
@@ -72,7 +72,7 @@
 +    '../../exporter'
      ]
  incs = ' '.join(incs)
- 
+
 
 --- source/blender/makesrna/intern/rna_texture.c	2011-11-26 18:38:44.088142414 +0400
 +++ source/blender/makesrna/intern/rna_texture.c	2011-11-26 18:59:28.344102839 +0400
@@ -80,7 +80,7 @@
 
  EnumPropertyItem texture_type_items[] = {
  	{0, "NONE", 0, "None", ""},
-+	{TEX_VRAY, "VRAY", ICON_TEXTURE, "V-Ray", ""},
++	{TEX_VRAY, "VRAY", ICON_VRAY_LOGO, "V-Ray", ""},
  	{TEX_BLEND, "BLEND", ICON_TEXTURE, "Blend", "Procedural - create a ramp texture"},
  	{TEX_CLOUDS, "CLOUDS", ICON_TEXTURE, "Clouds", "Procedural - create a cloud-like fractal noise texture"},
  	{TEX_DISTNOISE, "DISTORTED_NOISE", ICON_TEXTURE,
@@ -112,7 +112,7 @@
 @@ -279,9 +279,11 @@
  DEF_ICON(RNA)
  DEF_ICON(RNA_ADD)
- 
+
 +	/* V-Ray Icons */
 +DEF_ICON(VRAY_LOGO)
 +

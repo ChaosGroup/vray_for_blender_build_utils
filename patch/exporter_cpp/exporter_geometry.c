@@ -417,20 +417,48 @@ static float c_spline_eval(int n, float u, float x[], float y[],
 }
 
 
+typedef struct ParticleStrandData {
+    float *uvco;
+    int    totuv;
+} ParticleStrandData;
+
+
+static void get_particle_uvco_mcol(short from, DerivedMesh *dm, float *fuv, int num, ParticleStrandData *sd)
+{
+    int i;
+
+    /* get uvco */
+    if (sd->uvco && ELEM(from, PART_FROM_FACE, PART_FROM_VOLUME)) {
+        for (i=0; i<sd->totuv; i++) {
+            if (num != DMCACHE_NOTFOUND) {
+                MFace  *mface  = dm->getTessFaceData(dm, num, CD_MFACE);
+                MTFace *mtface = (MTFace*)CustomData_get_layer_n(&dm->faceData, CD_MTFACE, i);
+                mtface += num;
+
+                psys_interpolate_uvs(mtface, mface->v4, fuv, sd->uvco + 2 * i);
+            }
+            else {
+                sd->uvco[2*i] = 0.0f;
+                sd->uvco[2*i + 1] = 0.0f;
+            }
+        }
+    }
+}
+
+
 static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 {
     int    i, c, p, s;
     float  f;
     float  t;
 
-    ParticleSystem   *psys;
-    ParticleSettings *pset;
-
+    ParticleSystem             *psys = NULL;
+    ParticleSettings           *pset = NULL;
     ParticleSystemModifierData *psmd = NULL;
 
-    ParticleData     *pa;
-
-    HairKey          *hkey;
+    ParticleData       *pa   = NULL;
+    HairKey            *hkey = NULL;
+    ParticleStrandData  sd;
 
     ParticleCacheKey **child_cache;
     ParticleCacheKey  *child_key;
@@ -443,6 +471,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
     float     color[3] = {0.5f,0.5f,0.5f};
     float     width = 0.001f;
     float     cone_width = 0.001f;
+    int       num = -1;
 
     int       spline_init_flag;
     int       interp_points_count;
@@ -458,7 +487,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 
     int       spline_last[3];
 
-    short     use_cone    = 0;
+    short     use_cone    = 1;
     short     use_child   = 0;
     short     free_edit   = 0;
     short     need_recalc = 0;
@@ -485,8 +514,10 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         }
 
         psmd = psys_get_modifier(ob, psys);
-
         if(!psmd) {
+            continue;
+        }
+        if(!(psmd->modifier.mode & eModifierMode_Render)) {
             continue;
         }
 
@@ -511,7 +542,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         display_percentage       = pset->disp;
         display_percentage_child = pset->child_nbr;
 
-        // Check if particles are edited
+        // Check if particles are editedgit@github.com:bdancer/vrayblender.git
         free_edit = psys_check_edited(psys);
 
         // Recalc parent hair only if they are not
@@ -623,7 +654,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
             LOOP_PARTICLES {
                 DEBUG_OUTPUT(debug, "\033[0;32mV-Ray/Blender:\033[0m Particle system: %s => Hair: %i\n", psys->name, p + 1);
 
-                psys_mat_hair_to_object(ob, psmd->dm, psmd->psys->part->from, pa, hairmat);
+                psys_mat_hair_to_object(NULL, psmd->dm, psmd->psys->part->from, pa, hairmat);
 
                 // Spline interpolation
                 data_points_count = pa->totkey;
@@ -668,6 +699,47 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         }
         fprintf(gfile,"\")));");
 
+        memset(&sd, 0, sizeof(ParticleStrandData));
+
+        // DEBUG_OUTPUT(TRUE, "psmd->dm = 0x%X", psmd->dm);
+
+        if(psmd->dm && !use_child) {
+            sd.totuv = CustomData_number_of_layers(&psmd->dm->faceData, CD_MTFACE);
+
+            if(sd.totuv) {
+                sd.uvco = MEM_callocN(sd.totuv * 2 * sizeof(float), "particle_uvs");
+            }
+            else {
+                sd.uvco = NULL;
+            }
+
+            if(sd.uvco) {
+                fprintf(gfile, "\n\tstrand_uvw=interpolate((%d,ListVectorHex(\"", sce->r.cfra);
+                LOOP_PARTICLES {
+                    /* get uvco & mcol */
+                    num = pa->num_dmcache;
+
+                    if(num == DMCACHE_NOTFOUND) {
+                        if(pa->num < psmd->dm->getNumTessFaces(psmd->dm)) {
+                            num = pa->num;
+                        }
+                    }
+
+                    get_particle_uvco_mcol(pset->from, psmd->dm, pa->fuv, num, &sd);
+
+                    // DEBUG_OUTPUT(TRUE, "Pa.uv = %.3f, %.3f", sd.uvco[0], sd.uvco[1]);
+
+                    segment[0] = sd.uvco[0];
+                    segment[1] = sd.uvco[1];
+                    segment[2] = 0.0f;
+
+                    WRITE_HEX_VECTOR(gfile, segment);
+                }
+                fprintf(gfile,"\")));");
+
+                MEM_freeN(sd.uvco);
+            }
+        }
 
         fprintf(gfile, "\n\twidths=interpolate((%d,ListFloatHex(\"", sce->r.cfra);
         if(use_child) {

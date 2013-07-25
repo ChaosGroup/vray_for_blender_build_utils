@@ -911,6 +911,7 @@ static void write_GeomStaticMesh(FILE *gfile,
     Mesh   *me = ob->data;
     MFace  *face;
     MTFace *mtface;
+    MCol   *mcol;
     MVert  *vert;
 
     CustomData *fdata;
@@ -919,6 +920,10 @@ static void write_GeomStaticMesh(FILE *gfile,
     int    fve[4];
     float *ve[4];
     float  no[3];
+    float  col[3];
+
+    float  fno[3];
+    float  n0[3], n1[3], n2[3], n3[3];
 
     int    matid       = 0;
     int    uv_count    = 0;
@@ -994,8 +999,9 @@ static void write_GeomStaticMesh(FILE *gfile,
 
 
     fprintf(gfile,"\tnormals= interpolate((%d, ListVectorHex(\"", sce->r.cfra);
-    face= mesh->mface;
-    for(f= 0; f < mesh->totface; ++face, ++f) {
+    face = mesh->mface;
+    for(f = 0; f < mesh->totface; ++face, ++f) {
+#if 0
         fve[0]= face->v1;
         fve[1]= face->v2;
         fve[2]= face->v3;
@@ -1035,6 +1041,42 @@ static void write_GeomStaticMesh(FILE *gfile,
                         htonl(*(int*)&(no[2])));
             }
         }
+#else
+        if(face->flag & ME_SMOOTH) {
+            normal_short_to_float_v3(n0, mesh->mvert[face->v1].no);
+            normal_short_to_float_v3(n1, mesh->mvert[face->v2].no);
+            normal_short_to_float_v3(n2, mesh->mvert[face->v3].no);
+
+            if(face->v4)
+                normal_short_to_float_v3(n3, mesh->mvert[face->v4].no);
+        }
+        else {
+            if(face->v4)
+                normal_quad_v3(fno, mesh->mvert[face->v1].co, mesh->mvert[face->v2].co, mesh->mvert[face->v3].co, mesh->mvert[face->v4].co);
+            else
+                normal_tri_v3(fno,  mesh->mvert[face->v1].co, mesh->mvert[face->v2].co, mesh->mvert[face->v3].co);
+
+            copy_v3_v3(n0, fno);
+            copy_v3_v3(n1, fno);
+            copy_v3_v3(n2, fno);
+
+            if(face->v4)
+                copy_v3_v3(n3, fno);
+        }
+
+        if(face->v4) {
+            WRITE_HEX_VECTOR(gfile, n0);
+            WRITE_HEX_VECTOR(gfile, n1);
+            WRITE_HEX_VECTOR(gfile, n2);
+            WRITE_HEX_VECTOR(gfile, n2);
+            WRITE_HEX_VECTOR(gfile, n3);
+            WRITE_HEX_VECTOR(gfile, n0);
+        } else {
+            WRITE_HEX_VECTOR(gfile, n0);
+            WRITE_HEX_VECTOR(gfile, n1);
+            WRITE_HEX_VECTOR(gfile, n2);
+        }
+#endif
     }
     fprintf(gfile,"\")));\n");
 
@@ -1104,34 +1146,59 @@ static void write_GeomStaticMesh(FILE *gfile,
 
     fdata = &mesh->fdata;
 
-    uv_count = CustomData_number_of_layers(fdata, CD_MTFACE);
+    uv_count  = CustomData_number_of_layers(fdata, CD_MTFACE);
+    uv_count += CustomData_number_of_layers(fdata, CD_MCOL);
 
     if(uv_count) {
         fprintf(gfile,"\tmap_channels= interpolate((%d, List(", sce->r.cfra);
         for(l = 0; l < fdata->totlayer; ++l) {
-            if(fdata->layers[l].type == CD_MTFACE) {
+            if(fdata->layers[l].type == CD_MTFACE || fdata->layers[l].type == CD_MCOL) {
+                uv_layer_id = l;
+
                 if(is_numeric(fdata->layers[l].name)) {
                     uv_layer_id = atoi(fdata->layers[l].name);
                 } else {
-                    uv_layer_id = uvlayer_name_to_id(uv_list, fdata->layers[l].name);
+                    if(fdata->layers[l].type == CD_MTFACE) {
+                        uv_layer_id = uvlayer_name_to_id(uv_list, fdata->layers[l].name);
+                    }
                 }
 
                 fprintf(gfile,"\n\t\t// Name: %s", fdata->layers[l].name);
                 fprintf(gfile,"\n\t\tList(%i,ListVectorHex(\"", uv_layer_id);
 
-                face   = mesh->mface;
-                mtface = (MTFace*)fdata->layers[l].data;
-                for(f = 0; f < mesh->totface; ++face, ++f) {
-                    if(face->v4)
-                        verts = 4;
-                    else
-                        verts = 3;
-                    for(i = 0; i < verts; i++) {
-                        fprintf(gfile, "%08X%08X00000000",
-                                htonl(*(int*)&(mtface[f].uv[i][0])),
-                                htonl(*(int*)&(mtface[f].uv[i][1])));
+                if(fdata->layers[l].type == CD_MTFACE) {
+                    face   = mesh->mface;
+                    mtface = (MTFace*)fdata->layers[l].data;
+                    for(f = 0; f < mesh->totface; ++face, ++f) {
+                        if(face->v4)
+                            verts = 4;
+                        else
+                            verts = 3;
+                        for(i = 0; i < verts; i++) {
+                            fprintf(gfile, "%08X%08X00000000",
+                                    htonl(*(int*)&(mtface[f].uv[i][0])),
+                                    htonl(*(int*)&(mtface[f].uv[i][1])));
+                        }
                     }
                 }
+                else {
+                    face = mesh->mface;
+                    mcol = (MCol*)fdata->layers[l].data;
+                    for(f = 0; f < mesh->totface; ++face, ++f) {
+                        if(face->v4)
+                            verts = 4;
+                        else
+                            verts = 3;
+                        for(i = 0; i < verts; i++) {
+                            col[0] = (float)mcol[f * 4 + i].b / 255.0;
+                            col[1] = (float)mcol[f * 4 + i].g / 255.0;
+                            col[2] = (float)mcol[f * 4 + i].r / 255.0;
+
+                            WRITE_HEX_VECTOR(gfile, col);
+                        }
+                    }
+                }
+
                 fprintf(gfile,"\"),");
 
                 fprintf(gfile,"ListIntHex(\"");

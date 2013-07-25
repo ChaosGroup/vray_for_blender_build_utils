@@ -175,18 +175,18 @@ class LinuxBuilder(Builder):
 		#BF_FFMPEG_LIBPATH = '/opt/ffmpeg/lib'
 		#BF_FFMPEG_LIB_STATIC = '${BF_FFMPEG_LIBPATH}/libavcodec.a ${BF_FFMPEG_LIBPATH}/libavdevice.a ${BF_FFMPEG_LIBPATH}/libavfilter.a ${BF_FFMPEG_LIBPATH}/libavformat.a ${BF_FFMPEG_LIBPATH}/libavutil.a ${BF_FFMPEG_LIBPATH}/libswresample.a ${BF_FFMPEG_LIBPATH}/libswscale.a'
 
-		if self.build_release:
-			uc.write("WITH_BF_OIIO = True\n")
-			uc.write("WITH_BF_STATICOIIO = True\n")
-			uc.write("BF_OIIO_LIBPATH = '${BF_OIIO}/lib'\n")
-			uc.write("BF_OIIO_LIB_STATIC = '${BF_OIIO_LIBPATH}/libOpenImageIO.a'\n")
-
-			uc.write("WITH_BF_STATICBOOST = True\n")
-			uc.write("BF_BOOST_INC = '/opt/boost/include'\n")
-			uc.write("BF_BOOST_LIBPATH = '/opt/boost/lib'\n")
-			uc.write("BF_BOOST_LIB_STATIC = '${BF_BOOST_LIBPATH}/libboost_regex.a ${BF_BOOST_LIBPATH}/libboost_date_time.a ${BF_BOOST_LIBPATH}/libboost_filesystem.a ${BF_BOOST_LIBPATH}/libboost_system.a ${BF_BOOST_LIBPATH}/libboost_thread.a ${BF_BOOST_LIBPATH}/libboost_locale.a'\n")
-		else:
+		if not self.build_release:
 			uc.write("WITHOUT_BF_PYTHON_INSTALL = True\n")
+
+		uc.write("WITH_BF_OIIO = True\n")
+		uc.write("WITH_BF_STATICOIIO = True\n")
+		uc.write("BF_OIIO_LIBPATH = '${BF_OIIO}/lib'\n")
+		uc.write("BF_OIIO_LIB_STATIC = '${BF_OIIO_LIBPATH}/libOpenImageIO.a'\n")
+
+		uc.write("WITH_BF_STATICBOOST = True\n")
+		uc.write("BF_BOOST_INC = '/opt/boost/include'\n")
+		uc.write("BF_BOOST_LIBPATH = '/opt/boost/lib'\n")
+		uc.write("BF_BOOST_LIB_STATIC = '${BF_BOOST_LIBPATH}/libboost_regex.a ${BF_BOOST_LIBPATH}/libboost_date_time.a ${BF_BOOST_LIBPATH}/libboost_filesystem.a ${BF_BOOST_LIBPATH}/libboost_thread.a ${BF_BOOST_LIBPATH}/libboost_locale.a ${BF_BOOST_LIBPATH}/libboost_system.a'\n")
 
 		uc.write("\n")
 

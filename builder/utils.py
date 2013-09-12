@@ -30,6 +30,7 @@ import platform
 import re
 import socket
 import sys
+import subprocess
 
 
 VERSION  = "2.61"

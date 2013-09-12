@@ -253,16 +253,26 @@ def create_desktop_file(filepath = "/usr/share/applications/vrayblender.desktop"
 
 
 def get_svn_revision(svn_root):
+	rev = None
+	
 	try:
-		entries= open(path_join(svn_root,'.svn','entries'), 'r').read()
+		entries = open(path_join(svn_root,'.svn','entries'), 'r').read()
 	except IOError:
 		pass
 	else:
 		if re.match('(\d+)', entries):
 			rev_match = re.search('\d+\s+dir\s+(\d+)', entries)
 			if rev_match:
-				return rev_match.groups()[0]
-	return REVISION
+				rev = rev_match.groups()[0]
+
+	if not rev:
+		pwd = os.getcwd()
+
+		os.chdir(svn_root)
+		rev = subprocess.check_output("svnversion")
+		os.chdir(pwd)
+
+	return rev
 
 
 def get_blender_version(root_dir):

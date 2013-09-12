@@ -273,6 +273,8 @@ def get_svn_revision(svn_root):
 		rev = subprocess.check_output("svnversion")
 		os.chdir(pwd)
 
+	rev = rev.strip(" \n\r\t")
+	
 	return rev
 
 

@@ -200,7 +200,7 @@ class Builder:
 					shutil.move(self.dir_blender, self.dir_blender_svn)
 
 					# Export sources
-					os.system("svn --quiet export blender-svn blender")
+					os.system("svn export blender-svn blender --quiet")
 
 			else:
 				sys.stdout.write("Updating Blender sources...\n")

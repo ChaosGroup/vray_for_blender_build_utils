@@ -1150,21 +1150,23 @@ static void write_GeomStaticMesh(FILE *gfile,
     uv_count += CustomData_number_of_layers(fdata, CD_MCOL);
 
     if(uv_count) {
+        fprintf(gfile,"\tmap_channels_names=List(");
+        for(l = 0; l < fdata->totlayer; ++l) {
+            if(fdata->layers[l].type == CD_MTFACE || fdata->layers[l].type == CD_MCOL) {
+                fprintf(gfile,"\"%s\"", fdata->layers[l].name);
+
+                if(l < uv_count)
+                    fprintf(gfile,",");
+            }
+        }
+        fprintf(gfile,");\n");
+
+        uv_layer_id = 0;
         fprintf(gfile,"\tmap_channels= interpolate((%d, List(", sce->r.cfra);
         for(l = 0; l < fdata->totlayer; ++l) {
             if(fdata->layers[l].type == CD_MTFACE || fdata->layers[l].type == CD_MCOL) {
-                uv_layer_id = l;
-
-                if(is_numeric(fdata->layers[l].name)) {
-                    uv_layer_id = atoi(fdata->layers[l].name);
-                } else {
-                    if(fdata->layers[l].type == CD_MTFACE) {
-                        uv_layer_id = uvlayer_name_to_id(uv_list, fdata->layers[l].name);
-                    }
-                }
-
                 fprintf(gfile,"\n\t\t// Name: %s", fdata->layers[l].name);
-                fprintf(gfile,"\n\t\tList(%i,ListVectorHex(\"", uv_layer_id);
+                fprintf(gfile,"\n\t\tList(%i,ListVectorHex(\"", uv_layer_id++);
 
                 if(fdata->layers[l].type == CD_MTFACE) {
                     face   = mesh->mface;

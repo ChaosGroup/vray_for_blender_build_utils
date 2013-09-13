@@ -441,7 +441,7 @@ class Builder:
 		cmd += " scons/scons.py"
 		if not self.build_clean:
 			cmd += " --implicit-deps-unchanged --max-drift=1"
-		is self.use_env_msvc:
+		if self.use_env_msvc:
 			cmd += r" env=\"PATH:%PATH,INCLUDE:%INCLUDE%,LIB:%LIB%\""
 
 		sys.stdout.write("Calling: %s\n" % (cmd))

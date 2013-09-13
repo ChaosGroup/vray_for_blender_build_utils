@@ -111,6 +111,7 @@ class Builder:
 	build_clean         = False
 	build_release       = False
 	checkout_revision   = None
+	use_env_msvc        = False
 
 	# user-config.py file path
 	user_config         = ""
@@ -440,6 +441,8 @@ class Builder:
 		cmd += " scons/scons.py"
 		if not self.build_clean:
 			cmd += " --implicit-deps-unchanged --max-drift=1"
+		is self.use_env_msvc:
+			cmd += r" env=\"PATH:%PATH,INCLUDE:%INCLUDE%,LIB:%LIB%\""
 
 		sys.stdout.write("Calling: %s\n" % (cmd))
 

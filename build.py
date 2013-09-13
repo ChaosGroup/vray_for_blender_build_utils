@@ -81,6 +81,7 @@ parser.add_option('', '--developer', action= 'store_true', dest= 'mode_devel', d
 
 parser.add_option('', '--user_config', dest='user_user_config', default="", help="User defined user-config.py")
 
+parser.add_option('', '--env', dest="use_env_msvc", default=False, help="Use compiler from the environment")
 
 (options, args) = parser.parse_args()
 
@@ -151,6 +152,8 @@ params['with_cycles'] = options.with_cycles
 params['with_cuda']   = options.with_cuda
 params['cuda_gpu']    = options.cuda_gpu
 params['with_osl']    = options.with_osl
+
+params['use_env_msvc'] = options.use_env_msvc
 
 if options.user_user_config:
 	params['user_user_config'] = options.user_user_config

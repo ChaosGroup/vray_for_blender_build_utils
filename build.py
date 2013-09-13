@@ -81,7 +81,7 @@ parser.add_option('', '--developer', action= 'store_true', dest= 'mode_devel', d
 
 parser.add_option('', '--user_config', dest='user_user_config', default="", help="User defined user-config.py")
 
-parser.add_option('', '--env', dest="use_env_msvc", default=False, help="Use compiler from the environment")
+parser.add_option('', '--env', action='store_true', dest="use_env_msvc", default=False, help="Use compiler from the environment")
 
 (options, args) = parser.parse_args()
 

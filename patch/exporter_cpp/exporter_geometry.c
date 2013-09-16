@@ -460,8 +460,9 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
     HairKey            *hkey = NULL;
     ParticleStrandData  sd;
 
-    ParticleCacheKey **child_cache;
-    ParticleCacheKey  *child_key;
+	ParticleCacheKey **child_cache = NULL;
+	ParticleCacheKey  *child_key   = NULL;
+	ChildParticle     *cpa         = NULL;
     int                child_total = 0;
     int                child_steps = 0;
     float              child_key_co[3];
@@ -542,7 +543,7 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
         display_percentage       = pset->disp;
         display_percentage_child = pset->child_nbr;
 
-        // Check if particles are editedgit@github.com:bdancer/vrayblender.git
+		// Check if particles are edited
         free_edit = psys_check_edited(psys);
 
         // Recalc parent hair only if they are not
@@ -703,42 +704,86 @@ static void write_GeomMayaHair(FILE *gfile, Scene *sce, Main *bmain, Object *ob)
 
         // DEBUG_OUTPUT(TRUE, "psmd->dm = 0x%X", psmd->dm);
 
-        if(psmd->dm && !use_child) {
-            sd.totuv = CustomData_number_of_layers(&psmd->dm->faceData, CD_MTFACE);
+		if(psmd->dm) {
+			if(use_child) {
+				sd.totuv = CustomData_number_of_layers(&psmd->dm->faceData, CD_MTFACE);
 
-            if(sd.totuv) {
-                sd.uvco = MEM_callocN(sd.totuv * 2 * sizeof(float), "particle_uvs");
-            }
-            else {
-                sd.uvco = NULL;
-            }
+				if(sd.totuv) {
+					sd.uvco = MEM_callocN(sd.totuv * 2 * sizeof(float), "particle_uvs");
+				}
+				else {
+					sd.uvco = NULL;
+				}
 
-            if(sd.uvco) {
-                fprintf(gfile, "\n\tstrand_uvw=interpolate((%d,ListVectorHex(\"", sce->r.cfra);
-                LOOP_PARTICLES {
-                    /* get uvco & mcol */
-                    num = pa->num_dmcache;
+				if(sd.uvco) {
+					fprintf(gfile, "\n\tstrand_uvw=interpolate((%d,ListVectorHex(\"", sce->r.cfra);
 
-                    if(num == DMCACHE_NOTFOUND) {
-                        if(pa->num < psmd->dm->getNumTessFaces(psmd->dm)) {
-                            num = pa->num;
-                        }
-                    }
+					for(p = 0; p < child_total; ++p) {
+						cpa = psys->child + p;
 
-                    get_particle_uvco_mcol(pset->from, psmd->dm, pa->fuv, num, &sd);
+						/* get uvco & mcol */
+						if(pset->childtype==PART_CHILD_FACES) {
+							get_particle_uvco_mcol(PART_FROM_FACE, psmd->dm, cpa->fuv, cpa->num, &sd);
+						}
+						else {
+							ParticleData *parent = psys->particles + cpa->parent;
+							num = parent->num_dmcache;
 
-                    // DEBUG_OUTPUT(TRUE, "Pa.uv = %.3f, %.3f", sd.uvco[0], sd.uvco[1]);
+							if (num == DMCACHE_NOTFOUND)
+								if (parent->num < psmd->dm->getNumTessFaces(psmd->dm))
+									num = parent->num;
 
-                    segment[0] = sd.uvco[0];
-                    segment[1] = sd.uvco[1];
-                    segment[2] = 0.0f;
+							get_particle_uvco_mcol(pset->from, psmd->dm, parent->fuv, num, &sd);
+						}
 
-                    WRITE_HEX_VECTOR(gfile, segment);
-                }
-                fprintf(gfile,"\")));");
+						segment[0] = sd.uvco[0];
+						segment[1] = sd.uvco[1];
+						segment[2] = 0.0f;
 
-                MEM_freeN(sd.uvco);
-            }
+						WRITE_HEX_VECTOR(gfile, segment);
+					}
+					fprintf(gfile,"\")));");
+
+					MEM_freeN(sd.uvco);
+				}
+			}
+			else {
+				sd.totuv = CustomData_number_of_layers(&psmd->dm->faceData, CD_MTFACE);
+
+				if(sd.totuv) {
+					sd.uvco = MEM_callocN(sd.totuv * 2 * sizeof(float), "particle_uvs");
+				}
+				else {
+					sd.uvco = NULL;
+				}
+
+				if(sd.uvco) {
+					fprintf(gfile, "\n\tstrand_uvw=interpolate((%d,ListVectorHex(\"", sce->r.cfra);
+					LOOP_PARTICLES {
+						/* get uvco & mcol */
+						num = pa->num_dmcache;
+
+						if(num == DMCACHE_NOTFOUND) {
+							if(pa->num < psmd->dm->getNumTessFaces(psmd->dm)) {
+								num = pa->num;
+							}
+						}
+
+						get_particle_uvco_mcol(pset->from, psmd->dm, pa->fuv, num, &sd);
+
+						// DEBUG_OUTPUT(TRUE, "Pa.uv = %.3f, %.3f", sd.uvco[0], sd.uvco[1]);
+
+						segment[0] = sd.uvco[0];
+						segment[1] = sd.uvco[1];
+						segment[2] = 0.0f;
+
+						WRITE_HEX_VECTOR(gfile, segment);
+					}
+					fprintf(gfile,"\")));");
+
+					MEM_freeN(sd.uvco);
+				}
+			}
         }
 
         fprintf(gfile, "\n\twidths=interpolate((%d,ListFloatHex(\"", sce->r.cfra);
@@ -978,15 +1023,16 @@ static void write_GeomStaticMesh(FILE *gfile,
     fprintf(gfile," {\n");
 
 
-    fprintf(gfile,"\tvertices= interpolate((%d, ListVectorHex(\"", sce->r.cfra);
+	fprintf(gfile,"\tvertices=interpolate((%d,ListVectorHex(\"", sce->r.cfra);
     vert= mesh->mvert;
     for(f= 0; f < mesh->totvert; ++vert, ++f) {
         WRITE_HEX_VECTOR(gfile, vert->co);
     }
     fprintf(gfile,"\")));\n");
 
+    // TODO: velocities (?)
 
-    fprintf(gfile,"\tfaces= interpolate((%d, ListIntHex(\"", sce->r.cfra);
+	fprintf(gfile,"\tfaces=interpolate((%d,ListIntHex(\"", sce->r.cfra);
     face= mesh->mface;
     for(f= 0; f < mesh->totface; ++face, ++f) {
         if(face->v4)
@@ -998,50 +1044,9 @@ static void write_GeomStaticMesh(FILE *gfile,
     fprintf(gfile,"\")));\n");
 
 
-    fprintf(gfile,"\tnormals= interpolate((%d, ListVectorHex(\"", sce->r.cfra);
+	fprintf(gfile,"\tnormals=interpolate((%d,ListVectorHex(\"", sce->r.cfra);
     face = mesh->mface;
     for(f = 0; f < mesh->totface; ++face, ++f) {
-#if 0
-        fve[0]= face->v1;
-        fve[1]= face->v2;
-        fve[2]= face->v3;
-        fve[3]= face->v4;
-
-        // Get face normal
-        for(i= 0; i < 3; i++)
-            ve[i]= mesh->mvert[fve[i]].co;
-        if(face->v4) {
-            ve[3]= mesh->mvert[fve[3]].co;
-            normal_quad_v3(no, ve[0], ve[1], ve[2], ve[3]);
-        } else
-            normal_tri_v3(no, ve[0], ve[1], ve[2]);
-
-        if(face->v4) {
-            for(i= 0; i < 6; i++) {
-                // If face is smooth get vertex normal
-                if(face->flag & ME_SMOOTH)
-                    for(j= 0; j < 3; j++)
-                        no[j]= (float)(mesh->mvert[fve[ft[i]]].no[j]/32767.0);
-
-                fprintf(gfile, "%08X%08X%08X",
-                        htonl(*(int*)&(no[0])),
-                        htonl(*(int*)&(no[1])),
-                        htonl(*(int*)&(no[2])));
-            }
-        } else {
-            for(i= 0; i < 3; i++) {
-                // If face is smooth get vertex normal
-                if(face->flag & ME_SMOOTH)
-                    for(j= 0; j < 3; j++)
-                        no[j]= (float)(mesh->mvert[fve[i]].no[j]/32767.0);
-
-                fprintf(gfile, "%08X%08X%08X",
-                        htonl(*(int*)&(no[0])),
-                        htonl(*(int*)&(no[1])),
-                        htonl(*(int*)&(no[2])));
-            }
-        }
-#else
         if(face->flag & ME_SMOOTH) {
             normal_short_to_float_v3(n0, mesh->mvert[face->v1].no);
             normal_short_to_float_v3(n1, mesh->mvert[face->v2].no);
@@ -1076,12 +1081,11 @@ static void write_GeomStaticMesh(FILE *gfile,
             WRITE_HEX_VECTOR(gfile, n1);
             WRITE_HEX_VECTOR(gfile, n2);
         }
-#endif
     }
     fprintf(gfile,"\")));\n");
 
 
-    fprintf(gfile,"\tfaceNormals= interpolate((%d, ListIntHex(\"", sce->r.cfra);
+	fprintf(gfile,"\tfaceNormals=interpolate((%d,ListIntHex(\"", sce->r.cfra);
     face= mesh->mface;
     k= 0;
     for(f= 0; f < mesh->totface; ++face, ++f) {
@@ -1098,7 +1102,7 @@ static void write_GeomStaticMesh(FILE *gfile,
     fprintf(gfile,"\")));\n");
 
 
-    fprintf(gfile,"\tface_mtlIDs= ListIntHex(\"");
+    fprintf(gfile,"\tface_mtlIDs=ListIntHex(\"");
     face= mesh->mface;
     for(f= 0; f < mesh->totface; ++face, ++f) {
         matid= face->mat_nr + 1;
@@ -1110,7 +1114,7 @@ static void write_GeomStaticMesh(FILE *gfile,
     fprintf(gfile,"\");\n");
 
 
-    fprintf(gfile,"\tedge_visibility= ListIntHex(\"");
+    fprintf(gfile,"\tedge_visibility=ListIntHex(\"");
     ev= 0;
     if(mesh->totface <= 5) {
         face= mesh->mface;
@@ -1162,7 +1166,7 @@ static void write_GeomStaticMesh(FILE *gfile,
         fprintf(gfile,");\n");
 
         uv_layer_id = 0;
-        fprintf(gfile,"\tmap_channels= interpolate((%d, List(", sce->r.cfra);
+        fprintf(gfile,"\tmap_channels=interpolate((%d, List(", sce->r.cfra);
         for(l = 0; l < fdata->totlayer; ++l) {
             if(fdata->layers[l].type == CD_MTFACE || fdata->layers[l].type == CD_MCOL) {
                 fprintf(gfile,"\n\t\t// Name: %s", fdata->layers[l].name);
@@ -1251,7 +1255,7 @@ static void write_GeomStaticMesh(FILE *gfile,
     // Instead of copying the mesh many times in the BSP tree, only the bounding
     // box will be present many times and ray intersections will occur
     // in a separate object space BSP tree.
-    fprintf(gfile,"\tdynamic_geometry= %i;\n", dynamic_geometry);
+	fprintf(gfile,"\tdynamic_geometry=%i;\n", dynamic_geometry);
 
     fprintf(gfile,"}\n\n");
 }

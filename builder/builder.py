@@ -220,7 +220,7 @@ class Builder:
 				os.chdir(self.dir_source)
 
 				# Export sources
-				os.system("svn export blender-svn blender")
+				os.system("svn export blender-svn blender --quiet")
 
 		else:
 			if not os.path.exists(self.dir_blender):
@@ -229,7 +229,7 @@ class Builder:
 					os.chdir(self.dir_source)
 
 					# Export sources
-					os.system("svn export blender-svn blender")
+					os.system("svn export blender-svn blender --quiet")
 
 		# Update Blender libs
 		if self.update_blender:

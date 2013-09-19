@@ -439,11 +439,11 @@ class Builder:
 	def compile(self):
 		compileCmd = [sys.executable]
 		compileCmd.append("scons/scons.py")
-		compileCmd.append("scons/scons.py")
 
 		if not self.build_clean:
 			compileCmd.append("--implicit-deps-unchanged")
 			compileCmd.append("--max-drift=1")
+		
 		if self.use_env_msvc:
 			compileCmd.append(r'env="PATH:%PATH%,INCLUDE:%INCLUDE%,LIB:%LIB%"')
 

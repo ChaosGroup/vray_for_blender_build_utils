@@ -122,3 +122,5 @@ class MacBuilder(Builder):
 		if not self.mode_test:
 			os.chdir(self.dir_install)
 			os.system(cmd)
+
+		return archive_path

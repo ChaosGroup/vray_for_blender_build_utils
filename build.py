@@ -34,50 +34,51 @@ host_os = build_system.utils.get_host_os()
 
 parser = optparse.OptionParser(usage="python %prog [options]", version="2.0")
 
-parser.add_option('', '--sourcedir',                         dest= 'sourcedir',                    help= "Source directory.", metavar= 'FILE')
-parser.add_option('', '--installdir',                        dest= 'installdir',                   help= "Installation directory.", metavar= 'FILE')
-parser.add_option('', '--builddir',                          dest= 'builddir',                     help= "Build directory.", metavar= 'FILE')
-parser.add_option('', '--releasedir',                        dest= 'releasedir',                   help= "Directory for package (installer or archive).", metavar= 'FILE')
-parser.add_option('', '--release',    action= 'store_true',  dest= 'release',     default= False,  help= "Release build.")
-parser.add_option('', '--package',    action= 'store_true',  dest= 'package',     default= False,  help= "Create archive (Linux, Mac OS) or installer (Windows, NSIS required).")
+parser.add_option('', '--sourcedir',                         dest='sourcedir',                    help="Source directory.", metavar= 'FILE')
+parser.add_option('', '--installdir',                        dest='installdir',                   help="Installation directory.", metavar= 'FILE')
+parser.add_option('', '--builddir',                          dest='builddir',                     help="Build directory.", metavar= 'FILE')
+parser.add_option('', '--releasedir',                        dest='releasedir',                   help="Directory for package (installer or archive).", metavar= 'FILE')
+parser.add_option('', '--release',    action='store_true',   dest='release',      default=False,  help="Release build.")
+parser.add_option('', '--package',    action='store_true',   dest='package',      default=False,  help="Create archive (Linux, Mac OS) or installer (Windows, NSIS required).")
+parser.add_option('', '--upload',     action='store_true',   dest='upload',       default=False,  help="Upload build to the cgdo.ru FTP server")
 
 # Blender options
-parser.add_option('', '--with_collada', action= 'store_true',  dest= 'collada',      default= False,  help= "Add OpenCollada support.")
-parser.add_option('', '--with_player',  action= 'store_true',  dest= 'player',       default= False,  help= "Build Blender Player.")
-parser.add_option('', '--with_cycles',  action= 'store_true',  dest= 'with_cycles',  default= False,  help= "Add Cycles.")
-parser.add_option('', '--with_cuda',    action= 'store_true',  dest= 'with_cuda',    default= False,  help= "Build Cycles with CUDA kernels.")
-parser.add_option('', '--cuda_gpu',                            dest= 'cuda_gpu',     default= "sm_21",help= "CUDA GPU version.")
-parser.add_option('', '--with_osl',     action= 'store_true',  dest= 'with_osl',     default= False,  help= "Build Cycles with OSL support.")
-parser.add_option('', '--with_tracker', action= 'store_true',  dest= 'with_tracker', default= False,  help= "Add motion tracker support.")
+parser.add_option('', '--with_collada', action='store_true',  dest='collada',      default=False,  help="Add OpenCollada support.")
+parser.add_option('', '--with_player',  action='store_true',  dest='player',       default=False,  help="Build Blender Player.")
+parser.add_option('', '--with_cycles',  action='store_true',  dest='with_cycles',  default=False,  help="Add Cycles.")
+parser.add_option('', '--with_cuda',    action='store_true',  dest='with_cuda',    default=False,  help="Build Cycles with CUDA kernels.")
+parser.add_option('', '--cuda_gpu',                           dest='cuda_gpu',     default="sm_21",help="CUDA GPU version.")
+parser.add_option('', '--with_osl',     action='store_true',  dest='with_osl',     default=False,  help="Build Cycles with OSL support.")
+parser.add_option('', '--with_tracker', action='store_true',  dest='with_tracker', default=False,  help="Add motion tracker support.")
 
 # Updates
-parser.add_option('', '--upblender',                         dest= 'upblender',   default= 'on',   help= "Update Blender sources.", type= 'choice', choices=('on', 'off'))
-parser.add_option('', '--uppatch',                           dest= 'uppatch',     default= 'on',   help= "Update patch sources.", type= 'choice', choices=('on', 'off'))
+parser.add_option('', '--upblender',                          dest='upblender',   default='on',   help="Update Blender sources.", type= 'choice', choices=('on', 'off'))
+parser.add_option('', '--uppatch',                            dest='uppatch',     default='on',   help="Update patch sources.",   type= 'choice', choices=('on', 'off'))
 
 # Building options
-parser.add_option('', '--exporter_cpp',action= 'store_true', dest= 'exporter_cpp',default= True,   help= "Use new cpp exporter.")
-parser.add_option('', '--debug_build', action= 'store_true', dest= 'debug',       default= False,  help= "Debug build.")
-parser.add_option('', '--rebuild',     action= 'store_true', dest= 'rebuild',     default= False,  help= "Full rebuild.")
-parser.add_option('', '--revision',                          dest= 'revision',    default= "",     help= "Checkout particular SVN revision.")
-parser.add_option('', '--nopatches',   action= 'store_true', dest= 'nopatches',   default= False,  help= "Don't apply V-Ray/Blender patches.")
-parser.add_option('', '--nodatafiles', action= 'store_true', dest= 'nodatafiles', default= False,  help= "Don't add splash screen.")
-parser.add_option('', '--addextra',    action= 'store_true', dest= 'addextra',    default= False,  help= "Apply \"extra\" patches.")
-parser.add_option('', '--optimize',    action= 'store_true', dest= 'optimize',    default= False,  help= "Use compiler optimizations.")
-parser.add_option('', '--jobs',                              dest= 'jobs',        default= 4,      help= "Number of build threads.")
+parser.add_option('', '--exporter_cpp',action='store_true', dest='exporter_cpp',default=True,   help="Use new cpp exporter.")
+parser.add_option('', '--debug_build', action='store_true', dest='debug',       default=False,  help="Debug build.")
+parser.add_option('', '--rebuild',     action='store_true', dest='rebuild',     default=False,  help="Full rebuild.")
+parser.add_option('', '--revision',                         dest='revision',    default="",     help="Checkout particular SVN revision.")
+parser.add_option('', '--nopatches',   action='store_true', dest='nopatches',   default=False,  help="Don't apply V-Ray/Blender patches.")
+parser.add_option('', '--nodatafiles', action='store_true', dest='nodatafiles', default=False,  help="Don't add splash screen.")
+parser.add_option('', '--addextra',    action='store_true', dest='addextra',    default=False,  help="Apply \"extra\" patches.")
+parser.add_option('', '--optimize',    action='store_true', dest='optimize',    default=False,  help="Use compiler optimizations.")
+parser.add_option('', '--jobs',                             dest='jobs',        default=4,      help="Number of build threads.")
 if host_os == build_system.utils.MAC:
-	parser.add_option('', '--osx',                           dest= 'osx',         default= "10.6", help= "Mac OS X version.")
-	parser.add_option('', '--osx_arch',                      dest= 'osx_arch',    default= "x86",  help= "Mac OS X architecture.", type= 'choice', choices=('x86', 'x86_64'))
+	parser.add_option('', '--osx',                          dest='osx',         default="10.6", help="Mac OS X version.")
+	parser.add_option('', '--osx_arch',                     dest='osx_arch',    default="x86",  help="Mac OS X architecture.", type= 'choice', choices=('x86', 'x86_64'))
 if host_os == build_system.utils.LNX:
 	parser.add_option('', '--build_deps',     action='store_true', dest='build_deps',     default=False,  help="Build dependencies using BF build script.")
 	parser.add_option('', '--use_build_deps', action='store_true', dest='use_build_deps', default=True,   help="Use builded dependencies.")
-	parser.add_option('', '--install_deps', action='store_true', dest='deps',       default=False,  help="Install dependencies (Gentoo, OpenSuse, Fedora, Ubuntu).")
-	parser.add_option('', '--docs',         action='store_true', dest='docs',       default=False,  help="Build Python API documentation (python-sphinx required).")
-	parser.add_option('', '--desktop',      action='store_true', dest='desktop',    default=False,  help="Generate .desktop file.")
+	parser.add_option('', '--install_deps',   action='store_true', dest='deps',           default=False,  help="Install dependencies (Gentoo, OpenSuse, Fedora, Ubuntu).")
+	parser.add_option('', '--docs',           action='store_true', dest='docs',           default=False,  help="Build Python API documentation (python-sphinx required).")
+	parser.add_option('', '--desktop',        action='store_true', dest='desktop',        default=False,  help="Generate .desktop file.")
 
 # Script options
-parser.add_option('', '--debug',     action= 'store_true', dest= 'mode_debug', default= False, help= "Script debug output.")
-parser.add_option('', '--test',      action= 'store_true', dest= 'mode_test',  default= False, help= "Test mode.")
-parser.add_option('', '--developer', action= 'store_true', dest= 'mode_devel', default= False, help= optparse.SUPPRESS_HELP) # Special mode used only by me =)
+parser.add_option('', '--debug',     action='store_true', dest='mode_debug', default=False, help="Script debug output.")
+parser.add_option('', '--test',      action='store_true', dest='mode_test',  default=False, help="Test mode.")
+parser.add_option('', '--developer', action='store_true', dest='mode_devel', default=False, help=optparse.SUPPRESS_HELP) # Special mode used only by me =)
 
 parser.add_option('', '--user_config', dest='user_user_config', default="", help="User defined user-config.py")
 
@@ -137,9 +138,11 @@ if host_os == build_system.utils.LNX:
 if host_os == build_system.utils.MAC:
 	params['build_arch'] = options.osx_arch
 
-# Just for sure to disable debug for release build
 if params['build_release']:
+	# Just for sure to disable debug for release build
 	params['use_debug'] = False
+	
+	params['build_upload'] = options.upload
 
 # Just for sure to disable 'Developer' mode if OS is not Linux
 if host_os != build_system.utils.LNX:

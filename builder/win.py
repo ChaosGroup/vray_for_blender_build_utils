@@ -199,6 +199,8 @@ class WindowsBuilder(Builder):
 			os.chdir(installer_dir)
 			proc = subprocess.call(cmd)
 
+		return installer_path
+
 
 	def post_init(self):
 		pass

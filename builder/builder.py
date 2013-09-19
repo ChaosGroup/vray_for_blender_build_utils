@@ -27,6 +27,7 @@ import os
 import sys
 import shutil
 import tempfile
+import subprocess
 
 import utils
 
@@ -110,6 +111,7 @@ class Builder:
 	build_optimize_type = "INTEL"
 	build_clean         = False
 	build_release       = False
+	build_upload        = False
 	checkout_revision   = None
 	use_env_msvc        = False
 
@@ -435,27 +437,35 @@ class Builder:
 
 
 	def compile(self):
-		_python = sys.executable
+		compileCmd = [sys.executable]
+		compileCmd.append("scons/scons.py")
+		compileCmd.append("scons/scons.py")
 
-		cmd = _python
-		cmd += " scons/scons.py"
 		if not self.build_clean:
-			cmd += " --implicit-deps-unchanged --max-drift=1"
+			compileCmd.append("--implicit-deps-unchanged")
+			compileCmd.append("--max-drift=1")
 		if self.use_env_msvc:
-			cmd += r' env="PATH:%PATH%,INCLUDE:%INCLUDE%,LIB:%LIB%"'
+			compileCmd.append(r'env="PATH:%PATH%,INCLUDE:%INCLUDE%,LIB:%LIB%"')
 
-		sys.stdout.write("Calling: %s\n" % (cmd))
+		cleanCmd = [sys.executable]
+		cleanCmd.append("scons/scons.py")
+		cleanCmd.append("clean")
 
 		if not self.mode_test:
 			os.chdir(self.dir_blender)
 
 			if self.build_clean:
-				os.system("%s scons/scons.py clean" % (_python))
+				sys.stdout.write("Calling: %s\n" % (" ".join(cleanCmd)))
+				subprocess.call(cleanCmd)
 
-			os.system(cmd)
+			sys.stdout.write("Calling: %s\n" % (" ".join(compileCmd)))
+			res = subprocess.call(compileCmd)
+			if not res == 0:
+				sys.stderr.write("There was an error during the compilation!")
+				sys.exit(1)
 
-		if self.host_os == utils.WIN and not self.mode_test:
-			shutil.copy(utils.path_join(self.dir_source, "vb25-patch", "non-gpl", self.build_arch, "vcomp90.dll"), self.dir_install_path)
+			if self.host_os == utils.WIN:
+				shutil.copy(utils.path_join(self.dir_source, "vb25-patch", "non-gpl", self.build_arch, "vcomp90.dll"), self.dir_install_path)
 
 
 	def exporter(self):
@@ -522,6 +532,34 @@ class Builder:
 				sys.stdout.write("Package generation is disabled in 'Developer' mode.\n")
 			else:
 				if self.build_release:
-					self.package()
+					releasePackage = self.package()
+					if self.build_upload:
+						self.upload(releasePackage)
 				else:
 					sys.stdout.write("Package generation is disabled in non-release mode.\n")
+
+
+	def upload(self, filepath):
+		from ConfigParser import RawConfigParser
+		from ftplib import FTP
+
+		config = RawConfigParser()
+		config.read(os.path.expanduser("~/.passwd"))
+		
+		ftp_addr = config.get('cgdo.ru', 'ftp_address')
+		ftp_user = os.path.expanduser(config.get('cgdo.ru', 'ftp_directory'))
+		ftp_pass = config.get('cgdo.ru', 'ftp_login')
+
+		ftp_dir = config.get('cgdo.ru', 'ftp_password')
+
+		filePath, fileName = os.path.split(filepath)
+
+		serverFilepath = ftp_dir + "/" + fileName
+
+		sys.stdout.write("Uploading %s to %s:%s..." % (filepath, ftp_addr, serverFilepath))
+
+		ftp = FTP(ftp_addr, ftp_user, ftp_pass)
+		res = ftp.storbinary('STOR %s' % (serverFilepath), open(filepath, 'rb'))
+		ftp.quit()
+
+		sys.stdout.write("Upload finished with: %s" % (res))

@@ -132,6 +132,8 @@ class Builder:
 
 	exporter_cpp        = False
 
+	use_proxy           = None
+
 
 	def __init__(self, params):
 		if not params:
@@ -248,11 +250,11 @@ class Builder:
 					lib_dir = utils.path_join(self.dir_source, "lib", "darwin-9.x.universal")
 					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal"
 				# else:
-				# 	lib_dir = utils.path_join(self.dir_source, "lib", "linux")
-				# 	svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/linux lib/linux"
-				# 	if self.host_arch == "x86_64":
-				# 		lib_dir = utils.path_join(self.dir_source, "lib", "linux64")
-				# 		svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/linux64 lib/linux64"
+				#   lib_dir = utils.path_join(self.dir_source, "lib", "linux")
+				#   svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/linux lib/linux"
+				#   if self.host_arch == "x86_64":
+				#       lib_dir = utils.path_join(self.dir_source, "lib", "linux64")
+				#       svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/linux64 lib/linux64"
 
 				if not os.path.exists(lib_dir):
 					sys.stdout.write("Getting \"lib\" data...\n")
@@ -443,7 +445,7 @@ class Builder:
 		if not self.build_clean:
 			compileCmd.append("--implicit-deps-unchanged")
 			compileCmd.append("--max-drift=1")
-		
+
 		if self.use_env_msvc:
 			compileCmd.append(r'env="PATH:%PATH%,INCLUDE:%INCLUDE%,LIB:%LIB%"')
 
@@ -532,34 +534,35 @@ class Builder:
 				sys.stdout.write("Package generation is disabled in 'Developer' mode.\n")
 			else:
 				if self.build_release:
-					releasePackage = self.package()
+					releaeSubdir, releasePackage = self.package()
 					if self.build_upload:
-						self.upload(releasePackage)
+						self.upload(releaeSubdir, releasePackage)
 				else:
 					sys.stdout.write("Package generation is disabled in non-release mode.\n")
 
 
-	def upload(self, filepath):
+	def upload(self, subdir, filepath):
+		import requests
+
 		from ConfigParser import RawConfigParser
-		from ftplib import FTP
 
 		config = RawConfigParser()
 		config.read(os.path.expanduser("~/.passwd"))
-		
-		ftp_addr = config.get('cgdo.ru', 'ftp_address')
-		ftp_user = os.path.expanduser(config.get('cgdo.ru', 'ftp_directory'))
-		ftp_pass = config.get('cgdo.ru', 'ftp_login')
 
-		ftp_dir = config.get('cgdo.ru', 'ftp_password')
+		data = {
+			"password" : config.get('cgdo.ru', 'upload_password'),
+			"subdir"   : subdir,
+		}
 
-		filePath, fileName = os.path.split(filepath)
+		files = {
+			"file" : open(filepath, "rb"),
+		}
 
-		serverFilepath = ftp_dir + "/" + fileName
+		proxies = {}
+		if self.use_proxy:
+			proxies = { 
+				"http"  : self.use_proxy, 
+				"https" : self.use_proxy, 
+			}
 
-		sys.stdout.write("Uploading %s to %s:%s..." % (filepath, ftp_addr, serverFilepath))
-
-		ftp = FTP(ftp_addr, ftp_user, ftp_pass)
-		res = ftp.storbinary('STOR %s' % (serverFilepath), open(filepath, 'rb'))
-		ftp.quit()
-
-		sys.stdout.write("Upload finished with: %s" % (res))
+		requests.post("http://cgdo.ru/upload", files=files, data=data, proxies=proxies)

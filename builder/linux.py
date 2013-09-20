@@ -224,7 +224,9 @@ class LinuxBuilder(Builder):
 
 
 	def package(self):
-		release_path = os.path.join(self.dir_release, "linux", self.build_arch)
+		subdir = "linux" + "/" + self.build_arch
+
+		release_path = os.path.join(self.dir_release, subdir)
 
 		if not self.mode_test:
 			utils.path_create(release_path)
@@ -245,4 +247,4 @@ class LinuxBuilder(Builder):
 			os.chdir(self.dir_install)
 			os.system(cmd)
 
-		return archive_path
+		return subdir, archive_path

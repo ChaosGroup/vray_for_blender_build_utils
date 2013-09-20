@@ -41,6 +41,7 @@ parser.add_option('', '--releasedir',                        dest='releasedir', 
 parser.add_option('', '--release',    action='store_true',   dest='release',      default=False,  help="Release build.")
 parser.add_option('', '--package',    action='store_true',   dest='package',      default=False,  help="Create archive (Linux, Mac OS) or installer (Windows, NSIS required).")
 parser.add_option('', '--upload',     action='store_true',   dest='upload',       default=False,  help="Upload build to the cgdo.ru FTP server")
+parser.add_option('', '--proxy',                             dest='proxy',        default="",     help="Upload using proxy")
 
 # Blender options
 parser.add_option('', '--with_collada', action='store_true',  dest='collada',      default=False,  help="Add OpenCollada support.")
@@ -143,6 +144,7 @@ if params['build_release']:
 	params['use_debug'] = False
 	
 	params['build_upload'] = options.upload
+	params['use_proxy']    = options.proxy
 
 # Just for sure to disable 'Developer' mode if OS is not Linux
 if host_os != build_system.utils.LNX:

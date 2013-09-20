@@ -117,7 +117,9 @@ class WindowsBuilder(Builder):
 
 
 	def package(self):
-		release_path = os.path.join(self.dir_release, "windows", self.build_arch)
+		subdir = "windows" + "/" + self.build_arch
+
+		release_path = os.path.join(self.dir_release, subdir)
 
 		if not self.mode_test:
 			utils.path_create(release_path)
@@ -199,7 +201,7 @@ class WindowsBuilder(Builder):
 			os.chdir(installer_dir)
 			proc = subprocess.call(cmd)
 
-		return installer_path
+		return subdir, installer_path
 
 
 	def post_init(self):

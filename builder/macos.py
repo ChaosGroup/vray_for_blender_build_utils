@@ -102,7 +102,9 @@ class MacBuilder(Builder):
 
 
 	def package(self):
-		release_path = utils.path_join(self.dir_release, "macos", self.build_arch)
+		subdir = "macos" + "/" + self.build_arch
+
+		release_path = utils.path_join(self.dir_release, subdir)
 
 		if not self.mode_test:
 			utils.path_create(release_path)
@@ -123,4 +125,4 @@ class MacBuilder(Builder):
 			os.chdir(self.dir_install)
 			os.system(cmd)
 
-		return archive_path
+		return subdir, archive_path

@@ -97,6 +97,9 @@ class MacBuilder(Builder):
 		uc.write("REL_CFLAGS  = REL_CFLAGS + ['-march=core2','-mssse3','-with-tune=core2','-enable-threads']\n")
 		uc.write("REL_CCFLAGS = REL_CCFLAGS + ['-march=core2','-mssse3','-with-tune=core2','-enable-threads']\n")
 
+		uc.write("WITH_BF_3DMOUSE = False\n")
+		uc.write("BF_3DMOUSE_LIB = 'spnav'\n")
+
 		uc.write("\n")
 		uc.close()
 

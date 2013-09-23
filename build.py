@@ -68,7 +68,7 @@ parser.add_option('', '--optimize',    action='store_true', dest='optimize',    
 parser.add_option('', '--jobs',                             dest='jobs',        default=4,      help="Number of build threads.")
 if host_os == build_system.utils.MAC:
 	parser.add_option('', '--osx',                          dest='osx',         default="10.6", help="Mac OS X version.")
-	parser.add_option('', '--osx_arch',                     dest='osx_arch',    default="x86",  help="Mac OS X architecture.", type= 'choice', choices=('x86', 'x86_64'))
+	parser.add_option('', '--osx_arch',                     dest='osx_arch',    default="x86_64", help="Mac OS X architecture.", type= 'choice', choices=('x86', 'x86_64'))
 if host_os == build_system.utils.LNX:
 	parser.add_option('', '--build_deps',     action='store_true', dest='build_deps',     default=False,  help="Build dependencies using BF build script.")
 	parser.add_option('', '--use_build_deps', action='store_true', dest='use_build_deps', default=True,   help="Use builded dependencies.")

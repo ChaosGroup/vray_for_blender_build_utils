@@ -565,4 +565,5 @@ class Builder:
 				"https" : self.use_proxy, 
 			}
 
+		sys.stdout.write("Uploading package '%s' to '%s'...\n" % (filepath, subdir))
 		requests.post("http://cgdo.ru/upload", files=files, data=data, proxies=proxies)

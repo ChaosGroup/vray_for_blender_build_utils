@@ -2,12 +2,13 @@
 
 Import('env')
 
-sources= env.Glob('*.c')
+sources = env.Glob('*.c')
 
-incs = '../blenlib ../blenkernel ../blenloader'
-incs+= ' ../makesdna ../makesrna'
-incs+= ' ../windowmanager'
-incs+= ' ../../../intern/guardedalloc'
+incs  = '../blenlib ../blenkernel ../blenloader'
+incs += ' ../makesdna ../makesrna'
+incs += ' ../windowmanager'
+incs += ' ../../../intern/guardedalloc'
+incs += ' ../../../intern/smoke/extern'
 
 if env['OURPLATFORM'] in ('win32-vc', 'win32-mingw', 'linuxcross', 'win64-vc'):
 	incs += ' ' + env['BF_PTHREADS_INC']

@@ -1704,7 +1704,7 @@ static void export_meshes_threaded(char *filepath, Scene *sce, Main *bmain,
         threads_count = MAX_MESH_THREADS;
 
     /*
-      Preprocess textures to find proper UV channel indexes
+      XXX: Remove this! Preprocess textures to find proper UV channel indexes
     */
     for(ma= bmain->mat.first; ma; ma= ma->id.next) {
         if(debug) {

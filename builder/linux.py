@@ -70,7 +70,7 @@ class LinuxBuilder(Builder):
 		if self.build_deps:
 			os.chdir(self.dir_blender_svn)
 			cmd = "sudo ./build_files/build_environment/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source, "blender-deps"))
-			
+
 			if self.with_osl:
 				cmd += "  --with-osl"
 
@@ -117,6 +117,7 @@ class LinuxBuilder(Builder):
 				'WITH_BF_RAYOPTIMIZATION',
 				'WITH_BUILDINFO',
 				'WITH_BF_OPENEXR',
+				'WITH_BF_PLAYER',
 			],
 			'False': [
 				'WITH_BF_ICONV',
@@ -124,7 +125,6 @@ class LinuxBuilder(Builder):
 				'WITH_BF_FMOD',
 				'WITH_BF_STATICOPENGL',
 				'WITH_BF_VERSE',
-				'WITH_BF_PLAYER',
 			]
 		}
 

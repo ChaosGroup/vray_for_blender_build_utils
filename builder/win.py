@@ -58,13 +58,12 @@ class WindowsBuilder(Builder):
 				'WITH_BF_OPENEXR',
 				'WITH_BF_ICONV',
 				'WITH_BF_GAMEENGINE',
+				'WITH_BF_PLAYER',
 			],
 			'False': [
 				'WITH_BF_QUICKTIME',
 				'WITH_BF_FMOD',
 				'WITH_BF_VERSE',
-				'WITH_BF_GAMEENGINE',
-				'WITH_BF_PLAYER',
 				'WITH_BF_JACK',
 				'WITH_BF_FFTW3',
 			]

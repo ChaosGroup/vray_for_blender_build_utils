@@ -130,8 +130,6 @@ class Builder:
 	cuda_gpu            = "sm_21"
 	with_osl            = False
 
-	exporter_cpp        = False
-
 	use_proxy           = None
 
 
@@ -337,9 +335,6 @@ class Builder:
 		src_dir = utils.path_join(patch_dir, "patch", "exporter")
 		dst_dir = utils.path_join(blender_dir, "source", "blender", "exporter")
 
-		if self.exporter_cpp:
-			src_dir = utils.path_join(patch_dir, "patch", "exporter_cpp")
-
 		if self.mode_debug:
 			sys.stderr.write("Coping:\n\t%s =>\n\t%s\n" % (src_dir, dst_dir))
 
@@ -463,7 +458,7 @@ class Builder:
 			sys.stdout.write("Calling: %s\n" % (" ".join(compileCmd)))
 			res = subprocess.call(compileCmd)
 			if not res == 0:
-				sys.stderr.write("There was an error during the compilation!")
+				sys.stderr.write("There was an error during the compilation!\n")
 				sys.exit(1)
 
 			if self.host_os == utils.WIN:
@@ -502,6 +497,8 @@ class Builder:
 			# Add new
 			os.chdir(scripts_path)
 			os.system("git clone --depth=1 git://github.com/bdancer/vb25.git")
+			os.system("git submodule init")
+			os.system("git submodule update")
 
 
 	def package(self):
@@ -560,9 +557,9 @@ class Builder:
 
 		proxies = {}
 		if self.use_proxy:
-			proxies = { 
-				"http"  : self.use_proxy, 
-				"https" : self.use_proxy, 
+			proxies = {
+				"http"  : self.use_proxy,
+				"https" : self.use_proxy,
 			}
 
 		sys.stdout.write("Uploading package '%s' to '%s'...\n" % (filepath, subdir))

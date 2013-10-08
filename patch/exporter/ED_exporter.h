@@ -31,4 +31,4 @@ struct wmOperatorType;
 
 void ED_operatortypes_exporter(void);
 
-#endif /* ED_EXPORTER_H */
+#endif // ED_EXPORTER_H

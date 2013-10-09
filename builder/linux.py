@@ -136,9 +136,13 @@ class LinuxBuilder(Builder):
 		else:
 			if self.with_ge:
 				build_options['True'].append('WITH_BF_GAMEENGINE')
+			else:
+				build_options['False'].append('WITH_BF_GAMEENGINE')
 
 			if self.with_player:
 				build_options['True'].append('WITH_BF_PLAYER')
+			else:
+				build_options['False'].append('WITH_BF_PLAYER')
 
 			if not self.with_cycles:
 				build_options['False'].append('WITH_BF_CYCLES')

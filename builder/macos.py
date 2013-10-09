@@ -63,9 +63,13 @@ class MacBuilder(Builder):
 
 		if self.with_ge:
 			build_options['True'].append('WITH_BF_GAMEENGINE')
+		else:
+			build_options['False'].append('WITH_BF_GAMEENGINE')
 
 		if self.with_player:
 			build_options['True'].append('WITH_BF_PLAYER')
+		else:
+			build_options['False'].append('WITH_BF_PLAYER')
 
 		uc.write("BF_QUIET    = True\n")
 		uc.write("BF_NUMJOBS  = %s\n" % (self.build_threads))

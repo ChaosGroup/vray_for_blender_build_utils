@@ -407,10 +407,10 @@ index 0000000..4454a18
 +blender_add_lib(vray_for_blender "${SRC}" "${INC}" "${INC_SYS}")
 diff --git a/blender/source/blender/vray_for_blender/SConscript b/blender/source/blender/vray_for_blender/SConscript
 new file mode 100644
-index 0000000..3b7c01a
+index 0000000..047914d
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/SConscript
-@@ -0,0 +1,49 @@
+@@ -0,0 +1,50 @@
 +#!/usr/bin/python
 +
 +Import('env')
@@ -448,6 +448,7 @@ index 0000000..3b7c01a
 +]
 +
 +includes.extend(env['BF_PYTHON_INC'].split())
++includes.append(env['BF_BOOST_INC'])
 +
 +if env['OURPLATFORM'] in ('win32-vc', 'win32-mingw', 'linuxcross', 'win64-vc'):
 +    includes.append(env['BF_PTHREADS_INC'])
@@ -593,10 +594,10 @@ index 0000000..168206b
 +#endif // BLENDER_INCLUDES_H
 diff --git a/blender/source/blender/vray_for_blender/python/vray_python_ext.cpp b/blender/source/blender/vray_for_blender/python/vray_python_ext.cpp
 new file mode 100644
-index 0000000..70b2603
+index 0000000..1651186
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/python/vray_python_ext.cpp
-@@ -0,0 +1,180 @@
+@@ -0,0 +1,187 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -720,6 +721,12 @@ index 0000000..70b2603
 +}
 +
 +
++static PyObject* mExportNode(PyObject *self, PyObject *args)
++{
++	Py_RETURN_NONE;
++}
++
++
 +static PyObject* mExportDupli(PyObject *self, PyObject *args)
 +{
 +	PRINT_INFO("defExportDupli()");
@@ -759,6 +766,7 @@ index 0000000..70b2603
 +	{"exportMesh",  mExportMesh,  METH_VARARGS, "Export mesh"},
 +	{"exportSmoke", mExportSmoke, METH_VARARGS, "Export smoke simulation data"},
 +	{"exportHair",  mExportHair,  METH_VARARGS, "Export hair"},
++	{"exportNode",  mExportNode,  METH_VARARGS, "Export Node description"},
 +	{NULL, NULL, 0, NULL},
 +};
 +
@@ -2307,10 +2315,10 @@ index 0000000..eddf62f
 +}
 diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/node.c b/blender/source/blender/vray_for_blender/vrscene_exporter/node.c
 new file mode 100644
-index 0000000..7918f39
+index 0000000..8b11930
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/vrscene_exporter/node.c
-@@ -0,0 +1,26 @@
+@@ -0,0 +1,47 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -2337,6 +2345,27 @@ index 0000000..7918f39
 + */
 +
 +#include "vrscene.h"
++
++
++void  write_ObjectNode(PyObject *outputFile, Scene *sce, Object *ob, float tm[4][4])
++{	
++}
++
++
++void  write_Node(PyObject *outputFile,
++				 Scene *sce, Object *ob, const char *pluginName,
++				 const char *transform,
++				 const char *geometry,
++				 const char *material,
++				 const char *volume,
++				 const int   nsamples,
++				 const char *lights,
++				 const char *user_attributes,
++				 const int   visible,
++				 const int   objectID,
++				 const int   primary_visibility)
++{
++}
 diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/smoke.c b/blender/source/blender/vray_for_blender/vrscene_exporter/smoke.c
 new file mode 100644
 index 0000000..b885d0d
@@ -2465,10 +2494,10 @@ index 0000000..b885d0d
 +}
 diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/vrscene.h b/blender/source/blender/vray_for_blender/vrscene_exporter/vrscene.h
 new file mode 100644
-index 0000000..5f8af18
+index 0000000..59447b9
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/vrscene_exporter/vrscene.h
-@@ -0,0 +1,97 @@
+@@ -0,0 +1,112 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -2560,10 +2589,25 @@ index 0000000..5f8af18
 +	   m[3][0], m[3][1], m[3][2]); \
 +	WRITE_PYOBJECT_BUF(pyObject);
 +
++
 +int   write_GeomMayaHair(PyObject *outputFile, Scene *sce, Main *main, Object *ob, ParticleSystem *psys, const char *pluginName);
 +void  write_GeomStaticMesh(PyObject *outputFile, Scene *sce, Object *ob, Mesh *mesh, const char *pluginName);
 +void  write_TexVoxelData(PyObject *outputFile, Scene *sce, Object *ob, SmokeModifierData *smd, const char *pluginName,
 +						 short use_smoke_hires, short interp_type, float int_multiplier);
++
++void  write_ObjectNode(PyObject *outputFile, Scene *sce, Object *ob, float tm[4][4]);
++void  write_Node(PyObject *outputFile, Scene *sce, Object *ob, const char *pluginName,
++				 const char *transform,
++				 const char *geometry,
++				 const char *material,
++				 const char *volume,
++				 const int   nsamples,
++				 const char *lights,
++				 const char *user_attributes,
++				 const int   visible,
++				 const int   objectID,
++				 const int   primary_visibility);
++
 +
 +#endif // VRSCENE_H
 diff --git a/blender/source/creator/CMakeLists.txt b/blender/source/creator/CMakeLists.txt

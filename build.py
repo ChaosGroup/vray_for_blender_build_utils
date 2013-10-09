@@ -129,6 +129,7 @@ params['mode_test']      = options.mode_test
 params['add_datafiles']  = not options.nodatafiles
 params['add_extra']      = options.addextra
 
+params['with_tracker']   = options.with_tracker
 params['with_player']    = options.player
 params['with_ge']        = options.game
 

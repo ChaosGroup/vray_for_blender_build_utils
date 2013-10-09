@@ -73,6 +73,9 @@ class WindowsBuilder(Builder):
 		if self.with_player:
 			build_options['True'].append('WITH_BF_PLAYER')
 
+		if not self.with_tracker:
+			build_options['False'].append('WITH_BF_LIBMV')			
+
 		if self.build_arch == 'x86_64':
 			build_options['False'].append('WITH_BF_JACK')
 			build_options['False'].append('WITH_BF_SNDFILE')

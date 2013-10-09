@@ -117,7 +117,6 @@ class LinuxBuilder(Builder):
 				'WITH_BF_RAYOPTIMIZATION',
 				'WITH_BUILDINFO',
 				'WITH_BF_OPENEXR',
-				'WITH_BF_PLAYER',
 			],
 			'False': [
 				'WITH_BF_ICONV',
@@ -132,8 +131,15 @@ class LinuxBuilder(Builder):
 			build_options['False'].append('WITH_BF_CYCLES')
 			build_options['False'].append('WITH_BF_OIIO')
 			build_options['False'].append('WITH_BF_GAMEENGINE')
+			build_options['False'].append('WITH_BF_PLAYER')
+
 		else:
-			build_options['True'].append('WITH_BF_GAMEENGINE')
+			if self.with_ge:
+				build_options['True'].append('WITH_BF_GAMEENGINE')
+
+			if self.with_player:
+				build_options['True'].append('WITH_BF_PLAYER')
+
 			if not self.with_cycles:
 				build_options['False'].append('WITH_BF_CYCLES')
 				build_options['False'].append('WITH_BF_OIIO')
@@ -210,15 +216,17 @@ class LinuxBuilder(Builder):
 		if self.build_optimize:
 			if self.build_optimize_type == 'INTEL':
 				uc.write("CCFLAGS  = ['-pipe','-fPIC','-march=core2','-msse3','-mmmx','-mfpmath=sse','-funsigned-char','-fno-strict-aliasing','-ftracer','-fomit-frame-pointer','-finline-functions','-ffast-math']\n")
-				uc.write("CXXFLAGS = CCFLAGS\n")
 				uc.write("REL_CFLAGS  = ['-O3','-fomit-frame-pointer','-funroll-loops']\n")
-				uc.write("REL_CCFLAGS = REL_CFLAGS\n")
 		else:
 			uc.write("CCFLAGS  = ['-pipe','-fPIC','-funsigned-char','-fno-strict-aliasing']\n")
 			uc.write("CPPFLAGS = ['-DXP_UNIX']\n")
-			uc.write("CXXFLAGS = CCFLAGS\n")
 			uc.write("REL_CFLAGS  = ['-O2']\n")
-			uc.write("REL_CCFLAGS = REL_CFLAGS\n")
+
+		uc.write("REL_CCFLAGS = REL_CFLAGS\n")
+		uc.write("CXXFLAGS = CCFLAGS\n")
+
+		if self.add_patches:
+			uc.write("WITH_VRAY_FOR_BLENDER = True\n")
 
 		uc.close()
 

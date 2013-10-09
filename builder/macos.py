@@ -61,6 +61,12 @@ class MacBuilder(Builder):
 			uc.write("WITH_BF_OIIO         = True\n")
 			uc.write("\n")
 
+		if self.with_ge:
+			build_options['True'].append('WITH_BF_GAMEENGINE')
+
+		if self.with_player:
+			build_options['True'].append('WITH_BF_PLAYER')
+
 		uc.write("BF_QUIET    = True\n")
 		uc.write("BF_NUMJOBS  = %s\n" % (self.build_threads))
 		uc.write("\n")
@@ -99,6 +105,9 @@ class MacBuilder(Builder):
 
 		uc.write("WITH_BF_3DMOUSE = False\n")
 		uc.write("BF_3DMOUSE_LIB = 'spnav'\n")
+
+		if self.add_patches:
+			uc.write("WITH_VRAY_FOR_BLENDER = True\n")
 
 		uc.write("\n")
 		uc.close()

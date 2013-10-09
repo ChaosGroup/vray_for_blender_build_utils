@@ -1,0 +1,2583 @@
+diff --git a/blender/CMakeLists.txt b/blender/CMakeLists.txt
+index e88a5e0..9a88054 100644
+--- a/blender/CMakeLists.txt
++++ b/blender/CMakeLists.txt
+@@ -270,6 +270,9 @@ set(CYCLES_CUDA_BINARIES_ARCH sm_20 sm_21 sm_30 sm_35 CACHE STRING "CUDA archite
+ mark_as_advanced(CYCLES_CUDA_BINARIES_ARCH)
+ unset(PLATFORM_DEFAULT)
+ 
++# V-Ray For Blender
++option(WITH_VRAY_FOR_BLENDER		"Enable V-Ray For Blender extentions" OFF)
++
+ # LLVM
+ option(WITH_LLVM					"Use LLVM" OFF)
+ option(LLVM_STATIC					"Link with LLVM static libraries" ON)
+@@ -518,6 +521,12 @@ if(WITH_BOOL_COMPAT)
+ 	add_definitions(-DWITH_BOOL_COMPAT)
+ endif()
+ 
++if(WITH_VRAY_FOR_BLENDER)
++	# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-switch -std=c++0x")
++	add_definitions(-DWITH_VRAY_FOR_BLENDER)
++endif()
++
++
+ #-----------------------------------------------------------------------------
+ # Check for valid directories
+ # ... svn extern paths can be missing because of svn-git.
+@@ -2279,6 +2288,7 @@ if(FIRST_RUN)
+ 	info_cfg_option(WITH_INPUT_NDOF)
+ 	info_cfg_option(WITH_CYCLES)
+ 	info_cfg_option(WITH_FREESTYLE)
++	info_cfg_option(WITH_VRAY_FOR_BLENDER)
+ 	info_cfg_option(WITH_OPENCOLORIO)
+ 
+ 	info_cfg_text("Compiler Options:")
+diff --git a/blender/SConstruct b/blender/SConstruct
+index 539414d..8a51b6a 100644
+--- a/blender/SConstruct
++++ b/blender/SConstruct
+@@ -274,6 +274,7 @@ if 'blenderlite' in B.targets:
+     target_env_defs['WITH_BF_3DMOUSE'] = False
+     target_env_defs['WITH_BF_LIBMV'] = False
+     target_env_defs['WITH_BF_FREESTYLE'] = False
++    target_env_defs['WITH_VRAY_FOR_BLENDER'] = False
+ 
+     # Merge blenderlite, let command line to override
+     for k,v in target_env_defs.iteritems():
+diff --git a/blender/build_files/scons/tools/Blender.py b/blender/build_files/scons/tools/Blender.py
+index f181f29..3a655a2 100644
+--- a/blender/build_files/scons/tools/Blender.py
++++ b/blender/build_files/scons/tools/Blender.py
+@@ -393,6 +393,9 @@ def creator(env):
+         incs.append('#/source/blender/freestyle')
+         defs.append('WITH_FREESTYLE')
+ 
++    if env['WITH_VRAY_FOR_BLENDER']:
++        defs.append('WITH_VRAY_FOR_BLENDER')
++
+     if env['OURPLATFORM'] in ('win32-vc', 'win32-mingw', 'linuxcross', 'win64-vc', 'win64-mingw'):
+         incs.append(env['BF_PTHREADS_INC'])
+         incs.append('#/intern/utfconv')
+diff --git a/blender/build_files/scons/tools/btools.py b/blender/build_files/scons/tools/btools.py
+index 454e72a..bcd0252 100644
+--- a/blender/build_files/scons/tools/btools.py
++++ b/blender/build_files/scons/tools/btools.py
+@@ -144,6 +144,7 @@ def validate_arguments(args, bc):
+             'WITH_X11_XINPUT',
+             'WITH_X11_XF86VMODE',
+             'BF_GHOST_DEBUG',
++            'WITH_VRAY_FOR_BLENDER'
+             'USE_QTKIT',
+             'BF_FANCY', 'BF_QUIET', 'BF_LINE_OVERWRITE',
+             'BF_X264_CONFIG',
+@@ -575,6 +576,8 @@ def read_opts(env, cfg, args):
+         ('BF_CYCLES_CUDA_NVCC', 'CUDA nvcc compiler path', ''),
+         ('BF_CYCLES_CUDA_BINARIES_ARCH', 'CUDA architectures to compile binaries for', []),
+ 
++        (BoolVariable('WITH_VRAY_FOR_BLENDER', 'Compile with V-Ray For Blender extentions', True)),
++
+         (BoolVariable('WITH_BF_OIIO', 'Build with OpenImageIO', False)),
+         (BoolVariable('WITH_BF_STATICOIIO', 'Staticly link to OpenImageIO', False)),
+         ('BF_OIIO', 'OIIO root path', ''),
+diff --git a/blender/release/datafiles/blender_icons16.png b/blender/release/datafiles/blender_icons16.png
+index 24d95d7..0f87028 100644
+Binary files a/blender/release/datafiles/blender_icons16.png and b/blender/release/datafiles/blender_icons16.png differ
+diff --git a/blender/release/datafiles/blender_icons32.png b/blender/release/datafiles/blender_icons32.png
+index 3f8901f..0f62b77 100644
+Binary files a/blender/release/datafiles/blender_icons32.png and b/blender/release/datafiles/blender_icons32.png differ
+diff --git a/blender/source/blender/CMakeLists.txt b/blender/source/blender/CMakeLists.txt
+index 307f93d..1cbdd9e 100644
+--- a/blender/source/blender/CMakeLists.txt
++++ b/blender/source/blender/CMakeLists.txt
+@@ -149,3 +149,6 @@ if(WITH_FREESTYLE)
+ 	add_subdirectory(freestyle)
+ endif()
+ 
++if(WITH_VRAY_FOR_BLENDER)
++	add_subdirectory(vray_for_blender)
++endif()
+diff --git a/blender/source/blender/SConscript b/blender/source/blender/SConscript
+index 66d5496..d567150 100644
+--- a/blender/source/blender/SConscript
++++ b/blender/source/blender/SConscript
+@@ -69,3 +69,6 @@ if env['WITH_BF_COMPOSITOR']:
+ 
+ if env['WITH_BF_FREESTYLE']:
+     SConscript (['freestyle/SConscript'])
++
++if env['WITH_VRAY_FOR_BLENDER']:
++    SConscript (['vray_for_blender/SConscript'])
+diff --git a/blender/source/blender/editors/include/UI_icons.h b/blender/source/blender/editors/include/UI_icons.h
+index f8e1bbb..3564a5c 100644
+--- a/blender/source/blender/editors/include/UI_icons.h
++++ b/blender/source/blender/editors/include/UI_icons.h
+@@ -275,9 +275,10 @@ DEF_ICON(GROUP_UVS)
+ DEF_ICON(RNA)
+ DEF_ICON(RNA_ADD)
+ 
++DEF_ICON(VRAY_LOGO)
++
+ 	/* available */
+ #ifndef DEF_ICON_BLANK_SKIP
+-	DEF_ICON(BLANK092)
+ 	DEF_ICON(BLANK093)
+ 	DEF_ICON(BLANK094)
+ 	DEF_ICON(BLANK095)
+diff --git a/blender/source/blender/python/SConscript b/blender/source/blender/python/SConscript
+index 0ac0285..1fa8608 100644
+--- a/blender/source/blender/python/SConscript
++++ b/blender/source/blender/python/SConscript
+@@ -117,6 +117,10 @@ if env['WITH_BF_CYCLES']:
+ if env['WITH_BF_CYCLES_OSL']:
+     defs.append('WITH_CYCLES_OSL')
+ 
++if env['WITH_VRAY_FOR_BLENDER']:
++    incs += ' ../vray_for_blender'
++    defs.append('WITH_VRAY_FOR_BLENDER')
++
+ if env['WITH_BF_FREESTYLE']:
+     incs += ' ../freestyle/intern/python'
+     defs.append('WITH_FREESTYLE')
+diff --git a/blender/source/blender/python/intern/CMakeLists.txt b/blender/source/blender/python/intern/CMakeLists.txt
+index 072c73d..d45c372 100644
+--- a/blender/source/blender/python/intern/CMakeLists.txt
++++ b/blender/source/blender/python/intern/CMakeLists.txt
+@@ -143,6 +143,12 @@ if(WITH_CYCLES_OSL)
+ 	add_definitions(-DWITH_CYCLES_OSL)
+ endif()
+ 
++if(WITH_VRAY_FOR_BLENDER)
++	list(APPEND INC
++		../../vray_for_blender
++	)
++endif()
++
+ if(WITH_FREESTYLE)
+ 	list(APPEND INC
+ 		../../freestyle/intern/python
+diff --git a/blender/source/blender/python/intern/bpy_interface.c b/blender/source/blender/python/intern/bpy_interface.c
+index cc1dd36..0ebb548 100644
+--- a/blender/source/blender/python/intern/bpy_interface.c
++++ b/blender/source/blender/python/intern/bpy_interface.c
+@@ -80,6 +80,10 @@
+ #include "../bmesh/bmesh_py_api.h"
+ #include "../mathutils/mathutils.h"
+ 
++#ifdef WITH_VRAY_FOR_BLENDER
++#include "CGR_vray_for_blender.h"
++#endif
++
+ 
+ /* for internal use, when starting and ending python scripts */
+ 
+@@ -209,6 +213,13 @@ static PyObject *CCL_initPython(void)
+ }
+ #endif
+ 
++#ifdef WITH_VRAY_FOR_BLENDER
++static PyObject *CGR_initPython(void)
++{
++	return (PyObject*)VRayForBlender_initPython();
++}
++#endif
++
+ static struct _inittab bpy_internal_modules[] = {
+ 	{(char *)"mathutils", PyInit_mathutils},
+ //	{(char *)"mathutils.geometry", PyInit_mathutils_geometry},
+@@ -225,11 +236,15 @@ static struct _inittab bpy_internal_modules[] = {
+ #ifdef WITH_CYCLES
+ 	{(char *)"_cycles", CCL_initPython},
+ #endif
++#ifdef WITH_VRAY_FOR_BLENDER
++	{(char *)"_vray_for_blender", CGR_initPython},
++#endif
+ 	{(char *)"gpu", GPU_initPython},
+ 	{(char *)"idprop", BPyInit_idprop},
+ 	{NULL, NULL}
+ };
+ 
++
+ /* call BPY_context_set first */
+ void BPY_python_start(int argc, const char **argv)
+ {
+diff --git a/blender/source/blender/vray_for_blender/CGR_config.h b/blender/source/blender/vray_for_blender/CGR_config.h
+new file mode 100644
+index 0000000..2962c9e
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/CGR_config.h
+@@ -0,0 +1,97 @@
++/*
++ * ***** BEGIN GPL LICENSE BLOCK *****
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ *
++ * The Original Code is Copyright (C) 2010 Blender Foundation.
++ * All rights reserved.
++ *
++ * Contributor(s): Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
++ *
++ * ***** END GPL LICENSE BLOCK *****
++ */
++
++#ifndef CGR_CONFIG
++#define CGR_CONFIG
++
++#define PLUGIN_NAME V-Ray For Blender
++
++#define USE_COLOR        0 // For Qt Creator
++
++#define USE_DEBUG        1
++#define USE_CALL_DEBUG  (1 && USE_DEBUG)
++#define USE_TIME_DEBUG  (1 && USE_DEBUG)
++#define USE_DRAW_DEBUG  (0 && USE_DEBUG)
++
++#define CGR_USE_JOBS     0
++#define CGR_USE_RNA      0
++
++#if USE_COLOR
++#  define COLOR_RED      "\033[0;31m"
++#  define COLOR_GREEN    "\033[0;32m"
++#  define COLOR_YELLOW   "\033[0;33m"
++#  define COLOR_BLUE     "\033[0;34m"
++#  define COLOR_MAGENTA  "\033[0;35m"
++#  define COLOR_DEFAULT  "\033[0m"
++#else
++#  define COLOR_RED      ""
++#  define COLOR_GREEN    ""
++#  define COLOR_YELLOW   ""
++#  define COLOR_BLUE     ""
++#  define COLOR_MAGENTA  ""
++#  define COLOR_DEFAULT  ""
++#endif
++
++#define NOT(x) !(x)
++
++#define STRINGIZE_NX(A) #A
++#define STRINGIZE(A) STRINGIZE_NX(A)
++
++#ifdef PLUGIN_NAME
++#  define _OUTPUT_PROMPT(P) COLOR_MAGENTA STRINGIZE(P) COLOR_DEFAULT ": "
++#  define OUTPUT_PROMPT _OUTPUT_PROMPT(PLUGIN_NAME)
++#else
++#  define OUTPUT_PROMPT COLOR_MAGENTA "Info" COLOR_DEFAULT ": "
++#endif
++
++#ifdef PLUGIN_NAME
++#  define _OUTPUT_ERROR_PROMPT(P) COLOR_RED STRINGIZE(P) " Error" COLOR_DEFAULT ": "
++#  define OUTPUT_ERROR_PROMPT _OUTPUT_ERROR_PROMPT(PLUGIN_NAME)
++#else
++#  define OUTPUT_ERROR_PROMPT COLOR_RED "Error" COLOR_DEFAULT ": "
++#endif
++
++#if USE_DEBUG == 0
++#  define DEBUG_PRINT(use_debug, ...)
++#else
++#  define DEBUG_PRINT(use_debug, ...) \
++    if(use_debug) { \
++        fprintf(stdout, OUTPUT_PROMPT); \
++        fprintf(stdout, __VA_ARGS__); \
++        fprintf(stdout, "\n"); \
++    }
++#endif
++
++#define PRINT_ERROR(...) \
++    fprintf(stdout, OUTPUT_ERROR_PROMPT); \
++    fprintf(stdout, __VA_ARGS__); \
++    fprintf(stdout, "\n");
++
++#define PRINT_INFO(...) \
++    fprintf(stdout, OUTPUT_PROMPT); \
++    fprintf(stdout, __VA_ARGS__); \
++    fprintf(stdout, "\n");
++
++#endif // CGR_CONFIG
+diff --git a/blender/source/blender/vray_for_blender/CGR_vray_for_blender.h b/blender/source/blender/vray_for_blender/CGR_vray_for_blender.h
+new file mode 100644
+index 0000000..44d1cd7
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/CGR_vray_for_blender.h
+@@ -0,0 +1,39 @@
++/*
++ * ***** BEGIN GPL LICENSE BLOCK *****
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ *
++ * The Original Code is Copyright (C) 2010 Blender Foundation.
++ * All rights reserved.
++ *
++ * Contributor(s): Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
++ *
++ * ***** END GPL LICENSE BLOCK *****
++ */
++
++#ifndef CGR_VRAY_FOR_BLENDER_H
++#define CGR_VRAY_FOR_BLENDER_H
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++void* VRayForBlender_initPython(void);
++
++#ifdef __cplusplus
++}
++#endif
++
++#endif // CGR_VRAY_FOR_BLENDER_H
+diff --git a/blender/source/blender/vray_for_blender/CMakeLists.txt b/blender/source/blender/vray_for_blender/CMakeLists.txt
+new file mode 100644
+index 0000000..4454a18
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/CMakeLists.txt
+@@ -0,0 +1,50 @@
++include_directories(/home/bdancer/devel/globals/include)
++
++set(INC_SYS
++	${PYTHON_INCLUDE_DIRS}
++)
++
++set(INC
++	.
++	./common
++	../blenlib
++	../blenkernel
++	../blenloader
++	../makesdna
++	../makesrna
++	../imbuf
++	../windowmanager
++	../editors/include
++	../render/extern/include
++	../render/intern/include
++	${CMAKE_BINARY_DIR}/source/blender/makesrna/intern
++	../../../intern/guardedalloc
++	../../../intern/smoke/extern
++)
++
++set(SRC
++	CGR_config.h
++
++	# Common stuff
++	common/blender_includes.h
++	utils/CGR_rna.h
++	utils/CGR_rna.cpp
++	utils/CGR_data.h
++	utils/CGR_data.c
++	utils/CGR_string.h
++	utils/CGR_string.c
++
++	# vrscene export
++	vrscene_exporter/vrscene.h
++	vrscene_exporter/node.c
++	vrscene_exporter/geom.c
++	vrscene_exporter/hair.c
++	vrscene_exporter/smoke.c
++
++	python/vray_python_ext.cpp
++
++	# C API
++	CGR_vray_for_blender.h
++)
++
++blender_add_lib(vray_for_blender "${SRC}" "${INC}" "${INC_SYS}")
+diff --git a/blender/source/blender/vray_for_blender/SConscript b/blender/source/blender/vray_for_blender/SConscript
+new file mode 100644
+index 0000000..3b7c01a
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/SConscript
+@@ -0,0 +1,49 @@
++#!/usr/bin/python
++
++Import('env')
++
++sources = [
++    './python/vray_python_ext.cpp',
++    './utils/CGR_data.c',
++    './utils/CGR_rna.cpp',
++    './utils/CGR_string.c',
++    './vrscene_exporter/geom.c',
++    './vrscene_exporter/hair.c',
++    './vrscene_exporter/node.c',
++    './vrscene_exporter/smoke.c',
++]
++
++includes = [
++    '../../../intern/guardedalloc',
++    '../../../intern/smoke/extern',
++    '../../../intern/smoke/extern',
++    '../blenkernel',
++    '../blenlib',
++    '../blenloader',
++    '../makesdna',
++    '../makesrna',
++    '../render/extern/include',
++    '../render/intern/include',
++    '../windowmanager',
++    '../python',
++    '../python/intern',
++    './common',
++    './python',
++    './utils',
++    './vrscene_exporter',
++    './',
++]
++
++includes.extend(env['BF_PYTHON_INC'].split())
++
++if env['OURPLATFORM'] in ('win32-vc', 'win32-mingw', 'linuxcross', 'win64-vc'):
++    includes.append(env['BF_PTHREADS_INC'])
++
++env.BlenderLib(
++    libname  = 'vray_for_blender',
++    sources  = sources,
++    includes = includes,
++    defines  = [],
++    libtype  = ['core'],
++    priority = [600]
++)
+diff --git a/blender/source/blender/vray_for_blender/common/blender_includes.h b/blender/source/blender/vray_for_blender/common/blender_includes.h
+new file mode 100644
+index 0000000..168206b
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/common/blender_includes.h
+@@ -0,0 +1,125 @@
++/*
++ * ***** BEGIN GPL LICENSE BLOCK *****
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ *
++ * The Original Code is Copyright (C) 2010 Blender Foundation.
++ * All rights reserved.
++ *
++ * Contributor(s): Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
++ *
++ * ***** END GPL LICENSE BLOCK *****
++ */
++
++#ifndef BLENDER_INCLUDES_H
++#define BLENDER_INCLUDES_H
++
++#include <stdlib.h>
++#include <stdio.h>
++#include <string.h>
++#include <math.h>
++#include <pthread.h>
++#include <time.h>
++#include <ctype.h>
++
++#include "BLI_linklist.h"
++#include "BLI_listbase.h"
++#include "BLI_math.h"
++#include "BLI_path_util.h"
++#include "BLI_string.h"
++#include "BLI_threads.h"
++#include "BLI_voxel.h"
++#include "BLI_utildefines.h"
++#include "BLI_math_matrix.h"
++#include "BLI_math_vector.h"
++#include "BLI_math_rotation.h"
++#include "BLI_fileops.h"
++
++#include "BKE_main.h"
++#include "BKE_scene.h"
++#include "BKE_context.h"
++#include "BKE_utildefines.h"
++#include "BKE_library.h"
++#include "BKE_DerivedMesh.h"
++#include "BKE_fcurve.h"
++#include "BKE_anim.h"
++#include "BKE_animsys.h"
++#include "BKE_particle.h"
++#include "BKE_pointcache.h"
++#include "BKE_global.h"
++#include "BKE_report.h"
++#include "BKE_object.h"
++#include "BKE_mesh.h"
++#include "BKE_curve.h"
++#include "BKE_bvhutils.h"
++#include "BKE_customdata.h"
++#include "BKE_anim.h"
++#include "BKE_depsgraph.h"
++#include "BKE_displist.h"
++#include "BKE_font.h"
++#include "BKE_mball.h"
++#include "BKE_modifier.h"
++#include "BKE_material.h"
++
++#include "DNA_scene_types.h"
++#include "DNA_object_types.h"
++#include "DNA_group_types.h"
++#include "DNA_meshdata_types.h"
++#include "DNA_mesh_types.h"
++#include "DNA_meta_types.h"
++#include "DNA_image_types.h"
++#include "DNA_material_types.h"
++#include "DNA_texture_types.h"
++#include "DNA_camera_types.h"
++#include "DNA_lamp_types.h"
++#include "DNA_anim_types.h"
++#include "DNA_action_types.h"
++#include "DNA_curve_types.h"
++#include "DNA_armature_types.h"
++#include "DNA_modifier_types.h"
++#include "DNA_windowmanager_types.h"
++#include "DNA_particle_types.h"
++#include "DNA_smoke_types.h"
++#include "DNA_listBase.h"
++
++#include "render_types.h"
++#include "RE_engine.h"
++
++#include "PIL_time.h"
++
++#include "RNA_access.h"
++#include "RNA_define.h"
++
++#include "smoke_API.h"
++
++#ifdef WIN32
++#  ifdef htonl
++#    undef htonl
++#    undef htons
++#    undef ntohl
++#    undef ntohs
++#    define correctByteOrder(x) htonl(x)
++#  endif
++#  include <winsock.h>
++#else
++#  include <netinet/in.h>
++#endif
++
++#include "WM_api.h"
++#include "WM_types.h"
++
++#include "MEM_guardedalloc.h"
++
++#endif // BLENDER_INCLUDES_H
+diff --git a/blender/source/blender/vray_for_blender/python/vray_python_ext.cpp b/blender/source/blender/vray_for_blender/python/vray_python_ext.cpp
+new file mode 100644
+index 0000000..70b2603
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/python/vray_python_ext.cpp
+@@ -0,0 +1,180 @@
++/*
++ * ***** BEGIN GPL LICENSE BLOCK *****
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ *
++ * The Original Code is Copyright (C) 2010 Blender Foundation.
++ * All rights reserved.
++ *
++ * Contributor(s): Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
++ *
++ * ***** END GPL LICENSE BLOCK *****
++ */
++
++#include "CGR_config.h"
++
++extern "C" {
++#include "blender_includes.h"
++#include "vrscene_exporter/vrscene.h"
++}
++
++#include "utils/CGR_data.h"
++#include "CGR_vray_for_blender.h"
++
++#include <Python.h>
++
++
++static PyObject* mExportSmoke(PyObject *self, PyObject *args)
++{
++	int         contextPtr;
++	int         objectPtr;
++	int         smdPtr;
++	const char *pluginName;
++	PyObject   *fileObject;
++
++	if(NOT(PyArg_ParseTuple(args, "iiisO", &contextPtr, &objectPtr, &smdPtr, &pluginName, &fileObject))) {
++		return NULL;
++	}
++
++	bContext          *C   = (bContext*)(intptr_t)contextPtr;
++	Object            *ob  = (Object*)(intptr_t)objectPtr;
++	SmokeModifierData *smd = (SmokeModifierData*)(intptr_t)smdPtr;
++
++	Scene *sce = CTX_data_scene(C);
++
++	write_TexVoxelData(fileObject, sce, ob, smd, pluginName, true, 0, 1.0);
++
++	Py_RETURN_NONE;
++}
++
++
++static PyObject* mExportHair(PyObject *self, PyObject *args)
++{
++	int         contextPtr;
++	int         objectPtr;
++	int         psysPtr;
++	const char *pluginName;
++	PyObject   *fileObject;
++
++	if(NOT(PyArg_ParseTuple(args, "iiisO", &contextPtr, &objectPtr, &psysPtr, &pluginName, &fileObject))) {
++		return NULL;
++	}
++
++	bContext       *C    = (bContext*)(intptr_t)contextPtr;
++	Object         *ob   = (Object*)(intptr_t)objectPtr;
++	ParticleSystem *psys = (ParticleSystem*)(intptr_t)psysPtr;
++
++	Scene *sce  = CTX_data_scene(C);
++	Main  *main = CTX_data_main(C);
++
++	if(write_GeomMayaHair(fileObject, sce, main, ob, psys, pluginName)) {
++		return NULL;
++	}
++
++	Py_RETURN_NONE;
++}
++
++
++static PyObject* mExportMesh(PyObject *self, PyObject *args)
++{
++	int         contextPtr;
++	int         objectPtr;
++	const char *pluginName;
++	PyObject   *fileObject;
++
++	if(NOT(PyArg_ParseTuple(args, "iisO", &contextPtr, &objectPtr, &pluginName, &fileObject))) {
++		return NULL;
++	}
++
++	bContext *C = (bContext*)(intptr_t)contextPtr;
++	Object *ob  = (Object*)(intptr_t)objectPtr;
++
++	Scene *sce  = CTX_data_scene(C);
++	Main  *main = CTX_data_main(C);
++
++	Mesh *mesh = NULL;
++
++	mesh = GetRenderMesh(sce, main, ob);
++
++	if(mesh) {
++		write_GeomStaticMesh(fileObject, sce, ob, mesh, pluginName);
++
++		/* remove the temporary mesh */
++		BKE_mesh_free(mesh, TRUE);
++		BLI_remlink(&main->mesh, mesh);
++		MEM_freeN(mesh);
++	}
++
++	Py_RETURN_NONE;
++}
++
++
++static PyObject* mExportDupli(PyObject *self, PyObject *args)
++{
++	PRINT_INFO("defExportDupli()");
++
++	int objectPtr;
++	int scenePtr;
++
++	if(NOT(PyArg_ParseTuple(args, "ii", &scenePtr, &objectPtr))) {
++		return NULL;
++	}
++
++	Object *ob  = (Object*)(intptr_t)objectPtr;
++	Scene  *sce = (Scene*)(intptr_t)scenePtr;
++
++	/* free duplilist if a user forgets to */
++	if(ob->duplilist) {
++		free_object_duplilist(ob->duplilist);
++		ob->duplilist = NULL;
++	}
++
++	ob->duplilist = object_duplilist(sce, ob, TRUE);
++
++	// Process dupli objects
++	for(DupliObject *dob = (DupliObject*)ob->duplilist->first; dob; dob = dob->next) {
++		// ...
++	}
++
++	free_object_duplilist(ob->duplilist);
++	ob->duplilist = NULL;
++
++	Py_RETURN_NONE;
++}
++
++
++static PyMethodDef methods[] = {
++	{"exportDupli", mExportDupli, METH_VARARGS, "Export dupli / particles"},
++	{"exportMesh",  mExportMesh,  METH_VARARGS, "Export mesh"},
++	{"exportSmoke", mExportSmoke, METH_VARARGS, "Export smoke simulation data"},
++	{"exportHair",  mExportHair,  METH_VARARGS, "Export hair"},
++	{NULL, NULL, 0, NULL},
++};
++
++
++static struct PyModuleDef module = {
++	PyModuleDef_HEAD_INIT,
++	"_vray_for_blender",
++	"V-Ray For Blender export helper module",
++	-1,
++	methods,
++	NULL, NULL, NULL, NULL
++};
++
++
++void* VRayForBlender_initPython()
++{
++	return (void*)PyModule_Create(&module);
++}
+diff --git a/blender/source/blender/vray_for_blender/utils/CGR_data.c b/blender/source/blender/vray_for_blender/utils/CGR_data.c
+new file mode 100644
+index 0000000..d39ffd4
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/utils/CGR_data.c
+@@ -0,0 +1,116 @@
++/*
++ * ***** BEGIN GPL LICENSE BLOCK *****
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ *
++ * The Original Code is Copyright (C) 2010 Blender Foundation.
++ * All rights reserved.
++ *
++ * Contributor(s): Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
++ *
++ * ***** END GPL LICENSE BLOCK *****
++ */
++
++#include "CGR_data.h"
++
++
++Mesh* GetRenderMesh(Scene *sce, Main *bmain, Object *ob)
++{
++    Mesh *tmpmesh;
++    Curve *tmpcu = NULL, *copycu;
++    Object *tmpobj = NULL;
++    Object *basis_ob = NULL;
++    ListBase disp = {NULL, NULL};
++
++    /* Make a dummy mesh, saves copying */
++    DerivedMesh *dm;
++
++    CustomDataMask mask = CD_MASK_MESH;
++
++    /* perform the mesh extraction based on type */
++    switch (ob->type) {
++    case OB_FONT:
++    case OB_CURVE:
++    case OB_SURF:
++        /* copies object and modifiers (but not the data) */
++        tmpobj = BKE_object_copy(ob);
++        tmpcu = (Curve*)tmpobj->data;
++        tmpcu->id.us--;
++
++        /* copies the data */
++        tmpobj->data = BKE_curve_copy((Curve*)ob->data);
++        copycu = (Curve*)tmpobj->data;
++
++        /* temporarily set edit so we get updates from edit mode, but
++         * also because for text datablocks copying it while in edit
++         * mode gives invalid data structures */
++        copycu->editfont = tmpcu->editfont;
++        copycu->editnurb = tmpcu->editnurb;
++
++        /* get updated display list, and convert to a mesh */
++        BKE_displist_make_curveTypes( sce, tmpobj, 0 );
++
++        copycu->editfont = NULL;
++        copycu->editnurb = NULL;
++
++        BKE_mesh_from_nurbs( tmpobj );
++
++        /* nurbs_to_mesh changes the type to a mesh, check it worked */
++        if (tmpobj->type != OB_MESH) {
++            BKE_libblock_free_us( &(G.main->object), tmpobj );
++            return NULL;
++        }
++        tmpmesh = (Mesh*)tmpobj->data;
++        BKE_libblock_free_us( &G.main->object, tmpobj );
++
++        break;
++
++    case OB_MBALL:
++        /* metaballs don't have modifiers, so just convert to mesh */
++        basis_ob = BKE_mball_basis_find(sce, ob);
++
++        if (ob != basis_ob)
++            return NULL; /* only do basis metaball */
++
++        tmpmesh = BKE_mesh_add(bmain, "Mesh");
++
++        BKE_displist_make_mball_forRender(sce, ob, &disp);
++        BKE_mesh_from_metaball(&disp, tmpmesh);
++        BKE_displist_free(&disp);
++
++        break;
++
++    case OB_MESH:
++        /* Write the render mesh into the dummy mesh */
++        dm = mesh_create_derived_render(sce, ob, mask);
++
++        tmpmesh = BKE_mesh_add(bmain, "Mesh");
++        DM_to_mesh(dm, tmpmesh, ob, mask);
++        dm->release(dm);
++
++        break;
++
++    default:
++        return NULL;
++    }
++
++    /* cycles and exporters rely on this still */
++    BKE_mesh_tessface_ensure(tmpmesh);
++
++    /* we don't assign it to anything */
++    tmpmesh->id.us--;
++
++    return tmpmesh;
++}
+diff --git a/blender/source/blender/vray_for_blender/utils/CGR_data.h b/blender/source/blender/vray_for_blender/utils/CGR_data.h
+new file mode 100644
+index 0000000..d5eebb6
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/utils/CGR_data.h
+@@ -0,0 +1,41 @@
++/*
++ * ***** BEGIN GPL LICENSE BLOCK *****
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ *
++ * The Original Code is Copyright (C) 2010 Blender Foundation.
++ * All rights reserved.
++ *
++ * Contributor(s): Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
++ *
++ * ***** END GPL LICENSE BLOCK *****
++ */
++
++#ifndef CGR_BLENDER_UTILS_H
++#define CGR_BLENDER_UTILS_H
++
++#include "blender_includes.h"
++
++#ifdef __cplusplus
++extern "C" {
++#endif
++
++Mesh* GetRenderMesh(Scene *sce, Main *bmain, Object *ob);
++
++#ifdef __cplusplus
++} // extern "C"
++#endif
++
++#endif // CGR_BLENDER_UTILS_H
+diff --git a/blender/source/blender/vray_for_blender/utils/CGR_rna.cpp b/blender/source/blender/vray_for_blender/utils/CGR_rna.cpp
+new file mode 100644
+index 0000000..4b4a88c
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/utils/CGR_rna.cpp
+@@ -0,0 +1,158 @@
++/*
++ * ***** BEGIN GPL LICENSE BLOCK *****
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ *
++ * The Original Code is Copyright (C) 2010 Blender Foundation.
++ * All rights reserved.
++ *
++ * Contributor(s): Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
++ *
++ * ***** END GPL LICENSE BLOCK *****
++ */
++
++#include "CGR_config.h"
++#include "CGR_rna.h"
++
++#include <stdio.h>
++
++#include <string>
++#include <vector>
++
++#include <boost/algorithm/string.hpp>
++#include <boost/algorithm/string/classification.hpp>
++
++
++using namespace RnaAccess;
++
++
++typedef std::vector<std::string> PathRNA;
++
++
++RnaValue::RnaValue(ID *id, const char *rnaPointerPath)
++{
++    m_path = rnaPointerPath;
++
++    PathRNA rnaPath;
++    boost::split(rnaPath, m_path, boost::is_any_of("."));
++
++    DEBUG_PRINT(0, "Initing RnaValue for path = %s", rnaPointerPath);
++
++    RNA_id_pointer_create(id, &m_pointer);
++
++    size_t nTokens = rnaPath.size();
++    for(size_t t = 0; t < nTokens; ++t) {
++        if(NOT(RNA_struct_find_property(&m_pointer, rnaPath[t].c_str()))) {
++            m_pointer = PointerRNA_NULL;
++            break;
++        }
++        m_pointer = RNA_pointer_get(&m_pointer, rnaPath[t].c_str());
++    }
++}
++
++
++int RnaValue::CheckProperty(const char *propName)
++{
++    if(m_pointer.data == NULL) {
++        PRINT_ERROR("Property pointer not found!");
++        return 1;
++    }
++
++    if(NOT(RNA_struct_find_property(&m_pointer, propName))) {
++        PRINT_ERROR("Property "COLOR_YELLOW"%s"COLOR_DEFAULT" not found!", propName);
++        return 2;
++    }
++
++    return 0;
++}
++
++
++int RnaValue::GetValue(const char *propName, int &value)
++{
++    if(CheckProperty(propName)) {
++        return 1;
++    }
++
++    value = RNA_int_get(&m_pointer, propName);
++
++    DEBUG_PRINT(0,
++                COLOR_BLUE"%s"COLOR_DEFAULT"."COLOR_GREEN"%s"COLOR_DEFAULT" = "COLOR_YELLOW"%i"COLOR_DEFAULT,
++                m_path.c_str(), propName, value);
++
++    return 0;
++}
++
++
++int RnaValue::GetValue(const char *propName, bool &value)
++{
++    if(CheckProperty(propName)) {
++        return 1;
++    }
++
++    value = RNA_boolean_get(&m_pointer, propName);
++
++    DEBUG_PRINT(0,
++                COLOR_BLUE"%s"COLOR_DEFAULT"."COLOR_GREEN"%s"COLOR_DEFAULT" = "COLOR_YELLOW"%s"COLOR_DEFAULT,
++                m_path.c_str(), propName, value ? "True" : "False");
++
++    return 0;
++}
++
++
++int RnaValue::GetValue(const char *propName, float &value)
++{
++    if(CheckProperty(propName)) {
++        return 1;
++    }
++
++    value = RNA_float_get(&m_pointer, propName);
++
++    DEBUG_PRINT(0,
++                COLOR_BLUE"%s"COLOR_DEFAULT"."COLOR_GREEN"%s"COLOR_DEFAULT" = "COLOR_YELLOW"%.3f"COLOR_DEFAULT,
++                m_path.c_str(), propName, value);
++
++    return 0;
++}
++
++
++// Usage:
++//   char value[MAX_ID_NAME - 2];
++//
++int RnaValue::GetValue(const char *propName, char *value)
++{
++    if(CheckProperty(propName)) {
++        return 1;
++    }
++
++    RNA_string_get(&m_pointer, propName, value);
++
++    DEBUG_PRINT(0,
++                COLOR_BLUE"%s"COLOR_DEFAULT"."COLOR_GREEN"%s"COLOR_DEFAULT" = "COLOR_YELLOW"%s"COLOR_DEFAULT,
++                m_path.c_str(), propName, value);
++
++    return 0;
++}
++
++
++int RnaValue::GetValue(const char *propName, float value[])
++{
++    if(CheckProperty(propName)) {
++        return 1;
++    }
++
++    RNA_float_get_array(&m_pointer, propName, value);
++
++    return 0;
++}
+diff --git a/blender/source/blender/vray_for_blender/utils/CGR_rna.h b/blender/source/blender/vray_for_blender/utils/CGR_rna.h
+new file mode 100644
+index 0000000..39bffca
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/utils/CGR_rna.h
+@@ -0,0 +1,58 @@
++/*
++ * ***** BEGIN GPL LICENSE BLOCK *****
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ *
++ * The Original Code is Copyright (C) 2010 Blender Foundation.
++ * All rights reserved.
++ *
++ * Contributor(s): Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
++ *
++ * ***** END GPL LICENSE BLOCK *****
++ */
++
++#ifndef CGR_UTILS_RNA_H
++#define CGR_UTILS_RNA_H
++
++extern "C" {
++#include "RNA_access.h"
++}
++
++#include <string>
++
++
++namespace RnaAccess {
++
++class RnaValue {
++public:
++    RnaValue(ID *id, const char *rnaPointerPath);
++
++    int          GetValue(const char *propName, int   &value);
++    int          GetValue(const char *propName, bool  &value);
++    int          GetValue(const char *propName, float &value);
++    int          GetValue(const char *propName, char  *value);
++    int          GetValue(const char *propName, float  value[3]);
++
++private:
++    int          CheckProperty(const char *propName);
++
++    std::string  m_path;
++    PointerRNA   m_pointer;
++
++};
++
++}
++
++#endif // CGR_UTILS_RNA_H
+diff --git a/blender/source/blender/vray_for_blender/utils/CGR_string.c b/blender/source/blender/vray_for_blender/utils/CGR_string.c
+new file mode 100644
+index 0000000..14a3c68
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/utils/CGR_string.c
+@@ -0,0 +1,45 @@
++/*
++ * ***** BEGIN GPL LICENSE BLOCK *****
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ *
++ * The Original Code is Copyright (C) 2010 Blender Foundation.
++ * All rights reserved.
++ *
++ * Contributor(s): Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
++ *
++ * ***** END GPL LICENSE BLOCK *****
++ */
++
++#include "CGR_string.h"
++#include <string.h>
++
++
++void ClearString(char *str)
++{
++	int nChars = strlen(str);
++	int i      = 0;
++
++	for(i = 0; i < nChars; i++) {
++		if(str[i]) {
++			if(str[i] == '+')
++				str[i] = 'p';
++			else if(str[i] == '-')
++				str[i] = 'm';
++			else if(!((str[i] >= 'A' && str[i] <= 'Z') || (str[i] >= 'a' && str[i] <= 'z') || (str[i] >= '0' && str[i] <= '9')))
++				str[i] = '_';
++		}
++	}
++}
+diff --git a/blender/source/blender/vray_for_blender/utils/CGR_string.h b/blender/source/blender/vray_for_blender/utils/CGR_string.h
+new file mode 100644
+index 0000000..e308b28
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/utils/CGR_string.h
+@@ -0,0 +1,31 @@
++/*
++ * ***** BEGIN GPL LICENSE BLOCK *****
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ *
++ * The Original Code is Copyright (C) 2010 Blender Foundation.
++ * All rights reserved.
++ *
++ * Contributor(s): Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
++ *
++ * ***** END GPL LICENSE BLOCK *****
++ */
++
++#ifndef CGR_STRING_H
++#define CGR_STRING_H
++
++void ClearString(char *str);
++
++#endif // CGR_STRING_H
+diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/geom.c b/blender/source/blender/vray_for_blender/vrscene_exporter/geom.c
+new file mode 100644
+index 0000000..dc7cc45
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/vrscene_exporter/geom.c
+@@ -0,0 +1,317 @@
++/*
++ * ***** BEGIN GPL LICENSE BLOCK *****
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ *
++ * The Original Code is Copyright (C) 2010 Blender Foundation.
++ * All rights reserved.
++ *
++ * Contributor(s): Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
++ *
++ * ***** END GPL LICENSE BLOCK *****
++ */
++
++#include "vrscene.h"
++
++
++static int write_edge_visibility(PyObject *outputFile, int k, unsigned long int *ev)
++{
++	static char buf[MAX_PLUGIN_NAME];
++	if(k == 9) {
++		WRITE_PYOBJECT_HEX_VALUE(outputFile, *ev);
++		*ev= 0;
++		return 0;
++	}
++	return k + 1;
++}
++
++
++void write_GeomStaticMesh(PyObject *outputFile, Scene *sce, Object *ob, Mesh *mesh, const char *pluginName)
++{
++	static char buf[MAX_PLUGIN_NAME];
++
++	Mesh   *data = ob->data;
++	MFace  *face;
++	MTFace *mtface;
++	MCol   *mcol;
++	MVert  *vert;
++
++	CustomData *fdata;
++
++	int    verts;
++	int    fve[4];
++	float *ve[4];
++	float  no[3];
++	float  col[3];
++
++	float  fno[3];
++	float  n0[3], n1[3], n2[3], n3[3];
++
++	int    matid       = 0;
++	int    uv_count    = 0;
++	int    uv_layer_id = 1;
++
++	PointerRNA   rna_me;
++	PointerRNA   VRayMesh;
++	PointerRNA   GeomStaticMesh;
++
++	int          dynamic_geometry= 0;
++
++	const int ft[6]= {0,1,2,2,3,0};
++
++	unsigned long int ev= 0;
++
++	int i, j, f, k, l;
++	int u;
++
++	if(!(mesh->totface)) {
++		PRINT_ERROR( "No faces in mesh \"%s\"", data->id.name);
++		return;
++	}
++	
++	WRITE_PYOBJECT(outputFile, "\nGeomStaticMesh %s {", pluginName);
++
++	WRITE_PYOBJECT(outputFile, "\n\tvertices=interpolate((%d,ListVectorHex(\"", sce->r.cfra);
++	vert = mesh->mvert;
++	for(f = 0; f < mesh->totvert; ++vert, ++f) {
++		WRITE_PYOBJECT_HEX_VECTOR(outputFile, vert->co);
++	}
++	WRITE_PYOBJECT(outputFile, "\")));");
++
++	// TODO: velocities (?)
++
++	WRITE_PYOBJECT(outputFile, "\n\tfaces=interpolate((%d,ListIntHex(\"", sce->r.cfra);
++	face = mesh->mface;
++	for(f = 0; f < mesh->totface; ++face, ++f) {
++		if(face->v4) {
++			WRITE_PYOBJECT_HEX_QUADFACE(outputFile, face);
++		}
++		else {
++			WRITE_PYOBJECT_HEX_TRIFACE(outputFile, face);
++		}
++	}
++	WRITE_PYOBJECT(outputFile, "\")));");
++
++	WRITE_PYOBJECT(outputFile, "\n\tnormals=interpolate((%d,ListVectorHex(\"", sce->r.cfra);
++	face = mesh->mface;
++	for(f = 0; f < mesh->totface; ++face, ++f) {
++		if(face->flag & ME_SMOOTH) {
++			normal_short_to_float_v3(n0, mesh->mvert[face->v1].no);
++			normal_short_to_float_v3(n1, mesh->mvert[face->v2].no);
++			normal_short_to_float_v3(n2, mesh->mvert[face->v3].no);
++
++			if(face->v4)
++				normal_short_to_float_v3(n3, mesh->mvert[face->v4].no);
++		}
++		else {
++			if(face->v4)
++				normal_quad_v3(fno, mesh->mvert[face->v1].co, mesh->mvert[face->v2].co, mesh->mvert[face->v3].co, mesh->mvert[face->v4].co);
++			else
++				normal_tri_v3(fno,  mesh->mvert[face->v1].co, mesh->mvert[face->v2].co, mesh->mvert[face->v3].co);
++
++			copy_v3_v3(n0, fno);
++			copy_v3_v3(n1, fno);
++			copy_v3_v3(n2, fno);
++
++			if(face->v4)
++				copy_v3_v3(n3, fno);
++		}
++
++		if(face->v4) {
++			WRITE_PYOBJECT_HEX_VECTOR(outputFile, n0);
++			WRITE_PYOBJECT_HEX_VECTOR(outputFile, n1);
++			WRITE_PYOBJECT_HEX_VECTOR(outputFile, n2);
++			WRITE_PYOBJECT_HEX_VECTOR(outputFile, n2);
++			WRITE_PYOBJECT_HEX_VECTOR(outputFile, n3);
++			WRITE_PYOBJECT_HEX_VECTOR(outputFile, n0);
++		} else {
++			WRITE_PYOBJECT_HEX_VECTOR(outputFile, n0);
++			WRITE_PYOBJECT_HEX_VECTOR(outputFile, n1);
++			WRITE_PYOBJECT_HEX_VECTOR(outputFile, n2);
++		}
++	}
++	WRITE_PYOBJECT(outputFile, "\")));");
++
++
++	WRITE_PYOBJECT(outputFile, "\n\tfaceNormals=interpolate((%d,ListIntHex(\"", sce->r.cfra);
++	face= mesh->mface;
++	k= 0;
++	for(f= 0; f < mesh->totface; ++face, ++f) {
++		if(mesh->mface[f].v4)
++			verts= 6;
++		else
++			verts= 3;
++
++		for(i= 0; i < verts; i++) {
++			WRITE_PYOBJECT(outputFile, "%08X", HEX(k));
++			k++;
++		}
++	}
++	WRITE_PYOBJECT(outputFile, "\")));");
++
++
++	WRITE_PYOBJECT(outputFile, "\n\tface_mtlIDs=ListIntHex(\"");
++	face= mesh->mface;
++	for(f= 0; f < mesh->totface; ++face, ++f) {
++		matid= face->mat_nr + 1;
++		if(face->v4) {
++			WRITE_PYOBJECT(outputFile, "%08X%08X", HEX(matid), HEX(matid));
++		}
++		else {
++			WRITE_PYOBJECT(outputFile, "%08X", HEX(matid));
++		}
++	}
++	WRITE_PYOBJECT(outputFile, "\");");
++
++
++	WRITE_PYOBJECT(outputFile, "\n\tedge_visibility=ListIntHex(\"");
++	ev= 0;
++	if(mesh->totface <= 5) {
++		face= mesh->mface;
++		for(f= 0; f < mesh->totface; ++face, ++f) {
++			if(face->v4) {
++				ev= (ev << 6) | 27;
++			} else {
++				ev= (ev << 3) | 8;
++			}
++		}
++		WRITE_PYOBJECT(outputFile, "%08X", HEX(ev));
++	} else {
++		k= 0;
++		face= mesh->mface;
++		for(f= 0; f < mesh->totface; ++face, ++f) {
++			if(face->v4) {
++				ev= (ev << 3) | 3;
++				k= write_edge_visibility(outputFile, k, &ev);
++				ev= (ev << 3) | 3;
++				k= write_edge_visibility(outputFile, k, &ev);
++			} else {
++				ev= (ev << 3) | 8;
++				k= write_edge_visibility(outputFile, k, &ev);
++			}
++		}
++
++		if(k) {
++			WRITE_PYOBJECT(outputFile, "%08X", HEX(ev));
++		}
++	}
++	WRITE_PYOBJECT(outputFile, "\");");
++
++
++	fdata = &mesh->fdata;
++
++	uv_count  = CustomData_number_of_layers(fdata, CD_MTFACE);
++	uv_count += CustomData_number_of_layers(fdata, CD_MCOL);
++
++	if(uv_count) {
++		WRITE_PYOBJECT(outputFile, "\n\tmap_channels_names=List(");
++		for(l = 0; l < fdata->totlayer; ++l) {
++			if(fdata->layers[l].type == CD_MTFACE || fdata->layers[l].type == CD_MCOL) {
++				WRITE_PYOBJECT(outputFile, "\"%s\"", fdata->layers[l].name);
++
++				if(l < uv_count) {
++					WRITE_PYOBJECT(outputFile, ",");
++				}
++			}
++		}
++		WRITE_PYOBJECT(outputFile, ");");
++
++		WRITE_PYOBJECT(outputFile, "\n\tmap_channels=interpolate((%d, List(", sce->r.cfra);
++		uv_layer_id = 0;
++		for(l = 0; l < fdata->totlayer; ++l) {
++			if(fdata->layers[l].type == CD_MTFACE || fdata->layers[l].type == CD_MCOL) {
++				WRITE_PYOBJECT(outputFile, "\n\t\t// Name: %s", fdata->layers[l].name);
++				WRITE_PYOBJECT(outputFile, "\n\t\tList(%i,ListVectorHex(\"", uv_layer_id++);
++
++				if(fdata->layers[l].type == CD_MTFACE) {
++					face   = mesh->mface;
++					mtface = (MTFace*)fdata->layers[l].data;
++					for(f = 0; f < mesh->totface; ++face, ++f) {
++						if(face->v4)
++							verts = 4;
++						else
++							verts = 3;
++						for(i = 0; i < verts; i++) {
++							WRITE_PYOBJECT(outputFile, "%08X%08X00000000", HEX(mtface[f].uv[i][0]), HEX(mtface[f].uv[i][1]));
++						}
++					}
++				}
++				else {
++					face = mesh->mface;
++					mcol = (MCol*)fdata->layers[l].data;
++					for(f = 0; f < mesh->totface; ++face, ++f) {
++						if(face->v4)
++							verts = 4;
++						else
++							verts = 3;
++						for(i = 0; i < verts; i++) {
++							col[0] = (float)mcol[f * 4 + i].b / 255.0;
++							col[1] = (float)mcol[f * 4 + i].g / 255.0;
++							col[2] = (float)mcol[f * 4 + i].r / 255.0;
++
++							WRITE_PYOBJECT_HEX_VECTOR(outputFile, col);
++						}
++					}
++				}
++
++				WRITE_PYOBJECT(outputFile, "\"),");
++
++				WRITE_PYOBJECT(outputFile, "ListIntHex(\"");
++				u = 0;
++				face = mesh->mface;
++				for(f = 0; f < mesh->totface; ++face, ++f) {
++					if(face->v4) {
++						WRITE_PYOBJECT(outputFile, "%08X", HEX(u));
++						k = u+1;
++						WRITE_PYOBJECT(outputFile, "%08X", HEX(k));
++						k = u+2;
++						WRITE_PYOBJECT(outputFile, "%08X", HEX(k));
++						WRITE_PYOBJECT(outputFile, "%08X", HEX(k));
++						k = u+3;
++						WRITE_PYOBJECT(outputFile, "%08X", HEX(k));
++						WRITE_PYOBJECT(outputFile, "%08X", HEX(u));
++						u += 4;
++					} else {
++						WRITE_PYOBJECT(outputFile, "%08X", HEX(u));
++						k = u+1;
++						WRITE_PYOBJECT(outputFile, "%08X", HEX(k));
++						k = u+2;
++						WRITE_PYOBJECT(outputFile, "%08X", HEX(k));
++						u += 3;
++					}
++				}
++				WRITE_PYOBJECT(outputFile, "\"))");
++
++				if(l < uv_count) {
++					WRITE_PYOBJECT(outputFile, ",");
++				}
++			}
++		}
++		WRITE_PYOBJECT(outputFile, "\n\t)));");
++	}
++
++	RNA_id_pointer_create(&data->id, &rna_me);
++	if(RNA_struct_find_property(&rna_me, "vray")) {
++		VRayMesh = RNA_pointer_get(&rna_me, "vray");
++		if(RNA_struct_find_property(&VRayMesh, "GeomStaticMesh")) {
++			GeomStaticMesh = RNA_pointer_get(&VRayMesh, "GeomStaticMesh");
++			if(RNA_struct_find_property(&GeomStaticMesh, "dynamic_geometry")) {
++				dynamic_geometry = RNA_boolean_get(&GeomStaticMesh, "dynamic_geometry");
++			}
++		}
++	}
++	WRITE_PYOBJECT(outputFile, "\n\tdynamic_geometry=%i;", dynamic_geometry);
++	WRITE_PYOBJECT(outputFile, "\n}\n");
++}
+diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/hair.c b/blender/source/blender/vray_for_blender/vrscene_exporter/hair.c
+new file mode 100644
+index 0000000..eddf62f
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/vrscene_exporter/hair.c
+@@ -0,0 +1,714 @@
++/*
++ * ***** BEGIN GPL LICENSE BLOCK *****
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ *
++ * The Original Code is Copyright (C) 2010 Blender Foundation.
++ * All rights reserved.
++ *
++ * Contributor(s): Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
++ *
++ * ***** END GPL LICENSE BLOCK *****
++ */
++
++#include "vrscene.h"
++
++
++typedef struct ParticleStrandData {
++	float *uvco;
++	int    totuv;
++} ParticleStrandData;
++
++
++// TODO: Remove! V-Ray could do it itself!
++//
++// Spline Interpolation
++//
++//  Code from: http://www.mech.uq.edu.au/staff/jacobs/nm_lib/doc/spline.html
++//
++
++// c_spline_init()
++//
++//   Evaluate the coefficients b[i], c[i], d[i], i = 0, 1, .. n-1 for
++//   a cubic interpolating spline
++//
++//   S(xx) = Y[i] + b[i] * w + c[i] * w**2 + d[i] * w**3
++//   where w = xx - x[i]
++//   and   x[i] <= xx <= x[i+1]
++//
++//   The n supplied data points are x[i], y[i], i = 0 ... n-1.
++//
++//   Input :
++//   -------
++//   n       : The number of data points or knots (n >= 2)
++//   end1,
++//   end2    : = 1 to specify the slopes at the end points
++//             = 0 to obtain the default conditions
++//   slope1,
++//   slope2  : the slopes at the end points x[0] and x[n-1]
++//             respectively
++//   x[]     : the abscissas of the knots in strictly
++//             increasing order
++//   y[]     : the ordinates of the knots
++//
++//   Output :
++//   --------
++//   b, c, d : arrays of spline coefficients as defined above
++//             (See note 2 for a definition.)
++//   iflag   : status flag
++//            = 0 normal return
++//            = 1 less than two data points; cannot interpolate
++//            = 2 x[] are not in ascending order
++//
++//   This C code written by ...  Peter & Nigel,
++//   ----------------------      Design Software,
++//                               42 Gubberley St,
++//                               Kenmore, 4069,
++//                               Australia.
++//
++//   Version ... 1.1, 30 September 1987
++//   -------     2.0, 6 April 1989    (start with zero subscript)
++//                                     remove ndim from parameter list
++//               2.1, 28 April 1989   (check on x[])
++//               2.2, 10 Oct   1989   change number order of matrix
++//
++//   Notes ...
++//   -----
++//   (1) The accompanying function seval() may be used to evaluate the
++//       spline while deriv will provide the first derivative.
++//   (2) Using p to denote differentiation
++//       y[i] = S(X[i])
++//       b[i] = Sp(X[i])
++//       c[i] = Spp(X[i])/2
++//       d[i] = Sppp(X[i])/6  ( Derivative from the right )
++//   (3) Since the zero elements of the arrays ARE NOW used here,
++//       all arrays to be passed from the main program should be
++//       dimensioned at least [n].  These routines will use elements
++//       [0 .. n-1].
++//   (4) Adapted from the text
++//       Forsythe, G.E., Malcolm, M.A. and Moler, C.B. (1977)
++//       "Computer Methods for Mathematical Computations"
++//       Prentice Hall
++//   (5) Note that although there are only n-1 polynomial segments,
++//       n elements are requird in b, c, d.  The elements b[n-1],
++//       c[n-1] and d[n-1] are set to continue the last segment
++//       past x[n-1].
++//
++static int c_spline_init(const int n, const int end1, const int end2, const float slope1, const float slope2,
++						 const float x[], const float y[],
++						 float b[], float c[], float d[], int *iflag)
++{
++	int     nm1, ib, i;
++	float  t;
++	int     ascend;
++
++	nm1    = n - 1;
++	*iflag = 0;
++
++	/* no possible interpolation */
++	if(n < 2) {
++		*iflag = 1;
++		goto LeaveSpline;
++	}
++
++	ascend = 1;
++	for(i = 1; i < n; ++i)
++		if (x[i] <= x[i-1]) ascend = 0;
++
++	if(!ascend) {
++		*iflag = 2;
++		goto LeaveSpline;
++	}
++
++	if(n >= 3)
++	{
++		/* At least quadratic */
++
++		/* Set up the symmetric tri-diagonal system
++		   b = diagonal
++		   d = offdiagonal
++		   c = right-hand-side  */
++		d[0] = x[1] - x[0];
++		c[1] = (y[1] - y[0]) / d[0];
++		for (i = 1; i < nm1; ++i)
++		{
++			d[i]   = x[i+1] - x[i];
++			b[i]   = 2.0 * (d[i-1] + d[i]);
++			c[i+1] = (y[i+1] - y[i]) / d[i];
++			c[i]   = c[i+1] - c[i];
++		}
++
++		/* Default End conditions
++		   Third derivatives at x[0] and x[n-1] obtained
++		   from divided differences  */
++		b[0]   = -d[0];
++		b[nm1] = -d[n-2];
++		c[0]   = 0.0;
++		c[nm1] = 0.0;
++		if(n != 3) {
++			c[0]   = c[2] / (x[3] - x[1]) - c[1] / (x[2] - x[0]);
++			c[nm1] = c[n-2] / (x[nm1] - x[n-3]) - c[n-3] / (x[n-2] - x[n-4]);
++			c[0]   = c[0] * d[0] * d[0] / (x[3] - x[0]);
++			c[nm1] = -c[nm1] * d[n-2] * d[n-2] / (x[nm1] - x[n-4]);
++		}
++
++		/* Alternative end conditions -- known slopes */
++		if(end1 == 1) {
++			b[0] = 2.0 * (x[1] - x[0]);
++			c[0] = (y[1] - y[0]) / (x[1] - x[0]) - slope1;
++		}
++		if(end2 == 1) {
++			b[nm1] = 2.0 * (x[nm1] - x[n-2]);
++			c[nm1] = slope2 - (y[nm1] - y[n-2]) / (x[nm1] - x[n-2]);
++		}
++
++		/* Forward elimination */
++		for(i = 1; i < n; ++i) {
++			t    = d[i-1] / b[i-1];
++			b[i] = b[i] - t * d[i-1];
++			c[i] = c[i] - t * c[i-1];
++		}
++
++		/* Back substitution */
++		c[nm1] = c[nm1] / b[nm1];
++		for(ib = 0; ib < nm1; ++ib)
++		{
++			i    = n - ib - 2;
++			c[i] = (c[i] - d[i] * c[i+1]) / b[i];
++		}
++
++		/* c[i] is now the sigma[i] of the text */
++
++		/* Compute the polynomial coefficients */
++		b[nm1] = (y[nm1] - y[n-2]) / d[n-2] + d[n-2] * (c[n-2] + 2.0 * c[nm1]);
++		for(i = 0; i < nm1; ++i)
++		{
++			b[i] = (y[i+1] - y[i]) / d[i] - d[i] * (c[i+1] + 2.0 * c[i]);
++			d[i] = (c[i+1] - c[i]) / d[i];
++			c[i] = 3.0 * c[i];
++		}
++		c[nm1] = 3.0 * c[nm1];
++		d[nm1] = d[n-2];
++
++	}
++	else
++	{
++		/* linear segment only  */
++		b[0] = (y[1] - y[0]) / (x[1] - x[0]);
++		c[0] = 0.0;
++		d[0] = 0.0;
++		b[1] = b[0];
++		c[1] = 0.0;
++		d[1] = 0.0;
++	}
++
++LeaveSpline:
++	return 0;
++}
++
++
++// c_spline_eval()
++//
++//  Evaluate the cubic spline function
++//
++//  S(xx) = y[i] + b[i] * w + c[i] * w**2 + d[i] * w**3
++//  where w = u - x[i]
++//  and   x[i] <= u <= x[i+1]
++//  Note that Horner's rule is used.
++//  If u < x[0]   then i = 0 is used.
++//  If u > x[n-1] then i = n-1 is used.
++//
++//  Input :
++//  -------
++//  n       : The number of data points or knots (n >= 2)
++//  u       : the abscissa at which the spline is to be evaluated
++//  Last    : the segment that was last used to evaluate U
++//  x[]     : the abscissas of the knots in strictly increasing order
++//  y[]     : the ordinates of the knots
++//  b, c, d : arrays of spline coefficients computed by spline().
++//
++//  Output :
++//  --------
++//  seval   : the value of the spline function at u
++//  Last    : the segment in which u lies
++//
++//  Notes ...
++//  -----
++//  (1) If u is not in the same interval as the previous call then a
++//      binary search is performed to determine the proper interval.
++//
++static float c_spline_eval(int n, float u, float x[], float y[],
++						   float b[], float c[], float d[], int *last)
++{
++	int    i, j, k;
++	float w;
++
++	i = *last;
++
++	if(i >= n-1) i = 0;
++	if(i < 0)  i = 0;
++
++	/* perform a binary search */
++	if((x[i] > u) || (x[i+1] < u))
++	{
++		i = 0;
++		j = n;
++		do
++		{
++			k = (i + j) / 2;         /* split the domain to search */
++			if (u < x[k])  j = k;    /* move the upper bound */
++			if (u >= x[k]) i = k;    /* move the lower bound */
++		}                            /* there are no more segments to search */
++		while (j > i+1);
++	}
++	*last = i;
++
++	/* Evaluate the spline */
++	w = u - x[i];
++	w = y[i] + w * (b[i] + w * (c[i] + w * d[i]));
++
++	return w;
++}
++
++
++// Taken from "source/blender/render/intern/source/convertblender.c"
++// and slightly modified
++//
++static void get_particle_uvco_mcol(short from, DerivedMesh *dm, float *fuv, int num, ParticleStrandData *sd)
++{
++	int i;
++
++	/* get uvco */
++	if (sd->uvco && ELEM(from, PART_FROM_FACE, PART_FROM_VOLUME)) {
++		for (i=0; i<sd->totuv; i++) {
++			if (num != DMCACHE_NOTFOUND) {
++				MFace  *mface  = dm->getTessFaceData(dm, num, CD_MFACE);
++				MTFace *mtface = (MTFace*)CustomData_get_layer_n(&dm->faceData, CD_MTFACE, i);
++				mtface += num;
++
++				psys_interpolate_uvs(mtface, mface->v4, fuv, sd->uvco + 2 * i);
++			}
++			else {
++				sd->uvco[2*i] = 0.0f;
++				sd->uvco[2*i + 1] = 0.0f;
++			}
++		}
++	}
++}
++
++
++int write_GeomMayaHair(PyObject *outputFile, Scene *sce, Main *bmain, Object *ob, ParticleSystem *psys, const char *pluginName)
++{
++	static char buf[MAX_PLUGIN_NAME];
++
++	int    i, c, p, s;
++	float  f;
++	float  t;
++
++	ParticleSettings           *pset = NULL;
++	ParticleSystemModifierData *psmd = NULL;
++
++	ParticleData       *pa   = NULL;
++	HairKey            *hkey = NULL;
++	ParticleStrandData  sd;
++
++	ParticleCacheKey **child_cache = NULL;
++	ParticleCacheKey  *child_key   = NULL;
++	ChildParticle     *cpa         = NULL;
++	int                child_total = 0;
++	int                child_steps = 0;
++	float              child_key_co[3];
++
++	float     hairmat[4][4];
++	float     segment[3];
++	float     color[3] = {0.5f,0.5f,0.5f};
++	float     width = 0.001f;
++	float     cone_width = 0.001f;
++	int       num = -1;
++
++	int       spline_init_flag;
++	int       interp_points_count;
++	float     interp_points_step;
++	int       data_points_count;
++	float     data_points_step;
++	float     data_points_ordinates[3][64];
++	float     data_points_abscissas[64];
++
++	float     s_b[3][16];
++	float     s_c[3][16];
++	float     s_d[3][16];
++
++	int       spline_last[3];
++
++	short     use_cone    = false;
++	short     use_child   = 0;
++	short     free_edit   = 0;
++	short     need_recalc = 0;
++
++	PointerRNA  rna_pset;
++	PointerRNA  VRayParticleSettings;
++	PointerRNA  VRayFur;
++
++	int  display_percentage;
++	int  display_percentage_child;
++
++	int  debug = false;
++
++	need_recalc = 0;
++
++	pset = psys->part;
++
++	if(pset->type != PART_HAIR) {
++		return 1;
++	}
++
++	if(psys->part->ren_as != PART_DRAW_PATH) {
++		return 1;
++	}
++
++	psmd = psys_get_modifier(ob, psys);
++	if(!psmd) {
++		return 1;
++	}
++	if(!(psmd->modifier.mode & eModifierMode_Render)) {
++		return 1;
++	}
++
++	RNA_id_pointer_create(&pset->id, &rna_pset);
++
++	if(RNA_struct_find_property(&rna_pset, "vray")) {
++		VRayParticleSettings= RNA_pointer_get(&rna_pset, "vray");
++
++		if(RNA_struct_find_property(&VRayParticleSettings, "VRayFur")) {
++			VRayFur = RNA_pointer_get(&VRayParticleSettings, "VRayFur");
++
++			// Get hair width
++			width = RNA_float_get(&VRayFur, "width");
++		}
++	}
++
++	child_cache = psys->childcache;
++	child_total = psys->totchildcache;
++	use_child   = (pset->childtype && child_cache);
++
++	// Store "Display percentage" setting
++	display_percentage       = pset->disp;
++	display_percentage_child = pset->child_nbr;
++
++	// Check if particles are edited
++	free_edit = psys_check_edited(psys);
++
++	// Recalc parent hair only if they are not
++	// manually edited
++	if(!free_edit) {
++		need_recalc = 1;
++		pset->disp = 100;
++		psys->recalc |= PSYS_RECALC;
++	}
++
++	if(use_child) {
++		need_recalc = 1;
++		pset->child_nbr = pset->ren_child_nbr;
++		psys->recalc |= PSYS_RECALC_CHILD;
++	}
++
++	if(psys->flag & PSYS_HAIR_DYNAMICS)
++		need_recalc = 0;
++
++	// Recalc hair with render settings
++	if(need_recalc) {
++		ob->recalc |= OB_RECALC_ALL;
++		BKE_scene_update_tagged(bmain, sce);
++	}
++
++	// Get new child data pointers
++	if(use_child) {
++		child_cache = psys->childcache;
++		child_total = psys->totchildcache;
++
++		DEBUG_PRINT(debug, "child_total = %i", child_total);
++	}
++
++	// Spline interpolation
++	interp_points_count = (int)pow(2.0, pset->ren_step);
++	interp_points_step = 1.0 / (interp_points_count - 1);
++
++	DEBUG_PRINT(debug, "interp_points_count = %i", interp_points_count);
++
++	WRITE_PYOBJECT(outputFile, "GeomMayaHair %s {", pluginName);
++	WRITE_PYOBJECT(outputFile, "\n\tnum_hair_vertices=interpolate((%d,ListIntHex(\"", sce->r.cfra);
++	if(use_child) {
++		for(p = 0; p < child_total; ++p) {
++			WRITE_PYOBJECT_HEX_VALUE(outputFile, interp_points_count);
++		}
++	}
++	else {
++		LOOP_PARTICLES {
++			WRITE_PYOBJECT_HEX_VALUE(outputFile, interp_points_count);
++		}
++	}
++	WRITE_PYOBJECT(outputFile, "\")));");
++
++	WRITE_PYOBJECT(outputFile, "\n\thair_vertices=interpolate((%d,ListVectorHex(\"", sce->r.cfra);
++	if(use_child) {
++		for(p = 0; p < child_total; ++p) {
++			child_key   = child_cache[p];
++			child_steps = child_key->steps;
++
++			// Spline interpolation
++			data_points_count = child_steps;
++			data_points_step  = 1.0f / (child_steps - 1);
++
++			// Store control points
++			for(s = 0, f = 0.0f; s < child_steps; ++s, ++child_key, f += data_points_step) {
++				data_points_abscissas[s] = f;
++
++				// Child particles are stored in world space,
++				// but we need them in object space
++				copy_v3_v3(child_key_co, child_key->co);
++
++				// Remove transform by applying inverse matrix
++				mul_m4_v3(ob->imat, child_key_co);
++
++				for(c = 0; c < 3; ++c) {
++					data_points_ordinates[c][s] = child_key_co[c];
++				}
++			}
++
++			// Init spline coefficients
++			for(c = 0; c < 3; ++c) {
++				c_spline_init(data_points_count, 0, 0, 0.0f, 0.0f,
++							  data_points_abscissas, data_points_ordinates[c],
++							  s_b[c], s_c[c], s_d[c], &spline_init_flag);
++			}
++
++			// Write interpolated child points
++			for(c = 0; c < 3; ++c)
++				spline_last[c] = 0;
++
++			for(t = 0.0f; t <= 1.0; t += interp_points_step) {
++				// Calculate interpolated coordinate
++				for(c = 0; c < 3; ++c) {
++					segment[c] = c_spline_eval(data_points_count, t, data_points_abscissas, data_points_ordinates[c],
++											   s_b[c], s_c[c], s_d[c], &spline_last[c]);
++				}
++
++				WRITE_PYOBJECT_HEX_VECTOR(outputFile, segment);
++			}
++		}
++	}
++	else {
++		LOOP_PARTICLES {
++			DEBUG_PRINT(debug, "\033[0;32mV-Ray/Blender:\033[0m Particle system: %s => Hair: %i\n", psys->name, p + 1);
++
++			psys_mat_hair_to_object(NULL, psmd->dm, psmd->psys->part->from, pa, hairmat);
++
++			// Spline interpolation
++			data_points_count = pa->totkey;
++			data_points_step  = 1.0f / (data_points_count - 1);
++
++			DEBUG_PRINT(debug, "data_points_count = %i", data_points_count);
++			DEBUG_PRINT(debug, "data_points_step = %.3f", data_points_step);
++
++			for(i = 0, f = 0.0f; i < data_points_count; ++i, f += data_points_step) {
++				data_points_abscissas[i] = f;
++			}
++
++			// Store control points
++			for(s = 0, hkey = pa->hair; s < pa->totkey; ++s, ++hkey) {
++				copy_v3_v3(segment, hkey->co);
++				mul_m4_v3(hairmat, segment);
++
++				for(c = 0; c < 3; ++c) {
++					data_points_ordinates[c][s] = segment[c];
++				}
++			}
++
++			// Init spline coefficients
++			for(c = 0; c < 3; ++c) {
++				c_spline_init(data_points_count, 0, 0, 0.0f, 0.0f,
++							  data_points_abscissas, data_points_ordinates[c],
++							  s_b[c], s_c[c], s_d[c], &spline_init_flag);
++			}
++
++			// Write interpolated points
++			for(c = 0; c < 3; ++c)
++				spline_last[c] = 0;
++			for(t = 0.0f; t <= 1.0; t += interp_points_step) {
++				// Calculate interpolated coordinates
++				for(c = 0; c < 3; ++c) {
++					segment[c] = c_spline_eval(data_points_count, t, data_points_abscissas, data_points_ordinates[c],
++											   s_b[c], s_c[c], s_d[c], &spline_last[c]);
++				}
++				WRITE_PYOBJECT_HEX_VECTOR(outputFile, segment);
++			}
++		}
++	}
++	WRITE_PYOBJECT(outputFile, "\")));");
++
++	memset(&sd, 0, sizeof(ParticleStrandData));
++
++	// DEBUG_PRINT(TRUE, "psmd->dm = 0x%X", psmd->dm);
++
++	if(psmd->dm) {
++		if(use_child) {
++			sd.totuv = CustomData_number_of_layers(&psmd->dm->faceData, CD_MTFACE);
++
++			if(sd.totuv) {
++				sd.uvco = MEM_callocN(sd.totuv * 2 * sizeof(float), "particle_uvs");
++			}
++			else {
++				sd.uvco = NULL;
++			}
++
++			if(sd.uvco) {
++				WRITE_PYOBJECT(outputFile, "\n\tstrand_uvw=interpolate((%d,ListVectorHex(\"", sce->r.cfra);
++
++				for(p = 0; p < child_total; ++p) {
++					cpa = psys->child + p;
++
++					/* get uvco & mcol */
++					if(pset->childtype==PART_CHILD_FACES) {
++						get_particle_uvco_mcol(PART_FROM_FACE, psmd->dm, cpa->fuv, cpa->num, &sd);
++					}
++					else {
++						ParticleData *parent = psys->particles + cpa->parent;
++						num = parent->num_dmcache;
++
++						if (num == DMCACHE_NOTFOUND)
++							if (parent->num < psmd->dm->getNumTessFaces(psmd->dm))
++								num = parent->num;
++
++						get_particle_uvco_mcol(pset->from, psmd->dm, parent->fuv, num, &sd);
++					}
++
++					segment[0] = sd.uvco[0];
++					segment[1] = sd.uvco[1];
++					segment[2] = 0.0f;
++
++					WRITE_PYOBJECT_HEX_VECTOR(outputFile, segment);
++				}
++				WRITE_PYOBJECT(outputFile, "\")));");
++
++				MEM_freeN(sd.uvco);
++			}
++		}
++		else {
++			sd.totuv = CustomData_number_of_layers(&psmd->dm->faceData, CD_MTFACE);
++
++			if(sd.totuv) {
++				sd.uvco = MEM_callocN(sd.totuv * 2 * sizeof(float), "particle_uvs");
++			}
++			else {
++				sd.uvco = NULL;
++			}
++
++			if(sd.uvco) {
++				WRITE_PYOBJECT(outputFile, "\n\tstrand_uvw=interpolate((%d,ListVectorHex(\"", sce->r.cfra);
++				LOOP_PARTICLES {
++					/* get uvco & mcol */
++					num = pa->num_dmcache;
++
++					if(num == DMCACHE_NOTFOUND) {
++						if(pa->num < psmd->dm->getNumTessFaces(psmd->dm)) {
++							num = pa->num;
++						}
++					}
++
++					get_particle_uvco_mcol(pset->from, psmd->dm, pa->fuv, num, &sd);
++
++					// DEBUG_PRINT(TRUE, "Pa.uv = %.3f, %.3f", sd.uvco[0], sd.uvco[1]);
++
++					segment[0] = sd.uvco[0];
++					segment[1] = sd.uvco[1];
++					segment[2] = 0.0f;
++
++					WRITE_PYOBJECT_HEX_VECTOR(outputFile, segment);
++				}
++				WRITE_PYOBJECT(outputFile, "\")));");
++
++				MEM_freeN(sd.uvco);
++			}
++		}
++	}
++
++	WRITE_PYOBJECT(outputFile, "\n\twidths=interpolate((%d,ListFloatHex(\"", sce->r.cfra);
++	if(use_child) {
++		for(p = 0; p < child_total; ++p) {
++			cone_width = width;
++			for(s = 0; s < interp_points_count; ++s) {
++				if(use_cone && s > 0) {
++					cone_width = width / s;
++				}
++				WRITE_PYOBJECT_HEX_VALUE(outputFile, cone_width);
++			}
++		}
++	}
++	else {
++		for(p = 0; p < psys->totpart; ++p) {
++			for(s = 0; s < interp_points_count; ++s) {
++				cone_width = width;
++				if(use_cone && s > 0) {
++					cone_width = width / s;
++				}
++				WRITE_PYOBJECT_HEX_VALUE(outputFile, cone_width);
++			}
++		}
++	}
++	WRITE_PYOBJECT(outputFile, "\")));");
++
++	WRITE_PYOBJECT(outputFile, "\n\tcolors=interpolate((%d,ListColorHex(\"", sce->r.cfra);
++	if(use_child) {
++		for(p = 0; p < child_total; ++p) {
++			for(s = 0; s < interp_points_count; ++s) {
++				WRITE_PYOBJECT_HEX_VECTOR(outputFile, color);
++			}
++		}
++	}
++	else {
++		for(p = 0; p < psys->totpart; ++p) {
++			for(s = 0; s < interp_points_count; ++s) {
++				WRITE_PYOBJECT_HEX_VECTOR(outputFile, color);
++			}
++		}
++	}
++	WRITE_PYOBJECT(outputFile, "\")));");
++
++	WRITE_PYOBJECT(outputFile, "\n\topacity=1.0;");
++	if(psys->part->flag & PART_HAIR_BSPLINE) {
++		WRITE_PYOBJECT(outputFile, "\n\tgeom_splines=1;");
++		WRITE_PYOBJECT(outputFile, "\n\tgeom_tesselation_mult=1.0;");
++	}
++	WRITE_PYOBJECT(outputFile, "\n}\n\n");
++
++	// Restore "Display percentage" setting
++	pset->disp      = display_percentage;
++	pset->child_nbr = display_percentage_child;
++
++	if(!free_edit) {
++		psys->recalc |= PSYS_RECALC;
++	}
++	if(use_child) {
++		psys->recalc |= PSYS_RECALC_CHILD;
++	}
++
++	// Recalc hair back with viewport settings
++	if(need_recalc) {
++		ob->recalc |= OB_RECALC_ALL;
++		BKE_scene_update_tagged(bmain, sce);
++	}
++
++	return 0;
++}
+diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/node.c b/blender/source/blender/vray_for_blender/vrscene_exporter/node.c
+new file mode 100644
+index 0000000..7918f39
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/vrscene_exporter/node.c
+@@ -0,0 +1,26 @@
++/*
++ * ***** BEGIN GPL LICENSE BLOCK *****
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ *
++ * The Original Code is Copyright (C) 2010 Blender Foundation.
++ * All rights reserved.
++ *
++ * Contributor(s): Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
++ *
++ * ***** END GPL LICENSE BLOCK *****
++ */
++
++#include "vrscene.h"
+diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/smoke.c b/blender/source/blender/vray_for_blender/vrscene_exporter/smoke.c
+new file mode 100644
+index 0000000..b885d0d
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/vrscene_exporter/smoke.c
+@@ -0,0 +1,120 @@
++/*
++ * ***** BEGIN GPL LICENSE BLOCK *****
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ *
++ * The Original Code is Copyright (C) 2010 Blender Foundation.
++ * All rights reserved.
++ *
++ * Contributor(s): Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
++ *
++ * ***** END GPL LICENSE BLOCK *****
++ */
++
++#include "vrscene.h"
++
++
++void write_TexVoxelData(PyObject *outputFile,
++						Scene *sce, Object *ob, SmokeModifierData *smd,
++						const char *pluginName,
++						short use_smoke_hires, short interp_type, float int_multiplier)
++{
++	static char buf[MAX_PLUGIN_NAME];
++
++	size_t i;
++	size_t tot_res_high;
++	size_t tot_res_low;
++
++	float *density_data = NULL;
++	float *heat_data    = NULL;
++	float  density;
++	float  heat;
++
++	int    res_high[3];
++	int    res_low[3];
++
++	float  ob_imat[4][4];
++
++	if(!(smd->domain && smd->domain->fluid)) {
++		PRINT_ERROR("Domain and/or smoke data not found!");
++		return;
++	}
++
++	// Store object invert matrix
++	invert_m4_m4(ob_imat, ob->obmat);
++
++	if(use_smoke_hires && (smd->domain->flags & MOD_SMOKE_HIGHRES)) {
++		COPY_VECTOR_3_3(res_low,  smd->domain->res);
++		COPY_VECTOR_3_3(res_high, smd->domain->res_wt);
++
++		density_data = smoke_turbulence_get_density(smd->domain->wt);
++	}
++	else {
++		COPY_VECTOR_3_3(res_low,  smd->domain->res);
++		COPY_VECTOR_3_3(res_high, smd->domain->res);
++
++		density_data = smoke_get_density(smd->domain->fluid);
++	}
++
++	heat_data = smoke_get_heat(smd->domain->fluid);
++
++	tot_res_high = (size_t)res_high[0] * (size_t)res_high[1] * (size_t)res_high[2];
++	tot_res_low  = (size_t)res_low[0]  * (size_t)res_low[1]  * (size_t)res_low[2];
++
++	// Blender smoke uses 2.0 x 2.0 x 2.0 mesh domain and then uses object transform to form the final
++	// smoke domain, so we need to transform UVWs
++	//
++	WRITE_PYOBJECT(outputFile, "\nUVWGenPlanarWorld UVW%s {", pluginName);
++	WRITE_PYOBJECT(outputFile, "\n\tuvw_transform=interpolate((%d,", sce->r.cfra);
++	WRITE_PYOBJECT_TRANSFORM(outputFile, ob_imat);
++	WRITE_PYOBJECT(outputFile, "));");
++	WRITE_PYOBJECT(outputFile, "\n}\n");
++
++	WRITE_PYOBJECT(outputFile, "\nTexVoxelData %s {", pluginName);
++	WRITE_PYOBJECT(outputFile, "\n\tuvwgen=UVW%s;", pluginName);
++	WRITE_PYOBJECT(outputFile, "\n\tinterpolation=%i;", interp_type);
++	WRITE_PYOBJECT(outputFile, "\n\tresolution=Vector(%i,%i,%i);", res_high[0], res_high[1], res_high[2]);
++	WRITE_PYOBJECT(outputFile, "\n\tresolution_low=Vector(%i,%i,%i);", res_low[0], res_low[1], res_low[2]);
++
++	WRITE_PYOBJECT(outputFile, "\n\tdensity=interpolate((%d, ListFloatHex(\"", sce->r.cfra);
++	for(i = 0; i < tot_res_high; ++i) {
++		if(density_data) {
++			density = density_data[i];
++		}
++		else {
++			density = 0.0f;
++		}
++
++		WRITE_PYOBJECT_HEX_VALUE(outputFile, density);
++	}
++	WRITE_PYOBJECT(outputFile, "\")));");
++
++	WRITE_PYOBJECT(outputFile, "\n\theat=interpolate((%d, ListFloatHex(\"", sce->r.cfra);
++	// Heat is somehow always low res
++	for(i = 0; i < tot_res_low; ++i) {
++		if(heat_data) {
++			heat  = (heat_data[i]+2.0f)/4.0f;
++			heat *= int_multiplier;
++		}
++		else {
++			heat = 0.0f;
++		}
++
++		WRITE_PYOBJECT_HEX_VALUE(outputFile, heat);
++	}
++	WRITE_PYOBJECT(outputFile, "\")));");
++
++	WRITE_PYOBJECT(outputFile, "\n}\n");
++}
+diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/vrscene.h b/blender/source/blender/vray_for_blender/vrscene_exporter/vrscene.h
+new file mode 100644
+index 0000000..5f8af18
+--- /dev/null
++++ b/blender/source/blender/vray_for_blender/vrscene_exporter/vrscene.h
+@@ -0,0 +1,97 @@
++/*
++ * ***** BEGIN GPL LICENSE BLOCK *****
++ *
++ * This program is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU General Public License
++ * as published by the Free Software Foundation; either version 2
++ * of the License, or (at your option) any later version.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ *
++ * You should have received a copy of the GNU General Public License
++ * along with this program; if not, write to the Free Software Foundation,
++ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
++ *
++ * The Original Code is Copyright (C) 2010 Blender Foundation.
++ * All rights reserved.
++ *
++ * Contributor(s): Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
++ *
++ * ***** END GPL LICENSE BLOCK *****
++ */
++
++#ifndef VRSCENE_H
++#define VRSCENE_H
++
++#include "CGR_config.h"
++
++#include <Python.h>
++
++#include "blender_includes.h"
++
++#define MAX_PLUGIN_NAME  1024
++
++#define COPY_VECTOR_3_3(a, b) \
++	a[0] = b[0];\
++	a[1] = b[1];\
++	a[2] = b[2];
++
++#define HEX(x) htonl(*(int*)&(x))
++#define WRITE_HEX_VALUE(f, v) fprintf(f, "%08X", HEX(v));
++#define WRITE_HEX_VECTOR(f, v) fprintf(f, "%08X%08X%08X", HEX(v[0]), HEX(v[1]), HEX(v[2]))
++
++#define WRITE_TRANSFORM(f, m) fprintf(f, "Transform(Matrix(Vector(%f, %f, %f),Vector(%f, %f, %f),Vector(%f, %f, %f)),Vector(%f, %f, %f))", \
++	m[0][0], m[0][1], m[0][2],\
++	m[1][0], m[1][1], m[1][2],\
++	m[2][0], m[2][1], m[2][2],\
++	m[3][0], m[3][1], m[3][2]);
++
++#define WRITE_TRANSFORM_HEX(f, m) fprintf(f, "TransformHex(\"%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X%08X\")", \
++	HEX(m[0][0]), HEX(m[0][1]), HEX(m[0][2]),\
++	HEX(m[1][0]), HEX(m[1][1]), HEX(m[1][2]),\
++	HEX(m[2][0]), HEX(m[2][1]), HEX(m[2][2]),\
++	HEX(m[3][0]), HEX(m[3][1]), HEX(m[3][2]))
++
++#define WRITE_HEX_QUADFACE(f, face) fprintf(gfile, "%08X%08X%08X%08X%08X%08X", HEX(face->v1), HEX(face->v2), HEX(face->v3), HEX(face->v3), HEX(face->v4), HEX(face->v1))
++#define WRITE_HEX_TRIFACE(f, face)  fprintf(gfile, "%08X%08X%08X", HEX(face->v1), HEX(face->v2), HEX(face->v3))
++
++#define WRITE_PYOBJECT_BUF(pyObject) \
++	PyObject_CallMethod(pyObject, (char*)"write", (char*)"s", buf);
++
++#define WRITE_PYOBJECT(pyObject, ...) \
++	sprintf(buf, __VA_ARGS__); \
++	WRITE_PYOBJECT_BUF(pyObject);
++
++#define WRITE_PYOBJECT_HEX_VALUE(pyObject, v) \
++	sprintf(buf, "%08X", HEX(v)); \
++	WRITE_PYOBJECT_BUF(pyObject);
++
++#define WRITE_PYOBJECT_HEX_VECTOR(pyObject, v) \
++	sprintf(buf, "%08X%08X%08X", HEX(v[0]), HEX(v[1]), HEX(v[2])); \
++	WRITE_PYOBJECT_BUF(pyObject);
++
++#define WRITE_PYOBJECT_HEX_QUADFACE(pyObject, face) \
++	sprintf(buf, "%08X%08X%08X%08X%08X%08X", HEX(face->v1), HEX(face->v2), HEX(face->v3), HEX(face->v3), HEX(face->v4), HEX(face->v1));\
++	WRITE_PYOBJECT_BUF(pyObject);
++
++#define WRITE_PYOBJECT_HEX_TRIFACE(pyObject, face) \
++	sprintf(buf, "%08X%08X%08X", HEX(face->v1), HEX(face->v2), HEX(face->v3)); \
++	WRITE_PYOBJECT_BUF(pyObject);
++
++#define WRITE_PYOBJECT_TRANSFORM(pyObject, m) \
++	sprintf(buf, "Transform(Matrix(Vector(%f, %f, %f),Vector(%f, %f, %f),Vector(%f, %f, %f)),Vector(%f, %f, %f))", \
++	   m[0][0], m[0][1], m[0][2],\
++	   m[1][0], m[1][1], m[1][2],\
++	   m[2][0], m[2][1], m[2][2],\
++	   m[3][0], m[3][1], m[3][2]); \
++	WRITE_PYOBJECT_BUF(pyObject);
++
++int   write_GeomMayaHair(PyObject *outputFile, Scene *sce, Main *main, Object *ob, ParticleSystem *psys, const char *pluginName);
++void  write_GeomStaticMesh(PyObject *outputFile, Scene *sce, Object *ob, Mesh *mesh, const char *pluginName);
++void  write_TexVoxelData(PyObject *outputFile, Scene *sce, Object *ob, SmokeModifierData *smd, const char *pluginName,
++						 short use_smoke_hires, short interp_type, float int_multiplier);
++
++#endif // VRSCENE_H
+diff --git a/blender/source/creator/CMakeLists.txt b/blender/source/creator/CMakeLists.txt
+index 8e0ba66..c7791a9 100644
+--- a/blender/source/creator/CMakeLists.txt
++++ b/blender/source/creator/CMakeLists.txt
+@@ -1029,6 +1029,10 @@ endif()
+ 		list_insert_after(BLENDER_SORTED_LIBS "ge_logic_ngnetwork" "extern_bullet")
+ 	endif()
+ 
++	if(WITH_VRAY_FOR_BLENDER)
++		list_insert_after(BLENDER_SORTED_LIBS "bf_python_bmesh" "vray_for_blender")
++	endif()
++
+ 	foreach(SORTLIB ${BLENDER_SORTED_LIBS})
+ 		set(REMLIB ${SORTLIB})
+ 		foreach(SEARCHLIB ${BLENDER_LINK_LIBS})

@@ -129,6 +129,8 @@ class Builder:
 	with_cuda           = False
 	cuda_gpu            = "sm_21"
 	with_osl            = False
+	with_player         = False
+	with_ge             = False
 
 	use_proxy           = None
 
@@ -320,7 +322,8 @@ class Builder:
 			if self.add_patches:
 				sys.stdout.write("Adding V-Ray/Blender patches...\n")
 
-				cmd = "%s -Np0 -i %s" % (patch_cmd, utils.path_join(patch_dir, "patch", "vb25.patch"))
+				cmd  = "%s -Np0 -r - -i %s" % (patch_cmd, utils.path_join(patch_dir, "patch", "vb25.patch"))
+				cmd2 = "%s -Np2 -r - -i %s" % (patch_cmd, utils.path_join(patch_dir, "patch", "vb30.patch"))
 
 				# Patching Blender sources
 				sys.stdout.write("Patching sources...\n")
@@ -328,6 +331,7 @@ class Builder:
 				if not self.mode_test:
 					os.chdir(blender_dir)
 					os.system(cmd)
+					os.system(cmd2)
 
 		# Adding exporter directory to Blender sources
 		sys.stdout.write("Adding exporter sources...\n")

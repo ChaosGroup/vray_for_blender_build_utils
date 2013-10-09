@@ -46,6 +46,7 @@ parser.add_option('', '--proxy',                             dest='proxy',      
 # Blender options
 parser.add_option('', '--with_collada', action='store_true',  dest='collada',      default=False,  help="Add OpenCollada support.")
 parser.add_option('', '--with_player',  action='store_true',  dest='player',       default=False,  help="Build Blender Player.")
+parser.add_option('', '--with_game',    action='store_true',  dest='game',         default=False,  help="Build with Blender Game Engine.")
 parser.add_option('', '--with_cycles',  action='store_true',  dest='with_cycles',  default=False,  help="Add Cycles.")
 parser.add_option('', '--with_cuda',    action='store_true',  dest='with_cuda',    default=False,  help="Build Cycles with CUDA kernels.")
 parser.add_option('', '--cuda_gpu',                           dest='cuda_gpu',     default="sm_21",help="CUDA GPU version.")
@@ -128,6 +129,9 @@ params['mode_test']      = options.mode_test
 params['add_datafiles']  = not options.nodatafiles
 params['add_extra']      = options.addextra
 
+params['with_player']    = options.player
+params['with_ge']        = options.game
+
 params['exporter_cpp']   = options.exporter_cpp
 
 if host_os == build_system.utils.LNX:
@@ -142,7 +146,7 @@ if host_os == build_system.utils.MAC:
 if params['build_release']:
 	# Just for sure to disable debug for release build
 	params['use_debug'] = False
-	
+
 	params['build_upload'] = options.upload
 	params['use_proxy']    = options.proxy
 

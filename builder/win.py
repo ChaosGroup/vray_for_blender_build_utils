@@ -57,8 +57,6 @@ class WindowsBuilder(Builder):
 				'WITH_BUILDINFO',
 				'WITH_BF_OPENEXR',
 				'WITH_BF_ICONV',
-				'WITH_BF_GAMEENGINE',
-				'WITH_BF_PLAYER',
 			],
 			'False': [
 				'WITH_BF_QUICKTIME',
@@ -68,6 +66,12 @@ class WindowsBuilder(Builder):
 				'WITH_BF_FFTW3',
 			]
 		}
+
+		if self.with_ge:
+			build_options['True'].append('WITH_BF_GAMEENGINE')
+
+		if self.with_player:
+			build_options['True'].append('WITH_BF_PLAYER')
 
 		if self.build_arch == 'x86_64':
 			build_options['False'].append('WITH_BF_JACK')
@@ -105,6 +109,9 @@ class WindowsBuilder(Builder):
 			uc.write("WITH_BF_CYCLES    = False\n")
 			uc.write("WITH_BF_OIIO      = False\n")
 			uc.write("\n")
+
+		if self.add_patches:
+			uc.write("WITH_VRAY_FOR_BLENDER = True\n")
 
 		# Write boolean options
 		for key in build_options:

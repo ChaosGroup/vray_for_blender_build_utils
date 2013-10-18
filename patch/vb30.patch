@@ -422,7 +422,7 @@ index 0000000..bf2b557
 +blender_add_lib(vray_for_blender "${SRC}" "${INC}" "${INC_SYS}")
 diff --git a/blender/source/blender/vray_for_blender/SConscript b/blender/source/blender/vray_for_blender/SConscript
 new file mode 100644
-index 0000000..047914d
+index 0000000..3307d69
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/SConscript
 @@ -0,0 +1,50 @@
@@ -438,7 +438,7 @@ index 0000000..047914d
 +    './vrscene_exporter/geom.c',
 +    './vrscene_exporter/hair.c',
 +    './vrscene_exporter/node.c',
-+    './vrscene_exporter/smoke.c',
++    './vrscene_exporter/smoke.cpp',
 +]
 +
 +includes = [

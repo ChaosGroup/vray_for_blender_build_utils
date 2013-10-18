@@ -203,6 +203,19 @@ index cc1dd36..0ebb548 100644
  /* call BPY_context_set first */
  void BPY_python_start(int argc, const char **argv)
  {
+diff --git a/blender/source/blender/python/intern/bpy_rna.c b/blender/source/blender/python/intern/bpy_rna.c
+index 4d4d487..84a895c 100644
+--- a/blender/source/blender/python/intern/bpy_rna.c
++++ b/blender/source/blender/python/intern/bpy_rna.c
+@@ -83,7 +83,7 @@
+ #  include "BLF_translation.h"
+ #endif
+ 
+-#define USE_PEDANTIC_WRITE
++// #define USE_PEDANTIC_WRITE
+ #define USE_MATHUTILS
+ #define USE_STRING_COERCE
+ 
 diff --git a/blender/source/blender/vray_for_blender/CGR_config.h b/blender/source/blender/vray_for_blender/CGR_config.h
 new file mode 100644
 index 0000000..a1602c5
@@ -2461,10 +2474,10 @@ index 0000000..a2389e4
 +}
 diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/smoke.cpp b/blender/source/blender/vray_for_blender/vrscene_exporter/smoke.cpp
 new file mode 100644
-index 0000000..ee6b8c1
+index 0000000..68550e2
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/vrscene_exporter/smoke.cpp
-@@ -0,0 +1,306 @@
+@@ -0,0 +1,308 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -2734,7 +2747,9 @@ index 0000000..ee6b8c1
 +	WRITE_PYOBJECT(outputFile, "\n\tuvwgen=%s;", uvwPluginName);
 +	WRITE_PYOBJECT(outputFile, "\n\tinterpolation=%i;", interpolation);
 +	WRITE_PYOBJECT(outputFile, "\n\tresolution=Vector(%i,%i,%i);", res_high[0], res_high[1], res_high[2]);
++#if USE_HEAT
 +	WRITE_PYOBJECT(outputFile, "\n\tresolution_low=Vector(%i,%i,%i);", res_low[0], res_low[1], res_low[2]);
++#endif
 +
 +	WRITE_PYOBJECT(outputFile, "\n\tdensity=interpolate((%d, ListFloatHex(\"", sce->r.cfra);
 +	for(i = 0; i < tot_res_high; ++i) {

@@ -95,14 +95,3 @@
  #define TEX_CLOUDS		1
  #define TEX_WOOD		2
  #define TEX_MARBLE		3
-
---- source/blender/python/intern/bpy_rna.c	2011-11-26 18:38:41.178142507 +0400
-+++ source/blender/python/intern/bpy_rna.c	2011-11-26 19:04:03.191094097 +0400
-@@ -81,7 +81,7 @@
- #include "BLF_translation.h"
- #endif
-
--#define USE_PEDANTIC_WRITE
-+//#define USE_PEDANTIC_WRITE
- #define USE_MATHUTILS
- #define USE_STRING_COERCE

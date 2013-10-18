@@ -1,5 +1,5 @@
 diff --git a/blender/CMakeLists.txt b/blender/CMakeLists.txt
-index e88a5e0..9a88054 100644
+index fbb7c17..bfae548 100644
 --- a/blender/CMakeLists.txt
 +++ b/blender/CMakeLists.txt
 @@ -270,6 +270,9 @@ set(CYCLES_CUDA_BINARIES_ARCH sm_20 sm_21 sm_30 sm_35 CACHE STRING "CUDA archite
@@ -12,7 +12,7 @@ index e88a5e0..9a88054 100644
  # LLVM
  option(WITH_LLVM					"Use LLVM" OFF)
  option(LLVM_STATIC					"Link with LLVM static libraries" ON)
-@@ -518,6 +521,12 @@ if(WITH_BOOL_COMPAT)
+@@ -510,6 +513,12 @@ if(WITH_BOOL_COMPAT)
  	add_definitions(-DWITH_BOOL_COMPAT)
  endif()
  
@@ -25,7 +25,7 @@ index e88a5e0..9a88054 100644
  #-----------------------------------------------------------------------------
  # Check for valid directories
  # ... svn extern paths can be missing because of svn-git.
-@@ -2279,6 +2288,7 @@ if(FIRST_RUN)
+@@ -2271,6 +2280,7 @@ if(FIRST_RUN)
  	info_cfg_option(WITH_INPUT_NDOF)
  	info_cfg_option(WITH_CYCLES)
  	info_cfg_option(WITH_FREESTYLE)
@@ -34,7 +34,7 @@ index e88a5e0..9a88054 100644
  
  	info_cfg_text("Compiler Options:")
 diff --git a/blender/SConstruct b/blender/SConstruct
-index 539414d..8a51b6a 100644
+index 9f9eaa8..863de3b 100644
 --- a/blender/SConstruct
 +++ b/blender/SConstruct
 @@ -274,6 +274,7 @@ if 'blenderlite' in B.targets:
@@ -60,7 +60,7 @@ index f181f29..3a655a2 100644
          incs.append(env['BF_PTHREADS_INC'])
          incs.append('#/intern/utfconv')
 diff --git a/blender/build_files/scons/tools/btools.py b/blender/build_files/scons/tools/btools.py
-index 454e72a..bcd0252 100644
+index 8f0d3ff..da28f62 100644
 --- a/blender/build_files/scons/tools/btools.py
 +++ b/blender/build_files/scons/tools/btools.py
 @@ -144,6 +144,7 @@ def validate_arguments(args, bc):
@@ -78,16 +78,16 @@ index 454e72a..bcd0252 100644
 +        (BoolVariable('WITH_VRAY_FOR_BLENDER', 'Compile with V-Ray For Blender extentions', True)),
 +
          (BoolVariable('WITH_BF_OIIO', 'Build with OpenImageIO', False)),
-         (BoolVariable('WITH_BF_STATICOIIO', 'Staticly link to OpenImageIO', False)),
+         (BoolVariable('WITH_BF_STATICOIIO', 'Statically link to OpenImageIO', False)),
          ('BF_OIIO', 'OIIO root path', ''),
 diff --git a/blender/release/datafiles/blender_icons16.png b/blender/release/datafiles/blender_icons16.png
-index 24d95d7..0f87028 100644
+index 24d95d7..eeb1942 100644
 Binary files a/blender/release/datafiles/blender_icons16.png and b/blender/release/datafiles/blender_icons16.png differ
 diff --git a/blender/release/datafiles/blender_icons32.png b/blender/release/datafiles/blender_icons32.png
-index 3f8901f..0f62b77 100644
+index 3f8901f..2463ae9 100644
 Binary files a/blender/release/datafiles/blender_icons32.png and b/blender/release/datafiles/blender_icons32.png differ
 diff --git a/blender/source/blender/CMakeLists.txt b/blender/source/blender/CMakeLists.txt
-index 307f93d..1cbdd9e 100644
+index 0d30952..5fac625 100644
 --- a/blender/source/blender/CMakeLists.txt
 +++ b/blender/source/blender/CMakeLists.txt
 @@ -149,3 +149,6 @@ if(WITH_FREESTYLE)
@@ -98,10 +98,10 @@ index 307f93d..1cbdd9e 100644
 +	add_subdirectory(vray_for_blender)
 +endif()
 diff --git a/blender/source/blender/SConscript b/blender/source/blender/SConscript
-index 66d5496..d567150 100644
+index de052f2..e7256d9 100644
 --- a/blender/source/blender/SConscript
 +++ b/blender/source/blender/SConscript
-@@ -69,3 +69,6 @@ if env['WITH_BF_COMPOSITOR']:
+@@ -72,3 +72,6 @@ if env['WITH_BF_COMPOSITOR']:
  
  if env['WITH_BF_FREESTYLE']:
      SConscript (['freestyle/SConscript'])
@@ -109,21 +109,23 @@ index 66d5496..d567150 100644
 +if env['WITH_VRAY_FOR_BLENDER']:
 +    SConscript (['vray_for_blender/SConscript'])
 diff --git a/blender/source/blender/editors/include/UI_icons.h b/blender/source/blender/editors/include/UI_icons.h
-index f8e1bbb..3564a5c 100644
+index f8e1bbb..5b64bf6 100644
 --- a/blender/source/blender/editors/include/UI_icons.h
 +++ b/blender/source/blender/editors/include/UI_icons.h
-@@ -275,9 +275,10 @@ DEF_ICON(GROUP_UVS)
+@@ -275,10 +275,11 @@ DEF_ICON(GROUP_UVS)
  DEF_ICON(RNA)
  DEF_ICON(RNA_ADD)
  
 +DEF_ICON(VRAY_LOGO)
++DEF_ICON(VRAY_LOGO_MONO)
 +
  	/* available */
  #ifndef DEF_ICON_BLANK_SKIP
 -	DEF_ICON(BLANK092)
- 	DEF_ICON(BLANK093)
+-	DEF_ICON(BLANK093)
  	DEF_ICON(BLANK094)
  	DEF_ICON(BLANK095)
+ 	DEF_ICON(BLANK096)
 diff --git a/blender/source/blender/python/SConscript b/blender/source/blender/python/SConscript
 index 0ac0285..1fa8608 100644
 --- a/blender/source/blender/python/SConscript
@@ -140,7 +142,7 @@ index 0ac0285..1fa8608 100644
      incs += ' ../freestyle/intern/python'
      defs.append('WITH_FREESTYLE')
 diff --git a/blender/source/blender/python/intern/CMakeLists.txt b/blender/source/blender/python/intern/CMakeLists.txt
-index 072c73d..d45c372 100644
+index ef5d26d..a054a12 100644
 --- a/blender/source/blender/python/intern/CMakeLists.txt
 +++ b/blender/source/blender/python/intern/CMakeLists.txt
 @@ -143,6 +143,12 @@ if(WITH_CYCLES_OSL)
@@ -203,10 +205,10 @@ index cc1dd36..0ebb548 100644
  {
 diff --git a/blender/source/blender/vray_for_blender/CGR_config.h b/blender/source/blender/vray_for_blender/CGR_config.h
 new file mode 100644
-index 0000000..2962c9e
+index 0000000..a1602c5
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/CGR_config.h
-@@ -0,0 +1,97 @@
+@@ -0,0 +1,110 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -296,12 +298,25 @@ index 0000000..2962c9e
 +#define PRINT_ERROR(...) \
 +    fprintf(stdout, OUTPUT_ERROR_PROMPT); \
 +    fprintf(stdout, __VA_ARGS__); \
-+    fprintf(stdout, "\n");
++    fprintf(stdout, "\n"); \
++	fflush(stdout);
 +
 +#define PRINT_INFO(...) \
 +    fprintf(stdout, OUTPUT_PROMPT); \
 +    fprintf(stdout, __VA_ARGS__); \
-+    fprintf(stdout, "\n");
++    fprintf(stdout, "\n"); \
++	fflush(stdout);
++
++#if USE_DEBUG == 0
++#define PRINT_TM4(label, tm) ()
++#else
++#define PRINT_TM4(label, tm) \
++	PRINT_INFO("%s:", label); \
++	PRINT_INFO("  %.3f %.3f %.3f %.3f", tm[0][0], tm[0][1], tm[0][2], tm[0][3]); \
++	PRINT_INFO("  %.3f %.3f %.3f %.3f", tm[1][0], tm[1][1], tm[1][2], tm[1][3]); \
++	PRINT_INFO("  %.3f %.3f %.3f %.3f", tm[2][0], tm[2][1], tm[2][2], tm[2][3]); \
++	PRINT_INFO("  %.3f %.3f %.3f %.3f", tm[3][0], tm[3][1], tm[3][2], tm[3][3]);
++#endif
 +
 +#endif // CGR_CONFIG
 diff --git a/blender/source/blender/vray_for_blender/CGR_vray_for_blender.h b/blender/source/blender/vray_for_blender/CGR_vray_for_blender.h
@@ -351,7 +366,7 @@ index 0000000..44d1cd7
 +#endif // CGR_VRAY_FOR_BLENDER_H
 diff --git a/blender/source/blender/vray_for_blender/CMakeLists.txt b/blender/source/blender/vray_for_blender/CMakeLists.txt
 new file mode 100644
-index 0000000..4454a18
+index 0000000..bf2b557
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/CMakeLists.txt
 @@ -0,0 +1,50 @@
@@ -396,7 +411,7 @@ index 0000000..4454a18
 +	vrscene_exporter/node.c
 +	vrscene_exporter/geom.c
 +	vrscene_exporter/hair.c
-+	vrscene_exporter/smoke.c
++	vrscene_exporter/smoke.cpp
 +
 +	python/vray_python_ext.cpp
 +
@@ -463,10 +478,10 @@ index 0000000..047914d
 +)
 diff --git a/blender/source/blender/vray_for_blender/common/blender_includes.h b/blender/source/blender/vray_for_blender/common/blender_includes.h
 new file mode 100644
-index 0000000..168206b
+index 0000000..4dab252
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/common/blender_includes.h
-@@ -0,0 +1,125 @@
+@@ -0,0 +1,124 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -541,6 +556,7 @@ index 0000000..168206b
 +#include "BKE_mball.h"
 +#include "BKE_modifier.h"
 +#include "BKE_material.h"
++#include "BKE_texture.h"
 +
 +#include "DNA_scene_types.h"
 +#include "DNA_object_types.h"
@@ -571,8 +587,6 @@ index 0000000..168206b
 +#include "RNA_access.h"
 +#include "RNA_define.h"
 +
-+#include "smoke_API.h"
-+
 +#ifdef WIN32
 +#  ifdef htonl
 +#    undef htonl
@@ -594,10 +608,10 @@ index 0000000..168206b
 +#endif // BLENDER_INCLUDES_H
 diff --git a/blender/source/blender/vray_for_blender/python/vray_python_ext.cpp b/blender/source/blender/vray_for_blender/python/vray_python_ext.cpp
 new file mode 100644
-index 0000000..1651186
+index 0000000..76b3e5a
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/python/vray_python_ext.cpp
-@@ -0,0 +1,187 @@
+@@ -0,0 +1,204 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -627,24 +641,25 @@ index 0000000..1651186
 +
 +extern "C" {
 +#include "blender_includes.h"
-+#include "vrscene_exporter/vrscene.h"
 +}
 +
 +#include "utils/CGR_data.h"
++#include "vrscene_exporter/vrscene.h"
 +#include "CGR_vray_for_blender.h"
 +
 +#include <Python.h>
 +
 +
-+static PyObject* mExportSmoke(PyObject *self, PyObject *args)
++static PyObject* mExportSmokeDomain(PyObject *self, PyObject *args)
 +{
 +	int         contextPtr;
 +	int         objectPtr;
 +	int         smdPtr;
 +	const char *pluginName;
++	const char *lights;
 +	PyObject   *fileObject;
 +
-+	if(NOT(PyArg_ParseTuple(args, "iiisO", &contextPtr, &objectPtr, &smdPtr, &pluginName, &fileObject))) {
++	if(NOT(PyArg_ParseTuple(args, "iiissO", &contextPtr, &objectPtr, &smdPtr, &pluginName, &lights, &fileObject))) {
 +		return NULL;
 +	}
 +
@@ -654,7 +669,33 @@ index 0000000..1651186
 +
 +	Scene *sce = CTX_data_scene(C);
 +
-+	write_TexVoxelData(fileObject, sce, ob, smd, pluginName, true, 0, 1.0);
++	write_SmokeDomain(fileObject, sce, ob, smd, pluginName, lights);
++
++	Py_RETURN_NONE;
++}
++
++
++static PyObject* mExportSmoke(PyObject *self, PyObject *args)
++{
++	int         contextPtr;
++	int         objectPtr;
++	int         smdPtr;
++	const char *pluginName;
++	PyObject   *fileObject;
++	
++	int         p_interpolation;
++
++	if(NOT(PyArg_ParseTuple(args, "iiiisO", &contextPtr, &objectPtr, &smdPtr, &p_interpolation, &pluginName, &fileObject))) {
++		return NULL;
++	}
++
++	bContext          *C   = (bContext*)(intptr_t)contextPtr;
++	Object            *ob  = (Object*)(intptr_t)objectPtr;
++	SmokeModifierData *smd = (SmokeModifierData*)(intptr_t)smdPtr;
++
++	Scene *sce = CTX_data_scene(C);
++
++	write_TexVoxelData(fileObject, sce, ob, smd, pluginName, p_interpolation);
 +
 +	Py_RETURN_NONE;
 +}
@@ -731,42 +772,32 @@ index 0000000..1651186
 +{
 +	PRINT_INFO("defExportDupli()");
 +
-+	int objectPtr;
-+	int scenePtr;
++	int       contextPtr;
++	int       objectPtr;
++	PyObject *fileObject;
 +
-+	if(NOT(PyArg_ParseTuple(args, "ii", &scenePtr, &objectPtr))) {
++	if(NOT(PyArg_ParseTuple(args, "iiO", &contextPtr, &objectPtr, &fileObject))) {
 +		return NULL;
 +	}
 +
++	bContext *C = (bContext*)(intptr_t)contextPtr;
 +	Object *ob  = (Object*)(intptr_t)objectPtr;
-+	Scene  *sce = (Scene*)(intptr_t)scenePtr;
 +
-+	/* free duplilist if a user forgets to */
-+	if(ob->duplilist) {
-+		free_object_duplilist(ob->duplilist);
-+		ob->duplilist = NULL;
-+	}
-+
-+	ob->duplilist = object_duplilist(sce, ob, TRUE);
-+
-+	// Process dupli objects
-+	for(DupliObject *dob = (DupliObject*)ob->duplilist->first; dob; dob = dob->next) {
-+		// ...
-+	}
-+
-+	free_object_duplilist(ob->duplilist);
-+	ob->duplilist = NULL;
-+
++	Scene *sce  = CTX_data_scene(C);
++	
++	write_Dupli(fileObject, sce, ob);
++	
 +	Py_RETURN_NONE;
 +}
 +
 +
 +static PyMethodDef methods[] = {
-+	{"exportDupli", mExportDupli, METH_VARARGS, "Export dupli / particles"},
-+	{"exportMesh",  mExportMesh,  METH_VARARGS, "Export mesh"},
-+	{"exportSmoke", mExportSmoke, METH_VARARGS, "Export smoke simulation data"},
-+	{"exportHair",  mExportHair,  METH_VARARGS, "Export hair"},
-+	{"exportNode",  mExportNode,  METH_VARARGS, "Export Node description"},
++	{"exportDupli",       mExportDupli,       METH_VARARGS, "Export dupli / particles"},
++	{"exportMesh",        mExportMesh,        METH_VARARGS, "Export mesh"},
++	{"exportSmoke",       mExportSmoke,       METH_VARARGS, "Export voxel data"},
++	{"exportSmokeDomain", mExportSmokeDomain, METH_VARARGS, "Export domain data"},
++	{"exportHair",        mExportHair,        METH_VARARGS, "Export hair"},
++	{"exportNode",        mExportNode,        METH_VARARGS, "Export Node description"},
 +	{NULL, NULL, 0, NULL},
 +};
 +
@@ -909,10 +940,10 @@ index 0000000..d39ffd4
 +}
 diff --git a/blender/source/blender/vray_for_blender/utils/CGR_data.h b/blender/source/blender/vray_for_blender/utils/CGR_data.h
 new file mode 100644
-index 0000000..d5eebb6
+index 0000000..57533df
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/utils/CGR_data.h
-@@ -0,0 +1,41 @@
+@@ -0,0 +1,42 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -948,6 +979,7 @@ index 0000000..d5eebb6
 +#endif
 +
 +Mesh* GetRenderMesh(Scene *sce, Main *bmain, Object *ob);
++bool  IsGeometryType(Object *ob);
 +
 +#ifdef __cplusplus
 +} // extern "C"
@@ -1184,7 +1216,7 @@ index 0000000..39bffca
 +#endif // CGR_UTILS_RNA_H
 diff --git a/blender/source/blender/vray_for_blender/utils/CGR_string.c b/blender/source/blender/vray_for_blender/utils/CGR_string.c
 new file mode 100644
-index 0000000..14a3c68
+index 0000000..d1bb803
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/utils/CGR_string.c
 @@ -0,0 +1,45 @@
@@ -1217,7 +1249,7 @@ index 0000000..14a3c68
 +#include <string.h>
 +
 +
-+void ClearString(char *str)
++void StripString(char *str)
 +{
 +	int nChars = strlen(str);
 +	int i      = 0;
@@ -1235,7 +1267,7 @@ index 0000000..14a3c68
 +}
 diff --git a/blender/source/blender/vray_for_blender/utils/CGR_string.h b/blender/source/blender/vray_for_blender/utils/CGR_string.h
 new file mode 100644
-index 0000000..e308b28
+index 0000000..39fd5db
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/utils/CGR_string.h
 @@ -0,0 +1,31 @@
@@ -1267,7 +1299,7 @@ index 0000000..e308b28
 +#ifndef CGR_STRING_H
 +#define CGR_STRING_H
 +
-+void ClearString(char *str);
++void StripString(char *str);
 +
 +#endif // CGR_STRING_H
 diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/geom.c b/blender/source/blender/vray_for_blender/vrscene_exporter/geom.c
@@ -2315,10 +2347,10 @@ index 0000000..eddf62f
 +}
 diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/node.c b/blender/source/blender/vray_for_blender/vrscene_exporter/node.c
 new file mode 100644
-index 0000000..8b11930
+index 0000000..a2389e4
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/vrscene_exporter/node.c
-@@ -0,0 +1,47 @@
+@@ -0,0 +1,108 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -2344,16 +2376,43 @@ index 0000000..8b11930
 + * ***** END GPL LICENSE BLOCK *****
 + */
 +
++#include "utils/CGR_string.h"
++
 +#include "vrscene.h"
 +
 +
-+void  write_ObjectNode(PyObject *outputFile, Scene *sce, Object *ob, float tm[4][4])
-+{	
++static void  write_ObjectNode(PyObject   *outputFile,
++					   Scene      *sce,
++					   Object     *ob,
++					   float       tm[4][4],
++                       const char *pluginName)
++{
++	static char buf[MAX_PLUGIN_NAME];
++	
++	char material[MAX_PLUGIN_NAME];
++	char geometry[MAX_PLUGIN_NAME];
++	
++	sprintf(material, "RS%s", ob->id.name);
++	sprintf(geometry, "%s", ((Mesh*)ob->data)->id.name);
++	
++	StripString(material);
++	StripString(geometry);
++	
++	WRITE_PYOBJECT(outputFile, "\nNode %s {", pluginName);
++	WRITE_PYOBJECT(outputFile, "\n\tobjectID=%i;", ob->index);
++	WRITE_PYOBJECT(outputFile, "\n\tmaterial=RS%s;", material);
++	WRITE_PYOBJECT(outputFile, "\n\tgeometry=%s;", geometry);
++	WRITE_PYOBJECT(outputFile, "\n\ttransform=interpolate((%d,", sce->r.cfra);
++	WRITE_PYOBJECT_TRANSFORM(outputFile, tm);
++	WRITE_PYOBJECT(outputFile, "));");
++	WRITE_PYOBJECT(outputFile, "\n}\n");
 +}
 +
 +
-+void  write_Node(PyObject *outputFile,
-+				 Scene *sce, Object *ob, const char *pluginName,
++void  write_Node(PyObject   *outputFile,
++				 Scene      *sce,
++				 Object     *ob,
++				 const char *pluginName,
 +				 const char *transform,
 +				 const char *geometry,
 +				 const char *material,
@@ -2366,12 +2425,46 @@ index 0000000..8b11930
 +				 const int   primary_visibility)
 +{
 +}
-diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/smoke.c b/blender/source/blender/vray_for_blender/vrscene_exporter/smoke.c
++
++
++static void free_duplilist(Object *ob)
++{
++	if(ob->duplilist) {
++		free_object_duplilist(ob->duplilist);
++		ob->duplilist = NULL;
++	}
++}
++
++
++void write_Dupli(PyObject   *outputFile,
++				 Scene      *sce,
++				 Object     *ob)
++{
++	DupliObject *dob;
++
++	char pluginName[MAX_PLUGIN_NAME];
++	
++	// Free duplilist if a user forgets to
++	free_duplilist(ob);
++
++	ob->duplilist = object_duplilist(sce, ob, TRUE);
++
++	for(dob = ob->duplilist->first; dob; dob = dob->next) {
++		sprintf(pluginName, "%s%.5i", dob->ob->id.name, dob->persistent_id[0]);
++		StripString(pluginName);
++		
++		write_ObjectNode(outputFile, sce, dob->ob, dob->mat, pluginName);
++	}
++
++	// Free our duplilist
++	free_duplilist(ob);
++}
+diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/smoke.cpp b/blender/source/blender/vray_for_blender/vrscene_exporter/smoke.cpp
 new file mode 100644
-index 0000000..b885d0d
+index 0000000..ee6b8c1
 --- /dev/null
-+++ b/blender/source/blender/vray_for_blender/vrscene_exporter/smoke.c
-@@ -0,0 +1,120 @@
++++ b/blender/source/blender/vray_for_blender/vrscene_exporter/smoke.cpp
+@@ -0,0 +1,306 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -2399,105 +2492,291 @@ index 0000000..b885d0d
 +
 +#include "vrscene.h"
 +
++#include "smoke_API.h"
 +
-+void write_TexVoxelData(PyObject *outputFile,
-+						Scene *sce, Object *ob, SmokeModifierData *smd,
-+						const char *pluginName,
-+						short use_smoke_hires, short interp_type, float int_multiplier)
++#define USE_HEAT           0
++#define USE_LOCAL_DOMAIN   1
++
++#define DEBUG_GIZMO_SHAPE  0
++
++
++static void GetDomainBounds(SmokeDomainSettings *sds, float p0[3], float p1[3])
++{
++	if(sds->flags & MOD_SMOKE_ADAPTIVE_DOMAIN) {
++		p0[0] = sds->p0[0] + sds->cell_size[0] * sds->res_min[0];
++		p0[1] = sds->p0[1] + sds->cell_size[1] * sds->res_min[1];
++		p0[2] = sds->p0[2] + sds->cell_size[2] * sds->res_min[2];
++		p1[0] = sds->p0[0] + sds->cell_size[0] * sds->res_max[0];
++		p1[1] = sds->p0[1] + sds->cell_size[1] * sds->res_max[1];
++		p1[2] = sds->p0[2] + sds->cell_size[2] * sds->res_max[2];
++	}
++	else {
++		p0[0] = -1.0f;
++		p0[1] = -1.0f;
++		p0[2] = -1.0f;
++		p1[0] =  1.0f;
++		p1[1] =  1.0f;
++		p1[2] =  1.0f;
++	}
++	
++	// PRINT_INFO("sds->res_min = %i %i %i", sds->res_min[0], sds->res_min[1], sds->res_min[2]);
++	// PRINT_INFO("sds->res_max = %i %i %i", sds->res_max[0], sds->res_max[1], sds->res_max[2]);
++	// PRINT_INFO("sds->cell_size = %.3f %.3f %.3f", sds->cell_size[0], sds->cell_size[1], sds->cell_size[2]);
++	// PRINT_INFO("sds->p0 = %.3f %.3f %.3f", sds->p0[0], sds->p0[1], sds->p0[2]);
++	// PRINT_INFO("sds->p1 = %.3f %.3f %.3f", sds->p1[0], sds->p1[1], sds->p1[2]);		
++	// PRINT_INFO("p0 = %.3f %.3f %.3f", p0[0], p0[1], p0[2]);
++	// PRINT_INFO("p1 = %.3f %.3f %.3f", p1[0], p1[1], p1[2]);
++}
++
++
++// Represents transformation of base domain to adaptive domain
++//
++static void GetBaseToAdaptiveTransform(SmokeDomainSettings *sds, float tm[4][4])
++{
++	float p0[3];
++	float p1[3];
++	
++	GetDomainBounds(sds, p0, p1);
++	
++	unit_m4(tm);
++
++	tm[0][0] = fabs(p1[0] - p0[0]) / 2.0f;
++	tm[1][1] = fabs(p1[1] - p0[1]) / 2.0f;
++	tm[2][2] = fabs(p1[2] - p0[2]) / 2.0f;
++	
++	tm[3][0] = (p0[0] + p1[0]) / 2.0f;
++	tm[3][1] = (p0[1] + p1[1]) / 2.0f;
++	tm[3][2] = (p0[2] + p1[2]) / 2.0f;
++	
++	// PRINT_TM4("adaptive", tm);
++}
++
++
++static void GetDomainTransform(Object *ob, SmokeDomainSettings *sds, float tm[4][4])
++{
++	unit_m4(tm);
++	
++	float domainToAdaptiveTM[4][4];
++	GetBaseToAdaptiveTransform(sds, domainToAdaptiveTM);
++	
++	mul_m4_m4m4(tm, ob->obmat, domainToAdaptiveTM);
++	
++	// PRINT_TM4("object", ob->obmat);
++	// PRINT_TM4("domain", tm);
++}
++
++
++static void write_SmokeGizmo(PyObject          *outputFile,
++							 Scene             *sce,
++							 Object            *ob,
++							 SmokeModifierData *smd,
++							 const char        *pluginName,
++							 const char        *geometryName,
++							 const char        *lights)
++{
++	static char buf[MAX_PLUGIN_NAME];
++	
++	SmokeDomainSettings *sds = smd->domain;
++	
++	float domainTM[4][4];
++	GetDomainTransform(ob, sds, domainTM);
++	
++	WRITE_PYOBJECT(outputFile, "\nEnvFogMeshGizmo %s {", pluginName);	
++	WRITE_PYOBJECT(outputFile, "\n\tgeometry=%s;", geometryName);
++	if(strlen(lights)) {
++		WRITE_PYOBJECT(outputFile, "\n\tlights=%s;", lights);
++	}
++	WRITE_PYOBJECT(outputFile, "\n\ttransform=interpolate((%d,", sce->r.cfra);
++	WRITE_PYOBJECT_TRANSFORM(outputFile, domainTM);
++	WRITE_PYOBJECT(outputFile, "));");	
++	WRITE_PYOBJECT(outputFile, "\n}\n");
++	
++#if DEBUG_GIZMO_SHAPE
++	WRITE_PYOBJECT(outputFile, "\nNode Node%s {", geometryName);
++	WRITE_PYOBJECT(outputFile, "\n\tgeometry=%s;", geometryName);
++	WRITE_PYOBJECT(outputFile, "\n\tmaterial=MANOMATERIALISSET;");
++	WRITE_PYOBJECT(outputFile, "\n\ttransform=interpolate((%d,", sce->r.cfra);
++	WRITE_PYOBJECT_TRANSFORM(outputFile, domainTM);
++	WRITE_PYOBJECT(outputFile, "));");	
++	WRITE_PYOBJECT(outputFile, "\n}\n");
++#endif
++}
++
++
++void write_SmokeDomain(PyObject          *outputFile,
++					   Scene             *sce,
++					   Object            *ob,
++					   SmokeModifierData *smd,
++					   const char        *pluginName,
++					   const char        *lights)
++{
++	static char buf[MAX_PLUGIN_NAME];
++	
++	char geomteryPluginName[MAX_PLUGIN_NAME];
++	sprintf(geomteryPluginName, "Geom%s", pluginName);
++		
++	// Topology is always the same:
++	//   2.0 x 2.0 x 2.0 box
++	//     pmin = -1.0, -1.0, 1.0
++	//     pmax =  1.0,  1.0, 1.0
++	//
++	WRITE_PYOBJECT(outputFile, "\nGeomStaticMesh %s {", geomteryPluginName);
++	WRITE_PYOBJECT(outputFile,
++				   "\n\tvertices=ListVectorHex(\""
++				   "000080BF000080BF000080BF000080BF000080BF0000803F000080BF0000803F0000803F000080BF0000803F000080BF"
++				   "0000803F000080BF000080BF0000803F000080BF0000803F0000803F0000803F0000803F0000803F0000803F000080BF\");");
++	WRITE_PYOBJECT(outputFile,
++				   "\n\tfaces=ListIntHex(\""
++				   "000000000100000002000000020000000300000000000000020000000100000005000000050000000600000002000000"
++				   "070000000600000005000000050000000400000007000000000000000300000007000000070000000400000000000000"
++				   "030000000200000006000000060000000700000003000000010000000000000004000000040000000500000001000000\");");
++	WRITE_PYOBJECT(outputFile, "\n}\n");
++	
++	write_SmokeGizmo(outputFile, sce, ob, smd, pluginName, geomteryPluginName, lights);
++}
++
++
++// Blender smoke uses 2.0 x 2.0 x 2.0 mesh domain and then uses object transform to form the final
++// smoke domain, there also could be an adaptive domain, so we need to transform UVWs
++//
++static void write_SmokeUVWGen(PyObject          *outputFile,
++							  Scene             *sce,
++							  Object            *ob,
++							  SmokeModifierData *smd,
++							  const char        *pluginName)
++{
++	static char buf[MAX_PLUGIN_NAME];
++	
++	SmokeDomainSettings *sds = smd->domain;	
++
++	float domainTm[4][4];
++	GetDomainTransform(ob, sds, domainTm);
++	invert_m4(domainTm);
++	
++	// Remaps [-1.0, 1.0] to [0.0, 1.0]
++	float uvwTm[4][4];
++	scale_m4_fl(uvwTm, 0.5f);
++	copy_v3_fl(uvwTm[3], 0.5f);
++		
++	float uvw_transform[4][4];
++	mul_m4_m4m4(uvw_transform, uvwTm, domainTm);
++	
++	WRITE_PYOBJECT(outputFile, "\nUVWGenPlanarWorld %s {", pluginName);
++	WRITE_PYOBJECT(outputFile, "\n\tuvw_transform=interpolate((%d,", sce->r.cfra);
++	WRITE_PYOBJECT_TRANSFORM(outputFile, uvw_transform);
++	WRITE_PYOBJECT(outputFile, "));");
++	WRITE_PYOBJECT(outputFile, "\n}\n");
++}
++
++
++void write_TexVoxelData(PyObject          *outputFile,
++						Scene             *sce,
++						Object            *ob,
++						SmokeModifierData *smd,
++						const char        *pluginName, 
++						short              interpolation)
 +{
 +	static char buf[MAX_PLUGIN_NAME];
 +
++	SmokeDomainSettings *sds = smd->domain;
++	
++	char uvwPluginName[MAX_PLUGIN_NAME];
++	sprintf(uvwPluginName, "UVW%s", pluginName);
++	
 +	size_t i;
 +	size_t tot_res_high;
 +	size_t tot_res_low;
-+
-+	float *density_data = NULL;
-+	float *heat_data    = NULL;
-+	float  density;
-+	float  heat;
-+
++	
 +	int    res_high[3];
 +	int    res_low[3];
-+
++	
 +	float  ob_imat[4][4];
-+
-+	if(!(smd->domain && smd->domain->fluid)) {
-+		PRINT_ERROR("Domain and/or smoke data not found!");
++		
++	if(NOT(sds && sds->fluid)) {
++		PRINT_ERROR("Domain and / or fluid data not found!");
 +		return;
 +	}
 +
 +	// Store object invert matrix
 +	invert_m4_m4(ob_imat, ob->obmat);
 +
-+	if(use_smoke_hires && (smd->domain->flags & MOD_SMOKE_HIGHRES)) {
-+		COPY_VECTOR_3_3(res_low,  smd->domain->res);
-+		COPY_VECTOR_3_3(res_high, smd->domain->res_wt);
-+
-+		density_data = smoke_turbulence_get_density(smd->domain->wt);
++	// flame: Use flame temperature as texture data
++	// dens: Use smoke density and color as texture data
++	// heat: Use smoke heat as texture data. Values from -2.0 to 2.0 are used
++	float dt, dx, *dens, *react, *fuel, *flame, *heat, *heatold, *vx, *vy, *vz, *r, *g, *b;
++	float _d, _fu, _fl;
++	unsigned char *obstacles;
++	float *tcu, *tcv, *tcw;
++	
++	if(sds->flags & MOD_SMOKE_HIGHRES) {
++		COPY_VECTOR_3_3(res_high, sds->res_wt);
++		COPY_VECTOR_3_3(res_low,  sds->res);
++		
++		smoke_turbulence_export(sds->wt, &dens, &react, &flame, &fuel, &r, &g, &b, &tcu, &tcv, &tcw);
 +	}
 +	else {
-+		COPY_VECTOR_3_3(res_low,  smd->domain->res);
-+		COPY_VECTOR_3_3(res_high, smd->domain->res);
-+
-+		density_data = smoke_get_density(smd->domain->fluid);
++		COPY_VECTOR_3_3(res_high, sds->res);
++		COPY_VECTOR_3_3(res_low,  sds->res);
++		
++		smoke_export(sds->fluid, &dt, &dx, &dens, &react, &flame, &fuel, &heat, &heatold, &vx, &vy, &vz, &r, &g, &b, &obstacles);
 +	}
-+
-+	heat_data = smoke_get_heat(smd->domain->fluid);
-+
++	
++	// PRINT_INFO("sds->res      = %i %i %i", sds->res[0],    sds->res[1],    sds->res[2]);
++	// PRINT_INFO("sds->res_wt   = %i %i %i", sds->res_wt[0], sds->res_wt[1], sds->res_wt[2]);
++	// PRINT_INFO("sds->base_res = %i %i %i", sds->base_res[0], sds->base_res[1], sds->base_res[2]);
++	
 +	tot_res_high = (size_t)res_high[0] * (size_t)res_high[1] * (size_t)res_high[2];
-+	tot_res_low  = (size_t)res_low[0]  * (size_t)res_low[1]  * (size_t)res_low[2];
-+
-+	// Blender smoke uses 2.0 x 2.0 x 2.0 mesh domain and then uses object transform to form the final
-+	// smoke domain, so we need to transform UVWs
-+	//
-+	WRITE_PYOBJECT(outputFile, "\nUVWGenPlanarWorld UVW%s {", pluginName);
-+	WRITE_PYOBJECT(outputFile, "\n\tuvw_transform=interpolate((%d,", sce->r.cfra);
-+	WRITE_PYOBJECT_TRANSFORM(outputFile, ob_imat);
-+	WRITE_PYOBJECT(outputFile, "));");
-+	WRITE_PYOBJECT(outputFile, "\n}\n");
-+
++	tot_res_low  = (size_t)res_low[0]  * (size_t)res_low[1]  * (size_t)res_low[2];	
++	
++	write_SmokeUVWGen(outputFile, sce, ob, smd, uvwPluginName);
++	
 +	WRITE_PYOBJECT(outputFile, "\nTexVoxelData %s {", pluginName);
-+	WRITE_PYOBJECT(outputFile, "\n\tuvwgen=UVW%s;", pluginName);
-+	WRITE_PYOBJECT(outputFile, "\n\tinterpolation=%i;", interp_type);
++	WRITE_PYOBJECT(outputFile, "\n\tuvwgen=%s;", uvwPluginName);
++	WRITE_PYOBJECT(outputFile, "\n\tinterpolation=%i;", interpolation);
 +	WRITE_PYOBJECT(outputFile, "\n\tresolution=Vector(%i,%i,%i);", res_high[0], res_high[1], res_high[2]);
 +	WRITE_PYOBJECT(outputFile, "\n\tresolution_low=Vector(%i,%i,%i);", res_low[0], res_low[1], res_low[2]);
 +
 +	WRITE_PYOBJECT(outputFile, "\n\tdensity=interpolate((%d, ListFloatHex(\"", sce->r.cfra);
 +	for(i = 0; i < tot_res_high; ++i) {
-+		if(density_data) {
-+			density = density_data[i];
-+		}
-+		else {
-+			density = 0.0f;
-+		}
-+
-+		WRITE_PYOBJECT_HEX_VALUE(outputFile, density);
++		_d = dens ? dens[i] : 0.0f;
++		WRITE_PYOBJECT_HEX_VALUE(outputFile, _d);
 +	}
 +	WRITE_PYOBJECT(outputFile, "\")));");
 +
-+	WRITE_PYOBJECT(outputFile, "\n\theat=interpolate((%d, ListFloatHex(\"", sce->r.cfra);
-+	// Heat is somehow always low res
-+	for(i = 0; i < tot_res_low; ++i) {
-+		if(heat_data) {
-+			heat  = (heat_data[i]+2.0f)/4.0f;
-+			heat *= int_multiplier;
-+		}
-+		else {
-+			heat = 0.0f;
-+		}
-+
-+		WRITE_PYOBJECT_HEX_VALUE(outputFile, heat);
++	WRITE_PYOBJECT(outputFile, "\n\tflame=interpolate((%d, ListFloatHex(\"", sce->r.cfra);
++	for(i = 0; i < tot_res_high; ++i) {
++		_fl = flame ? flame[i] : 0.0f;
++		WRITE_PYOBJECT_HEX_VALUE(outputFile, _fl);
 +	}
 +	WRITE_PYOBJECT(outputFile, "\")));");
-+
++	
++	WRITE_PYOBJECT(outputFile, "\n\tfuel=interpolate((%d, ListFloatHex(\"", sce->r.cfra);
++	for(i = 0; i < tot_res_high; ++i) {
++		_fu = fuel ? fuel[i] : 0.0f;
++		WRITE_PYOBJECT_HEX_VALUE(outputFile, _fu);
++	}
++	WRITE_PYOBJECT(outputFile, "\")));");
++	
++#if USE_HEAT
++	if(NOT(sds->flags & MOD_SMOKE_HIGHRES)) {
++		WRITE_PYOBJECT(outputFile, "\n\theat=interpolate((%d, ListFloatHex(\"", sce->r.cfra);
++		// Heat is somehow always low res
++		for(i = 0; i < tot_res_low; ++i) {
++			_h = heat ? heat[i] : 0.0f;
++			WRITE_PYOBJECT_HEX_VALUE(outputFile, _h);
++		}
++		WRITE_PYOBJECT(outputFile, "\")));");
++	}
++#endif
++	
 +	WRITE_PYOBJECT(outputFile, "\n}\n");
 +}
 diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/vrscene.h b/blender/source/blender/vray_for_blender/vrscene_exporter/vrscene.h
 new file mode 100644
-index 0000000..59447b9
+index 0000000..539362c
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/vrscene_exporter/vrscene.h
-@@ -0,0 +1,112 @@
+@@ -0,0 +1,119 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -2589,13 +2868,17 @@ index 0000000..59447b9
 +	   m[3][0], m[3][1], m[3][2]); \
 +	WRITE_PYOBJECT_BUF(pyObject);
 +
++#ifdef __cplusplus
++extern "C" {
++#endif
 +
 +int   write_GeomMayaHair(PyObject *outputFile, Scene *sce, Main *main, Object *ob, ParticleSystem *psys, const char *pluginName);
 +void  write_GeomStaticMesh(PyObject *outputFile, Scene *sce, Object *ob, Mesh *mesh, const char *pluginName);
-+void  write_TexVoxelData(PyObject *outputFile, Scene *sce, Object *ob, SmokeModifierData *smd, const char *pluginName,
-+						 short use_smoke_hires, short interp_type, float int_multiplier);
 +
-+void  write_ObjectNode(PyObject *outputFile, Scene *sce, Object *ob, float tm[4][4]);
++void  write_SmokeDomain(PyObject *outputFile, Scene *sce, Object *ob, SmokeModifierData *smd, const char *pluginName, const char *lights);
++void  write_TexVoxelData(PyObject *outputFile, Scene *sce, Object *ob, SmokeModifierData *smd, const char *pluginName, short interp_type);
++
++void  write_Dupli(PyObject *outputFile, Scene *sce, Object *ob);
 +void  write_Node(PyObject *outputFile, Scene *sce, Object *ob, const char *pluginName,
 +				 const char *transform,
 +				 const char *geometry,
@@ -2608,6 +2891,9 @@ index 0000000..59447b9
 +				 const int   objectID,
 +				 const int   primary_visibility);
 +
++#ifdef __cplusplus
++}
++#endif
 +
 +#endif // VRSCENE_H
 diff --git a/blender/source/creator/CMakeLists.txt b/blender/source/creator/CMakeLists.txt

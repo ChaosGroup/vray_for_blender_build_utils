@@ -1,5 +1,5 @@
 diff --git a/blender/CMakeLists.txt b/blender/CMakeLists.txt
-index fbb7c17..bfae548 100644
+index f9ba78e..b4cc816 100644
 --- a/blender/CMakeLists.txt
 +++ b/blender/CMakeLists.txt
 @@ -270,6 +270,9 @@ set(CYCLES_CUDA_BINARIES_ARCH sm_20 sm_21 sm_30 sm_35 CACHE STRING "CUDA archite
@@ -12,7 +12,7 @@ index fbb7c17..bfae548 100644
  # LLVM
  option(WITH_LLVM					"Use LLVM" OFF)
  option(LLVM_STATIC					"Link with LLVM static libraries" ON)
-@@ -510,6 +513,12 @@ if(WITH_BOOL_COMPAT)
+@@ -497,6 +500,12 @@ if(WITH_BOOL_COMPAT)
  	add_definitions(-DWITH_BOOL_COMPAT)
  endif()
  
@@ -25,7 +25,7 @@ index fbb7c17..bfae548 100644
  #-----------------------------------------------------------------------------
  # Check for valid directories
  # ... svn extern paths can be missing because of svn-git.
-@@ -2271,6 +2280,7 @@ if(FIRST_RUN)
+@@ -2237,6 +2246,7 @@ if(FIRST_RUN)
  	info_cfg_option(WITH_INPUT_NDOF)
  	info_cfg_option(WITH_CYCLES)
  	info_cfg_option(WITH_FREESTYLE)
@@ -34,7 +34,7 @@ index fbb7c17..bfae548 100644
  
  	info_cfg_text("Compiler Options:")
 diff --git a/blender/SConstruct b/blender/SConstruct
-index 9f9eaa8..863de3b 100644
+index f516560..e6f61d1 100644
 --- a/blender/SConstruct
 +++ b/blender/SConstruct
 @@ -274,6 +274,7 @@ if 'blenderlite' in B.targets:
@@ -46,7 +46,7 @@ index 9f9eaa8..863de3b 100644
      # Merge blenderlite, let command line to override
      for k,v in target_env_defs.iteritems():
 diff --git a/blender/build_files/scons/tools/Blender.py b/blender/build_files/scons/tools/Blender.py
-index f181f29..3a655a2 100644
+index 06cc6b7..fa33f7f 100644
 --- a/blender/build_files/scons/tools/Blender.py
 +++ b/blender/build_files/scons/tools/Blender.py
 @@ -393,6 +393,9 @@ def creator(env):
@@ -60,18 +60,19 @@ index f181f29..3a655a2 100644
          incs.append(env['BF_PTHREADS_INC'])
          incs.append('#/intern/utfconv')
 diff --git a/blender/build_files/scons/tools/btools.py b/blender/build_files/scons/tools/btools.py
-index 8f0d3ff..da28f62 100644
+index c542435..4b2ba0b 100644
 --- a/blender/build_files/scons/tools/btools.py
 +++ b/blender/build_files/scons/tools/btools.py
-@@ -144,6 +144,7 @@ def validate_arguments(args, bc):
+@@ -143,6 +143,8 @@ def validate_arguments(args, bc):
              'WITH_X11_XINPUT',
              'WITH_X11_XF86VMODE',
              'BF_GHOST_DEBUG',
 +            'WITH_VRAY_FOR_BLENDER'
-             'USE_QTKIT',
++            'USE_QTKIT',
              'BF_FANCY', 'BF_QUIET', 'BF_LINE_OVERWRITE',
              'BF_X264_CONFIG',
-@@ -575,6 +576,8 @@ def read_opts(env, cfg, args):
+             'BF_XVIDCORE_CONFIG',
+@@ -572,6 +574,8 @@ def read_opts(env, cfg, args):
          ('BF_CYCLES_CUDA_NVCC', 'CUDA nvcc compiler path', ''),
          ('BF_CYCLES_CUDA_BINARIES_ARCH', 'CUDA architectures to compile binaries for', []),
  
@@ -81,10 +82,10 @@ index 8f0d3ff..da28f62 100644
          (BoolVariable('WITH_BF_STATICOIIO', 'Statically link to OpenImageIO', False)),
          ('BF_OIIO', 'OIIO root path', ''),
 diff --git a/blender/release/datafiles/blender_icons16.png b/blender/release/datafiles/blender_icons16.png
-index 24d95d7..eeb1942 100644
+index 2f2f8de..43df1bc 100644
 Binary files a/blender/release/datafiles/blender_icons16.png and b/blender/release/datafiles/blender_icons16.png differ
 diff --git a/blender/release/datafiles/blender_icons32.png b/blender/release/datafiles/blender_icons32.png
-index 3f8901f..2463ae9 100644
+index 8b46923..551b7d1 100644
 Binary files a/blender/release/datafiles/blender_icons32.png and b/blender/release/datafiles/blender_icons32.png differ
 diff --git a/blender/source/blender/CMakeLists.txt b/blender/source/blender/CMakeLists.txt
 index 0d30952..5fac625 100644
@@ -108,24 +109,121 @@ index de052f2..e7256d9 100644
 +
 +if env['WITH_VRAY_FOR_BLENDER']:
 +    SConscript (['vray_for_blender/SConscript'])
+diff --git a/blender/source/blender/blenkernel/BKE_object.h b/blender/source/blender/blenkernel/BKE_object.h
+index 4341756..10153ac 100644
+--- a/blender/source/blender/blenkernel/BKE_object.h
++++ b/blender/source/blender/blenkernel/BKE_object.h
+@@ -155,7 +155,7 @@ void BKE_object_tfm_protected_restore(struct Object *ob,
+ 
+ void BKE_object_handle_update(struct Scene *scene, struct Object *ob);
+ void BKE_object_handle_update_ex(struct Scene *scene, struct Object *ob,
+-                                 struct RigidBodyWorld *rbw);
++                                 struct RigidBodyWorld *rbw, struct Main *bmain);
+ void BKE_object_sculpt_modifiers_changed(struct Object *ob);
+ 
+ int BKE_object_obdata_texspace_get(struct Object *ob, short **r_texflag, float **r_loc, float **r_size, float **r_rot);
+diff --git a/blender/source/blender/blenkernel/intern/object.c b/blender/source/blender/blenkernel/intern/object.c
+index 45d9d14..43d098a 100644
+--- a/blender/source/blender/blenkernel/intern/object.c
++++ b/blender/source/blender/blenkernel/intern/object.c
+@@ -65,6 +65,7 @@
+ #include "BLI_utildefines.h"
+ #include "BLI_linklist.h"
+ #include "BLI_kdtree.h"
++#include "BLI_callbacks.h"
+ 
+ #include "BLF_translation.h"
+ 
+@@ -2689,7 +2690,7 @@ bool BKE_object_parent_loop_check(const Object *par, const Object *ob)
+ /* requires flags to be set! */
+ /* Ideally we shouldn't have to pass the rigid body world, but need bigger restructuring to avoid id */
+ void BKE_object_handle_update_ex(Scene *scene, Object *ob,
+-                                 RigidBodyWorld *rbw)
++                                 RigidBodyWorld *rbw, Main *bmain)
+ {
+ 	if (ob->recalc & OB_RECALC_ALL) {
+ 		/* speed optimization for animation lookups */
+@@ -2868,9 +2869,16 @@ void BKE_object_handle_update_ex(Scene *scene, Object *ob,
+ 						psys_get_modifier(ob, psys)->flag &= ~eParticleSystemFlag_psys_updated;
+ 				}
+ 			}
+-			
++
+ 			/* quick cache removed */
++
++            if(bmain)
++                BLI_callback_exec(bmain, &ob->id, BLI_CB_EVT_OBJECT_DATA_UPDATE);
+ 		}
++        else {
++            if(bmain)
++                BLI_callback_exec(bmain, &ob->id, BLI_CB_EVT_OBJECT_UPDATE);
++        }
+ 
+ 		ob->recalc &= ~OB_RECALC_ALL;
+ 	}
+@@ -2895,7 +2903,7 @@ void BKE_object_handle_update_ex(Scene *scene, Object *ob,
+  */
+ void BKE_object_handle_update(Scene *scene, Object *ob)
+ {
+-	BKE_object_handle_update_ex(scene, ob, NULL);
++	BKE_object_handle_update_ex(scene, ob, NULL, NULL);
+ }
+ 
+ void BKE_object_sculpt_modifiers_changed(Object *ob)
+diff --git a/blender/source/blender/blenkernel/intern/scene.c b/blender/source/blender/blenkernel/intern/scene.c
+index 05e1ec8..d22dd62 100644
+--- a/blender/source/blender/blenkernel/intern/scene.c
++++ b/blender/source/blender/blenkernel/intern/scene.c
+@@ -1199,7 +1199,7 @@ static void scene_update_tagged_recursive(Main *bmain, Scene *scene, Scene *scen
+ 	for (base = scene->base.first; base; base = base->next) {
+ 		Object *ob = base->object;
+ 		
+-		BKE_object_handle_update_ex(scene_parent, ob, scene->rigidbody_world);
++		BKE_object_handle_update_ex(scene_parent, ob, scene->rigidbody_world, bmain);
+ 		
+ 		if (ob->dup_group && (ob->transflag & OB_DUPLIGROUP))
+ 			BKE_group_handle_recalc_and_update(scene_parent, ob, ob->dup_group);
+diff --git a/blender/source/blender/blenlib/BLI_callbacks.h b/blender/source/blender/blenlib/BLI_callbacks.h
+index 8d5ea91..95f41f5 100644
+--- a/blender/source/blender/blenlib/BLI_callbacks.h
++++ b/blender/source/blender/blenlib/BLI_callbacks.h
+@@ -43,6 +43,8 @@ typedef enum {
+ 	BLI_CB_EVT_SAVE_POST,
+ 	BLI_CB_EVT_SCENE_UPDATE_PRE,
+ 	BLI_CB_EVT_SCENE_UPDATE_POST,
++	BLI_CB_EVT_OBJECT_UPDATE,
++	BLI_CB_EVT_OBJECT_DATA_UPDATE,
+ 	BLI_CB_EVT_GAME_PRE,
+ 	BLI_CB_EVT_GAME_POST,
+ 	BLI_CB_EVT_TOT
 diff --git a/blender/source/blender/editors/include/UI_icons.h b/blender/source/blender/editors/include/UI_icons.h
-index f8e1bbb..5b64bf6 100644
+index f8e1bbb..679250c 100644
 --- a/blender/source/blender/editors/include/UI_icons.h
 +++ b/blender/source/blender/editors/include/UI_icons.h
-@@ -275,10 +275,11 @@ DEF_ICON(GROUP_UVS)
+@@ -275,15 +275,16 @@ DEF_ICON(GROUP_UVS)
  DEF_ICON(RNA)
  DEF_ICON(RNA_ADD)
  
 +DEF_ICON(VRAY_LOGO)
 +DEF_ICON(VRAY_LOGO_MONO)
++DEF_ICON(VRAY_WORLD)
++DEF_ICON(VRAY_LIGHT)
++DEF_ICON(VRAY_MATERIAL)
++DEF_ICON(VRAY_OBJECT)
++DEF_ICON(VRAY_RENDER_LAYERS)
 +
  	/* available */
  #ifndef DEF_ICON_BLANK_SKIP
 -	DEF_ICON(BLANK092)
 -	DEF_ICON(BLANK093)
- 	DEF_ICON(BLANK094)
- 	DEF_ICON(BLANK095)
- 	DEF_ICON(BLANK096)
+-	DEF_ICON(BLANK094)
+-	DEF_ICON(BLANK095)
+-	DEF_ICON(BLANK096)
+-	DEF_ICON(BLANK097)
+-	DEF_ICON(BLANK098)
+ 	DEF_ICON(BLANK099)
+ 	DEF_ICON(BLANK100)
+ 	DEF_ICON(BLANK101)
 diff --git a/blender/source/blender/python/SConscript b/blender/source/blender/python/SConscript
 index 0ac0285..1fa8608 100644
 --- a/blender/source/blender/python/SConscript
@@ -158,6 +256,49 @@ index ef5d26d..a054a12 100644
  if(WITH_FREESTYLE)
  	list(APPEND INC
  		../../freestyle/intern/python
+diff --git a/blender/source/blender/python/intern/bpy_app_handlers.c b/blender/source/blender/python/intern/bpy_app_handlers.c
+index f8725d6..faf1b27 100644
+--- a/blender/source/blender/python/intern/bpy_app_handlers.c
++++ b/blender/source/blender/python/intern/bpy_app_handlers.c
+@@ -44,21 +44,23 @@ void bpy_app_generic_callback(struct Main *main, struct ID *id, void *arg);
+ static PyTypeObject BlenderAppCbType;
+ 
+ static PyStructSequence_Field app_cb_info_fields[] = {
+-	{(char *)"frame_change_pre",  (char *)"Callback list - on frame change for playback and rendering (before)"},
+-	{(char *)"frame_change_post", (char *)"Callback list - on frame change for playback and rendering (after)"},
+-	{(char *)"render_pre",        (char *)"Callback list - on render (before)"},
+-	{(char *)"render_post",       (char *)"Callback list - on render (after)"},
+-	{(char *)"render_stats",      (char *)"Callback list - on printing render statistics"},
+-	{(char *)"render_complete",   (char *)"Callback list - on completion of render job"},
+-	{(char *)"render_cancel",     (char *)"Callback list - on canceling a render job"},
+-	{(char *)"load_pre",          (char *)"Callback list - on loading a new blend file (before)"},
+-	{(char *)"load_post",         (char *)"Callback list - on loading a new blend file (after)"},
+-	{(char *)"save_pre",          (char *)"Callback list - on saving a blend file (before)"},
+-	{(char *)"save_post",         (char *)"Callback list - on saving a blend file (after)"},
+-	{(char *)"scene_update_pre",  (char *)"Callback list - on updating the scenes data (before)"},
+-	{(char *)"scene_update_post", (char *)"Callback list - on updating the scenes data (after)"},
+-	{(char *)"game_pre",          (char *)"Callback list - on starting the game engine"},
+-	{(char *)"game_post",         (char *)"Callback list - on ending the game engine"},
++	{(char *)"frame_change_pre",   (char *)"Callback list - on frame change for playback and rendering (before)"},
++	{(char *)"frame_change_post",  (char *)"Callback list - on frame change for playback and rendering (after)"},
++	{(char *)"render_pre",         (char *)"Callback list - on render (before)"},
++	{(char *)"render_post",        (char *)"Callback list - on render (after)"},
++	{(char *)"render_stats",       (char *)"Callback list - on printing render statistics"},
++	{(char *)"render_complete",    (char *)"Callback list - on completion of render job"},
++	{(char *)"render_cancel",      (char *)"Callback list - on canceling a render job"},
++	{(char *)"load_pre",           (char *)"Callback list - on loading a new blend file (before)"},
++	{(char *)"load_post",          (char *)"Callback list - on loading a new blend file (after)"},
++	{(char *)"save_pre",           (char *)"Callback list - on saving a blend file (before)"},
++	{(char *)"save_post",          (char *)"Callback list - on saving a blend file (after)"},
++	{(char *)"scene_update_pre",   (char *)"Callback list - on updating the scenes data (before)"},
++	{(char *)"scene_update_post",  (char *)"Callback list - on updating the scenes data (after)"},
++	{(char *)"object_update",      (char *)"Callback list - on updating an object"},
++	{(char *)"object_data_update", (char *)"Callback list - on updating an object's data"},
++	{(char *)"game_pre",           (char *)"Callback list - on starting the game engine"},
++	{(char *)"game_post",          (char *)"Callback list - on ending the game engine"},
+ 
+ 	/* sets the permanent tag */
+ #   define APP_CB_OTHER_FIELDS 1
 diff --git a/blender/source/blender/python/intern/bpy_interface.c b/blender/source/blender/python/intern/bpy_interface.c
 index cc1dd36..0ebb548 100644
 --- a/blender/source/blender/python/intern/bpy_interface.c
@@ -218,7 +359,7 @@ index 4d4d487..84a895c 100644
  
 diff --git a/blender/source/blender/vray_for_blender/CGR_config.h b/blender/source/blender/vray_for_blender/CGR_config.h
 new file mode 100644
-index 0000000..a1602c5
+index 0000000..c9b9c7b
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/CGR_config.h
 @@ -0,0 +1,110 @@
@@ -252,7 +393,7 @@ index 0000000..a1602c5
 +
 +#define PLUGIN_NAME V-Ray For Blender
 +
-+#define USE_COLOR        0 // For Qt Creator
++#define USE_COLOR        1 // For Qt Creator
 +
 +#define USE_DEBUG        1
 +#define USE_CALL_DEBUG  (1 && USE_DEBUG)
@@ -621,10 +762,10 @@ index 0000000..4dab252
 +#endif // BLENDER_INCLUDES_H
 diff --git a/blender/source/blender/vray_for_blender/python/vray_python_ext.cpp b/blender/source/blender/vray_for_blender/python/vray_python_ext.cpp
 new file mode 100644
-index 0000000..76b3e5a
+index 0000000..3473b5d
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/python/vray_python_ext.cpp
-@@ -0,0 +1,204 @@
+@@ -0,0 +1,193 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -656,7 +797,6 @@ index 0000000..76b3e5a
 +#include "blender_includes.h"
 +}
 +
-+#include "utils/CGR_data.h"
 +#include "vrscene_exporter/vrscene.h"
 +#include "CGR_vray_for_blender.h"
 +
@@ -746,30 +886,20 @@ index 0000000..76b3e5a
 +	int         contextPtr;
 +	int         objectPtr;
 +	const char *pluginName;
++	PyObject   *propGroup;
 +	PyObject   *fileObject;
 +
-+	if(NOT(PyArg_ParseTuple(args, "iisO", &contextPtr, &objectPtr, &pluginName, &fileObject))) {
++	if(NOT(PyArg_ParseTuple(args, "iisOO", &contextPtr, &objectPtr, &pluginName, &propGroup, &fileObject))) {
 +		return NULL;
 +	}
 +
 +	bContext *C = (bContext*)(intptr_t)contextPtr;
-+	Object *ob  = (Object*)(intptr_t)objectPtr;
++	Object   *ob = (Object*)(intptr_t)objectPtr;
 +
 +	Scene *sce  = CTX_data_scene(C);
 +	Main  *main = CTX_data_main(C);
 +
-+	Mesh *mesh = NULL;
-+
-+	mesh = GetRenderMesh(sce, main, ob);
-+
-+	if(mesh) {
-+		write_GeomStaticMesh(fileObject, sce, ob, mesh, pluginName);
-+
-+		/* remove the temporary mesh */
-+		BKE_mesh_free(mesh, TRUE);
-+		BLI_remlink(&main->mesh, mesh);
-+		MEM_freeN(mesh);
-+	}
++	write_Mesh(fileObject, sce, ob, main, pluginName, propGroup);
 +
 +	Py_RETURN_NONE;
 +}
@@ -783,13 +913,12 @@ index 0000000..76b3e5a
 +
 +static PyObject* mExportDupli(PyObject *self, PyObject *args)
 +{
-+	PRINT_INFO("defExportDupli()");
-+
 +	int       contextPtr;
 +	int       objectPtr;
-+	PyObject *fileObject;
++	PyObject *nodeFile;
++	PyObject *geomFile;
 +
-+	if(NOT(PyArg_ParseTuple(args, "iiO", &contextPtr, &objectPtr, &fileObject))) {
++	if(NOT(PyArg_ParseTuple(args, "iiOO", &contextPtr, &objectPtr, &nodeFile, &geomFile))) {
 +		return NULL;
 +	}
 +
@@ -797,8 +926,9 @@ index 0000000..76b3e5a
 +	Object *ob  = (Object*)(intptr_t)objectPtr;
 +
 +	Scene *sce  = CTX_data_scene(C);
++	Main  *main = CTX_data_main(C);
 +	
-+	write_Dupli(fileObject, sce, ob);
++	write_Dupli(nodeFile, geomFile, sce, main, ob);
 +	
 +	Py_RETURN_NONE;
 +}
@@ -1317,10 +1447,10 @@ index 0000000..39fd5db
 +#endif // CGR_STRING_H
 diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/geom.c b/blender/source/blender/vray_for_blender/vrscene_exporter/geom.c
 new file mode 100644
-index 0000000..dc7cc45
+index 0000000..c494035
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/vrscene_exporter/geom.c
-@@ -0,0 +1,317 @@
+@@ -0,0 +1,357 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -1346,22 +1476,45 @@ index 0000000..dc7cc45
 + * ***** END GPL LICENSE BLOCK *****
 + */
 +
++#include "utils/CGR_data.h"
++
 +#include "vrscene.h"
++
++
++static void WritePythonAttribute(PyObject *outputFile, PyObject *propGroup, const char *attrName)
++{
++	static char buf[MAX_PLUGIN_NAME];
++
++	PyObject *attr      = NULL;
++	PyObject *attrValue = NULL;
++
++	if(propGroup == Py_None)
++		return;
++
++	attr      = PyObject_GetAttrString(propGroup, attrName);
++	attrValue = PyNumber_Long(attr);
++
++	if(attrValue) {
++		WRITE_PYOBJECT(outputFile, "\n\t%s=%li;", attrName, PyLong_AsLong(attrValue));
++	}
++}
 +
 +
 +static int write_edge_visibility(PyObject *outputFile, int k, unsigned long int *ev)
 +{
 +	static char buf[MAX_PLUGIN_NAME];
++
 +	if(k == 9) {
 +		WRITE_PYOBJECT_HEX_VALUE(outputFile, *ev);
 +		*ev= 0;
 +		return 0;
 +	}
++
 +	return k + 1;
 +}
 +
 +
-+void write_GeomStaticMesh(PyObject *outputFile, Scene *sce, Object *ob, Mesh *mesh, const char *pluginName)
++void write_GeomStaticMesh(PyObject *outputFile, Scene *sce, Object *ob, Mesh *mesh, const char *pluginName, PyObject *propGroup)
 +{
 +	static char buf[MAX_PLUGIN_NAME];
 +
@@ -1370,6 +1523,7 @@ index 0000000..dc7cc45
 +	MTFace *mtface;
 +	MCol   *mcol;
 +	MVert  *vert;
++	MEdge  *edge;
 +
 +	CustomData *fdata;
 +
@@ -1498,6 +1652,11 @@ index 0000000..dc7cc45
 +	}
 +	WRITE_PYOBJECT(outputFile, "\");");
 +
++//	WRITE_PYOBJECT(outputFile, "\n\tedge_creases_vertices=ListIntHex(\"");
++//	WRITE_PYOBJECT(outputFile, "\");");
++
++//	WRITE_PYOBJECT(outputFile, "\n\tedge_creases_sharpness=ListFloatHex(\"");
++//	WRITE_PYOBJECT(outputFile, "\");");
 +
 +	WRITE_PYOBJECT(outputFile, "\n\tedge_visibility=ListIntHex(\"");
 +	ev= 0;
@@ -1625,18 +1784,29 @@ index 0000000..dc7cc45
 +		WRITE_PYOBJECT(outputFile, "\n\t)));");
 +	}
 +
-+	RNA_id_pointer_create(&data->id, &rna_me);
-+	if(RNA_struct_find_property(&rna_me, "vray")) {
-+		VRayMesh = RNA_pointer_get(&rna_me, "vray");
-+		if(RNA_struct_find_property(&VRayMesh, "GeomStaticMesh")) {
-+			GeomStaticMesh = RNA_pointer_get(&VRayMesh, "GeomStaticMesh");
-+			if(RNA_struct_find_property(&GeomStaticMesh, "dynamic_geometry")) {
-+				dynamic_geometry = RNA_boolean_get(&GeomStaticMesh, "dynamic_geometry");
-+			}
-+		}
++	if(propGroup) {
++		WritePythonAttribute(outputFile, propGroup, "dynamic_geometry");
++		WritePythonAttribute(outputFile, propGroup, "osd_subdiv_level");
 +	}
-+	WRITE_PYOBJECT(outputFile, "\n\tdynamic_geometry=%i;", dynamic_geometry);
++
 +	WRITE_PYOBJECT(outputFile, "\n}\n");
++}
++
++
++void  write_Mesh(PyObject *outputFile, Scene *sce, Object *ob, Main *main, const char *pluginName, PyObject *propGroup)
++{
++	Mesh *mesh = GetRenderMesh(sce, main, ob);
++	if(NOT(mesh)) {
++		PRINT_ERROR("Can't get render mesh!");
++		return;
++	}
++
++	write_GeomStaticMesh(outputFile, sce, ob, mesh, pluginName, propGroup);
++
++	/* remove the temporary mesh */
++	BKE_mesh_free(mesh, TRUE);
++	BLI_remlink(&main->mesh, mesh);
++	MEM_freeN(mesh);
 +}
 diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/hair.c b/blender/source/blender/vray_for_blender/vrscene_exporter/hair.c
 new file mode 100644
@@ -2360,10 +2530,10 @@ index 0000000..eddf62f
 +}
 diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/node.c b/blender/source/blender/vray_for_blender/vrscene_exporter/node.c
 new file mode 100644
-index 0000000..a2389e4
+index 0000000..be7926d
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/vrscene_exporter/node.c
-@@ -0,0 +1,108 @@
+@@ -0,0 +1,119 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -2394,31 +2564,38 @@ index 0000000..a2389e4
 +#include "vrscene.h"
 +
 +
-+static void  write_ObjectNode(PyObject   *outputFile,
-+					   Scene      *sce,
-+					   Object     *ob,
-+					   float       tm[4][4],
-+                       const char *pluginName)
++static void  write_ObjectNode(PyObject   *nodeFile,
++							  PyObject   *geomFile,
++							  Scene      *sce,
++							  Main       *main,
++							  Object     *ob,
++							  float       tm[4][4],
++							  const char *pluginName)
 +{
 +	static char buf[MAX_PLUGIN_NAME];
-+	
++
 +	char material[MAX_PLUGIN_NAME];
 +	char geometry[MAX_PLUGIN_NAME];
 +	
++	// TODO:
++	//   [ ] Add type checking and sync with Python naming
++	//
 +	sprintf(material, "RS%s", ob->id.name);
 +	sprintf(geometry, "%s", ((Mesh*)ob->data)->id.name);
 +	
 +	StripString(material);
 +	StripString(geometry);
++
++	write_Mesh(geomFile, sce, ob, main, geometry, NULL);
 +	
-+	WRITE_PYOBJECT(outputFile, "\nNode %s {", pluginName);
-+	WRITE_PYOBJECT(outputFile, "\n\tobjectID=%i;", ob->index);
-+	WRITE_PYOBJECT(outputFile, "\n\tmaterial=RS%s;", material);
-+	WRITE_PYOBJECT(outputFile, "\n\tgeometry=%s;", geometry);
-+	WRITE_PYOBJECT(outputFile, "\n\ttransform=interpolate((%d,", sce->r.cfra);
-+	WRITE_PYOBJECT_TRANSFORM(outputFile, tm);
-+	WRITE_PYOBJECT(outputFile, "));");
-+	WRITE_PYOBJECT(outputFile, "\n}\n");
++	WRITE_PYOBJECT(nodeFile, "\nNode %s {", pluginName);
++	WRITE_PYOBJECT(nodeFile, "\n\tobjectID=%i;", ob->index);
++	WRITE_PYOBJECT(nodeFile, "\n\tmaterial=RS%s;", material);
++	WRITE_PYOBJECT(nodeFile, "\n\tgeometry=%s;", geometry);
++	WRITE_PYOBJECT(nodeFile, "\n\ttransform=interpolate((%d,", sce->r.cfra);
++	WRITE_PYOBJECT_TRANSFORM(nodeFile, tm);
++	WRITE_PYOBJECT(nodeFile, "));");
++	WRITE_PYOBJECT(nodeFile, "\n}\n");
 +}
 +
 +
@@ -2449,8 +2626,10 @@ index 0000000..a2389e4
 +}
 +
 +
-+void write_Dupli(PyObject   *outputFile,
++void write_Dupli(PyObject   *nodeFile,
++				 PyObject   *geomFile,
 +				 Scene      *sce,
++				 Main       *main,
 +				 Object     *ob)
 +{
 +	DupliObject *dob;
@@ -2465,8 +2644,10 @@ index 0000000..a2389e4
 +	for(dob = ob->duplilist->first; dob; dob = dob->next) {
 +		sprintf(pluginName, "%s%.5i", dob->ob->id.name, dob->persistent_id[0]);
 +		StripString(pluginName);
++
++		PRINT_INFO("Processing dupli %s", dob->ob->id.name);
 +		
-+		write_ObjectNode(outputFile, sce, dob->ob, dob->mat, pluginName);
++		write_ObjectNode(nodeFile, geomFile, sce, main, dob->ob, dob->mat, pluginName);
 +	}
 +
 +	// Free our duplilist
@@ -2788,10 +2969,10 @@ index 0000000..68550e2
 +}
 diff --git a/blender/source/blender/vray_for_blender/vrscene_exporter/vrscene.h b/blender/source/blender/vray_for_blender/vrscene_exporter/vrscene.h
 new file mode 100644
-index 0000000..539362c
+index 0000000..9fac96f
 --- /dev/null
 +++ b/blender/source/blender/vray_for_blender/vrscene_exporter/vrscene.h
-@@ -0,0 +1,119 @@
+@@ -0,0 +1,121 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -2888,12 +3069,14 @@ index 0000000..539362c
 +#endif
 +
 +int   write_GeomMayaHair(PyObject *outputFile, Scene *sce, Main *main, Object *ob, ParticleSystem *psys, const char *pluginName);
-+void  write_GeomStaticMesh(PyObject *outputFile, Scene *sce, Object *ob, Mesh *mesh, const char *pluginName);
++
++void  write_Mesh(PyObject *outputFile, Scene *sce, Object *ob, Main *main, const char *pluginName, PyObject *propGroup);
++void  write_GeomStaticMesh(PyObject *outputFile, Scene *sce, Object *ob, Mesh *mesh, const char *pluginName, PyObject *propGroup);
 +
 +void  write_SmokeDomain(PyObject *outputFile, Scene *sce, Object *ob, SmokeModifierData *smd, const char *pluginName, const char *lights);
 +void  write_TexVoxelData(PyObject *outputFile, Scene *sce, Object *ob, SmokeModifierData *smd, const char *pluginName, short interp_type);
 +
-+void  write_Dupli(PyObject *outputFile, Scene *sce, Object *ob);
++void  write_Dupli(PyObject *nodeFile, PyObject *geomFile, Scene *sce, Main *main, Object *ob);
 +void  write_Node(PyObject *outputFile, Scene *sce, Object *ob, const char *pluginName,
 +				 const char *transform,
 +				 const char *geometry,
@@ -2912,10 +3095,10 @@ index 0000000..539362c
 +
 +#endif // VRSCENE_H
 diff --git a/blender/source/creator/CMakeLists.txt b/blender/source/creator/CMakeLists.txt
-index 8e0ba66..c7791a9 100644
+index 33d5c7d..61900c7 100644
 --- a/blender/source/creator/CMakeLists.txt
 +++ b/blender/source/creator/CMakeLists.txt
-@@ -1029,6 +1029,10 @@ endif()
+@@ -1031,6 +1031,10 @@ endif()
  		list_insert_after(BLENDER_SORTED_LIBS "ge_logic_ngnetwork" "extern_bullet")
  	endif()
  

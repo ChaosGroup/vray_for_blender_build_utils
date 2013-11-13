@@ -44,6 +44,11 @@ class MacBuilder(Builder):
 
 		uc= open(self.user_config, 'w')
 
+		build_options = {
+			'True': [],
+			'False': [],
+		}
+
 		if self.use_debug:
 			uc.write("BF_DEBUG    = True\n")
 
@@ -51,14 +56,11 @@ class MacBuilder(Builder):
 		uc.write("BF_BUILDDIR   = '/tmp/builder_%s'\n" % (self.build_arch))
 		uc.write("\n")
 
-		uc.write("WITH_BF_PLAYER = False\n")
-		uc.write("\n")
-
 		# Cycles
 		#
 		if self.with_cycles:
-			uc.write("WITH_BF_CYCLES       = True\n")
-			uc.write("WITH_BF_OIIO         = True\n")
+			uc.write("WITH_BF_CYCLES = True\n")
+			uc.write("WITH_BF_OIIO = True\n")
 			uc.write("\n")
 
 		if self.with_ge:
@@ -112,6 +114,11 @@ class MacBuilder(Builder):
 
 		if self.add_patches:
 			uc.write("WITH_VRAY_FOR_BLENDER = True\n")
+
+		# Write boolean options
+		for key in build_options:
+			for opt in build_options[key]:
+				uc.write("{0} = {1}\n".format(opt, key))
 
 		uc.write("\n")
 		uc.close()

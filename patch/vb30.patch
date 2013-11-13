@@ -34,7 +34,7 @@ index f9ba78e..b4cc816 100644
  
  	info_cfg_text("Compiler Options:")
 diff --git a/blender/SConstruct b/blender/SConstruct
-index f516560..e6f61d1 100644
+index 2c30e1b..35f49c0 100644
 --- a/blender/SConstruct
 +++ b/blender/SConstruct
 @@ -274,6 +274,7 @@ if 'blenderlite' in B.targets:
@@ -60,7 +60,7 @@ index 06cc6b7..fa33f7f 100644
          incs.append(env['BF_PTHREADS_INC'])
          incs.append('#/intern/utfconv')
 diff --git a/blender/build_files/scons/tools/btools.py b/blender/build_files/scons/tools/btools.py
-index c542435..4b2ba0b 100644
+index 607b761..ca8f582 100644
 --- a/blender/build_files/scons/tools/btools.py
 +++ b/blender/build_files/scons/tools/btools.py
 @@ -143,6 +143,8 @@ def validate_arguments(args, bc):
@@ -72,7 +72,7 @@ index c542435..4b2ba0b 100644
              'BF_FANCY', 'BF_QUIET', 'BF_LINE_OVERWRITE',
              'BF_X264_CONFIG',
              'BF_XVIDCORE_CONFIG',
-@@ -572,6 +574,8 @@ def read_opts(env, cfg, args):
+@@ -571,6 +573,8 @@ def read_opts(env, cfg, args):
          ('BF_CYCLES_CUDA_NVCC', 'CUDA nvcc compiler path', ''),
          ('BF_CYCLES_CUDA_BINARIES_ARCH', 'CUDA architectures to compile binaries for', []),
  
@@ -3095,10 +3095,10 @@ index 0000000..9fac96f
 +
 +#endif // VRSCENE_H
 diff --git a/blender/source/creator/CMakeLists.txt b/blender/source/creator/CMakeLists.txt
-index 33d5c7d..61900c7 100644
+index b386312..6b3196d 100644
 --- a/blender/source/creator/CMakeLists.txt
 +++ b/blender/source/creator/CMakeLists.txt
-@@ -1031,6 +1031,10 @@ endif()
+@@ -1079,6 +1079,10 @@ endif()
  		list_insert_after(BLENDER_SORTED_LIBS "ge_logic_ngnetwork" "extern_bullet")
  	endif()
  

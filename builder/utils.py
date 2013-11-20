@@ -169,7 +169,7 @@ def find_cmd_from_git(cmd):
 		full_path = path_join(path, "..", "bin", cmd)
 		full_path = os.path.normpath(full_path)
 
-		sys.stdout.write("Using \"patch.exe\" from Git (%s)\n" % (full_path))
+		sys.stdout.write("Using \"%s\" from Git (%s)\n" % (cmd, full_path))
 
 		return full_path
 

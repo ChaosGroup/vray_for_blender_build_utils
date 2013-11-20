@@ -519,7 +519,7 @@ class Builder:
 			else:
 				if self.build_release:
 					releaeSubdir, releasePackage = self.package()
-					if self.build_upload not in {'off'}:
+					if self.build_upload != 'off':
 						self.upload(releaeSubdir, releasePackage)
 				else:
 					sys.stdout.write("Package generation is disabled in non-release mode.\n")

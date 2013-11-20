@@ -180,60 +180,51 @@ class Builder:
 		  Getting/updating sources
 		"""
 
+		def exportSources():
+			sys.stdout.write("Exporting sources...\n")
+			if self.mode_test:
+				return
+			if os.path.exists(self.dir_blender):
+				shutil.rmtree(self.dir_blender)
+			shutil.copytree(self.dir_blender_svn, self.dir_blender, ignore=shutil.ignore_patterns('.git'))
+
 		# Update Blender sources
-		if self.update_blender:
-			# Blender SVN directory
-			blender_svn_dir = self.dir_blender_svn
+		if not self.update_blender:
+			exportSources()
 
-			# Blender clean exported souces
-			blender_dir     = self.dir_blender
-
-			if os.path.exists(blender_dir):
+		else:
+			if os.path.exists(self.dir_blender):
 				sys.stdout.write("Removing exported sources...\n")
 				if not self.mode_test:
-					shutil.rmtree(blender_dir)
+					shutil.rmtree(self.dir_blender)
 
-			if not os.path.exists(blender_svn_dir):
+			if not os.path.exists(self.dir_blender_svn):
 				sys.stdout.write("Obtaining Blender sources...\n")
 				if not self.mode_test:
 					os.chdir(self.dir_source)
 
 					# Obtain sources
-					os.system("svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/blender")
+					os.system("git clone http://git.blender.org/blender.git")
+					os.chdir(self.dir_blender)
+					os.system("git submodule update --init --recursive --remote")
 
-					# Move "blender" to "blender-svn"
+					# Move "blender" to "blender-git"
 					shutil.move(self.dir_blender, self.dir_blender_svn)
-
-					# Export sources
-					os.system("svn export blender-svn blender --quiet")
 
 			else:
 				sys.stdout.write("Updating Blender sources...\n")
 				if not self.mode_test:
-					os.chdir(blender_svn_dir)
+					os.chdir(self.dir_blender_svn)
 
-					# Obtain sources
-					os.system("svn update")
+					# Update sources
+					os.system("git pull --rebase")
+					os.system("git submodule update --recursive --remote")
 
 			if self.checkout_revision is not None:
-				sys.stdout.write("Checking out revision: %s\n" % (self.checkout_revision))
-				os.system("svn update -r%s" % (self.checkout_revision))
+				sys.stdout.write("Checkout revision is currently not supported!")
+				sys.exit(1)
 
-			sys.stdout.write("Exporting sources...\n")
-			if not self.mode_test:
-				os.chdir(self.dir_source)
-
-				# Export sources
-				os.system("svn export blender-svn blender --quiet")
-
-		else:
-			if not os.path.exists(self.dir_blender):
-				sys.stdout.write("Exporting sources...\n")
-				if not self.mode_test:
-					os.chdir(self.dir_source)
-
-					# Export sources
-					os.system("svn export blender-svn blender --quiet")
+			exportSources()
 
 		# Update Blender libs
 		if self.update_blender:
@@ -249,12 +240,6 @@ class Builder:
 				elif self.host_os == utils.MAC:
 					lib_dir = utils.path_join(self.dir_source, "lib", "darwin-9.x.universal")
 					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal"
-				# else:
-				#   lib_dir = utils.path_join(self.dir_source, "lib", "linux")
-				#   svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/linux lib/linux"
-				#   if self.host_arch == "x86_64":
-				#       lib_dir = utils.path_join(self.dir_source, "lib", "linux64")
-				#       svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/linux64 lib/linux64"
 
 				if not os.path.exists(lib_dir):
 					sys.stdout.write("Getting \"lib\" data...\n")
@@ -280,7 +265,7 @@ class Builder:
 				sys.stdout.write("Getting V-Ray/Blender patches...\n")
 				if not self.mode_test:
 					os.chdir(self.dir_source)
-					os.system("git clone --depth=1 git://github.com/bdancer/vb25-patch.git")
+					os.system("git clone git://github.com/bdancer/vb25-patch.git")
 
 
 	def update(self):
@@ -423,7 +408,7 @@ class Builder:
 		self.dir_install_path = utils.path_slashify(self.dir_install_path)
 
 		self.dir_blender      = utils.path_join(self.dir_source, "blender")
-		self.dir_blender_svn  = utils.path_join(self.dir_source, "blender-svn")
+		self.dir_blender_svn  = utils.path_join(self.dir_source, "blender-git")
 		self.user_config      = utils.path_join(self.dir_blender, "user-config.py")
 
 		if self.user_user_config:

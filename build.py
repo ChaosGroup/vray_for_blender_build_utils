@@ -40,7 +40,7 @@ parser.add_option('', '--builddir',                          dest='builddir',   
 parser.add_option('', '--releasedir',                        dest='releasedir',                   help="Directory for package (installer or archive).", metavar= 'FILE')
 parser.add_option('', '--release',    action='store_true',   dest='release',      default=False,  help="Release build.")
 parser.add_option('', '--package',    action='store_true',   dest='package',      default=False,  help="Create archive (Linux, Mac OS) or installer (Windows, NSIS required).")
-parser.add_option('', '--upload',     action='store_true',   dest='upload',       default=False,  help="Upload build to the cgdo.ru FTP server")
+parser.add_option('', '--upload',                            dest='upload',       default='off',  help="Upload build", type='choice', choices=('off', 'ftp', 'http'))
 parser.add_option('', '--proxy',                             dest='proxy',        default="",     help="Upload using proxy")
 
 # Blender options

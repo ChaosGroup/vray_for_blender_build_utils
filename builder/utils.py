@@ -159,14 +159,14 @@ def which(program):
 	return None
 
 
-def find_git_patch():
+def find_cmd_from_git(cmd):
 	env_paths = os.getenv('PATH').split(';')
 
 	for path in env_paths:
 		if path.find('Git') == -1 and path.find('cmd') == -1:
 			continue
 
-		full_path = path_join(path, "..", "bin", "patch.exe")
+		full_path = path_join(path, "..", "bin", cmd)
 		full_path = os.path.normpath(full_path)
 
 		sys.stdout.write("Using \"patch.exe\" from Git (%s)\n" % (full_path))
@@ -195,35 +195,41 @@ def find_makensis():
 	sys.exit(2)
 
 
-def find_patch():
+def find_command(cmd):
 	if get_host_os() == WIN:
+		cmd_exe = cmd+".exe"
+
 		# Try to use patch.exe from Git installation
-		patch_exe = find_git_patch()
-		if patch_exe is not None:
-			return '"%s"' % (patch_exe)
+		cmd_exe = find_cmd_from_git(cmd_exe)
+		if cmd_exe is not None:
+			return '"%s"' % (cmd_exe)
 
 		# Try to find patch.exe in %PATH%
-		if which("patch.exe") is not None:
-			return "patch.exe"
+		if which(cmd_exe) is not None:
+			return cmd_exe
 
 		# Try to find patch in Git installation
 		# without using environment variables
 		git_common_paths = [
-			path_join("C:", "Program Files", "Git", "bin", "patch.exe"),
-			path_join("C:", "Program Files (x86)", "Git", "bin", "patch.exe"),
+			path_join("C:", "Program Files", "Git", "bin", cmd_exe),
+			path_join("C:", "Program Files (x86)", "Git", "bin", cmd_exe),
 		]
 
 		for path in git_common_paths:
-			if os.path.exists(path):
-				return '"%s"' % (path)
+			if os.path.exists(cmd_exe):
+				return '"%s"' % (cmd_exe)
 
 	else:
-		if which("patch") is not None:
-			return "patch"
+		if which(cmd) is not None:
+			return cmd
 
 	sys.stderr.write("Fatal error!\n")
-	sys.stderr.write("Patch command not found!!\n")
+	sys.stderr.write("'%s' command not found!!\n" % cmd)
 	sys.exit(2)
+
+
+def find_patch():
+	return find_command("patch")
 
 
 def notify(title, message):
@@ -254,27 +260,11 @@ def create_desktop_file(filepath = "/usr/share/applications/vrayblender.desktop"
 
 
 def get_svn_revision(svn_root):
-	rev = None
-	
-	try:
-		entries = open(path_join(svn_root,'.svn','entries'), 'r').read()
-	except IOError:
-		pass
-	else:
-		if re.match('(\d+)', entries):
-			rev_match = re.search('\d+\s+dir\s+(\d+)', entries)
-			if rev_match:
-				rev = rev_match.groups()[0]
-
-	if not rev:
-		pwd = os.getcwd()
-
-		os.chdir(svn_root)
-		rev = subprocess.check_output("svnversion")
-		os.chdir(pwd)
-
+	pwd = os.getcwd()
+	os.chdir(svn_root)
+	rev = subprocess.check_output(('git', 'rev-parse', '--short', 'HEAD'))
+	os.chdir(pwd)
 	rev = rev.strip(" \n\r\t")
-	
 	return rev
 
 

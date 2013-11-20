@@ -519,35 +519,59 @@ class Builder:
 			else:
 				if self.build_release:
 					releaeSubdir, releasePackage = self.package()
-					if self.build_upload:
+					if self.build_upload not in {'off'}:
 						self.upload(releaeSubdir, releasePackage)
 				else:
 					sys.stdout.write("Package generation is disabled in non-release mode.\n")
 
 
 	def upload(self, subdir, filepath):
-		import requests
+		if self.build_upload == 'http':
+			import requests
 
-		from ConfigParser import RawConfigParser
+			from ConfigParser import RawConfigParser
 
-		config = RawConfigParser()
-		config.read(os.path.expanduser("~/.passwd"))
+			config = RawConfigParser()
+			config.read(os.path.expanduser("~/.passwd"))
 
-		data = {
-			"password" : config.get('cgdo.ru', 'upload_password'),
-			"subdir"   : subdir,
-		}
-
-		files = {
-			"file" : open(filepath, "rb"),
-		}
-
-		proxies = {}
-		if self.use_proxy:
-			proxies = {
-				"http"  : self.use_proxy,
-				"https" : self.use_proxy,
+			data = {
+				"password" : config.get('cgdo.ru', 'upload_password'),
+				"subdir"   : subdir,
 			}
 
-		sys.stdout.write("Uploading package '%s' to '%s'...\n" % (filepath, subdir))
-		requests.post("http://cgdo.ru/upload", files=files, data=data, proxies=proxies)
+			files = {
+				"file" : open(filepath, "rb"),
+			}
+
+			proxies = {}
+			if self.use_proxy:
+				proxies = {
+					"http"  : self.use_proxy,
+					"https" : self.use_proxy,
+				}
+
+			sys.stdout.write("Uploading package '%s' to '%s'...\n" % (filepath, subdir))
+			requests.post("http://cgdo.ru/upload", files=files, data=data, proxies=proxies)
+
+		elif self.build_upload == 'ftp':
+			from ConfigParser import RawConfigParser
+
+			config = RawConfigParser()
+			config.read(os.path.expanduser("~/.passwd"))
+
+			curl = [utils.find_command("curl")]
+			curl.append('--upload-file')
+			curl.append(filepath)
+			if self.use_proxy:
+				curl.append('--proxy')
+				curl.append(self.use_proxy)
+
+			curl.append('--user')
+			curl.append('%s:%s' % (config.get('chaosgroup.ftp', 'user'), config.get('chaosgroup.ftp', 'pass')))
+
+			curl.append('ftp://%s/adv/%s/%s' % (config.get('chaosgroup.ftp', 'host'), subdir, os.path.basename(filepath)))
+
+			sys.stdout.write("Uploading package '%s' to '%s'...\n" % (filepath, subdir))
+			sys.stdout.write("Command: %s\n" % (' '.join(curl)))
+			if not self.mode_test:
+				subprocess.call(curl)

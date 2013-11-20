@@ -262,7 +262,14 @@ def create_desktop_file(filepath = "/usr/share/applications/vrayblender.desktop"
 def get_svn_revision(svn_root):
 	pwd = os.getcwd()
 	os.chdir(svn_root)
-	rev = subprocess.check_output(('git', 'rev-parse', '--short', 'HEAD'))
+
+	git_rev = ['git', 'rev-parse', '--short', 'HEAD']
+
+	if not hasattr(subprocess, "check_output"):
+		rev = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
+	else:
+		rev = subprocess.check_output(git_rev)
+
 	os.chdir(pwd)
 	rev = rev.strip(" \n\r\t")
 	return rev

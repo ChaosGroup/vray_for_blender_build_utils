@@ -432,6 +432,9 @@ class Builder:
 		if self.user_user_config:
 			self.user_user_config = utils.pathExpand(self.user_user_config)
 
+		if os.path.exists(self.dir_build):
+			shutil.rmtree(self.dir_build)
+
 
 	def config(self):
 		"""

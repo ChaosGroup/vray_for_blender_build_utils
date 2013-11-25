@@ -28,6 +28,7 @@ import sys
 import shutil
 import tempfile
 import subprocess
+import datetime
 
 import utils
 
@@ -180,13 +181,28 @@ class Builder:
 		  Getting/updating sources
 		"""
 
+		def genBuildInfo():
+			with open(os.path.join(self.dir_blender, "source", "creator", "buildinfo.h"), 'w') as f:
+				now = datetime.datetime.now()
+
+				f.write('#define BUILD_HASH "%s"\n' % utils.get_svn_revision(self.dir_blender_svn))
+				f.write('#define BUILD_CHANGE ""\n')
+				f.write('#define BUILD_BRANCH "dev/vray_for_blender"\n')
+				f.write('#define BUILD_DATE "%s"\n' % now.strftime("%Y-%m-%d"))
+				f.write('#define BUILD_TIME "%s"\n' % now.strftime("%H:%M:%S"))
+				f.write('\n')
+
 		def exportSources():
 			sys.stdout.write("Exporting sources...\n")
 			if self.mode_test:
 				return
 			if os.path.exists(self.dir_blender):
-				shutil.rmtree(self.dir_blender)
-			shutil.copytree(self.dir_blender_svn, self.dir_blender, ignore=shutil.ignore_patterns('.git'))
+				# shutil.rmtree(self.dir_blender)
+				os.system("rmdir /Q /S %s" % self.dir_blender)
+			# shutil.copytree(self.dir_blender_svn, self.dir_blender, ignore=shutil.ignore_patterns('.git'))
+			# genBuildInfo()
+			# Copy full tree to have proper build info.
+			shutil.copytree(self.dir_blender_svn, self.dir_blender)
 
 		# Update Blender sources
 		if not self.update_blender:
@@ -206,7 +222,9 @@ class Builder:
 					# Obtain sources
 					os.system("git clone http://git.blender.org/blender.git")
 					os.chdir(self.dir_blender)
-					os.system("git submodule update --init --recursive --remote")
+					os.system("git submodule update --init --recursive")
+					os.system("git submodule foreach git checkout master")
+					os.system("git submodule foreach git pull --rebase origin master")
 
 					# Move "blender" to "blender-git"
 					shutil.move(self.dir_blender, self.dir_blender_svn)
@@ -218,7 +236,7 @@ class Builder:
 
 					# Update sources
 					os.system("git pull --rebase")
-					os.system("git submodule update --recursive --remote")
+					os.system("git submodule foreach git pull --rebase origin master")
 
 			if self.checkout_revision is not None:
 				sys.stdout.write("Checkout revision is currently not supported!")

@@ -212,7 +212,8 @@ class Builder:
 			if os.path.exists(self.dir_blender):
 				sys.stdout.write("Removing exported sources...\n")
 				if not self.mode_test:
-					shutil.rmtree(self.dir_blender)
+					#shutil.rmtree(self.dir_blender)
+					os.system("rmdir /Q /S %s" % self.dir_blender)
 
 			if not os.path.exists(self.dir_blender_svn):
 				sys.stdout.write("Obtaining Blender sources...\n")

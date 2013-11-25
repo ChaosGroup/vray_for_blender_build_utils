@@ -263,7 +263,7 @@ def get_svn_revision(svn_root):
 	pwd = os.getcwd()
 	os.chdir(svn_root)
 
-	git_rev = ['git', 'rev-parse', '--short', 'HEAD']
+	git_rev = ['git', 'rev-parse', '--short', '@{u}']
 
 	if not hasattr(subprocess, "check_output"):
 		rev = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]

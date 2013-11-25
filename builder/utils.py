@@ -166,10 +166,8 @@ def find_cmd_from_git(cmd):
 		if path.find('Git') == -1 and path.find('cmd') == -1:
 			continue
 
-		full_path = path_join(path, "..", "bin", cmd)
-		full_path = os.path.normpath(full_path)
-
-		if not os.path.exists:
+		full_path = os.path.normpath(path_join(path, "..", "bin", cmd))
+		if not os.path.exists(full_path):
 			continue
 
 		sys.stdout.write("Using \"%s\" from Git (%s)\n" % (cmd, full_path))

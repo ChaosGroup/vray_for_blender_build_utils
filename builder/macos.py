@@ -50,7 +50,7 @@ class MacBuilder(Builder):
 		}
 
 		if self.use_debug:
-			uc.write("BF_DEBUG    = True\n")
+			uc.write("BF_DEBUG = True\n")
 
 		uc.write("BF_INSTALLDIR = '%s'\n" % (self.dir_install_path))
 		uc.write("BF_BUILDDIR   = '/tmp/builder_%s'\n" % (self.build_arch))
@@ -73,42 +73,11 @@ class MacBuilder(Builder):
 		else:
 			build_options['False'].append('WITH_BF_PLAYER')
 
-		uc.write("BF_QUIET    = True\n")
-		uc.write("BF_NUMJOBS  = %s\n" % (self.build_threads))
+		uc.write("BF_NUMJOBS  = %s\n" % self.build_threads)
 		uc.write("\n")
 
 		uc.write("MACOSX_ARCHITECTURE      = '%s'\n" % ('i386' if self.build_arch == 'x86' else 'x86_64'))
-		uc.write("MAC_CUR_VER              = '%s'\n" % self.osx_sdk)
-		uc.write("MAC_MIN_VERS             = '%s'\n" % self.osx_sdk)
-		uc.write("MACOSX_DEPLOYMENT_TARGET = '%s'\n" % self.osx_sdk)
-		uc.write("MACOSX_SDK               = '/Developer/SDKs/MacOSX%s.sdk'\n" % self.osx_sdk)
-		uc.write("LCGDIR                   = '#../lib/darwin-9.x.universal'\n")
-		uc.write("LIBDIR                   = '#../lib/darwin-9.x.universal'\n")
-
-		uc.write("CC                       = 'gcc'\n")
-		uc.write("CXX                      = 'g++'\n")
-
-		uc.write("USE_SDK                  = True\n")
-		uc.write("WITH_GHOST_COCOA         = True\n")
-		uc.write("WITH_BF_QUICKTIME        = False\n")
-
-		uc.write("ARCH_FLAGS = ['-arch', MACOSX_ARCHITECTURE]\n")
-
-		uc.write("CFLAGS     = ['-pipe','-funsigned-char'] + ARCH_FLAGS\n")
-		uc.write("CPPFLAGS   = [] + ARCH_FLAGS\n")
-		uc.write("CCFLAGS    = ['-pipe','-funsigned-char'] + ARCH_FLAGS\n")
-		uc.write("CXXFLAGS   = ['-pipe','-funsigned-char'] + ARCH_FLAGS\n")
-
-		uc.write("SDK_FLAGS          = ['-isysroot', MACOSX_SDK, '-mmacosx-version-min='+MAC_MIN_VERS, '-arch', MACOSX_ARCHITECTURE]\n")
-		uc.write("PLATFORM_LINKFLAGS = ['-fexceptions','-framework','CoreServices','-framework','Foundation','-framework','IOKit','-framework','AppKit','-framework','Cocoa','-framework','Carbon','-framework','AudioUnit','-framework','AudioToolbox','-framework','CoreAudio','-framework','OpenAL']+ARCH_FLAGS\n")
-		uc.write("PLATFORM_LINKFLAGS = ['-mmacosx-version-min='+MAC_MIN_VERS, '-Wl', '-isysroot', MACOSX_SDK, '-arch', MACOSX_ARCHITECTURE] + PLATFORM_LINKFLAGS\n")
-		uc.write("CCFLAGS  = SDK_FLAGS + CCFLAGS\n")
-		uc.write("CXXFLAGS = SDK_FLAGS + CXXFLAGS\n")
-		uc.write("REL_CFLAGS  = ['-DNDEBUG', '-O2','-ftree-vectorize','-msse','-msse2','-msse3','-mfpmath=sse']\n")
-		uc.write("REL_CCFLAGS = ['-DNDEBUG', '-O2','-ftree-vectorize','-msse','-msse2','-msse3','-mfpmath=sse']\n")
-		uc.write("REL_CFLAGS  = REL_CFLAGS + ['-march=core2','-mssse3','-with-tune=core2','-enable-threads']\n")
-		uc.write("REL_CCFLAGS = REL_CCFLAGS + ['-march=core2','-mssse3','-with-tune=core2','-enable-threads']\n")
-
+		
 		uc.write("WITH_BF_3DMOUSE = False\n")
 		uc.write("BF_3DMOUSE_LIB = 'spnav'\n")
 
@@ -118,7 +87,7 @@ class MacBuilder(Builder):
 		# Write boolean options
 		for key in build_options:
 			for opt in build_options[key]:
-				uc.write("{0} = {1}\n".format(opt, key))
+				uc.write("%s = %s\n" % (opt, key))
 
 		uc.write("\n")
 		uc.close()

@@ -31,6 +31,7 @@ import re
 import socket
 import sys
 import subprocess
+import shutil
 
 
 VERSION  = "2.61"
@@ -317,3 +318,13 @@ def python_get_suffix(path, version):
 		if os.path.exists("%s%s%s" % (path,version,s)):
 			return s
 	return ""
+
+
+def remove_directory(path):
+	# Don't know why, but when deleting from python
+	# on Windows it fails to delete '.git' direcotry,
+	# so using shell command
+	if get_host_os() == WIN:
+		os.system("rmdir /Q /S %s" % path)
+	else:
+		shutil.rmtree(path)

@@ -197,10 +197,7 @@ class Builder:
 			if self.mode_test:
 				return
 			if os.path.exists(self.dir_blender):
-				# shutil.rmtree(self.dir_blender)
-				os.system("rmdir /Q /S %s" % self.dir_blender)
-			# shutil.copytree(self.dir_blender_svn, self.dir_blender, ignore=shutil.ignore_patterns('.git'))
-			# genBuildInfo()
+				utils.remove_directory(self.dir_blender)
 			# Copy full tree to have proper build info.
 			shutil.copytree(self.dir_blender_svn, self.dir_blender)
 
@@ -212,8 +209,7 @@ class Builder:
 			if os.path.exists(self.dir_blender):
 				sys.stdout.write("Removing exported sources...\n")
 				if not self.mode_test:
-					#shutil.rmtree(self.dir_blender)
-					os.system("rmdir /Q /S %s" % self.dir_blender)
+					utils.remove_directory(self.dir_blender)
 
 			if not os.path.exists(self.dir_blender_svn):
 				sys.stdout.write("Obtaining Blender sources...\n")
@@ -497,13 +493,7 @@ class Builder:
 
 			# Remove old
 			if os.path.exists(exporter_path):
-				if self.host_os == utils.WIN:
-					# Don't know why, but when deleting from python
-					# it fails to delete '.git' direcotry, so using
-					# shell command
-					os.system("rmdir /Q /S %s" % exporter_path)
-				else:
-					shutil.rmtree(exporter_path)
+				utils.remove_directory(exporter_path)
 
 			# Add new
 			os.chdir(scripts_path)

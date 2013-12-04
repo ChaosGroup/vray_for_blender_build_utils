@@ -201,6 +201,10 @@ class Builder:
 			# Copy full tree to have proper build info.
 			shutil.copytree(self.dir_blender_svn, self.dir_blender)
 
+			if self.checkout_revision is not None:
+				os.chdir(self.dir_blender)
+				os.system("git checkout %s" % self.checkout_revision)
+
 		# Update Blender sources
 		if not self.update_blender:
 			exportSources()
@@ -234,10 +238,6 @@ class Builder:
 					# Update sources
 					os.system("git pull --rebase")
 					os.system("git submodule foreach git pull --rebase origin master")
-
-			if self.checkout_revision is not None:
-				sys.stdout.write("Checkout revision is currently not supported!")
-				sys.exit(1)
 
 			exportSources()
 

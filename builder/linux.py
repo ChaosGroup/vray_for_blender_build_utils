@@ -106,22 +106,22 @@ class LinuxBuilder(Builder):
 
 		build_options= {
 			'True': [
+				'WITH_BF_BULLET',
+				'WITH_BF_FTGL',
 				'WITH_BF_INTERNATIONAL',
 				'WITH_BF_JPEG',
-				'WITH_BF_PNG',
 				'WITH_BF_OPENAL',
-				'WITH_BF_SDL',
-				'WITH_BF_BULLET',
-				'WITH_BF_ZLIB',
-				'WITH_BF_FTGL',
-				'WITH_BF_RAYOPTIMIZATION',
-				'WITH_BUILDINFO',
 				'WITH_BF_OPENEXR',
+				'WITH_BF_PNG',
+				'WITH_BF_RAYOPTIMIZATION',
+				'WITH_BF_SDL',
+				'WITH_BF_ZLIB',
+				'WITH_BUILDINFO',
 			],
 			'False': [
+				'WITH_BF_FMOD',
 				'WITH_BF_ICONV',
 				'WITH_BF_QUICKTIME',
-				'WITH_BF_FMOD',
 				'WITH_BF_STATICOPENGL',
 				'WITH_BF_VERSE',
 			]
@@ -161,76 +161,67 @@ class LinuxBuilder(Builder):
 			build_options['True'].append('BF_DEBUG')
 
 		uc.write("BF_INSTALLDIR = '%s'\n" % (self.dir_install_path))
-		uc.write("BF_BUILDDIR   = '/tmp/builder_%s'\n" % (self.build_arch))
+		uc.write("BF_BUILDDIR = '/tmp/builder_%s'\n" % (self.build_arch))
+		uc.write("BF_NUMJOBS = %i\n" % (self.build_threads))
 		uc.write("\n")
 
-		uc.write("BF_OPENAL_LIB = 'openal alut'\n")
+		uc.write("WITH_BF_STATIC3DMOUSE = True\n")
 		uc.write("\n")
 
+		uc.write("WITH_BF_STATICPYTHON = True\n")
 		uc.write("BF_PYTHON = '/opt/python-3.3'\n")
 		uc.write("BF_PYTHON_ABI_FLAGS = 'm'\n")
-		uc.write("BF_OCIO = '/opt/ocio'\n")
-		uc.write("BF_OIIO = '/opt/oiio'\n")
-		uc.write("BF_BOOST = '/opt/boost'\n")
-		uc.write("WITH_BF_BOOST = True\n")
+		uc.write("\n")
 
-		if self.mode_developer:
-			# uc.write("BF_FFMPEG = '/usr/local'\n")
-			uc.write("BF_FFMPEG = '/opt/ffmpeg'\n")
-		else:
-			uc.write("BF_FFMPEG = '/opt/ffmpeg'\n")
-		uc.write("BF_FFMPEG_LIB = 'avformat avcodec swscale avutil avdevice theoraenc theora theoradec vorbisenc vorbisfile vorbis x264 openjpeg'\n")
-
-		uc.write("WITH_BF_STATICFFMPEG = False\n")
-		#BF_FFMPEG_LIBPATH = '/opt/ffmpeg/lib'
-		#BF_FFMPEG_LIB_STATIC = '${BF_FFMPEG_LIBPATH}/libavcodec.a ${BF_FFMPEG_LIBPATH}/libavdevice.a ${BF_FFMPEG_LIBPATH}/libavfilter.a ${BF_FFMPEG_LIBPATH}/libavformat.a ${BF_FFMPEG_LIBPATH}/libavutil.a ${BF_FFMPEG_LIBPATH}/libswresample.a ${BF_FFMPEG_LIBPATH}/libswscale.a'
-
-		if not self.build_release:
-			uc.write("WITHOUT_BF_PYTHON_INSTALL = True\n")
+		uc.write("WITH_BF_STATICFFMPEG = True\n")
+		uc.write("BF_FFMPEG = '/opt/ffmpeg'\n")
+		uc.write("BF_FFMPEG_LIBPATH='${BF_FFMPEG}/lib'\n")
+		uc.write("BF_FFMPEG_LIB_STATIC = '${BF_FFMPEG_LIBPATH}/libavformat.a ${BF_FFMPEG_LIBPATH}/libavcodec.a ${BF_FFMPEG_LIBPATH}/libswscale.a ${BF_FFMPEG_LIBPATH}/libavutil.a ${BF_FFMPEG_LIBPATH}/libavdevice.a /usr/lib/x86_64-linux-gnu/libx264.a /usr/lib/x86_64-linux-gnu/libtheora.a'\n")
+		uc.write("\n")
 
 		uc.write("WITH_BF_OIIO = True\n")
 		uc.write("WITH_BF_STATICOIIO = True\n")
+		uc.write("BF_OIIO = '/opt/oiio'\n")
+		uc.write("BF_OIIO_INC = '${BF_OIIO}/include'\n")
+		uc.write("BF_OIIO_LIB = 'OpenImageIO'\n")
+		uc.write("BF_OIIO_LIB_STATIC = '${BF_OIIO_LIBPATH}/libOpenImageIO.a ${BF_OPENEXR}/lib/libIlmImf.a ${BF_JPEG}/lib/libjpeg.a'\n")
 		uc.write("BF_OIIO_LIBPATH = '${BF_OIIO}/lib'\n")
-		uc.write("BF_OIIO_LIB_STATIC = '${BF_OIIO_LIBPATH}/libOpenImageIO.a'\n")
+		uc.write("\n")
 
+		uc.write("WITH_BF_OCIO = True\n")
+		uc.write("WITH_BF_STATICOCIO = True\n")
+		uc.write("BF_OCIO = '/opt/ocio'\n")
+		uc.write("BF_OCIO_INC = '${BF_OCIO}/include'\n")
+		uc.write("BF_OCIO_LIB_STATIC = '${BF_OCIO_LIBPATH}/libOpenColorIO.a ${BF_OCIO_LIBPATH}/libtinyxml.a ${BF_OCIO_LIBPATH}/libyaml-cpp.a'\n")
+		uc.write("BF_OCIO_LIBPATH = '${BF_OCIO}/lib'\n")
+		uc.write("\n")
+		
+		uc.write("WITH_BF_STATICOPENEXR = True\n")
+		uc.write("BF_OPENEXR = '/opt/openexr'\n")
+		uc.write("BF_OPENEXR_INC = '${BF_OPENEXR}/include/OpenEXR'\n")
+		uc.write("BF_OPENEXR_LIB_STATIC = '${BF_OPENEXR}/lib/libHalf.a ${BF_OPENEXR}/lib/libIlmImf.a ${BF_OPENEXR}/lib/libIex.a ${BF_OPENEXR}/lib/libImath.a ${BF_OPENEXR}/lib/libIlmThread.a'\n")
+		uc.write("\n")
+
+		uc.write("WITH_BF_BOOST = True\n")
 		uc.write("WITH_BF_STATICBOOST = True\n")
+		uc.write("BF_BOOST = '/opt/boost'\n")
 		uc.write("BF_BOOST_INC = '/opt/boost/include'\n")
 		uc.write("BF_BOOST_LIBPATH = '/opt/boost/lib'\n")
 		uc.write("BF_BOOST_LIB_STATIC = '${BF_BOOST_LIBPATH}/libboost_regex.a ${BF_BOOST_LIBPATH}/libboost_date_time.a ${BF_BOOST_LIBPATH}/libboost_filesystem.a ${BF_BOOST_LIBPATH}/libboost_thread.a ${BF_BOOST_LIBPATH}/libboost_locale.a ${BF_BOOST_LIBPATH}/libboost_system.a'\n")
-
-		uc.write("\n")
-
-		# uc.write("BF_QUIET = False\n")
-		uc.write("BF_TWEAK_MODE = False\n")
-		uc.write("BF_NUMJOBS = %i\n" % (self.build_threads))
-
 		uc.write("\n")
 
 		# Write boolean options
 		for key in build_options:
 			for opt in build_options[key]:
-				uc.write("{0:25} = {1}\n".format(opt, key))
-
+				uc.write("%s = %s\n" % (opt, key))
 		uc.write("\n")
-
-		uc.write("C_WARN  = [\'-Wno-char-subscripts\', \'-Wdeclaration-after-statement\']\n")
-		uc.write("CC_WARN = [\'-Wall\']\n")
-
-		# Optimize for Intel Core
-		if self.build_optimize:
-			if self.build_optimize_type == 'INTEL':
-				uc.write("CCFLAGS  = ['-pipe','-fPIC','-march=core2','-msse3','-mmmx','-mfpmath=sse','-funsigned-char','-fno-strict-aliasing','-ftracer','-fomit-frame-pointer','-finline-functions','-ffast-math']\n")
-				uc.write("REL_CFLAGS  = ['-O3','-fomit-frame-pointer','-funroll-loops']\n")
-		else:
-			uc.write("CCFLAGS  = ['-pipe','-fPIC','-funsigned-char','-fno-strict-aliasing']\n")
-			uc.write("CPPFLAGS = ['-DXP_UNIX']\n")
-			uc.write("REL_CFLAGS  = ['-O2']\n")
-
-		uc.write("REL_CCFLAGS = REL_CFLAGS\n")
-		uc.write("CXXFLAGS = CCFLAGS\n")
 
 		if self.add_patches:
 			uc.write("WITH_VRAY_FOR_BLENDER = True\n")
+
+		if not self.build_release:
+			uc.write("WITHOUT_BF_PYTHON_INSTALL = True\n")
+			uc.write("\n")
 
 		uc.close()
 

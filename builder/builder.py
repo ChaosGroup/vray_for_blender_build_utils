@@ -196,8 +196,10 @@ class Builder:
 			sys.stdout.write("Exporting sources...\n")
 			if self.mode_test:
 				return
+
 			if os.path.exists(self.dir_blender):
 				utils.remove_directory(self.dir_blender)
+
 			# Copy full tree to have proper build info.
 			shutil.copytree(self.dir_blender_svn, self.dir_blender)
 
@@ -206,10 +208,7 @@ class Builder:
 				os.system("git checkout %s" % self.checkout_revision)
 
 		# Update Blender sources
-		if not self.update_blender:
-			exportSources()
-
-		else:
+		if self.update_blender:
 			if os.path.exists(self.dir_blender):
 				sys.stdout.write("Removing exported sources...\n")
 				if not self.mode_test:
@@ -241,8 +240,7 @@ class Builder:
 
 			exportSources()
 
-		# Update Blender libs
-		if self.update_blender:
+			# Update Blender libs
 			lib_dir = None
 			svn_cmd = None
 			if self.host_os != utils.LNX:

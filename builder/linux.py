@@ -69,7 +69,7 @@ class LinuxBuilder(Builder):
 
 		if self.build_deps:
 			os.chdir(self.dir_blender_svn)
-			cmd = "sudo ./build_files/build_environment/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source, "blender-deps"))
+			cmd = "sudo -E ./build_files/build_environment/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source, "blender-deps"))
 
 			if self.with_osl:
 				cmd += "  --with-osl"

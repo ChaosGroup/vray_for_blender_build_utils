@@ -579,7 +579,8 @@ class Builder:
 			curl.append('--user')
 			curl.append('%s:%s' % (config.get('chaosgroup.ftp', 'user'), config.get('chaosgroup.ftp', 'pass')))
 
-			curl.append('ftp://%s/adv/%s/%s' % (config.get('chaosgroup.ftp', 'host'), subdir, os.path.basename(filepath)))
+			# curl.append('ftp://%s/adv/%s/%s' % (config.get('chaosgroup.ftp', 'host'), subdir, os.path.basename(filepath)))
+			curl.append('ftp://%s/demo/%s' % (config.get('chaosgroup.ftp', 'host'), os.path.basename(filepath)))
 
 			sys.stdout.write("Uploading package '%s' to '%s'...\n" % (filepath, subdir))
 			sys.stdout.write("Command: %s\n" % (' '.join(curl)))

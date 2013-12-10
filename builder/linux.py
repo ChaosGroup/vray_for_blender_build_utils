@@ -68,8 +68,8 @@ class LinuxBuilder(Builder):
 			sys.exit(0)
 
 		if self.build_deps:
-			os.chdir(self.dir_blender_svn)
-			cmd = "sudo -E ./build_files/build_environment/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source, "blender-deps"))
+			os.chdir(self.dir_blender)
+			cmd = "sudo -E %s/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source, "vb25-patch"), utils.path_join(self.dir_source, "blender-deps"))
 
 			if self.with_osl:
 				cmd += "  --with-osl"
@@ -199,7 +199,7 @@ class LinuxBuilder(Builder):
 		uc.write("WITH_BF_STATICOPENEXR = True\n")
 		uc.write("BF_OPENEXR = '/opt/openexr'\n")
 		uc.write("BF_OPENEXR_INC = '${BF_OPENEXR}/include/OpenEXR'\n")
-		uc.write("BF_OPENEXR_LIB_STATIC = '${BF_OPENEXR}/lib/libHalf.a ${BF_OPENEXR}/lib/libIlmImf.a ${BF_OPENEXR}/lib/libIex.a ${BF_OPENEXR}/lib/libImath.a ${BF_OPENEXR}/lib/libIlmThread.a'\n")
+		uc.write("BF_OPENEXR_LIB_STATIC = '${BF_OPENEXR}/lib/libHalf.a ${BF_OPENEXR}/lib/libIlmImf-2_1.a ${BF_OPENEXR}/lib/libIex-2_1.a ${BF_OPENEXR}/lib/libImath-2_1.a ${BF_OPENEXR}/lib/libIlmThread-2_1.a'\n")
 		uc.write("\n")
 
 		uc.write("WITH_BF_BOOST = True\n")

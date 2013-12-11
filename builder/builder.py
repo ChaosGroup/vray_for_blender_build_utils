@@ -330,20 +330,6 @@ class Builder:
 					os.system(cmd)
 					os.system(cmd2)
 
-		# Adding exporter directory to Blender sources
-		sys.stdout.write("Adding exporter sources...\n")
-
-		src_dir = utils.path_join(patch_dir, "patch", "exporter")
-		dst_dir = utils.path_join(blender_dir, "source", "blender", "exporter")
-
-		if self.mode_debug:
-			sys.stderr.write("Coping:\n\t%s =>\n\t%s\n" % (src_dir, dst_dir))
-
-		if not self.mode_test:
-			if os.path.exists(dst_dir):
-				shutil.rmtree(dst_dir)
-			shutil.copytree(src_dir, dst_dir)
-
 		# Apply extra patches
 		if self.add_extra:
 			extra_dir = path_join(patch_dir, "patch", "extra")

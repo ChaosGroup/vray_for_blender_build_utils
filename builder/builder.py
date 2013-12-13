@@ -320,7 +320,7 @@ class Builder:
 			if self.add_patches:
 				sys.stdout.write("Adding V-Ray/Blender patches...\n")
 
-				cmd = "%s -Np2 -i %s" % (patch_cmd, utils.path_join(patch_dir, "patch", "vray_for_blender.patch"))
+				cmd = "%s -Np1 -i %s" % (patch_cmd, utils.path_join(patch_dir, "patch", "vray_for_blender.patch"))
 
 				# Patching Blender sources
 				sys.stdout.write("Patching sources...\n")

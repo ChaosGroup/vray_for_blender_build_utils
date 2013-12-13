@@ -8553,10 +8553,10 @@ index 0000000..a329410
 +}
 diff --git a/source/blender/vray_for_blender/vrscene_exporter/vrscene.cpp b/source/blender/vray_for_blender/vrscene_exporter/vrscene.cpp
 new file mode 100644
-index 0000000..4e95a31
+index 0000000..7f03dd5
 --- /dev/null
 +++ b/source/blender/vray_for_blender/vrscene_exporter/vrscene.cpp
-@@ -0,0 +1,82 @@
+@@ -0,0 +1,86 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -8583,6 +8583,10 @@ index 0000000..4e95a31
 + */
 +
 +#include "vrscene.h"
++
++#ifdef _WIN32
++typedef unsigned char u_int8_t;
++#endif
 +
 +
 +static char sbuf[MAX_PLUGIN_NAME];

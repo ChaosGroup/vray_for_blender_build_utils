@@ -34,7 +34,7 @@ index abca0ee..fbc87e6 100644
  
  	info_cfg_text("Compiler Options:")
 diff --git a/SConstruct b/SConstruct
-index 3b0bf9c..6d64e71 100644
+index 2e00066..d02f831 100644
 --- a/SConstruct
 +++ b/SConstruct
 @@ -274,6 +274,7 @@ if 'blenderlite' in B.targets:
@@ -6146,10 +6146,10 @@ index 0000000..82f5ce4
 +blender_add_lib(vray_for_blender "${SRC}" "${INC}" "${INC_SYS}")
 diff --git a/source/blender/vray_for_blender/SConscript b/source/blender/vray_for_blender/SConscript
 new file mode 100644
-index 0000000..3307d69
+index 0000000..e9a387b
 --- /dev/null
 +++ b/source/blender/vray_for_blender/SConscript
-@@ -0,0 +1,50 @@
+@@ -0,0 +1,51 @@
 +#!/usr/bin/python
 +
 +Import('env')
@@ -6161,8 +6161,9 @@ index 0000000..3307d69
 +    './utils/CGR_string.c',
 +    './vrscene_exporter/geom.c',
 +    './vrscene_exporter/hair.c',
-+    './vrscene_exporter/node.c',
++    './vrscene_exporter/node.cpp',
 +    './vrscene_exporter/smoke.cpp',
++    './vrscene_exporter/vrscene.cpp',
 +]
 +
 +includes = [
@@ -8240,10 +8241,10 @@ index 0000000..93d55fe
 +}
 diff --git a/source/blender/vray_for_blender/vrscene_exporter/smoke.cpp b/source/blender/vray_for_blender/vrscene_exporter/smoke.cpp
 new file mode 100644
-index 0000000..605d053
+index 0000000..a329410
 --- /dev/null
 +++ b/source/blender/vray_for_blender/vrscene_exporter/smoke.cpp
-@@ -0,0 +1,308 @@
+@@ -0,0 +1,306 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -8396,8 +8397,6 @@ index 0000000..605d053
 +
 +	// Topology is always the same:
 +	//   2.0 x 2.0 x 2.0 box
-+	//     pmin = -1.0, -1.0, -1.0
-+	//     pmax =  1.0,  1.0,  1.0
 +	//
 +	WRITE_PYOBJECT(outputFile, "\nGeomStaticMesh %s {", geomteryPluginName);
 +	WRITE_PYOBJECT(outputFile,

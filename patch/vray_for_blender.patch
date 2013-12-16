@@ -8645,10 +8645,10 @@ index 0000000..7f03dd5
 +}
 diff --git a/source/blender/vray_for_blender/vrscene_exporter/vrscene.h b/source/blender/vray_for_blender/vrscene_exporter/vrscene.h
 new file mode 100644
-index 0000000..6e386de
+index 0000000..2ba32ae
 --- /dev/null
 +++ b/source/blender/vray_for_blender/vrscene_exporter/vrscene.h
-@@ -0,0 +1,138 @@
+@@ -0,0 +1,140 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -8679,7 +8679,7 @@ index 0000000..6e386de
 +
 +#include "CGR_config.h"
 +
-+#include <Python.h>
++#include <math.h>
 +
 +#ifdef __cplusplus
 +extern "C" {
@@ -8690,6 +8690,8 @@ index 0000000..6e386de
 +#ifdef __cplusplus
 +}
 +#endif
++
++#include <Python.h>
 +
 +#define MAX_PLUGIN_NAME  1024
 +

@@ -328,3 +328,10 @@ def remove_directory(path):
 		os.system("rmdir /Q /S %s" % path)
 	else:
 		shutil.rmtree(path)
+
+
+def move_directory(src, dst):
+	if get_host_os() == WIN:
+		os.system('move /Y "%s" "%s"' % (src, dst))
+	else:
+		shutil.move(src, dst)

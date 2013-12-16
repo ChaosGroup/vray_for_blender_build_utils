@@ -227,7 +227,7 @@ class Builder:
 					os.system("git submodule foreach git pull --rebase origin master")
 
 					# Move "blender" to "blender-git"
-					shutil.move(self.dir_blender, self.dir_blender_svn)
+					utils.move_directory(self.dir_blender, self.dir_blender_svn)
 
 			else:
 				sys.stdout.write("Updating Blender sources...\n")

@@ -2980,27 +2980,23 @@ index 2ba918f..2427b72 100644
  incs = ' '.join(incs)
  
 diff --git a/source/blender/editors/space_api/spacetypes.c b/source/blender/editors/space_api/spacetypes.c
-index e226239..fdb38ed 100644
+index e226239..304af1e 100644
 --- a/source/blender/editors/space_api/spacetypes.c
 +++ b/source/blender/editors/space_api/spacetypes.c
-@@ -66,6 +66,10 @@
+@@ -66,6 +66,8 @@
  #include "ED_mask.h"
  #include "ED_sequencer.h"
  
-+#ifdef WITH_VRAY_FOR_BLENDER
 +#include "ED_exporter.h"
-+#endif
 +
  #include "io_ops.h"
  
  /* only call once on startup, storage is global in BKE kernel listbase */
-@@ -129,6 +133,10 @@ void ED_spacetypes_init(void)
+@@ -129,6 +131,8 @@ void ED_spacetypes_init(void)
  			type->operatortypes();
  	}
  
-+#ifdef WITH_VRAY_FOR_BLENDER
 +	ED_operatortypes_exporter();
-+#endif
 +
  	/* Macros's must go last since they reference other operators
  	 * maybe we'll need to have them go after python operators too? */

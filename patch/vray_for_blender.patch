@@ -5761,30 +5761,26 @@ index 0000000..ec53806
 +
 +#endif // EXPORTER_SOCKET_H
 diff --git a/source/blender/makesdna/DNA_texture_types.h b/source/blender/makesdna/DNA_texture_types.h
-index fcd0575..b2ed66a 100644
+index fcd0575..e303142 100644
 --- a/source/blender/makesdna/DNA_texture_types.h
 +++ b/source/blender/makesdna/DNA_texture_types.h
-@@ -315,6 +315,9 @@ typedef struct ColorMapping {
+@@ -315,6 +315,7 @@ typedef struct ColorMapping {
  #define TEX_POINTDENSITY	14
  #define TEX_VOXELDATA		15
  #define TEX_OCEAN		16
-+#ifdef WITH_VRAY_FOR_BLENDER
 +#define TEX_VRAY		200
-+#endif
  
  /* musgrave stype */
  #define TEX_MFRACTAL		0
 diff --git a/source/blender/makesrna/intern/rna_texture.c b/source/blender/makesrna/intern/rna_texture.c
-index a26272b..f4f2507 100644
+index a26272b..b7f01a9 100644
 --- a/source/blender/makesrna/intern/rna_texture.c
 +++ b/source/blender/makesrna/intern/rna_texture.c
-@@ -63,6 +63,9 @@ static EnumPropertyItem texture_filter_items[] = {
+@@ -63,6 +63,7 @@ static EnumPropertyItem texture_filter_items[] = {
  
  EnumPropertyItem texture_type_items[] = {
  	{0, "NONE", 0, "None", ""},
-+#ifdef WITH_VRAY_FOR_BLENDER
 +	{TEX_VRAY, "VRAY", ICON_VRAY_LOGO_MONO, "V-Ray", "V-Ray procedural textures"},
-+#endif
  	{TEX_BLEND, "BLEND", ICON_TEXTURE, "Blend", "Procedural - create a ramp texture"},
  	{TEX_CLOUDS, "CLOUDS", ICON_TEXTURE, "Clouds", "Procedural - create a cloud-like fractal noise texture"},
  	{TEX_DISTNOISE, "DISTORTED_NOISE", ICON_TEXTURE,
@@ -5864,7 +5860,7 @@ index f8725d6..faf1b27 100644
  	/* sets the permanent tag */
  #   define APP_CB_OTHER_FIELDS 1
 diff --git a/source/blender/python/intern/bpy_interface.c b/source/blender/python/intern/bpy_interface.c
-index 7a3d56d..18c7722 100644
+index 9fbad95..696d945 100644
 --- a/source/blender/python/intern/bpy_interface.c
 +++ b/source/blender/python/intern/bpy_interface.c
 @@ -80,6 +80,10 @@

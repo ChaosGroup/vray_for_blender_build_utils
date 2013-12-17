@@ -46,7 +46,9 @@ class MacBuilder(Builder):
 
 		build_options = {
 			'True': [],
-			'False': [],
+			'False': [
+				'WITH_BF_FREESTYLE',
+			],
 		}
 
 		if self.use_debug:

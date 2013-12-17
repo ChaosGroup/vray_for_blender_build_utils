@@ -123,6 +123,7 @@ class LinuxBuilder(Builder):
 				'WITH_BF_ICONV',
 				'WITH_BF_QUICKTIME',
 				'WITH_BF_STATICOPENGL',
+				'WITH_BF_FREESTYLE',
 				'WITH_BF_VERSE',
 			]
 		}

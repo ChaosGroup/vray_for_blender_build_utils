@@ -59,6 +59,7 @@ class WindowsBuilder(Builder):
 				'WITH_BF_ICONV',
 			],
 			'False': [
+				'WITH_BF_FREESTYLE',
 				'WITH_BF_QUICKTIME',
 				'WITH_BF_FMOD',
 				'WITH_BF_VERSE',

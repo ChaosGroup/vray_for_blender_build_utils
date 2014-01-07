@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index abca0ee..fbc87e6 100644
+index 106c807..d342697 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -278,6 +278,9 @@ set(CYCLES_CUDA_BINARIES_ARCH sm_20 sm_21 sm_30 sm_35 CACHE STRING "CUDA archite
@@ -25,7 +25,7 @@ index abca0ee..fbc87e6 100644
  #-----------------------------------------------------------------------------
  # Check for valid directories
  # ... svn extern paths can be missing because of svn-git.
-@@ -2262,6 +2271,7 @@ if(FIRST_RUN)
+@@ -2317,6 +2326,7 @@ if(FIRST_RUN)
  	info_cfg_option(WITH_INPUT_NDOF)
  	info_cfg_option(WITH_CYCLES)
  	info_cfg_option(WITH_FREESTYLE)
@@ -34,7 +34,7 @@ index abca0ee..fbc87e6 100644
  
  	info_cfg_text("Compiler Options:")
 diff --git a/SConstruct b/SConstruct
-index 2e00066..d02f831 100644
+index be61f4a..2887a7b 100644
 --- a/SConstruct
 +++ b/SConstruct
 @@ -274,6 +274,7 @@ if 'blenderlite' in B.targets:
@@ -60,7 +60,7 @@ index 3291851..29a4f15 100644
          incs.append(env['BF_PTHREADS_INC'])
          incs.append('#/intern/utfconv')
 diff --git a/build_files/scons/tools/btools.py b/build_files/scons/tools/btools.py
-index 715d922..e7e4f01 100644
+index 47434e6..dc764b2 100644
 --- a/build_files/scons/tools/btools.py
 +++ b/build_files/scons/tools/btools.py
 @@ -143,6 +143,8 @@ def validate_arguments(args, bc):
@@ -72,9 +72,9 @@ index 715d922..e7e4f01 100644
              'BF_FANCY', 'BF_QUIET', 'BF_LINE_OVERWRITE',
              'BF_X264_CONFIG',
              'BF_XVIDCORE_CONFIG',
-@@ -572,6 +574,8 @@ def read_opts(env, cfg, args):
-         ('BF_CYCLES_CUDA_NVCC', 'CUDA nvcc compiler path', ''),
+@@ -575,6 +577,8 @@ def read_opts(env, cfg, args):
          ('BF_CYCLES_CUDA_BINARIES_ARCH', 'CUDA architectures to compile binaries for', []),
+         (BoolVariable('WITH_CYCLES_OPTIMIZED_KERNEL_SSE41', 'Enable building of an extra SSE4.1 kernel', False)),
  
 +        (BoolVariable('WITH_VRAY_FOR_BLENDER', 'Compile with V-Ray For Blender extentions', True)),
 +
@@ -2841,20 +2841,20 @@ index de052f2..5920602 100644
 +    SConscript (['exporter/SConscript'])
 +    SConscript (['vray_for_blender/SConscript'])
 diff --git a/source/blender/blenkernel/BKE_object.h b/source/blender/blenkernel/BKE_object.h
-index 4341756..10153ac 100644
+index 419b8de..98d1848 100644
 --- a/source/blender/blenkernel/BKE_object.h
 +++ b/source/blender/blenkernel/BKE_object.h
-@@ -155,7 +155,7 @@ void BKE_object_tfm_protected_restore(struct Object *ob,
- 
- void BKE_object_handle_update(struct Scene *scene, struct Object *ob);
- void BKE_object_handle_update_ex(struct Scene *scene, struct Object *ob,
+@@ -166,7 +166,7 @@ void BKE_object_tfm_protected_restore(struct Object *ob,
+ void BKE_object_handle_update(struct EvaluationContext *eval_ctx, struct Scene *scene, struct Object *ob);
+ void BKE_object_handle_update_ex(struct EvaluationContext *eval_ctx,
+                                  struct Scene *scene, struct Object *ob,
 -                                 struct RigidBodyWorld *rbw);
-+                                 struct RigidBodyWorld *rbw, struct Main *bmain);
++								 struct RigidBodyWorld *rbw);
  void BKE_object_sculpt_modifiers_changed(struct Object *ob);
  
  int BKE_object_obdata_texspace_get(struct Object *ob, short **r_texflag, float **r_loc, float **r_size, float **r_rot);
 diff --git a/source/blender/blenkernel/intern/object.c b/source/blender/blenkernel/intern/object.c
-index 0694bde..345a457 100644
+index c069abf..a4e28be 100644
 --- a/source/blender/blenkernel/intern/object.c
 +++ b/source/blender/blenkernel/intern/object.c
 @@ -65,6 +65,7 @@
@@ -2865,16 +2865,16 @@ index 0694bde..345a457 100644
  
  #include "BLF_translation.h"
  
-@@ -2694,7 +2695,7 @@ bool BKE_object_parent_loop_check(const Object *par, const Object *ob)
- /* requires flags to be set! */
+@@ -2852,7 +2853,7 @@ bool BKE_object_parent_loop_check(const Object *par, const Object *ob)
  /* Ideally we shouldn't have to pass the rigid body world, but need bigger restructuring to avoid id */
- void BKE_object_handle_update_ex(Scene *scene, Object *ob,
+ void BKE_object_handle_update_ex(EvaluationContext *eval_ctx,
+                                  Scene *scene, Object *ob,
 -                                 RigidBodyWorld *rbw)
-+                                 RigidBodyWorld *rbw, Main *bmain)
++								 RigidBodyWorld *rbw)
  {
  	if (ob->recalc & OB_RECALC_ALL) {
  		/* speed optimization for animation lookups */
-@@ -2873,9 +2874,16 @@ void BKE_object_handle_update_ex(Scene *scene, Object *ob,
+@@ -3019,8 +3020,13 @@ void BKE_object_handle_update_ex(EvaluationContext *eval_ctx,
  						psys_get_modifier(ob, psys)->flag &= ~eParticleSystemFlag_psys_updated;
  				}
  			}
@@ -2882,38 +2882,13 @@ index 0694bde..345a457 100644
 +
  			/* quick cache removed */
 +
-+            if(bmain)
-+                BLI_callback_exec(bmain, &ob->id, BLI_CB_EVT_OBJECT_DATA_UPDATE);
++			BLI_callback_exec(NULL, &ob->id, BLI_CB_EVT_OBJECT_DATA_UPDATE);
++		}
++		else {
++			BLI_callback_exec(NULL, &ob->id, BLI_CB_EVT_OBJECT_UPDATE);
  		}
-+        else {
-+            if(bmain)
-+                BLI_callback_exec(bmain, &ob->id, BLI_CB_EVT_OBJECT_UPDATE);
-+        }
  
  		ob->recalc &= ~OB_RECALC_ALL;
- 	}
-@@ -2900,7 +2908,7 @@ void BKE_object_handle_update_ex(Scene *scene, Object *ob,
-  */
- void BKE_object_handle_update(Scene *scene, Object *ob)
- {
--	BKE_object_handle_update_ex(scene, ob, NULL);
-+	BKE_object_handle_update_ex(scene, ob, NULL, NULL);
- }
- 
- void BKE_object_sculpt_modifiers_changed(Object *ob)
-diff --git a/source/blender/blenkernel/intern/scene.c b/source/blender/blenkernel/intern/scene.c
-index 80fcee1..9917c23 100644
---- a/source/blender/blenkernel/intern/scene.c
-+++ b/source/blender/blenkernel/intern/scene.c
-@@ -1201,7 +1201,7 @@ static void scene_update_tagged_recursive(Main *bmain, Scene *scene, Scene *scen
- 	for (base = scene->base.first; base; base = base->next) {
- 		Object *ob = base->object;
- 		
--		BKE_object_handle_update_ex(scene_parent, ob, scene->rigidbody_world);
-+		BKE_object_handle_update_ex(scene_parent, ob, scene->rigidbody_world, bmain);
- 		
- 		if (ob->dup_group && (ob->transflag & OB_DUPLIGROUP))
- 			BKE_group_handle_recalc_and_update(scene_parent, ob, ob->dup_group);
 diff --git a/source/blender/blenlib/BLI_callbacks.h b/source/blender/blenlib/BLI_callbacks.h
 index 8d5ea91..95f41f5 100644
 --- a/source/blender/blenlib/BLI_callbacks.h
@@ -2928,7 +2903,7 @@ index 8d5ea91..95f41f5 100644
  	BLI_CB_EVT_GAME_POST,
  	BLI_CB_EVT_TOT
 diff --git a/source/blender/editors/include/UI_icons.h b/source/blender/editors/include/UI_icons.h
-index f8e1bbb..679250c 100644
+index bbad49d..f003af8 100644
 --- a/source/blender/editors/include/UI_icons.h
 +++ b/source/blender/editors/include/UI_icons.h
 @@ -275,15 +275,16 @@ DEF_ICON(GROUP_UVS)
@@ -3103,10 +3078,10 @@ index 0000000..1e478d9
 +env.BlenderLib('vb_exporter', sources, Split(incs), [], libtype=['core'], priority=[300])
 diff --git a/source/blender/exporter/exporter_geometry.c b/source/blender/exporter/exporter_geometry.c
 new file mode 100644
-index 0000000..1cef9cf
+index 0000000..3598ffc
 --- /dev/null
 +++ b/source/blender/exporter/exporter_geometry.c
-@@ -0,0 +1,2006 @@
+@@ -0,0 +1,2017 @@
 +/*
 +
 +  V-Ray/Blender
@@ -3561,6 +3536,8 @@ index 0000000..1cef9cf
 +    float  f;
 +    float  t;
 +
++    EvaluationContext eval_ctx = {0};
++
 +    ParticleSystem             *psys = NULL;
 +    ParticleSettings           *pset = NULL;
 +    ParticleSystemModifierData *psmd = NULL;
@@ -3608,6 +3585,8 @@ index 0000000..1cef9cf
 +
 +    int  display_percentage;
 +    int  display_percentage_child;
++
++    eval_ctx.for_render = true;
 +
 +    for(psys = ob->particlesystem.first; psys; psys = psys->next)
 +    {
@@ -3675,7 +3654,7 @@ index 0000000..1cef9cf
 +        // Recalc hair with render settings
 +        if(need_recalc) {
 +            ob->recalc |= OB_RECALC_ALL;
-+            BKE_scene_update_tagged(bmain, sce);
++            BKE_scene_update_tagged(&eval_ctx, bmain, sce);
 +        }
 +
 +        // Get new child data pointers
@@ -3960,7 +3939,7 @@ index 0000000..1cef9cf
 +        // Recalc hair back with viewport settings
 +        if(need_recalc) {
 +            ob->recalc |= OB_RECALC_ALL;
-+            BKE_scene_update_tagged(bmain, sce);
++            BKE_scene_update_tagged(&eval_ctx, bmain, sce);
 +        }
 +    }
 +}
@@ -3976,11 +3955,14 @@ index 0000000..1cef9cf
 +    Object *tmpobj = NULL;
 +    Object *basis_ob = NULL;
 +    ListBase disp = {NULL, NULL};
++    EvaluationContext eval_ctx = {0};
 +
 +    /* Make a dummy mesh, saves copying */
 +    DerivedMesh *dm;
 +
 +    CustomDataMask mask = CD_MASK_MESH;
++
++    eval_ctx.for_render = true;
 +
 +    /* perform the mesh extraction based on type */
 +    switch (ob->type) {
@@ -4028,7 +4010,7 @@ index 0000000..1cef9cf
 +
 +        tmpmesh = BKE_mesh_add(bmain, "Mesh");
 +
-+        BKE_displist_make_mball_forRender(sce, ob, &disp);
++        BKE_displist_make_mball_forRender(&eval_ctx, sce, ob, &disp);
 +        BKE_mesh_from_metaball(&disp, tmpmesh);
 +        BKE_displist_free(&disp);
 +
@@ -4958,6 +4940,8 @@ index 0000000..1cef9cf
 +{
 +    Main   *bmain = CTX_data_main(C);
 +
++    EvaluationContext eval_ctx = {0};
++
 +    Scene  *sce     = NULL;
 +    char   *sce_ptr = NULL;
 +
@@ -5014,6 +4998,8 @@ index 0000000..1cef9cf
 +        debug = RNA_boolean_get(op->ptr, "debug");
 +    }
 +
++    eval_ctx.for_render = true;
++
 +    time = PIL_check_seconds_timer();
 +
 +    if(filepath) {
@@ -5028,7 +5014,7 @@ index 0000000..1cef9cf
 +            /* Export meshes for the start frame */
 +            sce->r.cfra = fra;
 +            CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-+            BKE_scene_update_for_newframe(bmain, sce, (1<<20) - 1);
++            BKE_scene_update_for_newframe(&eval_ctx, bmain, sce, (1<<20) - 1);
 +            export_meshes_threaded(filepath, sce, bmain, active_layers, instances, 0, 0);
 +            fra += sce->r.frame_step;
 +
@@ -5045,7 +5031,7 @@ index 0000000..1cef9cf
 +
 +                sce->r.cfra = fra;
 +                CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-+                BKE_scene_update_for_newframe(bmain, sce, (1<<20) - 1);
++                BKE_scene_update_for_newframe(&eval_ctx, bmain, sce, (1<<20) - 1);
 +                export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 1);
 +
 +                if(!debug) {
@@ -5058,7 +5044,7 @@ index 0000000..1cef9cf
 +
 +            sce->r.cfra = cfra;
 +            CLAMP(sce->r.cfra, MINAFRAME, MAXFRAME);
-+            BKE_scene_update_for_newframe(bmain, sce, (1<<20) - 1);
++            BKE_scene_update_for_newframe(&eval_ctx, bmain, sce, (1<<20) - 1);
 +        } else {
 +            export_meshes_threaded(filepath, sce, bmain, active_layers, instances, check_animated, 0);
 +        }
@@ -5773,7 +5759,7 @@ index fcd0575..e303142 100644
  /* musgrave stype */
  #define TEX_MFRACTAL		0
 diff --git a/source/blender/makesrna/intern/rna_texture.c b/source/blender/makesrna/intern/rna_texture.c
-index a26272b..b7f01a9 100644
+index b453965..ed604f3 100644
 --- a/source/blender/makesrna/intern/rna_texture.c
 +++ b/source/blender/makesrna/intern/rna_texture.c
 @@ -63,6 +63,7 @@ static EnumPropertyItem texture_filter_items[] = {
@@ -5860,7 +5846,7 @@ index f8725d6..faf1b27 100644
  	/* sets the permanent tag */
  #   define APP_CB_OTHER_FIELDS 1
 diff --git a/source/blender/python/intern/bpy_interface.c b/source/blender/python/intern/bpy_interface.c
-index 9fbad95..696d945 100644
+index aafb5e3..06983f7 100644
 --- a/source/blender/python/intern/bpy_interface.c
 +++ b/source/blender/python/intern/bpy_interface.c
 @@ -80,6 +80,10 @@
@@ -5888,7 +5874,7 @@ index 9fbad95..696d945 100644
  static struct _inittab bpy_internal_modules[] = {
  	{(char *)"mathutils", PyInit_mathutils},
  //	{(char *)"mathutils.geometry", PyInit_mathutils_geometry},
-@@ -226,11 +237,15 @@ static struct _inittab bpy_internal_modules[] = {
+@@ -227,11 +238,15 @@ static struct _inittab bpy_internal_modules[] = {
  #ifdef WITH_CYCLES
  	{(char *)"_cycles", CCL_initPython},
  #endif
@@ -5905,7 +5891,7 @@ index 9fbad95..696d945 100644
  void BPY_python_start(int argc, const char **argv)
  {
 diff --git a/source/blender/python/intern/bpy_rna.c b/source/blender/python/intern/bpy_rna.c
-index 5a87870..0c8c54d 100644
+index 8d6c7d9..161cb09 100644
 --- a/source/blender/python/intern/bpy_rna.c
 +++ b/source/blender/python/intern/bpy_rna.c
 @@ -83,7 +83,7 @@
@@ -6524,10 +6510,10 @@ index 0000000..5970bbf
 +}
 diff --git a/source/blender/vray_for_blender/utils/CGR_data.c b/source/blender/vray_for_blender/utils/CGR_data.c
 new file mode 100644
-index 0000000..d39ffd4
+index 0000000..7f405d6
 --- /dev/null
 +++ b/source/blender/vray_for_blender/utils/CGR_data.c
-@@ -0,0 +1,116 @@
+@@ -0,0 +1,119 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -6563,11 +6549,14 @@ index 0000000..d39ffd4
 +    Object *tmpobj = NULL;
 +    Object *basis_ob = NULL;
 +    ListBase disp = {NULL, NULL};
++    EvaluationContext eval_ctx = {0};
 +
 +    /* Make a dummy mesh, saves copying */
 +    DerivedMesh *dm;
 +
 +    CustomDataMask mask = CD_MASK_MESH;
++
++    eval_ctx.for_render = true;
 +
 +    /* perform the mesh extraction based on type */
 +    switch (ob->type) {
@@ -6616,7 +6605,7 @@ index 0000000..d39ffd4
 +
 +        tmpmesh = BKE_mesh_add(bmain, "Mesh");
 +
-+        BKE_displist_make_mball_forRender(sce, ob, &disp);
++        BKE_displist_make_mball_forRender(&eval_ctx, sce, ob, &disp);
 +        BKE_mesh_from_metaball(&disp, tmpmesh);
 +        BKE_displist_free(&disp);
 +
@@ -7381,10 +7370,10 @@ index 0000000..b74f270
 +}
 diff --git a/source/blender/vray_for_blender/vrscene_exporter/hair.c b/source/blender/vray_for_blender/vrscene_exporter/hair.c
 new file mode 100644
-index 0000000..eddf62f
+index 0000000..fb8b298
 --- /dev/null
 +++ b/source/blender/vray_for_blender/vrscene_exporter/hair.c
-@@ -0,0 +1,714 @@
+@@ -0,0 +1,718 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -7704,6 +7693,8 @@ index 0000000..eddf62f
 +	float  f;
 +	float  t;
 +
++	EvaluationContext eval_ctx = {0};
++
 +	ParticleSettings           *pset = NULL;
 +	ParticleSystemModifierData *psmd = NULL;
 +
@@ -7752,6 +7743,8 @@ index 0000000..eddf62f
 +	int  display_percentage_child;
 +
 +	int  debug = false;
++
++	eval_ctx.for_render = true;
 +
 +	need_recalc = 0;
 +
@@ -7817,7 +7810,7 @@ index 0000000..eddf62f
 +	// Recalc hair with render settings
 +	if(need_recalc) {
 +		ob->recalc |= OB_RECALC_ALL;
-+		BKE_scene_update_tagged(bmain, sce);
++		BKE_scene_update_tagged(&eval_ctx, bmain, sce);
 +	}
 +
 +	// Get new child data pointers
@@ -8094,17 +8087,17 @@ index 0000000..eddf62f
 +	// Recalc hair back with viewport settings
 +	if(need_recalc) {
 +		ob->recalc |= OB_RECALC_ALL;
-+		BKE_scene_update_tagged(bmain, sce);
++		BKE_scene_update_tagged(&eval_ctx, bmain, sce);
 +	}
 +
 +	return 0;
 +}
 diff --git a/source/blender/vray_for_blender/vrscene_exporter/node.cpp b/source/blender/vray_for_blender/vrscene_exporter/node.cpp
 new file mode 100644
-index 0000000..93d55fe
+index 0000000..2582f3a
 --- /dev/null
 +++ b/source/blender/vray_for_blender/vrscene_exporter/node.cpp
-@@ -0,0 +1,126 @@
+@@ -0,0 +1,130 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -8211,15 +8204,19 @@ index 0000000..93d55fe
 +				 Main       *main,
 +				 Object     *ob)
 +{
++	EvaluationContext eval_ctx = {0};
++
 +	DupliObject *dob;
 +	char         pluginName[MAX_PLUGIN_NAME];
++
++	eval_ctx.for_render = true;
 +
 +	exportedMeshes.clear();
 +
 +	// Free duplilist if a user forgets to
 +	free_duplilist(ob);
 +
-+	ob->duplilist = object_duplilist(sce, ob, TRUE);
++	ob->duplilist = object_duplilist(&eval_ctx, sce, ob);
 +
 +	for(dob = (DupliObject*)ob->duplilist->first; dob; dob = dob->next) {
 +		sprintf(pluginName, "%s_%.5i", dob->ob->id.name, dob->persistent_id[0]);

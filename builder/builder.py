@@ -140,7 +140,7 @@ class Builder:
 	use_proxy           = None
 
 	use_github_repo     = None
-
+	use_github_branch   = None
 
 	def __init__(self, params):
 		if not params:
@@ -159,7 +159,7 @@ class Builder:
 			sys.stderr.write("Source directory not specified!\n")
 			sys.exit(2)
 
-		if not self.add_patches:
+		if not (self.add_patches or self.use_github_repo):
 			self.project = "blender"
 
 

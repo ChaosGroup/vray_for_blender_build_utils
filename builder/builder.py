@@ -238,7 +238,7 @@ class Builder:
 						#
 						os.chdir(self.dir_blender)
 						os.system("git remote set-url origin %s" % OFFICIAL_REPO)
-						os.system("git remote set-url github %s" % GITHUB_REPO)
+						os.system("git remote add github %s" % GITHUB_REPO)
 					else:
 						os.system("git clone %s" % OFFICIAL_REPO)
 

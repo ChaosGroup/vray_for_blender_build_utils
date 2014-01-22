@@ -211,6 +211,7 @@ class Builder:
 
 			if self.use_github_repo:
 				os.chdir(self.dir_blender)
+				os.system("git remote update github")
 				os.system("git checkout -b {branch} github/{branch}".format(branch=self.use_github_branch))
 
 			if self.checkout_revision is not None:

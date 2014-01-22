@@ -247,6 +247,7 @@ class Builder:
 					os.system("git submodule foreach git checkout master")
 					os.system("git submodule foreach git pull --rebase origin master")
 
+					os.chdir(self.dir_source)
 					# Move "blender" to "blender-git"
 					utils.move_directory(self.dir_blender, self.dir_blender_svn)
 

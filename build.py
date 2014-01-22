@@ -86,6 +86,9 @@ parser.add_option('', '--user_config', dest='user_user_config', default="", help
 
 parser.add_option('', '--env', action='store_true', dest="use_env_msvc", default=False, help="Use compiler from the environment")
 
+parser.add_option('', '--github-repo',   action='store_true', dest="use_github_repo",   default=False, help="Use sources from project's github repository")
+parser.add_option('', '--github-branch',                      dest="use_github_branch", default="dev/vray_for_blender/stable", help="Use sources from project's github branch")
+
 (options, args) = parser.parse_args()
 
 
@@ -167,6 +170,14 @@ params['use_env_msvc'] = options.use_env_msvc
 
 if options.user_user_config:
 	params['user_user_config'] = options.user_user_config
+
+if options.use_github_repo:
+	params['use_github_repo']   = True
+	params['use_github_branch'] = options.use_github_branch
+	params['update_patch']      = False
+	params['add_patches']       = False
+	params['add_extra']         = False
+
 
 builder = build_system.Builder(params)
 builder.build()

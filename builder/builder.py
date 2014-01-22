@@ -33,6 +33,10 @@ import datetime
 import utils
 
 
+OFFICIAL_REPO = "http://git.blender.org/blender.git"
+GITHUB_REPO   = "https://github.com/bdancer/blender-for-vray.git"
+
+
 class Builder:
 	"""
 	  A generic build class.
@@ -135,6 +139,8 @@ class Builder:
 
 	use_proxy           = None
 
+	use_github_repo     = None
+
 
 	def __init__(self, params):
 		if not params:
@@ -203,6 +209,10 @@ class Builder:
 			# Copy full tree to have proper build info.
 			shutil.copytree(self.dir_blender_svn, self.dir_blender)
 
+			if self.use_github_repo:
+				os.chdir(self.dir_blender)
+				os.system("git checkout -b {branch} origin/{branch}".format(branch=self.use_github_branch))
+
 			if self.checkout_revision is not None:
 				os.chdir(self.dir_blender)
 				os.system("git checkout %s" % self.checkout_revision)
@@ -219,8 +229,12 @@ class Builder:
 				if not self.mode_test:
 					os.chdir(self.dir_source)
 
+					source_repo = OFFICIAL_REPO
+					if self.use_github_repo:
+						source_repo = GITHUB_REPO
+
 					# Obtain sources
-					os.system("git clone http://git.blender.org/blender.git")
+					os.system("git clone %s" % source_repo)
 					os.chdir(self.dir_blender)
 					os.system("git submodule update --init --recursive")
 					os.system("git submodule foreach git checkout master")
@@ -359,11 +373,12 @@ class Builder:
 				shutil.copyfile(splash_path_src, splash_path_dst)
 
 				# Change icons
-				for icons_filename in ["blender_icons16.png", "blender_icons32.png"]:
-					icons_path_src = utils.path_join(patch_dir, "datafiles", icons_filename)
-					icons_path_dst = utils.path_join(datafiles_path, icons_filename)
+				for subdir in ["blender_icons16", "blender_icons32"]:
+					icons_path_src = utils.path_join(patch_dir, "datafiles", subdir)
+					icons_path_dst = utils.path_join(datafiles_path, subdir)
 
-					shutil.copyfile(icons_path_src,  icons_path_dst)
+					shutil.rmtree(icons_path_dst)
+					shutil.copytree(icons_path_src, icons_path_dst)
 
 
 	def docs(self):

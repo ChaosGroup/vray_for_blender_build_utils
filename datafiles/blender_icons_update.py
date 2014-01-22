@@ -27,7 +27,7 @@ run(cmd)
 # rm ./blender_icons16/*.dat
 # rm ./blender_icons32/*.dat
 
-datatoc_icon_split_py = os.path.join(BASEDIR, "..", "..", "source", "blender", "datatoc", "datatoc_icon_split.py")
+datatoc_icon_split_py = os.path.join("/home/bdancer/devel/vrayblender/vb30/blender-git", "source", "blender", "datatoc", "datatoc_icon_split.py")
 
 # create .dat pixmaps (which are stored in git)
 cmd = (

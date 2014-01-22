@@ -118,7 +118,7 @@ class WindowsBuilder(Builder):
 			uc.write("WITH_BF_OIIO      = False\n")
 			uc.write("\n")
 
-		if self.add_patches:
+		if self.add_patches or self.use_github_repo:
 			uc.write("WITH_VRAY_FOR_BLENDER = True\n")
 
 		# Write boolean options

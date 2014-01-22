@@ -174,7 +174,6 @@ if options.user_user_config:
 if options.use_github_repo:
 	params['use_github_repo']   = True
 	params['use_github_branch'] = options.use_github_branch
-	params['update_patch']      = False
 	params['add_patches']       = False
 	params['add_extra']         = False
 

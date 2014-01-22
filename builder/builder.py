@@ -211,7 +211,7 @@ class Builder:
 
 			if self.use_github_repo:
 				os.chdir(self.dir_blender)
-				os.system("git checkout -b {branch} origin/{branch}".format(branch=self.use_github_branch))
+				os.system("git checkout -b {branch} github/{branch}".format(branch=self.use_github_branch))
 
 			if self.checkout_revision is not None:
 				os.chdir(self.dir_blender)
@@ -229,12 +229,19 @@ class Builder:
 				if not self.mode_test:
 					os.chdir(self.dir_source)
 
-					source_repo = OFFICIAL_REPO
-					if self.use_github_repo:
-						source_repo = GITHUB_REPO
-
 					# Obtain sources
-					os.system("git clone %s" % source_repo)
+					if self.use_github_repo:
+						os.system("git clone %s blender" % GITHUB_REPO)
+
+						# Now set origin to Blender's git and additional github remote
+						# This is needed for proper submodules init
+						#
+						os.chdir(self.dir_blender)
+						os.system("git remote set-url origin %s" % OFFICIAL_REPO)
+						os.system("git remote set-url github %s" % GITHUB_REPO)
+					else:
+						os.system("git clone %s" % OFFICIAL_REPO)
+
 					os.chdir(self.dir_blender)
 					os.system("git submodule update --init --recursive")
 					os.system("git submodule foreach git checkout master")
@@ -320,9 +327,9 @@ class Builder:
 			sys.stderr.write("Something wrong happened! Patch directory is incomplete!\n")
 			sys.exit(2)
 
+		# Blender clean exported souces
+		blender_dir = utils.path_join(self.dir_source, "blender")
 		if self.add_patches or self.add_extra:
-			# Blender clean exported souces
-			blender_dir = utils.path_join(self.dir_source, "blender")
 			if not os.path.exists(patch_dir):
 				sys.stderr.write("Fatal error!\n")
 				sys.stderr.write("Exported Blender sources (%s) not found!\n" % (blender_dir))

@@ -141,6 +141,7 @@ class Builder:
 
 	use_github_repo     = None
 	use_github_branch   = None
+	use_exp_branch      = None
 
 	def __init__(self, params):
 		if not params:
@@ -506,6 +507,8 @@ class Builder:
 			# Add new
 			os.chdir(scripts_path)
 			os.system("git clone git://github.com/bdancer/vb25.git")
+			if self.use_exp_branch not in {'master'}:
+				os.system("git checkout -b {branch} origin/{branch}".format(branch=self.use_exp_branch))
 
 
 	def package(self):

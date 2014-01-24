@@ -87,7 +87,8 @@ parser.add_option('', '--user_config', dest='user_user_config', default="", help
 parser.add_option('', '--env', action='store_true', dest="use_env_msvc", default=False, help="Use compiler from the environment")
 
 parser.add_option('', '--github-repo',   action='store_true', dest="use_github_repo",   default=False, help="Use sources from project's github repository")
-parser.add_option('', '--github-branch',                      dest="use_github_branch", default="dev/vray_for_blender/stable", help="Use sources from project's github branch")
+parser.add_option('', '--github-src-branch',                  dest="use_github_branch", default="dev/vray_for_blender/stable", help="Use sources from project's github branch")
+parser.add_option('', '--github-exp-branch',                  dest="use_exp_branch",    default="master", help="Use exporter from specific branch")
 
 (options, args) = parser.parse_args()
 
@@ -177,6 +178,7 @@ if options.use_github_repo:
 	params['add_patches']       = False
 	params['add_extra']         = False
 
+params['use_exp_branch'] = options.use_exp_branch
 
 builder = build_system.Builder(params)
 builder.build()

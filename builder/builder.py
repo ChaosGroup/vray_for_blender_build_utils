@@ -505,7 +505,7 @@ class Builder:
 
 			# Add new
 			os.chdir(scripts_path)
-			os.system("git clone --depth=1 git://github.com/bdancer/vb25.git")
+			os.system("git clone git://github.com/bdancer/vb25.git")
 
 
 	def package(self):

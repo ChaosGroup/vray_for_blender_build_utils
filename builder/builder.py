@@ -508,6 +508,7 @@ class Builder:
 			os.chdir(scripts_path)
 			os.system("git clone git://github.com/bdancer/vb25.git")
 			if self.use_exp_branch not in {'master'}:
+				os.system("git remote update")
 				os.system("git checkout -b {branch} origin/{branch}".format(branch=self.use_exp_branch))
 
 

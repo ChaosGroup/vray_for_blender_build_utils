@@ -49,7 +49,6 @@ class MacBuilder(Builder):
 			'WITH_BF_3DMOUSE' : False,
 
 			'WITH_BF_CYCLES' : self.with_cycles,
-			'WITH_BF_OIIO'   : self.with_cycles,
 
 			'WITH_BF_GAMEENGINE' : self.with_ge,
 			'WITH_BF_PLAYER'     : self.with_player,

@@ -42,57 +42,33 @@ class MacBuilder(Builder):
 			open(self.user_config, 'w').write(open(self.user_user_config, 'r').read())
 			return
 
-		uc= open(self.user_config, 'w')
-
 		build_options = {
-			'True': [],
-			'False': [
-				'WITH_BF_FREESTYLE',
-			],
+			'WITH_VRAY_FOR_BLENDER' : self.add_patches or self.use_github_repo,
+
+			'WITH_BF_FREESTYLE': False,
+			'WITH_BF_3DMOUSE' : False,
+
+			'WITH_BF_CYCLES' : self.with_cycles,
+			'WITH_BF_OIIO'   : self.with_cycles,
+
+			'WITH_BF_GAMEENGINE' : self.with_ge,
+			'WITH_BF_PLAYER'     : self.with_player,
+
+			'BF_DEBUG' : self.use_debug,
 		}
 
-		if self.use_debug:
-			uc.write("BF_DEBUG = True\n")
-
-		uc.write("BF_INSTALLDIR = '%s'\n" % (self.dir_install_path))
-		uc.write("BF_BUILDDIR   = '/tmp/builder_%s'\n" % (self.build_arch))
-		uc.write("\n")
-
-		# Cycles
-		#
-		if self.with_cycles:
-			uc.write("WITH_BF_CYCLES = True\n")
-			uc.write("WITH_BF_OIIO = True\n")
+		with open(self.user_config, 'w') as uc:
+			uc.write("BF_INSTALLDIR = '%s'\n" % (self.dir_install_path))
+			uc.write("BF_BUILDDIR   = '/tmp/builder_%s'\n" % (self.build_arch))
 			uc.write("\n")
-
-		if self.with_ge:
-			build_options['True'].append('WITH_BF_GAMEENGINE')
-		else:
-			build_options['False'].append('WITH_BF_GAMEENGINE')
-
-		if self.with_player:
-			build_options['True'].append('WITH_BF_PLAYER')
-		else:
-			build_options['False'].append('WITH_BF_PLAYER')
-
-		uc.write("BF_NUMJOBS  = %s\n" % self.build_threads)
-		uc.write("\n")
-
-		uc.write("MACOSX_ARCHITECTURE      = '%s'\n" % ('i386' if self.build_arch == 'x86' else 'x86_64'))
-		
-		uc.write("WITH_BF_3DMOUSE = False\n")
-		uc.write("BF_3DMOUSE_LIB = 'spnav'\n")
-
-		if self.add_patches or self.use_github_repo:
-			uc.write("WITH_VRAY_FOR_BLENDER = True\n")
-
-		# Write boolean options
-		for key in build_options:
-			for opt in build_options[key]:
-				uc.write("%s = %s\n" % (opt, key))
-
-		uc.write("\n")
-		uc.close()
+			uc.write("BF_NUMJOBS  = %s\n" % self.build_threads)
+			uc.write("\n")
+			uc.write("MACOSX_ARCHITECTURE = '%s'\n" % ('i386' if self.build_arch == 'x86' else 'x86_64'))
+			uc.write("BF_3DMOUSE_LIB = 'spnav'\n")
+			# Write boolean options
+			for key in build_options:
+				uc.write("%s = %s\n" % (key, build_options[key]))
+			uc.write("\n")
 
 
 	def package(self):

@@ -1,5 +1,5 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 271b33d..9871477 100644
+index 7ebc20f..8e417c0 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
 @@ -275,6 +275,9 @@ set(CYCLES_CUDA_BINARIES_ARCH sm_20 sm_21 sm_30 sm_35 CACHE STRING "CUDA archite
@@ -24,8 +24,8 @@ index 271b33d..9871477 100644
 +
  #-----------------------------------------------------------------------------
  # Check for valid directories
- # ... svn extern paths can be missing because of svn-git.
-@@ -2320,6 +2329,7 @@ if(FIRST_RUN)
+ # ... a partial checkout may cause this.
+@@ -2324,6 +2333,7 @@ if(FIRST_RUN)
  	info_cfg_option(WITH_INPUT_NDOF)
  	info_cfg_option(WITH_CYCLES)
  	info_cfg_option(WITH_FREESTYLE)
@@ -171,10 +171,10 @@ index 8d5ea91..95f41f5 100644
  	BLI_CB_EVT_GAME_POST,
  	BLI_CB_EVT_TOT
 diff --git a/source/blender/editors/include/UI_icons.h b/source/blender/editors/include/UI_icons.h
-index 2720577..6df1fb0 100644
+index dcc526b..253c962 100644
 --- a/source/blender/editors/include/UI_icons.h
 +++ b/source/blender/editors/include/UI_icons.h
-@@ -275,15 +275,16 @@ DEF_ICON(GROUP_UVS)
+@@ -273,15 +273,16 @@ DEF_ICON(GROUP_UVS)
  DEF_ICON(RNA)
  DEF_ICON(RNA_ADD)
  
@@ -2632,7 +2632,7 @@ index 0000000..71f2976
 +    WM_operatortype_append(VRAY_OT_export_meshes);
 +}
 diff --git a/source/blender/makesdna/DNA_texture_types.h b/source/blender/makesdna/DNA_texture_types.h
-index fcd0575..e303142 100644
+index a3025a7..867e7bd 100644
 --- a/source/blender/makesdna/DNA_texture_types.h
 +++ b/source/blender/makesdna/DNA_texture_types.h
 @@ -315,6 +315,7 @@ typedef struct ColorMapping {
@@ -2644,7 +2644,7 @@ index fcd0575..e303142 100644
  /* musgrave stype */
  #define TEX_MFRACTAL		0
 diff --git a/source/blender/makesrna/intern/rna_texture.c b/source/blender/makesrna/intern/rna_texture.c
-index b453965..ed604f3 100644
+index 37a0ee0..84b8f33 100644
 --- a/source/blender/makesrna/intern/rna_texture.c
 +++ b/source/blender/makesrna/intern/rna_texture.c
 @@ -63,6 +63,7 @@ static EnumPropertyItem texture_filter_items[] = {
@@ -2776,7 +2776,7 @@ index aafb5e3..06983f7 100644
  void BPY_python_start(int argc, const char **argv)
  {
 diff --git a/source/blender/python/intern/bpy_rna.c b/source/blender/python/intern/bpy_rna.c
-index b8640f7..0d5546d 100644
+index 23308bf..d0ed193 100644
 --- a/source/blender/python/intern/bpy_rna.c
 +++ b/source/blender/python/intern/bpy_rna.c
 @@ -83,7 +83,7 @@
@@ -3202,10 +3202,10 @@ index 0000000..4dab252
 +#endif // BLENDER_INCLUDES_H
 diff --git a/source/blender/vray_for_blender/python/vray_python_ext.cpp b/source/blender/vray_for_blender/python/vray_python_ext.cpp
 new file mode 100644
-index 0000000..4d4d685
+index 0000000..bf64be1
 --- /dev/null
 +++ b/source/blender/vray_for_blender/python/vray_python_ext.cpp
-@@ -0,0 +1,239 @@
+@@ -0,0 +1,245 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -3240,8 +3240,12 @@ index 0000000..4d4d685
 +#include "vrscene_exporter/vrscene.h"
 +#include "utils/CGR_string.h"
 +#include "CGR_vray_for_blender.h"
-+#include "mathutils/mathutils.h"
++extern "C" {
++#  include "mathutils/mathutils.h"
++}
 +#include <Python.h>
++
++
 +
 +
 +static PyObject* mExportSmokeDomain(PyObject *self, PyObject *args)
@@ -3403,16 +3407,18 @@ index 0000000..4d4d685
 +		MatrixObject *transform = (MatrixObject*)value;
 +
 +		float tm[4][4];
-+		char  buf[512];
++		char  tmBuf[130] = "";
++		char  buf[150]   = "";
 +
 +		copy_v3_v3(tm[0], MATRIX_COL_PTR(transform, 0));
 +		copy_v3_v3(tm[1], MATRIX_COL_PTR(transform, 1));
 +		copy_v3_v3(tm[2], MATRIX_COL_PTR(transform, 2));
 +		copy_v3_v3(tm[3], MATRIX_COL_PTR(transform, 3));
 +
-+		sprintf(buf, "TransformHex(\"%s\")", GetTransformHex(tm));
++		GetTransformHex(tm, tmBuf);
++		sprintf(buf, "TransformHex(\"%s\")", tmBuf);
 +
-+		return PyUnicode_FromString(buf);
++		return _PyUnicode_FromASCII(buf, strlen(buf));
 +	}
 +
 +	Py_RETURN_NONE;
@@ -5571,7 +5577,7 @@ index 0000000..7f03dd5
 +}
 diff --git a/source/blender/vray_for_blender/vrscene_exporter/vrscene.h b/source/blender/vray_for_blender/vrscene_exporter/vrscene.h
 new file mode 100644
-index 0000000..9ed9d71
+index 0000000..f8c5317
 --- /dev/null
 +++ b/source/blender/vray_for_blender/vrscene_exporter/vrscene.h
 @@ -0,0 +1,147 @@
@@ -5687,7 +5693,7 @@ index 0000000..9ed9d71
 +
 +void  GetDoubleHex(float f, char *str);
 +void  GetFloatHex(float f, char *buf);
-+char* GetTransformHex(float m[4][4]);
++void  GetTransformHex(float m[4][4], char *buf);
 +
 +int   write_GeomMayaHair(PyObject *outputFile, Scene *sce, Main *main, Object *ob, ParticleSystem *psys, const char *pluginName);
 +

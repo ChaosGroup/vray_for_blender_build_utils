@@ -342,7 +342,7 @@ index 0000000..1e478d9
 +env.BlenderLib('vb_exporter', sources, Split(incs), [], libtype=['core'], priority=[300])
 diff --git a/source/blender/exporter/exporter_geometry.c b/source/blender/exporter/exporter_geometry.c
 new file mode 100644
-index 0000000..66ecda3
+index 0000000..e14baa6
 --- /dev/null
 +++ b/source/blender/exporter/exporter_geometry.c
 @@ -0,0 +1,2017 @@
@@ -2350,12 +2350,12 @@ index 0000000..66ecda3
 +    ot->exec   = export_scene_exec;
 +
 +#if USE_STRING_POINTER
-+    RNA_def_string(ot->srna, "scene", "", 32, "Scene", "Scene pointer");
++	RNA_def_string(ot->srna, "scene", "Scene", 32, "Scene", "Scene pointer");
 +#else
 +    RNA_def_int(ot->srna, "scene", 0, INT_MIN, INT_MAX, "Scene", "Scene pointer", INT_MIN, INT_MAX);
 +#endif
 +
-+    RNA_def_string(ot->srna, "filepath", "", FILE_MAX, "Geometry filepath", "Geometry filepath");
++	RNA_def_string(ot->srna, "filepath", "Filepath", FILE_MAX, "Geometry filepath", "Geometry filepath");
 +
 +    RNA_def_boolean(ot->srna, "use_active_layers", 0,  "Active layer",      "Export only active layers");
 +    RNA_def_boolean(ot->srna, "use_animation",     0,  "Animation",         "Export animation");
@@ -5485,10 +5485,10 @@ index 0000000..a329410
 +}
 diff --git a/source/blender/vray_for_blender/vrscene_exporter/vrscene.cpp b/source/blender/vray_for_blender/vrscene_exporter/vrscene.cpp
 new file mode 100644
-index 0000000..7f03dd5
+index 0000000..db378c9
 --- /dev/null
 +++ b/source/blender/vray_for_blender/vrscene_exporter/vrscene.cpp
-@@ -0,0 +1,86 @@
+@@ -0,0 +1,84 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -5564,23 +5564,21 @@ index 0000000..7f03dd5
 +}
 +
 +
-+char* GetTransformHex(float m[4][4])
++void GetTransformHex(float m[4][4], char *buf)
 +{
 +	TraceTransform tm;
 +	copy_m3_m4(tm.m, m);
 +	copy_v3db_v3fl(tm.v, m[3]);
 +
-+	const u_int8_t *buf = (const u_int8_t*)&tm;
-+	getStringHex(buf, sizeof(tm), sbuf);
-+
-+	return sbuf;
++	const u_int8_t *tm8 = (const u_int8_t*)&tm;
++	getStringHex(tm8, sizeof(tm), buf);
 +}
 diff --git a/source/blender/vray_for_blender/vrscene_exporter/vrscene.h b/source/blender/vray_for_blender/vrscene_exporter/vrscene.h
 new file mode 100644
-index 0000000..f8c5317
+index 0000000..89ee127
 --- /dev/null
 +++ b/source/blender/vray_for_blender/vrscene_exporter/vrscene.h
-@@ -0,0 +1,147 @@
+@@ -0,0 +1,151 @@
 +/*
 + * ***** BEGIN GPL LICENSE BLOCK *****
 + *
@@ -5674,8 +5672,12 @@ index 0000000..f8c5317
 +
 +#if CGR_USE_HEX
 +#define WRITE_PYOBJECT_TRANSFORM(pyObject, m) \
-+	sprintf(buf, "TransformHex(\"%s\")", GetTransformHex(m));\
-+	WRITE_PYOBJECT_BUF(pyObject);
++	{\
++		char tmBuf[130];\
++		GetTransformHex(m, tmBuf);\
++		sprintf(buf, "TransformHex(\"%s\")", tmBuf);\
++		WRITE_PYOBJECT_BUF(pyObject);\
++	}
 +#else
 +#define WRITE_PYOBJECT_TRANSFORM(pyObject, m) \
 +	sprintf(buf, "Transform(Matrix(Vector(%f, %f, %f),Vector(%f, %f, %f),Vector(%f, %f, %f)),Vector(%f, %f, %f))", \

@@ -214,8 +214,6 @@ class Builder:
 				os.chdir(self.dir_blender)
 				os.system("git remote update github")
 				os.system("git checkout -b {branch} github/{branch}".format(branch=self.use_github_branch))
-				os.system("git submodule init")
-				os.system("git submodule update")
 
 			if self.checkout_revision is not None:
 				os.chdir(self.dir_blender)
@@ -513,7 +511,8 @@ class Builder:
 				os.chdir(os.path.join(scripts_path, "vb25"))
 				os.system("git remote update")
 				os.system("git checkout -b {branch} origin/{branch}".format(branch=self.use_exp_branch))
-
+				os.system("git submodule init")
+				os.system("git submodule update")
 
 	def package(self):
 		"""

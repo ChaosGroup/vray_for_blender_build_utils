@@ -34,10 +34,10 @@ index 7ebc20f..8e417c0 100644
  
  	info_cfg_text("Compiler Options:")
 diff --git a/SConstruct b/SConstruct
-index bff6d80..41bfdb5 100644
+index b0c7750..c0847c0 100644
 --- a/SConstruct
 +++ b/SConstruct
-@@ -274,6 +274,7 @@ if 'blenderlite' in B.targets:
+@@ -260,6 +260,7 @@ if 'blenderlite' in B.targets:
      target_env_defs['WITH_BF_3DMOUSE'] = False
      target_env_defs['WITH_BF_LIBMV'] = False
      target_env_defs['WITH_BF_FREESTYLE'] = False
@@ -46,10 +46,10 @@ index bff6d80..41bfdb5 100644
      # Merge blenderlite, let command line to override
      for k,v in target_env_defs.iteritems():
 diff --git a/build_files/scons/tools/Blender.py b/build_files/scons/tools/Blender.py
-index ec528c4..87af6fd 100644
+index ac001b5..a8f98b3 100644
 --- a/build_files/scons/tools/Blender.py
 +++ b/build_files/scons/tools/Blender.py
-@@ -393,6 +393,9 @@ def creator(env):
+@@ -391,6 +391,9 @@ def creator(env):
          incs.append('#/source/blender/freestyle')
          defs.append('WITH_FREESTYLE')
  
@@ -60,10 +60,10 @@ index ec528c4..87af6fd 100644
          incs.append(env['BF_PTHREADS_INC'])
          incs.append('#/intern/utfconv')
 diff --git a/build_files/scons/tools/btools.py b/build_files/scons/tools/btools.py
-index 9ab5fce..7d70f36 100644
+index 744896c..8dd8908 100644
 --- a/build_files/scons/tools/btools.py
 +++ b/build_files/scons/tools/btools.py
-@@ -143,6 +143,8 @@ def validate_arguments(args, bc):
+@@ -132,6 +132,8 @@ def validate_arguments(args, bc):
              'WITH_X11_XINPUT',
              'WITH_X11_XF86VMODE',
              'BF_GHOST_DEBUG',
@@ -72,7 +72,7 @@ index 9ab5fce..7d70f36 100644
              'BF_FANCY', 'BF_QUIET', 'BF_LINE_OVERWRITE',
              'BF_X264_CONFIG',
              'BF_XVIDCORE_CONFIG',
-@@ -573,6 +575,8 @@ def read_opts(env, cfg, args):
+@@ -562,6 +564,8 @@ def read_opts(env, cfg, args):
          ('BF_CYCLES_CUDA_ENV', 'preset environement nvcc will execute in', ''),
          ('BF_CYCLES_CUDA_BINARIES_ARCH', 'CUDA architectures to compile binaries for', []),
  
@@ -109,10 +109,10 @@ index de052f2..5920602 100644
 +    SConscript (['exporter/SConscript'])
 +    SConscript (['vray_for_blender/SConscript'])
 diff --git a/source/blender/blenkernel/BKE_object.h b/source/blender/blenkernel/BKE_object.h
-index 33c9583..5e31320 100644
+index 72c4c21..80fcaf7 100644
 --- a/source/blender/blenkernel/BKE_object.h
 +++ b/source/blender/blenkernel/BKE_object.h
-@@ -166,7 +166,7 @@ void BKE_object_tfm_protected_restore(struct Object *ob,
+@@ -167,7 +167,7 @@ void BKE_object_tfm_protected_restore(struct Object *ob,
  void BKE_object_handle_update(struct EvaluationContext *eval_ctx, struct Scene *scene, struct Object *ob);
  void BKE_object_handle_update_ex(struct EvaluationContext *eval_ctx,
                                   struct Scene *scene, struct Object *ob,
@@ -122,7 +122,7 @@ index 33c9583..5e31320 100644
  
  int BKE_object_obdata_texspace_get(struct Object *ob, short **r_texflag, float **r_loc, float **r_size, float **r_rot);
 diff --git a/source/blender/blenkernel/intern/object.c b/source/blender/blenkernel/intern/object.c
-index 6359c13..e48020b 100644
+index 05365a8..5f756cf 100644
 --- a/source/blender/blenkernel/intern/object.c
 +++ b/source/blender/blenkernel/intern/object.c
 @@ -66,6 +66,7 @@
@@ -133,7 +133,7 @@ index 6359c13..e48020b 100644
  
  #include "BLF_translation.h"
  
-@@ -2854,7 +2855,7 @@ bool BKE_object_parent_loop_check(const Object *par, const Object *ob)
+@@ -2844,7 +2845,7 @@ bool BKE_object_parent_loop_check(const Object *par, const Object *ob)
  /* Ideally we shouldn't have to pass the rigid body world, but need bigger restructuring to avoid id */
  void BKE_object_handle_update_ex(EvaluationContext *eval_ctx,
                                   Scene *scene, Object *ob,
@@ -142,7 +142,7 @@ index 6359c13..e48020b 100644
  {
  	if (ob->recalc & OB_RECALC_ALL) {
  		/* speed optimization for animation lookups */
-@@ -3027,8 +3028,13 @@ void BKE_object_handle_update_ex(EvaluationContext *eval_ctx,
+@@ -3022,8 +3023,13 @@ void BKE_object_handle_update_ex(EvaluationContext *eval_ctx,
  						psys_get_modifier(ob, psys)->flag &= ~eParticleSystemFlag_psys_updated;
  				}
  			}
@@ -2644,7 +2644,7 @@ index a3025a7..867e7bd 100644
  /* musgrave stype */
  #define TEX_MFRACTAL		0
 diff --git a/source/blender/makesrna/intern/rna_texture.c b/source/blender/makesrna/intern/rna_texture.c
-index 37a0ee0..84b8f33 100644
+index b0e1ed0..84a11d1 100644
 --- a/source/blender/makesrna/intern/rna_texture.c
 +++ b/source/blender/makesrna/intern/rna_texture.c
 @@ -63,6 +63,7 @@ static EnumPropertyItem texture_filter_items[] = {
@@ -5731,7 +5731,7 @@ index 0000000..89ee127
 +
 +#endif // VRSCENE_H
 diff --git a/source/blender/windowmanager/intern/wm_window.c b/source/blender/windowmanager/intern/wm_window.c
-index f2f9443..08b4709 100644
+index 6432421..bef479f 100644
 --- a/source/blender/windowmanager/intern/wm_window.c
 +++ b/source/blender/windowmanager/intern/wm_window.c
 @@ -324,12 +324,12 @@ void wm_window_title(wmWindowManager *wm, wmWindow *win)

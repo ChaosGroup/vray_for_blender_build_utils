@@ -108,129 +108,99 @@ class LinuxBuilder(Builder):
 			open(self.user_config, 'w').write(open(self.user_user_config, 'r').read())
 			return
 
-		uc = open(self.user_config, 'w')
+		build_options = {
+			'WITH_VRAY_FOR_BLENDER' : self.add_patches or self.use_github_repo,
 
-		build_options= {
-			'True': [
-				'WITH_BF_BULLET',
-				'WITH_BF_FTGL',
-				'WITH_BF_INTERNATIONAL',
-				'WITH_BF_JPEG',
-				'WITH_BF_OPENAL',
-				'WITH_BF_OPENEXR',
-				'WITH_BF_PNG',
-				'WITH_BF_RAYOPTIMIZATION',
-				'WITH_BF_SDL',
-				'WITH_BF_ZLIB',
-				'WITH_BUILDINFO',
-			],
-			'False': [
-				'WITH_BF_FMOD',
-				'WITH_BF_ICONV',
-				'WITH_BF_QUICKTIME',
-				'WITH_BF_STATICOPENGL',
-				'WITH_BF_FREESTYLE',
-				'WITH_BF_VERSE',
-			]
+			'BF_DEBUG' : self.use_debug,
+
+			'WITH_BF_FREESTYLE': False,
+			'WITH_BF_CYCLES' : self.with_cycles,
+			'WITH_BF_GAMEENGINE' : self.with_ge,
+			'WITH_BF_PLAYER'     : self.with_player,
+			'WITH_BF_COLLADA' : self.use_collada,
+
+			'WITHOUT_BF_PYTHON_INSTALL' : not self.build_release,
+
+			'WITH_BF_BULLET'          : True,
+			'WITH_BF_FTGL'            : True,
+			'WITH_BF_INTERNATIONAL'   : True,
+			'WITH_BF_JPEG'            : True,
+			'WITH_BF_OPENAL'          : True,
+			'WITH_BF_OPENEXR'         : True,
+			'WITH_BF_PNG'             : True,
+			'WITH_BF_RAYOPTIMIZATION' : True,
+			'WITH_BF_SDL'             : True,
+			'WITH_BF_ZLIB'            : True,
+			'WITH_BUILDINFO'          : True,
+
+			'WITH_BF_FMOD'         : False,
+			'WITH_BF_ICONV'        : False,
+			'WITH_BF_QUICKTIME'    : False,
+			'WITH_BF_STATICOPENGL' : False,
+			'WITH_BF_FREESTYLE'    : False,
+			'WITH_BF_VERSE'        : False,
 		}
 
 		if self.mode_developer:
-			build_options['False'].append('WITH_BF_CYCLES')
-			build_options['False'].append('WITH_BF_OIIO')
-			build_options['False'].append('WITH_BF_GAMEENGINE')
-			build_options['False'].append('WITH_BF_PLAYER')
+			build_options['WITH_BF_CYCLES'] = False
+			build_options['WITH_BF_OIIO'] = False
+			build_options['WITH_BF_GAMEENGINE'] = False
+			build_options['WITH_BF_PLAYER'] = False
 
-		else:
-			if self.with_ge:
-				build_options['True'].append('WITH_BF_GAMEENGINE')
-			else:
-				build_options['False'].append('WITH_BF_GAMEENGINE')
-
-			if self.with_player:
-				build_options['True'].append('WITH_BF_PLAYER')
-			else:
-				build_options['False'].append('WITH_BF_PLAYER')
-
-			if not self.with_cycles:
-				build_options['False'].append('WITH_BF_CYCLES')
-				build_options['False'].append('WITH_BF_OIIO')
-			else:
-				if self.with_cuda:
-					build_options['True'].append('WITH_BF_CYCLES_CUDA_BINARIES')
-					uc.write("BF_CYCLES_CUDA_BINARIES_ARCH = [%s]\n" % (','.join([ '"%s"'%(a) for a in self.cuda_gpu.split(',')])))
-
-		if self.use_collada:
-			build_options['True'].append('WITH_BF_COLLADA')
-		else:
-			build_options['False'].append('WITH_BF_COLLADA')
-
-		if self.use_debug:
-			build_options['True'].append('BF_DEBUG')
-
-		uc.write("BF_INSTALLDIR = '%s'\n" % (self.dir_install_path))
-		uc.write("BF_BUILDDIR = '/tmp/builder_%s'\n" % (self.build_arch))
-		uc.write("BF_NUMJOBS = %i\n" % (self.build_threads))
-		uc.write("\n")
-
-		uc.write("WITH_BF_STATIC3DMOUSE = True\n")
-		uc.write("\n")
-
-		uc.write("WITH_BF_STATICPYTHON = True\n")
-		uc.write("BF_PYTHON = '/opt/python-3.3'\n")
-		uc.write("BF_PYTHON_ABI_FLAGS = 'm'\n")
-		uc.write("\n")
-
-		uc.write("WITH_BF_STATICFFMPEG = True\n")
-		uc.write("BF_FFMPEG = '/opt/ffmpeg'\n")
-		uc.write("BF_FFMPEG_LIBPATH='${BF_FFMPEG}/lib'\n")
-		uc.write("BF_FFMPEG_LIB_STATIC = '${BF_FFMPEG_LIBPATH}/libavformat.a ${BF_FFMPEG_LIBPATH}/libavcodec.a ${BF_FFMPEG_LIBPATH}/libswscale.a ${BF_FFMPEG_LIBPATH}/libavutil.a ${BF_FFMPEG_LIBPATH}/libavdevice.a /usr/lib/x86_64-linux-gnu/libx264.a /usr/lib/x86_64-linux-gnu/libtheora.a'\n")
-		uc.write("\n")
-
-		uc.write("WITH_BF_OIIO = True\n")
-		uc.write("WITH_BF_STATICOIIO = True\n")
-		uc.write("BF_OIIO = '/opt/oiio'\n")
-		uc.write("BF_OIIO_INC = '${BF_OIIO}/include'\n")
-		uc.write("BF_OIIO_LIB = 'OpenImageIO'\n")
-		uc.write("BF_OIIO_LIB_STATIC = '${BF_OIIO_LIBPATH}/libOpenImageIO.a ${BF_OPENEXR}/lib/libIlmImf.a ${BF_JPEG}/lib/libjpeg.a'\n")
-		uc.write("BF_OIIO_LIBPATH = '${BF_OIIO}/lib'\n")
-		uc.write("\n")
-
-		uc.write("WITH_BF_OCIO = True\n")
-		uc.write("WITH_BF_STATICOCIO = True\n")
-		uc.write("BF_OCIO = '/opt/ocio'\n")
-		uc.write("BF_OCIO_INC = '${BF_OCIO}/include'\n")
-		uc.write("BF_OCIO_LIB_STATIC = '${BF_OCIO_LIBPATH}/libOpenColorIO.a ${BF_OCIO_LIBPATH}/libtinyxml.a ${BF_OCIO_LIBPATH}/libyaml-cpp.a'\n")
-		uc.write("BF_OCIO_LIBPATH = '${BF_OCIO}/lib'\n")
-		uc.write("\n")
-		
-		uc.write("WITH_BF_STATICOPENEXR = True\n")
-		uc.write("BF_OPENEXR = '/opt/openexr'\n")
-		uc.write("BF_OPENEXR_INC = '${BF_OPENEXR}/include/OpenEXR'\n")
-		uc.write("BF_OPENEXR_LIB_STATIC = '${BF_OPENEXR}/lib/libHalf.a ${BF_OPENEXR}/lib/libIlmImf-2_1.a ${BF_OPENEXR}/lib/libIex-2_1.a ${BF_OPENEXR}/lib/libImath-2_1.a ${BF_OPENEXR}/lib/libIlmThread-2_1.a'\n")
-		uc.write("\n")
-
-		uc.write("WITH_BF_BOOST = True\n")
-		uc.write("WITH_BF_STATICBOOST = True\n")
-		uc.write("BF_BOOST = '/opt/boost'\n")
-		uc.write("BF_BOOST_INC = '/opt/boost/include'\n")
-		uc.write("BF_BOOST_LIBPATH = '/opt/boost/lib'\n")
-		uc.write("BF_BOOST_LIB_STATIC = '${BF_BOOST_LIBPATH}/libboost_regex.a ${BF_BOOST_LIBPATH}/libboost_date_time.a ${BF_BOOST_LIBPATH}/libboost_filesystem.a ${BF_BOOST_LIBPATH}/libboost_thread.a ${BF_BOOST_LIBPATH}/libboost_locale.a ${BF_BOOST_LIBPATH}/libboost_system.a'\n")
-		uc.write("\n")
-
-		# Write boolean options
-		for key in build_options:
-			for opt in build_options[key]:
-				uc.write("%s = %s\n" % (opt, key))
-		uc.write("\n")
-
-		if self.add_patches or self.use_github_repo:
-			uc.write("WITH_VRAY_FOR_BLENDER = True\n")
-
-		if not self.build_release:
-			uc.write("WITHOUT_BF_PYTHON_INSTALL = True\n")
+		with open(self.user_config, 'w') as uc:
+			uc.write("BF_INSTALLDIR = '%s'\n" % (self.dir_install_path))
+			uc.write("BF_BUILDDIR = '/tmp/builder_%s'\n" % (self.build_arch))
+			uc.write("BF_NUMJOBS = %i\n" % (self.build_threads))
 			uc.write("\n")
 
-		uc.close()
+			uc.write("WITH_BF_STATIC3DMOUSE = True\n")
+			uc.write("\n")
+
+			uc.write("WITH_BF_STATICPYTHON = True\n")
+			uc.write("BF_PYTHON = '/opt/python-3.3'\n")
+			uc.write("BF_PYTHON_ABI_FLAGS = 'm'\n")
+			uc.write("\n")
+
+			uc.write("WITH_BF_STATICFFMPEG = True\n")
+			uc.write("BF_FFMPEG = '/opt/ffmpeg'\n")
+			uc.write("BF_FFMPEG_LIBPATH='${BF_FFMPEG}/lib'\n")
+			uc.write("BF_FFMPEG_LIB_STATIC = '${BF_FFMPEG_LIBPATH}/libavformat.a ${BF_FFMPEG_LIBPATH}/libavcodec.a ${BF_FFMPEG_LIBPATH}/libswscale.a ${BF_FFMPEG_LIBPATH}/libavutil.a ${BF_FFMPEG_LIBPATH}/libavdevice.a /usr/lib/x86_64-linux-gnu/libx264.a /usr/lib/x86_64-linux-gnu/libtheora.a'\n")
+			uc.write("\n")
+
+			uc.write("WITH_BF_OIIO = True\n")
+			uc.write("WITH_BF_STATICOIIO = True\n")
+			uc.write("BF_OIIO = '/opt/oiio'\n")
+			uc.write("BF_OIIO_INC = '${BF_OIIO}/include'\n")
+			uc.write("BF_OIIO_LIB = 'OpenImageIO'\n")
+			uc.write("BF_OIIO_LIB_STATIC = '${BF_OIIO_LIBPATH}/libOpenImageIO.a ${BF_OPENEXR}/lib/libIlmImf.a ${BF_JPEG}/lib/libjpeg.a'\n")
+			uc.write("BF_OIIO_LIBPATH = '${BF_OIIO}/lib'\n")
+			uc.write("\n")
+
+			uc.write("WITH_BF_OCIO = True\n")
+			uc.write("WITH_BF_STATICOCIO = True\n")
+			uc.write("BF_OCIO = '/opt/ocio'\n")
+			uc.write("BF_OCIO_INC = '${BF_OCIO}/include'\n")
+			uc.write("BF_OCIO_LIB_STATIC = '${BF_OCIO_LIBPATH}/libOpenColorIO.a ${BF_OCIO_LIBPATH}/libtinyxml.a ${BF_OCIO_LIBPATH}/libyaml-cpp.a'\n")
+			uc.write("BF_OCIO_LIBPATH = '${BF_OCIO}/lib'\n")
+			uc.write("\n")
+			
+			uc.write("WITH_BF_STATICOPENEXR = True\n")
+			uc.write("BF_OPENEXR = '/opt/openexr'\n")
+			uc.write("BF_OPENEXR_INC = '${BF_OPENEXR}/include/OpenEXR'\n")
+			uc.write("BF_OPENEXR_LIB_STATIC = '${BF_OPENEXR}/lib/libHalf.a ${BF_OPENEXR}/lib/libIlmImf-2_1.a ${BF_OPENEXR}/lib/libIex-2_1.a ${BF_OPENEXR}/lib/libImath-2_1.a ${BF_OPENEXR}/lib/libIlmThread-2_1.a'\n")
+			uc.write("\n")
+
+			uc.write("WITH_BF_BOOST = True\n")
+			uc.write("WITH_BF_STATICBOOST = True\n")
+			uc.write("BF_BOOST = '/opt/boost'\n")
+			uc.write("BF_BOOST_INC = '/opt/boost/include'\n")
+			uc.write("BF_BOOST_LIBPATH = '/opt/boost/lib'\n")
+			uc.write("BF_BOOST_LIB_STATIC = '${BF_BOOST_LIBPATH}/libboost_regex.a ${BF_BOOST_LIBPATH}/libboost_date_time.a ${BF_BOOST_LIBPATH}/libboost_filesystem.a ${BF_BOOST_LIBPATH}/libboost_thread.a ${BF_BOOST_LIBPATH}/libboost_locale.a ${BF_BOOST_LIBPATH}/libboost_system.a'\n")
+			uc.write("\n")
+
+			# Write boolean options
+			for key in build_options:
+				uc.write("%s = %s\n" % (key, build_options[key]))
 
 
 	def package(self):

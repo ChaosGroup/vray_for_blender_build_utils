@@ -2392,13 +2392,7 @@ install_RPM() {
   if $FFMPEG_SKIP; then
     WARNING "Skipping FFMpeg installation, as requested..."
   else
-    check_package_version_ge_RPM ffmpeg $FFMPEG_VERSION_MIN
-    if [ $? -eq 0 ]; then
-      install_packages_RPM ffmpeg ffmpeg-devel
-      clean_FFmpeg
-    else
-      compile_FFmpeg
-    fi
+    compile_FFmpeg
   fi
 }
 

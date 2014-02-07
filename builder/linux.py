@@ -72,13 +72,19 @@ class LinuxBuilder(Builder):
 			cmd = "sudo -E %s/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source, "vb25-patch"), utils.path_join(self.dir_source, "blender-deps"))
 
 			if self.with_osl:
-				cmd += "  --with-osl"
+				cmd += " --with-llvm"
+				cmd += " --with-osl"
+			else:
+				cmd += " --skip-llvm"
+				cmd += " --skip-osl"
+
+			if self.use_collada:
+				cmd += " --with-opencollada"
+			else:
+				cmd += " --skip-opencollada"
 
 			if self.build_release:
-				cmd += "  --all-static"
-
-			# if self.build_release:
-			# 	cmd += " --force-all"
+				cmd += " --all-static"
 
 			if self.mode_test:
 				print cmd

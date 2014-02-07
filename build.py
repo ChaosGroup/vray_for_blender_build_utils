@@ -78,6 +78,7 @@ if host_os == build_system.utils.LNX:
 	parser.add_option('', '--desktop',        action='store_true', dest='desktop',        default=False,  help="Generate .desktop file.")
 
 # Script options
+parser.add_option('', '--clean',     action='store_true', dest='build_clean', default=False, help="Clear build directory before building")
 parser.add_option('', '--debug',     action='store_true', dest='mode_debug', default=False, help="Script debug output.")
 parser.add_option('', '--test',      action='store_true', dest='mode_test',  default=False, help="Test mode.")
 parser.add_option('', '--developer', action='store_true', dest='mode_devel', default=False, help=optparse.SUPPRESS_HELP) # Special mode used only by me =)
@@ -138,6 +139,8 @@ params['with_player']    = options.player
 params['with_ge']        = options.game
 
 params['exporter_cpp']   = options.exporter_cpp
+
+params['build_clean'] = options.build_clean
 
 if host_os == build_system.utils.LNX:
 	params['generate_docs']  = options.docs

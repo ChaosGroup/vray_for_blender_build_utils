@@ -142,6 +142,7 @@ class Builder:
 	use_github_repo     = None
 	use_github_branch   = None
 	use_exp_branch      = None
+	to_addons           = None
 
 	def __init__(self, params):
 		if not params:
@@ -484,36 +485,53 @@ class Builder:
 
 	def exporter(self):
 		"""
-		  Add exporting script
+		  Add script and modules
 		"""
-		sys.stdout.write("Adding exporter...\n")
-
-		scripts_path  = utils.path_join(self.dir_install, self.dir_install_name, self.version, "scripts", "startup")
-		exporter_path = utils.path_join(scripts_path, "vb25")
-
-		sys.stdout.write("  in: %s\n" % (scripts_path))
-
+		scriptsPath = utils.path_join(self.dir_install, self.dir_install_name, self.version, "scripts")
 		if self.host_os == utils.MAC:
-			scripts_path = utils.path_join(self.dir_install, self.dir_install_name, "blender.app", "Contents", "MacOS", self.version, "scripts", "startup")
+			scriptsPath = utils.path_join(self.dir_install, self.dir_install_name, "blender.app", "Contents", "MacOS", self.version, "scripts")
+
+		modulesPath = utils.path_join(scriptsPath, "modules")
+		addonsPath  = utils.path_join(scriptsPath, "addons")
+		startupPath = utils.path_join(scriptsPath, "startup")
+
+		clonePath = addonsPath if self.to_addons else startupPath
+
+		sys.stdout.write("Adding exporter...\n")
+		sys.stdout.write("  in: %s\n" % clonePath)
 
 		if not self.mode_test:
-			if not os.path.exists(scripts_path):
-				sys.stderr.write("Build failed! Can't add exporter!\n")
+			if not (os.path.exists(clonePath) or os.path.exists(modulesPath)):
+				sys.stderr.write("Something went wrong! Can't add Python modules and exporter!\n")
 				return
 
-			# Remove old
-			if os.path.exists(exporter_path):
-				utils.remove_directory(exporter_path)
-
-			# Add new
-			os.chdir(scripts_path)
-			os.system("git clone git://github.com/bdancer/vb25.git")
+			# Clone "vb25"
+			os.chdir(clonePath)
+			exporterPath = utils.path_join(clonePath, "vb25")
+			if os.path.exists(exporterPath):
+				utils.remove_directory(exporterPath)
+			os.system("git clone https://github.com/bdancer/vb25.git")
 			if self.use_exp_branch not in {'master'}:
-				os.chdir(os.path.join(scripts_path, "vb25"))
+				os.chdir(exporterPath)
 				os.system("git remote update")
 				os.system("git checkout -b {branch} origin/{branch}".format(branch=self.use_exp_branch))
 				os.system("git submodule init")
 				os.system("git submodule update")
+
+			# If 'to_addons' clone also 'vb30' stuff
+			if self.to_addons:
+				os.chdir(modulesPath)
+				pyNodesPath = utils.path_join(modulesPath, "pynodes_framework")
+				if os.path.exists(pyNodesPath):
+					utils.remove_directory(pyNodesPath)
+				os.system("git clone https://git.gitorious.org/blender-trunk/pynodes_framework.git")
+
+				os.chdir(clonePath)
+				exporterPath = utils.path_join(clonePath, "vb30")
+				if os.path.exists(exporterPath):
+					utils.remove_directory(exporterPath)
+				os.system("git clone https://github.com/bdancer/vb30.git")
+
 
 	def package(self):
 		"""

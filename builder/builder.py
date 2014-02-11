@@ -315,7 +315,7 @@ class Builder:
 		self.version                = utils.get_blender_version(self.dir_blender_svn)
 
 		if self.build_release:
-			self.dir_install_name = "%s-%s-%s-%s-%s" % (self.project, self.commits, self.version, self.revision, self.build_arch)
+			self.dir_install_name = "%s-%s-%s-%s-%s" % (self.project, self.version, self.commits, self.revision, self.build_arch)
 		else:
 			self.dir_install_name = self.project
 

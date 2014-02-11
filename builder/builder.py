@@ -45,6 +45,7 @@ class Builder:
 	project        = "vrayblender"
 	version        = utils.VERSION
 	revision       = utils.REVISION
+	commits        = '0'
 
 	# Directories
 	dir_build      = utils.path_join(os.getcwd(), "build")
@@ -192,8 +193,9 @@ class Builder:
 		def genBuildInfo():
 			with open(os.path.join(self.dir_blender, "source", "creator", "buildinfo.h"), 'w') as f:
 				now = datetime.datetime.now()
+				gitHash, gitCnt = utils.get_svn_revision(self.dir_blender_svn)
 
-				f.write('#define BUILD_HASH "%s"\n' % utils.get_svn_revision(self.dir_blender_svn))
+				f.write('#define BUILD_HASH "%s"\n' % gitHash)
 				f.write('#define BUILD_CHANGE ""\n')
 				f.write('#define BUILD_BRANCH "dev/vray_for_blender"\n')
 				f.write('#define BUILD_DATE "%s"\n' % now.strftime("%Y-%m-%d"))
@@ -309,6 +311,8 @@ class Builder:
 
 
 	def update(self):
+		self.revision, self.commits = utils.get_svn_revision(self.dir_blender_svn)
+
 		self.revision = utils.get_svn_revision(self.dir_blender_svn)
 		self.version  = utils.get_blender_version(self.dir_blender_svn)
 

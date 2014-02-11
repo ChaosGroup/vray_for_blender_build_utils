@@ -261,20 +261,32 @@ def create_desktop_file(filepath = "/usr/share/applications/vrayblender.desktop"
 	ofile.close()
 
 
-def get_svn_revision(svn_root):
+def _get_cmd_output(cmd, workDir=None):
 	pwd = os.getcwd()
-	os.chdir(svn_root)
+	if workDir:
+		os.chdir(workDir)
 
-	git_rev = ['git', 'rev-parse', '--short', '@{u}']
-
-	if not hasattr(subprocess, "check_output"):
-		rev = subprocess.Popen(git_rev, stdout=subprocess.PIPE).communicate()[0]
+	res = "None"
+	if hasattr(subprocess, "check_output"):
+		res = subprocess.check_output(cmd)
 	else:
-		rev = subprocess.check_output(git_rev)
+		res = subprocess.Popen(cmd, stdout=subprocess.PIPE).communicate()[0]
+	res = res.strip(" \n\r\t")
 
-	os.chdir(pwd)
-	rev = rev.strip(" \n\r\t")
-	return rev
+	if workDir:
+		os.chdir(pwd)
+
+	return res
+
+
+def get_svn_revision(svn_root):
+	git_rev = ['git', 'rev-parse', '--short', '@{u}']
+	git_cnt = ['git', 'rev-list',  '--count', '@{u}']
+
+	rev = _get_cmd_output(git_rev, svn_root)
+	cnt = _get_cmd_output(git_cnt, svn_root)
+
+	return rev, cnt
 
 
 def get_blender_version(root_dir):

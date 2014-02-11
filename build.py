@@ -94,7 +94,7 @@ parser.add_option('', '--github-exp-branch',                  dest="use_exp_bran
 parser.add_option('', '--to-addons',
 	action  = 'store_true',
 	dest    = "to_addons",
-	default = "master",
+	default = False,
 	help    = "Clone exporter to 'addons' sub directory"
 )
 

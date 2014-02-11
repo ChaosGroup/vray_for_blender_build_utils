@@ -312,9 +312,7 @@ class Builder:
 
 	def update(self):
 		self.revision, self.commits = utils.get_svn_revision(self.dir_blender_svn)
-
-		self.revision = utils.get_svn_revision(self.dir_blender_svn)
-		self.version  = utils.get_blender_version(self.dir_blender_svn)
+		self.version                = utils.get_blender_version(self.dir_blender_svn)
 
 		if self.build_release:
 			self.dir_install_name = "%s-%s-%s-%s" % (self.project, self.version, self.revision, self.build_arch)

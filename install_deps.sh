@@ -924,7 +924,7 @@ compile_ILMBASE() {
     cmake_d="-D CMAKE_BUILD_TYPE=Release"
     cmake_d="$cmake_d -D CMAKE_PREFIX_PATH=$_inst"
     cmake_d="$cmake_d -D CMAKE_INSTALL_PREFIX=$_inst"
-    cmake_d="$cmake_d -D BUILD_SHARED_LIBS=ON"
+    cmake_d="$cmake_d -D BUILD_SHARED_LIBS=OFF"
 
     if file /bin/cp | grep -q '32-bit'; then
       cflags="-fPIC -m32 -march=i686"
@@ -1027,7 +1027,7 @@ compile_OPENEXR() {
     cmake_d="$cmake_d -D CMAKE_PREFIX_PATH=$_inst"
     cmake_d="$cmake_d -D CMAKE_INSTALL_PREFIX=$_inst"
     cmake_d="$cmake_d -D ILMBASE_PACKAGE_PREFIX=$_ilmbase_inst"
-    cmake_d="$cmake_d -D BUILD_SHARED_LIBS=ON"
+    cmake_d="$cmake_d -D BUILD_SHARED_LIBS=OFF"
 
     if file /bin/cp | grep -q '32-bit'; then
       cflags="-fPIC -m32 -march=i686"

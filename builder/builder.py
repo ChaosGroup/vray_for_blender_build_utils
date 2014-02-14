@@ -613,10 +613,18 @@ class Builder:
 				curl.append('--proxy')
 				curl.append(self.use_proxy)
 
-			curl.append('--user')
-			curl.append('%s:%s' % (config.get('chaosgroup.ftp', 'user'), config.get('chaosgroup.ftp', 'pass')))
+			if self.use_github_repo:
+				now = datetime.datetime.now()
+				subdir = now.strftime("%Y%m%d")
 
-			curl.append('ftp://%s/demo/%s' % (config.get('chaosgroup.ftp', 'host'), os.path.basename(filepath)))
+				curl.append('--user')
+				curl.append('%s:%s' % (config.get('nightlies.ftp', 'user'), config.get('nightlies.ftp', 'pass')))
+				curl.append('ftp://%s/%s/%s' % (config.get('nightlies.ftp', 'host'), subdir, os.path.basename(filepath)))
+
+			else:
+				curl.append('--user')
+				curl.append('%s:%s' % (config.get('chaosgroup.ftp', 'user'), config.get('chaosgroup.ftp', 'pass')))
+				curl.append('ftp://%s/demo/%s' % (config.get('chaosgroup.ftp', 'host'), os.path.basename(filepath)))
 
 			sys.stdout.write("Uploading package '%s' to '%s'...\n" % (filepath, subdir))
 			sys.stdout.write("Command: %s\n" % (' '.join(curl)))

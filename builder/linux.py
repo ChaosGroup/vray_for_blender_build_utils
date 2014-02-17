@@ -151,7 +151,7 @@ class LinuxBuilder(Builder):
 			uc.write("BF_OIIO = '/opt/oiio'\n")
 			uc.write("BF_OIIO_INC = '${BF_OIIO}/include'\n")
 			uc.write("BF_OIIO_LIB = 'OpenImageIO'\n")
-			uc.write("BF_OIIO_LIB_STATIC = '${BF_OIIO_LIBPATH}/libOpenImageIO.a ${BF_JPEG}/lib/libjpeg.a'\n")
+			uc.write("BF_OIIO_LIB_STATIC = '${BF_OIIO_LIBPATH}/libOpenImageIO.a /usr/lib/x86_64-linux-gnu/libjpeg.a'\n")
 			uc.write("BF_OIIO_LIBPATH = '${BF_OIIO}/lib'\n")
 			uc.write("\n")
 

@@ -191,7 +191,7 @@ class LinuxBuilder(Builder):
 			utils.path_create(release_path)
 
 		# Example: vrayblender-2.60-42181-Calculate-11.9-x86_64.tar.bz2
-		archive_name = "%s-%s-%s-%s-%s-%s-%s.tar.bz2" % (self.project, self.version, self.commits, self.revision, self.host_linux['short_name'], self.host_linux['version'], self.build_arch)
+		archive_name = "%s-%s-%s-%s-%s-%s-%s-%s.tar.bz2" % (self.project, self.status, self.version, self.commits, self.revision, self.host_linux['short_name'], self.host_linux['version'], self.build_arch)
 		archive_path = utils.path_join(release_path, archive_name)
 
 		sys.stdout.write("Generating archive: %s\n" % (archive_name))

@@ -144,6 +144,7 @@ class Builder:
 	use_github_branch   = None
 	use_exp_branch      = None
 	to_addons           = None
+	status              = None
 
 	def __init__(self, params):
 		if not params:
@@ -164,6 +165,10 @@ class Builder:
 
 		if not (self.add_patches or self.use_github_repo):
 			self.project = "blender"
+
+		self.status = 'stable'
+		if self.use_github_repo:
+			self.status = 'dev'
 
 
 	def info(self):
@@ -315,7 +320,7 @@ class Builder:
 		self.version                = utils.get_blender_version(self.dir_blender_svn)
 
 		if self.build_release:
-			self.dir_install_name = "%s-%s-%s-%s-%s" % (self.project, self.version, self.commits, self.revision, self.build_arch)
+			self.dir_install_name = "%s-%s-%s-%s-%s-%s" % (self.project, self.status, self.version, self.commits, self.revision, self.build_arch)
 		else:
 			self.dir_install_name = self.project
 

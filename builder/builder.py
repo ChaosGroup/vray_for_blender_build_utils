@@ -384,13 +384,13 @@ class Builder:
 
 			datafiles_path = utils.path_join(blender_dir, "release", "datafiles")
 
-			# Change splash
-			splash_filename = "splash.png"
-			splash_path_src = utils.path_join(patch_dir, "datafiles", splash_filename)
-			splash_path_dst = utils.path_join(datafiles_path, splash_filename)
-
 			if not self.mode_test:
-				shutil.copyfile(splash_path_src, splash_path_dst)
+				# Change splash
+				for splash_filename in ["splash.png", "splash_2x.png"]:
+					splash_path_src = utils.path_join(patch_dir, "datafiles", splash_filename)
+					splash_path_dst = utils.path_join(datafiles_path, splash_filename)
+
+					shutil.copyfile(splash_path_src, splash_path_dst)
 
 				# Change icons
 				for subdir in ["blender_icons16", "blender_icons32"]:

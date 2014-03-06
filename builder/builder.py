@@ -517,13 +517,17 @@ class Builder:
 			exporterPath = utils.path_join(clonePath, "vb25")
 			if os.path.exists(exporterPath):
 				utils.remove_directory(exporterPath)
+
 			os.system("git clone https://github.com/bdancer/vb25.git")
+
 			if self.use_exp_branch not in {'master'}:
 				os.chdir(exporterPath)
 				os.system("git remote update")
 				os.system("git checkout -b {branch} origin/{branch}".format(branch=self.use_exp_branch))
-				os.system("git submodule init")
-				os.system("git submodule update")
+
+			os.system("git submodule update --init --recursive")
+			os.system("git submodule foreach git checkout master")
+			os.system("git submodule foreach git pull --rebase origin master")
 
 			# If 'to_addons' clone also 'vb30' stuff
 			if self.to_addons:

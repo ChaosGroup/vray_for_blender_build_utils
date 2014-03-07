@@ -542,6 +542,9 @@ class Builder:
 				if os.path.exists(exporterPath):
 					utils.remove_directory(exporterPath)
 				os.system("git clone https://github.com/bdancer/vb30.git")
+				os.system("git submodule update --init --recursive")
+				os.system("git submodule foreach git checkout master")
+				os.system("git submodule foreach git pull --rebase origin master")
 
 
 	def package(self):

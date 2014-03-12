@@ -1,18 +1,18 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 7ebc20f..8e417c0 100644
+index dc5fef8..2e7c180 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -275,6 +275,9 @@ set(CYCLES_CUDA_BINARIES_ARCH sm_20 sm_21 sm_30 sm_35 CACHE STRING "CUDA archite
+@@ -279,6 +279,9 @@ set(CYCLES_CUDA_BINARIES_ARCH sm_20 sm_21 sm_30 sm_35 CACHE STRING "CUDA archite
  mark_as_advanced(CYCLES_CUDA_BINARIES_ARCH)
  unset(PLATFORM_DEFAULT)
  
 +# V-Ray For Blender
-+option(WITH_VRAY_FOR_BLENDER		"Enable V-Ray For Blender extentions" OFF)
++option(WITH_VRAY_FOR_BLENDER		"Enable V-Ray For Blender extentions" ON)
 +
  # LLVM
  option(WITH_LLVM					"Use LLVM" OFF)
  option(LLVM_STATIC					"Link with LLVM static libraries" ON)
-@@ -509,6 +512,12 @@ if(WITH_BOOL_COMPAT)
+@@ -513,6 +516,12 @@ if(WITH_BOOL_COMPAT)
  	add_definitions(-DWITH_BOOL_COMPAT)
  endif()
  
@@ -25,7 +25,7 @@ index 7ebc20f..8e417c0 100644
  #-----------------------------------------------------------------------------
  # Check for valid directories
  # ... a partial checkout may cause this.
-@@ -2324,6 +2333,7 @@ if(FIRST_RUN)
+@@ -2411,6 +2420,7 @@ if(FIRST_RUN)
  	info_cfg_option(WITH_INPUT_NDOF)
  	info_cfg_option(WITH_CYCLES)
  	info_cfg_option(WITH_FREESTYLE)
@@ -34,7 +34,7 @@ index 7ebc20f..8e417c0 100644
  
  	info_cfg_text("Compiler Options:")
 diff --git a/SConstruct b/SConstruct
-index b0c7750..c0847c0 100644
+index dde9d66..1a9123c 100644
 --- a/SConstruct
 +++ b/SConstruct
 @@ -260,6 +260,7 @@ if 'blenderlite' in B.targets:
@@ -46,7 +46,7 @@ index b0c7750..c0847c0 100644
      # Merge blenderlite, let command line to override
      for k,v in target_env_defs.iteritems():
 diff --git a/build_files/scons/tools/Blender.py b/build_files/scons/tools/Blender.py
-index ac001b5..a8f98b3 100644
+index 4ceadc7..b435ab2 100644
 --- a/build_files/scons/tools/Blender.py
 +++ b/build_files/scons/tools/Blender.py
 @@ -391,6 +391,9 @@ def creator(env):
@@ -60,10 +60,10 @@ index ac001b5..a8f98b3 100644
          incs.append(env['BF_PTHREADS_INC'])
          incs.append('#/intern/utfconv')
 diff --git a/build_files/scons/tools/btools.py b/build_files/scons/tools/btools.py
-index 744896c..8dd8908 100644
+index 3450f29..201c95a 100644
 --- a/build_files/scons/tools/btools.py
 +++ b/build_files/scons/tools/btools.py
-@@ -132,6 +132,8 @@ def validate_arguments(args, bc):
+@@ -133,6 +133,8 @@ def validate_arguments(args, bc):
              'WITH_X11_XINPUT',
              'WITH_X11_XF86VMODE',
              'BF_GHOST_DEBUG',
@@ -72,7 +72,7 @@ index 744896c..8dd8908 100644
              'BF_FANCY', 'BF_QUIET', 'BF_LINE_OVERWRITE',
              'BF_X264_CONFIG',
              'BF_XVIDCORE_CONFIG',
-@@ -562,6 +564,8 @@ def read_opts(env, cfg, args):
+@@ -564,6 +566,8 @@ def read_opts(env, cfg, args):
          ('BF_CYCLES_CUDA_ENV', 'preset environement nvcc will execute in', ''),
          ('BF_CYCLES_CUDA_BINARIES_ARCH', 'CUDA architectures to compile binaries for', []),
  
@@ -81,9 +81,6 @@ index 744896c..8dd8908 100644
          (BoolVariable('WITH_BF_OIIO', 'Build with OpenImageIO', False)),
          (BoolVariable('WITH_BF_STATICOIIO', 'Statically link to OpenImageIO', False)),
          ('BF_OIIO', 'OIIO root path', ''),
-diff --git a/release/datafiles/splash.png b/release/datafiles/splash.png
-index ad0028e..3e0f53d 100644
-Binary files a/release/datafiles/splash.png and b/release/datafiles/splash.png differ
 diff --git a/source/blender/CMakeLists.txt b/source/blender/CMakeLists.txt
 index 0d30952..eed7953 100644
 --- a/source/blender/CMakeLists.txt
@@ -122,7 +119,7 @@ index 72c4c21..80fcaf7 100644
  
  int BKE_object_obdata_texspace_get(struct Object *ob, short **r_texflag, float **r_loc, float **r_size, float **r_rot);
 diff --git a/source/blender/blenkernel/intern/object.c b/source/blender/blenkernel/intern/object.c
-index 05365a8..5f756cf 100644
+index 43dbc34..1f65601 100644
 --- a/source/blender/blenkernel/intern/object.c
 +++ b/source/blender/blenkernel/intern/object.c
 @@ -66,6 +66,7 @@
@@ -133,7 +130,7 @@ index 05365a8..5f756cf 100644
  
  #include "BLF_translation.h"
  
-@@ -2844,7 +2845,7 @@ bool BKE_object_parent_loop_check(const Object *par, const Object *ob)
+@@ -2838,7 +2839,7 @@ bool BKE_object_parent_loop_check(const Object *par, const Object *ob)
  /* Ideally we shouldn't have to pass the rigid body world, but need bigger restructuring to avoid id */
  void BKE_object_handle_update_ex(EvaluationContext *eval_ctx,
                                   Scene *scene, Object *ob,
@@ -142,7 +139,7 @@ index 05365a8..5f756cf 100644
  {
  	if (ob->recalc & OB_RECALC_ALL) {
  		/* speed optimization for animation lookups */
-@@ -3022,8 +3023,13 @@ void BKE_object_handle_update_ex(EvaluationContext *eval_ctx,
+@@ -3016,8 +3017,13 @@ void BKE_object_handle_update_ex(EvaluationContext *eval_ctx,
  						psys_get_modifier(ob, psys)->flag &= ~eParticleSystemFlag_psys_updated;
  				}
  			}
@@ -171,7 +168,7 @@ index 8d5ea91..95f41f5 100644
  	BLI_CB_EVT_GAME_POST,
  	BLI_CB_EVT_TOT
 diff --git a/source/blender/editors/include/UI_icons.h b/source/blender/editors/include/UI_icons.h
-index dcc526b..253c962 100644
+index 4e15f3e..ab95bf6 100644
 --- a/source/blender/editors/include/UI_icons.h
 +++ b/source/blender/editors/include/UI_icons.h
 @@ -273,15 +273,16 @@ DEF_ICON(GROUP_UVS)
@@ -2644,7 +2641,7 @@ index a3025a7..867e7bd 100644
  /* musgrave stype */
  #define TEX_MFRACTAL		0
 diff --git a/source/blender/makesrna/intern/rna_texture.c b/source/blender/makesrna/intern/rna_texture.c
-index b0e1ed0..84a11d1 100644
+index 0d327d6..762895f 100644
 --- a/source/blender/makesrna/intern/rna_texture.c
 +++ b/source/blender/makesrna/intern/rna_texture.c
 @@ -63,6 +63,7 @@ static EnumPropertyItem texture_filter_items[] = {
@@ -2731,7 +2728,7 @@ index f8725d6..faf1b27 100644
  	/* sets the permanent tag */
  #   define APP_CB_OTHER_FIELDS 1
 diff --git a/source/blender/python/intern/bpy_interface.c b/source/blender/python/intern/bpy_interface.c
-index aafb5e3..06983f7 100644
+index 93bced3..59004e2 100644
 --- a/source/blender/python/intern/bpy_interface.c
 +++ b/source/blender/python/intern/bpy_interface.c
 @@ -80,6 +80,10 @@
@@ -5731,7 +5728,7 @@ index 0000000..89ee127
 +
 +#endif // VRSCENE_H
 diff --git a/source/blender/windowmanager/intern/wm_window.c b/source/blender/windowmanager/intern/wm_window.c
-index 6432421..bef479f 100644
+index 6a2ef47..5bcd96b 100644
 --- a/source/blender/windowmanager/intern/wm_window.c
 +++ b/source/blender/windowmanager/intern/wm_window.c
 @@ -324,12 +324,12 @@ void wm_window_title(wmWindowManager *wm, wmWindow *win)
@@ -5751,10 +5748,10 @@ index 6432421..bef479f 100644
  		/* Informs GHOST of unsaved changes, to set window modified visual indicator (MAC OS X)
  		 * and to give hint of unsaved changes for a user warning mechanism
 diff --git a/source/creator/CMakeLists.txt b/source/creator/CMakeLists.txt
-index 2a355bd..e1562fa 100644
+index b8c97f8..a06026e 100644
 --- a/source/creator/CMakeLists.txt
 +++ b/source/creator/CMakeLists.txt
-@@ -1072,6 +1072,11 @@ endif()
+@@ -1116,6 +1116,11 @@ endif()
  		list_insert_after(BLENDER_SORTED_LIBS "ge_logic_ngnetwork" "extern_bullet")
  	endif()
  

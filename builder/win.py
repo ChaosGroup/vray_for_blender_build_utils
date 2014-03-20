@@ -193,11 +193,16 @@ class WindowsBuilder(Builder):
 
 		uninstaller_files.reverse()
 
-		nsis = nsis.replace('{INSTALLER_FILES}', installer_files)
-		nsis = nsis.replace('{UNINSTALLER_FILES}', ''.join(uninstaller_files))
-		nsis = nsis.replace('{SIZE}', str(director_size / 1024))
-
 		installer_dir = utils.path_join(self.dir_source, "vb25-patch", "installer")
+
+		if installer_log:
+			uninstall_stuff = open(utils.path_join(installer_dir, 'uninstall_log.tmpl'), 'r').read()
+		else:
+			uninstall_stuff = ''.join(uninstaller_files)
+
+		nsis = nsis.replace('{INSTALLER_FILES}', installer_files)
+		nsis = nsis.replace('{UNINSTALLER_FILES}', uninstall_stuff)
+		nsis = nsis.replace('{SIZE}', str(director_size / 1024))
 
 		template = utils.path_join(installer_dir, "installer.nsi")
 

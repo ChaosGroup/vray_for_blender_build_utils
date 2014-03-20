@@ -1,9 +1,8 @@
 ;  V-Ray/Blender Installer Template
 ;
-;  http://vray.cgdo.ru
+;  http://chaosgroup.com
 ;
-;  Author: Andrey M. Izrantsev (aka bdancer)
-;  E-Mail: izrantsev@cgdo.ru
+;  Author: Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>
 ;
 ;  This program is free software; you can redistribute it and/or
 ;  modify it under the terms of the GNU General Public License
@@ -28,7 +27,7 @@
 
 OutFile "{INSTALLER_OUTFILE}"
 
-Name "V-Ray/Blender {VERSION} [Rev. {REVISION}]"
+Name "V-Ray For Blender {VERSION} [Rev. {REVISION}]"
 
 RequestExecutionLevel admin
 
@@ -58,7 +57,7 @@ RequestExecutionLevel admin
 
 !insertmacro MUI_LANGUAGE "English"
 
-BrandingText "V-Ray/Blender {VERSION} | http://vray.cgdo.ru/"
+BrandingText "V-Ray For Blender {VERSION} | http://www.chaosgroup.com/"
 
 InstallDir "$PROGRAMFILES{IF64}\VRayBlender-{VERSION}"
 
@@ -77,11 +76,11 @@ Section "Uninstaller" VBUNINST
 	
 	StrCpy $VB_UNINST "Software\Microsoft\Windows\CurrentVersion\Uninstall\VRayBlender"
 	
-	WriteRegStr   HKLM $VB_UNINST "DisplayName"     "V-Ray/Blender"
+	WriteRegStr   HKLM $VB_UNINST "DisplayName"     "V-Ray For Blender"
 	WriteRegStr   HKLM $VB_UNINST "UninstallString" "$\"$INSTDIR\uninstaller.exe$\""
-	WriteRegStr   HKLM $VB_UNINST "Publisher"       "Andrey M. Izrantsev"
-	WriteRegStr   HKLM $VB_UNINST "URLInfoAbout"    "http://vray.cgdo.ru/"
-	WriteRegStr   HKLM $VB_UNINST "HelpLink"        "http://vray.cgdo.ru/"
+	WriteRegStr   HKLM $VB_UNINST "Publisher"       "Andrei Izrantcev"
+	WriteRegStr   HKLM $VB_UNINST "URLInfoAbout"    "http://www.chaosgroup.com/"
+	WriteRegStr   HKLM $VB_UNINST "HelpLink"        "http://www.chaosgroup.com/"
 	WriteRegDWORD HKLM $VB_UNINST "NoModify"  1
 	WriteRegDWORD HKLM $VB_UNINST "NoRepair " 1
 	
@@ -102,7 +101,7 @@ Section "Add Start Menu Shortcuts" VBSTART
 	${CreateDirectory} "$SMPROGRAMS\VRayBlender {VERSION}\"
 
 	; Blender
-	${CreateShortCut}  "$SMPROGRAMS\VRayBlender {VERSION}\VRayBlender.lnk" "$INSTDIR\blender.exe" "" "$INSTDIR\blender.exe" 0
+	${CreateShortCut}  "$SMPROGRAMS\VRayBlender {VERSION}\VRayForBlender.lnk" "$INSTDIR\blender.exe" "" "$INSTDIR\blender.exe" 0
 	
 	; Uninstaller
 	${CreateShortCut}  "$SMPROGRAMS\VRayBlender {VERSION}\Uninstall.lnk" "$INSTDIR\uninstaller.exe" "" "$INSTDIR\uninstaller.exe" 0
@@ -113,54 +112,7 @@ SectionEnd
 
 
 Section "Uninstall"
-  ;Can't uninstall if uninstall log is missing!
-  IfFileExists "$INSTDIR\${UninstLog}" +3
-    MessageBox MB_OK|MB_ICONSTOP "$(UninstLogMissing)"
-      Abort
- 
-  Push $R0
-  Push $R1
-  Push $R2
-  SetFileAttributes "$INSTDIR\${UninstLog}" NORMAL
-  FileOpen $UninstLog "$INSTDIR\${UninstLog}" r
-  StrCpy $R1 -1
- 
-  GetLineCount:
-    ClearErrors
-    FileRead $UninstLog $R0
-    IntOp $R1 $R1 + 1
-    StrCpy $R0 $R0 -2
-    Push $R0   
-    IfErrors 0 GetLineCount
- 
-  Pop $R0
- 
-  LoopRead:
-    StrCmp $R1 0 LoopDone
-    Pop $R0
- 
-    IfFileExists "$R0\*.*" 0 +3
-      RMDir $R0  #is dir
-    Goto +9
-    IfFileExists $R0 0 +3
-      Delete $R0 #is file
-    Goto +6
-    StrCmp $R0 "${REG_ROOT} ${REG_APP_PATH}" 0 +3
-      DeleteRegKey ${REG_ROOT} "${REG_APP_PATH}" #is Reg Element
-    Goto +3
-    StrCmp $R0 "${REG_ROOT} ${UNINSTALL_PATH}" 0 +2
-      DeleteRegKey ${REG_ROOT} "${UNINSTALL_PATH}" #is Reg Element
- 
-    IntOp $R1 $R1 - 1
-    Goto LoopRead
-  LoopDone:
-  FileClose $UninstLog
-  Delete "$INSTDIR\${UninstLog}"
-  Pop $R2
-  Pop $R1
-  Pop $R0
- 
-  ; Remove registry keys
-  ;DeleteRegKey ${REG_ROOT} "${REG_APP_PATH}"
-  ;DeleteRegKey ${REG_ROOT} "${UNINSTALL_PATH}"
+{UNINSTALLER_FILES}
+RMDir "$INSTDIR/uninstaller.exe"
+RMDir "$INSTDIR"
 SectionEnd

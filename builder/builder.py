@@ -641,9 +641,9 @@ class Builder:
 					f.write('\n')
 
 				cmd = ['winscp']
-				cmd.append('/console')
 				cmd.append('/passive')
 				cmd.append('/script="%s"' % winscpScriptFilepath)
+				os.system(' '.join(cmd))
 
 			else:
 				cmd = [utils.find_command("curl")]
@@ -656,8 +656,8 @@ class Builder:
 				cmd.append('%s:%s' % (config.get('chaosgroup.ftp', 'user'), config.get('chaosgroup.ftp', 'pass')))
 				cmd.append('ftp://%s/demo/%s' % (config.get('chaosgroup.ftp', 'host'), os.path.basename(filepath)))
 
-			sys.stdout.write("Uploading package '%s' to '%s'...\n" % (filepath, subdir))
-			sys.stdout.write("Command: %s\n" % (' '.join(cmd)))
-			if not self.mode_test:
-				subprocess.call(cmd)
+				sys.stdout.write("Uploading package '%s' to '/%s/'...\n" % (filepath, subdir))
+				sys.stdout.write("Command: %s\n" % (' '.join(cmd)))
+				if not self.mode_test:
+					subprocess.call(cmd)
 

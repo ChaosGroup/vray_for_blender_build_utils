@@ -169,6 +169,8 @@ class Builder:
 		self.status = 'stable'
 		if self.use_github_repo:
 			self.status = 'dev'
+			if self.to_addons:
+				self.status = 'vb30'
 
 
 	def info(self):
@@ -616,48 +618,28 @@ class Builder:
 			config = RawConfigParser()
 			config.read(os.path.expanduser("~/.passwd"))
 
-			cmd = None
+			now = datetime.datetime.now()
+			subdir = now.strftime("%Y%m%d")
 
-			if self.use_github_repo:
-				now = datetime.datetime.now()
-				subdir = now.strftime("%Y%m%d")
+			winscpScriptFilepath = os.path.join(tempfile.gettempdir(), "blender_for_vray_upload.txt")
 
-				winscpScriptFilepath = os.path.join(tempfile.gettempdir(), "blender_for_vray_upload.txt")
+			with open(winscpScriptFilepath, 'w') as f:
+				f.write('option batch abort\n')
+				f.write('option confirm off\n')
+				f.write('open ftp://%s:%s@%s -rawsettings ProxyMethod=%s ProxyHost=%s ProxyPort=%s\n' % (
+					config.get('nightlies.ftp', 'user'),
+					config.get('nightlies.ftp', 'pass'),
+					config.get('nightlies.ftp', 'host'),
+					config.get('nightlies.ftp', 'proxy_type'),
+					config.get('nightlies.ftp', 'proxy_host'),
+					config.get('nightlies.ftp', 'proxy_port'),
+				))
+				f.write('option transfer binary\n')
+				f.write('put %s /%s/\n' % (filepath, subdir))
+				f.write('exit\n')
+				f.write('\n')
 
-				with open(winscpScriptFilepath, 'w') as f:
-					f.write('option batch abort\n')
-					f.write('option confirm off\n')
-					f.write('open ftp://%s:%s@%s -rawsettings ProxyMethod=%s ProxyHost=%s ProxyPort=%s\n' % (
-						config.get('nightlies.ftp', 'user'),
-						config.get('nightlies.ftp', 'pass'),
-						config.get('nightlies.ftp', 'host'),
-						config.get('nightlies.ftp', 'proxy_type'),
-						config.get('nightlies.ftp', 'proxy_host'),
-						config.get('nightlies.ftp', 'proxy_port'),
-					))
-					f.write('option transfer binary\n')
-					f.write('put %s /%s/\n' % (filepath, subdir))
-					f.write('exit\n')
-					f.write('\n')
-
-				cmd = ['winscp']
-				cmd.append('/passive')
-				cmd.append('/script="%s"' % winscpScriptFilepath)
-				os.system(' '.join(cmd))
-
-			else:
-				cmd = [utils.find_command("curl")]
-				cmd.append('--upload-file')
-				cmd.append(filepath)
-				if self.use_proxy:
-					cmd.append('--proxy')
-					cmd.append(self.use_proxy)
-				cmd.append('--user')
-				cmd.append('%s:%s' % (config.get('chaosgroup.ftp', 'user'), config.get('chaosgroup.ftp', 'pass')))
-				cmd.append('ftp://%s/demo/%s' % (config.get('chaosgroup.ftp', 'host'), os.path.basename(filepath)))
-
-				sys.stdout.write("Uploading package '%s' to '/%s/'...\n" % (filepath, subdir))
-				sys.stdout.write("Command: %s\n" % (' '.join(cmd)))
-				if not self.mode_test:
-					subprocess.call(cmd)
-
+			cmd = ['winscp']
+			cmd.append('/passive')
+			cmd.append('/script="%s"' % winscpScriptFilepath)
+			os.system(' '.join(cmd))

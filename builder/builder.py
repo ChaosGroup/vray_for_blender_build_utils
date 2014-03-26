@@ -616,27 +616,48 @@ class Builder:
 			config = RawConfigParser()
 			config.read(os.path.expanduser("~/.passwd"))
 
-			curl = [utils.find_command("curl")]
-			curl.append('--upload-file')
-			curl.append(filepath)
-			if self.use_proxy:
-				curl.append('--proxy')
-				curl.append(self.use_proxy)
+			cmd = None
 
 			if self.use_github_repo:
 				now = datetime.datetime.now()
 				subdir = now.strftime("%Y%m%d")
 
-				curl.append('--user')
-				curl.append('%s:%s' % (config.get('nightlies.ftp', 'user'), config.get('nightlies.ftp', 'pass')))
-				curl.append('ftp://%s/%s/%s' % (config.get('nightlies.ftp', 'host'), subdir, os.path.basename(filepath)))
+				winscpScriptFilepath = os.path.join(tempfile.gettempdir(), "blender_for_vray_upload.txt")
+
+				with open(winscpScriptFilepath, 'w') as f:
+					f.write('option batch abort\n')
+					f.write('option confirm off\n')
+					f.write('open ftp://%s:%s@%s -rawsettings ProxyMethod=%s ProxyHost=%s ProxyPort=%s\n' % (
+						config.get('nightlies.ftp', 'user'),
+						config.get('nightlies.ftp', 'pass'),
+						config.get('nightlies.ftp', 'host'),
+						config.get('nightlies.ftp', 'proxy_type'),
+						config.get('nightlies.ftp', 'proxy_host'),
+						config.get('nightlies.ftp', 'proxy_port'),
+					))
+					f.write('option transfer binary\n')
+					f.write('put %s /%s/\n' % (filepath, subdir))
+					f.write('exit\n')
+					f.write('\n')
+
+				cmd = ['winscp']
+				cmd.append('/console')
+				cmd.append('/passive')
+				cmd.append('/script="%s"' % winscpScriptFilepath)
 
 			else:
-				curl.append('--user')
-				curl.append('%s:%s' % (config.get('chaosgroup.ftp', 'user'), config.get('chaosgroup.ftp', 'pass')))
-				curl.append('ftp://%s/demo/%s' % (config.get('chaosgroup.ftp', 'host'), os.path.basename(filepath)))
+				cmd = [utils.find_command("curl")]
+				cmd.append('--upload-file')
+				cmd.append(filepath)
+				if self.use_proxy:
+					cmd.append('--proxy')
+					cmd.append(self.use_proxy)
+				cmd.append('--user')
+				cmd.append('%s:%s' % (config.get('chaosgroup.ftp', 'user'), config.get('chaosgroup.ftp', 'pass')))
+				cmd.append('ftp://%s/demo/%s' % (config.get('chaosgroup.ftp', 'host'), os.path.basename(filepath)))
 
 			sys.stdout.write("Uploading package '%s' to '%s'...\n" % (filepath, subdir))
-			sys.stdout.write("Command: %s\n" % (' '.join(curl)))
+			sys.stdout.write("Command: %s\n" % (' '.join(cmd)))
 			if not self.mode_test:
-				subprocess.call(curl)
+				subprocess.call(cmd)
+

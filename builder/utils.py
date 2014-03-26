@@ -338,6 +338,9 @@ def remove_directory(path):
 	# so using shell command
 	if get_host_os() == WIN:
 		os.system("rmdir /Q /S %s" % path)
+		# Well yes, on Windows one remove is not enough...
+		if os.path.exists(path):
+			os.system("rmdir /Q /S %s" % path)
 	else:
 		shutil.rmtree(path)
 

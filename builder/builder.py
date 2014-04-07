@@ -621,25 +621,55 @@ class Builder:
 			now = datetime.datetime.now()
 			subdir = now.strftime("%Y%m%d")
 
-			winscpScriptFilepath = os.path.join(tempfile.gettempdir(), "blender_for_vray_upload.txt")
+			cmd = None
 
-			with open(winscpScriptFilepath, 'w') as f:
-				f.write('option batch abort\n')
-				f.write('option confirm off\n')
-				f.write('open ftp://%s:%s@%s -rawsettings ProxyMethod=%s ProxyHost=%s ProxyPort=%s\n' % (
+			if sys.platform == 'win32':
+				ftpScriptFilepath = os.path.join(tempfile.gettempdir(), "blender_for_vray_upload.txt")
+
+				with open(ftpScriptFilepath, 'w') as f:
+					f.write('option batch abort\n')
+					f.write('option confirm off\n')
+					f.write('open ftp://%s:%s@%s -rawsettings ProxyMethod=%s ProxyHost=%s ProxyPort=%s\n' % (
+						config.get('nightlies.ftp', 'user'),
+						config.get('nightlies.ftp', 'pass'),
+						config.get('nightlies.ftp', 'host'),
+						config.get('nightlies.ftp', 'proxy_type'),
+						config.get('nightlies.ftp', 'proxy_host'),
+						config.get('nightlies.ftp', 'proxy_port'),
+					))
+					f.write('option transfer binary\n')
+					f.write('put %s /%s/\n' % (filepath, subdir))
+					f.write('exit\n')
+					f.write('\n')
+
+				cmd = ['winscp']
+				cmd.append('/passive')
+				cmd.append('/script="%s"' % ftpScriptFilepath)
+
+				if not self.mode_test:
+					os.system(' '.join(cmd))
+
+			else:
+				cmd = ['curl']
+				cmd.append('--no-epsv')
+				if self.use_proxy:
+					cmd.append('--proxy')
+					cmd.append(self.use_proxy)
+				cmd.append('--user')
+				cmd.append('%s:%s' % (
 					config.get('nightlies.ftp', 'user'),
 					config.get('nightlies.ftp', 'pass'),
-					config.get('nightlies.ftp', 'host'),
-					config.get('nightlies.ftp', 'proxy_type'),
-					config.get('nightlies.ftp', 'proxy_host'),
-					config.get('nightlies.ftp', 'proxy_port'),
 				))
-				f.write('option transfer binary\n')
-				f.write('put %s /%s/\n' % (filepath, subdir))
-				f.write('exit\n')
-				f.write('\n')
+				cmd.append('--upload-file')
+				# cmd.append(filepath)
+				cmd.append('/tmp/test')
+				cmd.append('ftp://%s/%s/' % (
+					config.get('nightlies.ftp', 'host'),
+					subdir,
+				))
 
-			cmd = ['winscp']
-			cmd.append('/passive')
-			cmd.append('/script="%s"' % winscpScriptFilepath)
-			os.system(' '.join(cmd))
+				if not self.mode_test:
+					subprocess.call(cmd)
+
+			if self.mode_test:
+				print(' '.join(cmd))

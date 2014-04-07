@@ -661,8 +661,7 @@ class Builder:
 					config.get('nightlies.ftp', 'pass'),
 				))
 				cmd.append('--upload-file')
-				# cmd.append(filepath)
-				cmd.append('/tmp/test')
+				cmd.append(filepath)
 				cmd.append('ftp://%s/%s/' % (
 					config.get('nightlies.ftp', 'host'),
 					subdir,

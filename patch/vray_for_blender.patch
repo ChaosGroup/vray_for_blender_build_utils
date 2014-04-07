@@ -3925,7 +3925,7 @@ index 0000000..1e528cb
 +#endif // CGR_STRING_H
 diff --git a/source/blender/vray_for_blender/vrscene_exporter/geom.c b/source/blender/vray_for_blender/vrscene_exporter/geom.c
 new file mode 100644
-index 0000000..b74f270
+index 0000000..3ca9311
 --- /dev/null
 +++ b/source/blender/vray_for_blender/vrscene_exporter/geom.c
 @@ -0,0 +1,357 @@
@@ -4282,13 +4282,13 @@ index 0000000..b74f270
 +	write_GeomStaticMesh(outputFile, sce, ob, mesh, pluginName, propGroup);
 +
 +	/* remove the temporary mesh */
-+	BKE_mesh_free(mesh, TRUE);
++	BKE_mesh_free(mesh, true);
 +	BLI_remlink(&main->mesh, mesh);
 +	MEM_freeN(mesh);
 +}
 diff --git a/source/blender/vray_for_blender/vrscene_exporter/hair.c b/source/blender/vray_for_blender/vrscene_exporter/hair.c
 new file mode 100644
-index 0000000..fb8b298
+index 0000000..cb7e837
 --- /dev/null
 +++ b/source/blender/vray_for_blender/vrscene_exporter/hair.c
 @@ -0,0 +1,718 @@
@@ -4858,7 +4858,7 @@ index 0000000..fb8b298
 +
 +	memset(&sd, 0, sizeof(ParticleStrandData));
 +
-+	// DEBUG_PRINT(TRUE, "psmd->dm = 0x%X", psmd->dm);
++	// DEBUG_PRINT(true, "psmd->dm = 0x%X", psmd->dm);
 +
 +	if(psmd->dm) {
 +		if(use_child) {
@@ -4927,7 +4927,7 @@ index 0000000..fb8b298
 +
 +					get_particle_uvco_mcol(pset->from, psmd->dm, pa->fuv, num, &sd);
 +
-+					// DEBUG_PRINT(TRUE, "Pa.uv = %.3f, %.3f", sd.uvco[0], sd.uvco[1]);
++					// DEBUG_PRINT(true, "Pa.uv = %.3f, %.3f", sd.uvco[0], sd.uvco[1]);
 +
 +					segment[0] = sd.uvco[0];
 +					segment[1] = sd.uvco[1];

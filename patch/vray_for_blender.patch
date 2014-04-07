@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index dc5fef8..2e7c180 100644
+index 8b57251..ec3b7b8 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -279,6 +279,9 @@ set(CYCLES_CUDA_BINARIES_ARCH sm_20 sm_21 sm_30 sm_35 CACHE STRING "CUDA archite
+@@ -276,6 +276,9 @@ set(CYCLES_CUDA_BINARIES_ARCH sm_20 sm_21 sm_30 sm_35 CACHE STRING "CUDA archite
  mark_as_advanced(CYCLES_CUDA_BINARIES_ARCH)
  unset(PLATFORM_DEFAULT)
  
@@ -12,8 +12,8 @@ index dc5fef8..2e7c180 100644
  # LLVM
  option(WITH_LLVM					"Use LLVM" OFF)
  option(LLVM_STATIC					"Link with LLVM static libraries" ON)
-@@ -513,6 +516,12 @@ if(WITH_BOOL_COMPAT)
- 	add_definitions(-DWITH_BOOL_COMPAT)
+@@ -507,6 +510,12 @@ if(HAVE_STDBOOL_H)
+ 	add_definitions(-DHAVE_STDBOOL_H)
  endif()
  
 +if(WITH_VRAY_FOR_BLENDER)
@@ -25,7 +25,7 @@ index dc5fef8..2e7c180 100644
  #-----------------------------------------------------------------------------
  # Check for valid directories
  # ... a partial checkout may cause this.
-@@ -2411,6 +2420,7 @@ if(FIRST_RUN)
+@@ -2408,6 +2417,7 @@ if(FIRST_RUN)
  	info_cfg_option(WITH_INPUT_NDOF)
  	info_cfg_option(WITH_CYCLES)
  	info_cfg_option(WITH_FREESTYLE)
@@ -34,7 +34,7 @@ index dc5fef8..2e7c180 100644
  
  	info_cfg_text("Compiler Options:")
 diff --git a/SConstruct b/SConstruct
-index dde9d66..1a9123c 100644
+index 0258f77..efb1991 100644
 --- a/SConstruct
 +++ b/SConstruct
 @@ -260,6 +260,7 @@ if 'blenderlite' in B.targets:
@@ -46,7 +46,7 @@ index dde9d66..1a9123c 100644
      # Merge blenderlite, let command line to override
      for k,v in target_env_defs.iteritems():
 diff --git a/build_files/scons/tools/Blender.py b/build_files/scons/tools/Blender.py
-index 4ceadc7..b435ab2 100644
+index 29e04ba..c7c0b63 100644
 --- a/build_files/scons/tools/Blender.py
 +++ b/build_files/scons/tools/Blender.py
 @@ -391,6 +391,9 @@ def creator(env):
@@ -105,21 +105,8 @@ index de052f2..5920602 100644
 +if env['WITH_VRAY_FOR_BLENDER']:
 +    SConscript (['exporter/SConscript'])
 +    SConscript (['vray_for_blender/SConscript'])
-diff --git a/source/blender/blenkernel/BKE_object.h b/source/blender/blenkernel/BKE_object.h
-index 72c4c21..80fcaf7 100644
---- a/source/blender/blenkernel/BKE_object.h
-+++ b/source/blender/blenkernel/BKE_object.h
-@@ -167,7 +167,7 @@ void BKE_object_tfm_protected_restore(struct Object *ob,
- void BKE_object_handle_update(struct EvaluationContext *eval_ctx, struct Scene *scene, struct Object *ob);
- void BKE_object_handle_update_ex(struct EvaluationContext *eval_ctx,
-                                  struct Scene *scene, struct Object *ob,
--                                 struct RigidBodyWorld *rbw);
-+								 struct RigidBodyWorld *rbw);
- void BKE_object_sculpt_modifiers_changed(struct Object *ob);
- 
- int BKE_object_obdata_texspace_get(struct Object *ob, short **r_texflag, float **r_loc, float **r_size, float **r_rot);
 diff --git a/source/blender/blenkernel/intern/object.c b/source/blender/blenkernel/intern/object.c
-index 43dbc34..1f65601 100644
+index 23af5bd..98cb9c0 100644
 --- a/source/blender/blenkernel/intern/object.c
 +++ b/source/blender/blenkernel/intern/object.c
 @@ -66,6 +66,7 @@
@@ -130,16 +117,7 @@ index 43dbc34..1f65601 100644
  
  #include "BLF_translation.h"
  
-@@ -2838,7 +2839,7 @@ bool BKE_object_parent_loop_check(const Object *par, const Object *ob)
- /* Ideally we shouldn't have to pass the rigid body world, but need bigger restructuring to avoid id */
- void BKE_object_handle_update_ex(EvaluationContext *eval_ctx,
-                                  Scene *scene, Object *ob,
--                                 RigidBodyWorld *rbw)
-+								 RigidBodyWorld *rbw)
- {
- 	if (ob->recalc & OB_RECALC_ALL) {
- 		/* speed optimization for animation lookups */
-@@ -3016,8 +3017,13 @@ void BKE_object_handle_update_ex(EvaluationContext *eval_ctx,
+@@ -3022,8 +3023,13 @@ void BKE_object_handle_update_ex(EvaluationContext *eval_ctx,
  						psys_get_modifier(ob, psys)->flag &= ~eParticleSystemFlag_psys_updated;
  				}
  			}
@@ -220,7 +198,7 @@ index 2ba918f..2427b72 100644
  incs = ' '.join(incs)
  
 diff --git a/source/blender/editors/space_api/spacetypes.c b/source/blender/editors/space_api/spacetypes.c
-index e226239..304af1e 100644
+index 83040a2..9e67d14 100644
 --- a/source/blender/editors/space_api/spacetypes.c
 +++ b/source/blender/editors/space_api/spacetypes.c
 @@ -66,6 +66,8 @@
@@ -339,7 +317,7 @@ index 0000000..1e478d9
 +env.BlenderLib('vb_exporter', sources, Split(incs), [], libtype=['core'], priority=[300])
 diff --git a/source/blender/exporter/exporter_geometry.c b/source/blender/exporter/exporter_geometry.c
 new file mode 100644
-index 0000000..e14baa6
+index 0000000..4fb5280
 --- /dev/null
 +++ b/source/blender/exporter/exporter_geometry.c
 @@ -0,0 +1,2017 @@
@@ -1053,7 +1031,7 @@ index 0000000..e14baa6
 +
 +        memset(&sd, 0, sizeof(ParticleStrandData));
 +
-+        // DEBUG_OUTPUT(TRUE, "psmd->dm = 0x%X", psmd->dm);
++		// DEBUG_OUTPUT(true, "psmd->dm = 0x%X", psmd->dm);
 +
 +		if(psmd->dm) {
 +			if(use_child) {
@@ -1122,7 +1100,7 @@ index 0000000..e14baa6
 +
 +						get_particle_uvco_mcol(pset->from, psmd->dm, pa->fuv, num, &sd);
 +
-+						// DEBUG_OUTPUT(TRUE, "Pa.uv = %.3f, %.3f", sd.uvco[0], sd.uvco[1]);
++						// DEBUG_OUTPUT(true, "Pa.uv = %.3f, %.3f", sd.uvco[0], sd.uvco[1]);
 +
 +						segment[0] = sd.uvco[0];
 +						segment[1] = sd.uvco[1];
@@ -1643,7 +1621,7 @@ index 0000000..e14baa6
 +    char   tex_name[255];
 +
 +    if(!(smd->domain && smd->domain->fluid)) {
-+        DEBUG_OUTPUT(TRUE, "Smoke modifier not found!");
++		DEBUG_OUTPUT(true, "Smoke modifier not found!");
 +        return;
 +    }
 +
@@ -1678,7 +1656,7 @@ index 0000000..e14baa6
 +    }
 +
 +    if(!(vd)) {
-+        DEBUG_OUTPUT(TRUE, "VoxelData texture not found!");
++		DEBUG_OUTPUT(true, "VoxelData texture not found!");
 +        return;
 +    }
 +
@@ -1903,7 +1881,7 @@ index 0000000..e14baa6
 +                pthread_mutex_lock(&mtx);
 +
 +                /* remove the temporary mesh */
-+                BKE_mesh_free(mesh, TRUE);
++				BKE_mesh_free(mesh, true);
 +                BLI_remlink(&bmain->mesh, mesh);
 +                MEM_freeN(mesh);
 +
@@ -2773,7 +2751,7 @@ index 93bced3..59004e2 100644
  void BPY_python_start(int argc, const char **argv)
  {
 diff --git a/source/blender/python/intern/bpy_rna.c b/source/blender/python/intern/bpy_rna.c
-index 23308bf..d0ed193 100644
+index cf13efa..35248c9 100644
 --- a/source/blender/python/intern/bpy_rna.c
 +++ b/source/blender/python/intern/bpy_rna.c
 @@ -83,7 +83,7 @@
@@ -5728,7 +5706,7 @@ index 0000000..89ee127
 +
 +#endif // VRSCENE_H
 diff --git a/source/blender/windowmanager/intern/wm_window.c b/source/blender/windowmanager/intern/wm_window.c
-index 6a2ef47..5bcd96b 100644
+index 1bd9f15..390b0b3 100644
 --- a/source/blender/windowmanager/intern/wm_window.c
 +++ b/source/blender/windowmanager/intern/wm_window.c
 @@ -324,12 +324,12 @@ void wm_window_title(wmWindowManager *wm, wmWindow *win)
@@ -5748,10 +5726,10 @@ index 6a2ef47..5bcd96b 100644
  		/* Informs GHOST of unsaved changes, to set window modified visual indicator (MAC OS X)
  		 * and to give hint of unsaved changes for a user warning mechanism
 diff --git a/source/creator/CMakeLists.txt b/source/creator/CMakeLists.txt
-index b8c97f8..a06026e 100644
+index a7a3d60..471997e 100644
 --- a/source/creator/CMakeLists.txt
 +++ b/source/creator/CMakeLists.txt
-@@ -1116,6 +1116,11 @@ endif()
+@@ -1120,6 +1120,11 @@ endif()
  		list_insert_after(BLENDER_SORTED_LIBS "ge_logic_ngnetwork" "extern_bullet")
  	endif()
  

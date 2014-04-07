@@ -128,7 +128,7 @@ class LinuxBuilder(Builder):
 
 		with open(self.user_config, 'w') as uc:
 			uc.write("BF_INSTALLDIR = '%s'\n" % (self.dir_install_path))
-			uc.write("BF_BUILDDIR = '/tmp/builder_%s'\n" % (self.build_arch))
+			uc.write("BF_BUILDDIR = '%s'\n" % (self.dir_build))
 			uc.write("BF_NUMJOBS = %i\n" % (self.build_threads))
 			uc.write("\n")
 

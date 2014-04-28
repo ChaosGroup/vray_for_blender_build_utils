@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 8b57251..ec3b7b8 100644
+index 74a662a..47b898d 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -276,6 +276,9 @@ set(CYCLES_CUDA_BINARIES_ARCH sm_20 sm_21 sm_30 sm_35 CACHE STRING "CUDA archite
+@@ -268,6 +268,9 @@ set(CYCLES_CUDA_BINARIES_ARCH sm_20 sm_21 sm_30 sm_35 CACHE STRING "CUDA archite
  mark_as_advanced(CYCLES_CUDA_BINARIES_ARCH)
  unset(PLATFORM_DEFAULT)
  
@@ -12,7 +12,7 @@ index 8b57251..ec3b7b8 100644
  # LLVM
  option(WITH_LLVM					"Use LLVM" OFF)
  option(LLVM_STATIC					"Link with LLVM static libraries" ON)
-@@ -507,6 +510,12 @@ if(HAVE_STDBOOL_H)
+@@ -499,6 +502,12 @@ if(HAVE_STDBOOL_H)
  	add_definitions(-DHAVE_STDBOOL_H)
  endif()
  
@@ -25,7 +25,7 @@ index 8b57251..ec3b7b8 100644
  #-----------------------------------------------------------------------------
  # Check for valid directories
  # ... a partial checkout may cause this.
-@@ -2408,6 +2417,7 @@ if(FIRST_RUN)
+@@ -2401,6 +2410,7 @@ if(FIRST_RUN)
  	info_cfg_option(WITH_INPUT_NDOF)
  	info_cfg_option(WITH_CYCLES)
  	info_cfg_option(WITH_FREESTYLE)
@@ -106,7 +106,7 @@ index de052f2..5920602 100644
 +    SConscript (['exporter/SConscript'])
 +    SConscript (['vray_for_blender/SConscript'])
 diff --git a/source/blender/blenkernel/intern/object.c b/source/blender/blenkernel/intern/object.c
-index 23af5bd..98cb9c0 100644
+index f601840..e8f3939 100644
 --- a/source/blender/blenkernel/intern/object.c
 +++ b/source/blender/blenkernel/intern/object.c
 @@ -66,6 +66,7 @@
@@ -117,7 +117,7 @@ index 23af5bd..98cb9c0 100644
  
  #include "BLF_translation.h"
  
-@@ -3022,8 +3023,13 @@ void BKE_object_handle_update_ex(EvaluationContext *eval_ctx,
+@@ -3023,8 +3024,13 @@ void BKE_object_handle_update_ex(EvaluationContext *eval_ctx,
  						psys_get_modifier(ob, psys)->flag &= ~eParticleSystemFlag_psys_updated;
  				}
  			}
@@ -146,7 +146,7 @@ index 8d5ea91..95f41f5 100644
  	BLI_CB_EVT_GAME_POST,
  	BLI_CB_EVT_TOT
 diff --git a/source/blender/editors/include/UI_icons.h b/source/blender/editors/include/UI_icons.h
-index 4e15f3e..ab95bf6 100644
+index eeb5498..08fb7e6 100644
 --- a/source/blender/editors/include/UI_icons.h
 +++ b/source/blender/editors/include/UI_icons.h
 @@ -273,15 +273,16 @@ DEF_ICON(GROUP_UVS)
@@ -2751,7 +2751,7 @@ index 93bced3..59004e2 100644
  void BPY_python_start(int argc, const char **argv)
  {
 diff --git a/source/blender/python/intern/bpy_rna.c b/source/blender/python/intern/bpy_rna.c
-index cf13efa..35248c9 100644
+index e0c8df7..40b2504 100644
 --- a/source/blender/python/intern/bpy_rna.c
 +++ b/source/blender/python/intern/bpy_rna.c
 @@ -83,7 +83,7 @@
@@ -5706,7 +5706,7 @@ index 0000000..89ee127
 +
 +#endif // VRSCENE_H
 diff --git a/source/blender/windowmanager/intern/wm_window.c b/source/blender/windowmanager/intern/wm_window.c
-index 1bd9f15..390b0b3 100644
+index e850b4f..6d99e59 100644
 --- a/source/blender/windowmanager/intern/wm_window.c
 +++ b/source/blender/windowmanager/intern/wm_window.c
 @@ -324,12 +324,12 @@ void wm_window_title(wmWindowManager *wm, wmWindow *win)

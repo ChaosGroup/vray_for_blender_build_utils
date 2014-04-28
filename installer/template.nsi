@@ -111,6 +111,11 @@ Section "Add Start Menu Shortcuts" VBSTART
 SectionEnd
 
 
+Section "Open .blend files with Blender" BlendRegister
+	ExecWait '"$INSTDIR\blender.exe" -r'
+SectionEnd
+
+
 Section "Uninstall"
 {UNINSTALLER_FILES}
 RMDir "$INSTDIR/uninstaller.exe"

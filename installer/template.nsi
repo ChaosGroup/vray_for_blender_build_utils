@@ -1,4 +1,4 @@
-;  V-Ray/Blender Installer Template
+;  V-Ray For Blender Installer Template
 ;
 ;  http://chaosgroup.com
 ;
@@ -73,9 +73,9 @@ SectionEnd
 
 Section "Uninstaller" VBUNINST
 	SectionIn RO
-	
+
 	StrCpy $VB_UNINST "Software\Microsoft\Windows\CurrentVersion\Uninstall\VRayBlender"
-	
+
 	WriteRegStr   HKLM $VB_UNINST "DisplayName"     "V-Ray For Blender"
 	WriteRegStr   HKLM $VB_UNINST "UninstallString" "$\"$INSTDIR\uninstaller.exe$\""
 	WriteRegStr   HKLM $VB_UNINST "Publisher"       "Andrei Izrantcev"
@@ -83,12 +83,12 @@ Section "Uninstaller" VBUNINST
 	WriteRegStr   HKLM $VB_UNINST "HelpLink"        "http://www.chaosgroup.com/"
 	WriteRegDWORD HKLM $VB_UNINST "NoModify"  1
 	WriteRegDWORD HKLM $VB_UNINST "NoRepair " 1
-	
+
 	${WriteUninstaller} "$INSTDIR\uninstaller.exe"
-	
+
 	; Write the installation path into the registry
 	${WriteRegStr} "${REG_ROOT}" "${REG_APP_PATH}" "Install Directory" "$INSTDIR"
-	
+
 	; Write the Uninstall information into the registry
 	${WriteRegStr} "${REG_ROOT}" "${UNINSTALL_PATH}" "UninstallString" "$INSTDIR\uninstaller.exe"
 SectionEnd
@@ -96,16 +96,16 @@ SectionEnd
 
 Section "Add Start Menu Shortcuts" VBSTART
 	SetShellVarContext all
-  
+
 	; Menu section
 	${CreateDirectory} "$SMPROGRAMS\VRayBlender {VERSION}\"
 
 	; Blender
 	${CreateShortCut}  "$SMPROGRAMS\VRayBlender {VERSION}\VRayForBlender.lnk" "$INSTDIR\blender.exe" "" "$INSTDIR\blender.exe" 0
-	
+
 	; Uninstaller
 	${CreateShortCut}  "$SMPROGRAMS\VRayBlender {VERSION}\Uninstall.lnk" "$INSTDIR\uninstaller.exe" "" "$INSTDIR\uninstaller.exe" 0
-	
+
 	; Refresh icons
 	System::Call 'shell32.dll::SHChangeNotify(i, i, i, i) v (0x08000000, 0, 0, 0)'
 SectionEnd

@@ -48,7 +48,7 @@ class LinuxBuilder(Builder):
 			sys.exit(0)
 
 		if self.build_deps:
-			cmd = "sudo -E %s/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source), utils.path_join(self.dir_source, "blender-deps"))
+			cmd = "sudo -E %s/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source, 'vb25-patch'), utils.path_join(self.dir_source, "blender-deps"))
 
 			if self.with_osl:
 				cmd += " --with-llvm"

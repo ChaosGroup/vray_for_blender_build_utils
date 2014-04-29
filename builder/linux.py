@@ -48,7 +48,7 @@ class LinuxBuilder(Builder):
 			sys.exit(0)
 
 		if self.build_deps:
-			cmd = "sudo -E %s/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source, 'blender', 'build_files', 'build_environment'), utils.path_join(self.dir_source, "blender-deps"))
+			cmd = "sudo -E %s/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source), utils.path_join(self.dir_source, "blender-deps"))
 
 			if self.with_osl:
 				cmd += " --with-llvm"
@@ -136,8 +136,9 @@ class LinuxBuilder(Builder):
 			uc.write("\n")
 
 			uc.write("WITH_BF_STATICPYTHON = True\n")
-			uc.write("BF_PYTHON = '/opt/python-3.4'\n")
-			uc.write("BF_PYTHON_ABI_FLAGS = 'm'\n")
+			uc.write("BF_PYTHON_VERSION    = '3.4'\n")
+			uc.write("BF_PYTHON            = '/opt/python-3.4.0'\n")
+			uc.write("BF_PYTHON_ABI_FLAGS  = 'm'\n")
 			uc.write("\n")
 
 			uc.write("WITH_BF_STATICFFMPEG = True\n")

@@ -146,7 +146,7 @@ class LinuxBuilder(Builder):
 			uc.write("WITH_BF_STATICFFMPEG = True\n")
 			uc.write("BF_FFMPEG = '/opt/ffmpeg'\n")
 			uc.write("BF_FFMPEG_LIBPATH='${BF_FFMPEG}/lib'\n")
-			uc.write("BF_FFMPEG_LIB_STATIC = '${BF_FFMPEG_LIBPATH}/libavformat.a ${BF_FFMPEG_LIBPATH}/libavcodec.a ${BF_FFMPEG_LIBPATH}/libswscale.a ${BF_FFMPEG_LIBPATH}/libavutil.a ${BF_FFMPEG_LIBPATH}/libavdevice.a /usr/lib/x86_64-linux-gnu/libx264.a /usr/lib/x86_64-linux-gnu/libtheora.a'\n")
+			uc.write("BF_FFMPEG_LIB_STATIC = '${BF_FFMPEG_LIBPATH}/libavformat.a ${BF_FFMPEG_LIBPATH}/libavcodec.a ${BF_FFMPEG_LIBPATH}/libswscale.a ${BF_FFMPEG_LIBPATH}/libavutil.a ${BF_FFMPEG_LIBPATH}/libavdevice.a'\n")
 			uc.write("\n")
 
 			uc.write("WITH_BF_OIIO = True\n")
@@ -154,7 +154,7 @@ class LinuxBuilder(Builder):
 			uc.write("BF_OIIO = '/opt/oiio'\n")
 			uc.write("BF_OIIO_INC = '${BF_OIIO}/include'\n")
 			uc.write("BF_OIIO_LIB = 'OpenImageIO'\n")
-			uc.write("BF_OIIO_LIB_STATIC = '${BF_OIIO_LIBPATH}/libOpenImageIO.a /usr/lib/x86_64-linux-gnu/libjpeg.a'\n")
+			uc.write("BF_OIIO_LIB_STATIC = '${BF_OIIO_LIBPATH}/libOpenImageIO.a'\n")
 			uc.write("BF_OIIO_LIBPATH = '${BF_OIIO}/lib'\n")
 			uc.write("\n")
 

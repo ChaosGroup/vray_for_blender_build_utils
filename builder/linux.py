@@ -136,7 +136,7 @@ class LinuxBuilder(Builder):
 			uc.write("\n")
 
 			uc.write("WITH_BF_STATICPYTHON = True\n")
-			uc.write("BF_PYTHON = '/opt/python-3.3'\n")
+			uc.write("BF_PYTHON = '/opt/python-3.4'\n")
 			uc.write("BF_PYTHON_ABI_FLAGS = 'm'\n")
 			uc.write("\n")
 

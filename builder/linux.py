@@ -132,7 +132,9 @@ class LinuxBuilder(Builder):
 			uc.write("BF_NUMJOBS = %i\n" % (self.build_threads))
 			uc.write("\n")
 
-			uc.write("WITH_BF_STATIC3DMOUSE = True\n")
+			uc.write("WITH_BF_STATIC3DMOUSE = False\n")
+			uc.write("WITH_BF_OGG = True\n")
+			uc.write("LLIBS = ['ogg', 'vorbis', 'vorbisenc', 'theoraenc', 'theoradec', 'x264', 'util', 'c', 'm', 'dl', 'pthread']\n")
 			uc.write("\n")
 
 			uc.write("WITH_BF_STATICPYTHON = True\n")

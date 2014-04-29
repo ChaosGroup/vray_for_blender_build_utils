@@ -1957,41 +1957,21 @@ install_DEB() {
   if $OCIO_SKIP; then
     WARNING "Skipping OpenColorIO installation, as requested..."
   else
-    check_package_version_ge_DEB libopencolorio-dev $OCIO_VERSION_MIN
-    if [ $? -eq 0 ]; then
-      install_packages_DEB libopencolorio-dev
-      clean_OCIO
-    else
-      compile_OCIO
-    fi
+    compile_OCIO
   fi
 
   PRINT ""
   if $OPENEXR_SKIP; then
     WARNING "Skipping OpenEXR installation, as requested..."
   else
-    check_package_version_ge_DEB libopenexr-dev $OPENEXR_VERSION_MIN
-    if [ $? -eq 0 ]; then
-      install_packages_DEB libopenexr-dev
-      OPENEXR_VERSION=`get_package_version_DEB libopenexr-dev`
-      ILMBASE_VERSION=$OPENEXR_VERSION
-      clean_OPENEXR
-    else
-      compile_OPENEXR
-    fi
+    compile_OPENEXR
   fi
 
   PRINT ""
   if $OIIO_SKIP; then
     WARNING "Skipping OpenImageIO installation, as requested..."
   else
-    check_package_version_ge_DEB libopenimageio-dev $OIIO_VERSION_MIN
-    if [ $? -eq 0 -a $_with_built_openexr == false ]; then
-      install_packages_DEB libopenimageio-dev
-      clean_OIIO
-    else
-      compile_OIIO
-    fi
+    compile_OIIO
   fi
 
   have_llvm=false
@@ -2391,41 +2371,21 @@ install_RPM() {
   if $OCIO_SKIP; then
     WARNING "Skipping OpenColorIO installation, as requested..."
   else
-    check_package_version_ge_RPM OpenColorIO-devel $OCIO_VERSION_MIN
-    if [ $? -eq 0 ]; then
-      install_packages_RPM OpenColorIO-devel
-      clean_OCIO
-    else
-      compile_OCIO
-    fi
+    compile_OCIO
   fi
 
   PRINT ""
   if $OPENEXR_SKIP; then
     WARNING "Skipping OpenEXR installation, as requested..."
   else
-    check_package_version_ge_RPM $OPENEXR_DEV $OPENEXR_VERSION_MIN
-    if [ $? -eq 0 ]; then
-      install_packages_RPM $OPENEXR_DEV
-      OPENEXR_VERSION=`get_package_version_RPM $OPENEXR_DEV`
-      ILMBASE_VERSION=$OPENEXR_VERSION
-      clean_OPENEXR
-    else
-      compile_OPENEXR
-    fi
+    compile_OPENEXR
   fi
 
   PRINT ""
   if $OIIO_SKIP; then
     WARNING "Skipping OpenImageIO installation, as requested..."
   else
-    check_package_version_ge_RPM OpenImageIO-devel $OIIO_VERSION_MIN
-    if [ $? -eq 0 -a $_with_built_openexr == false ]; then
-      install_packages_RPM OpenImageIO-devel
-      clean_OIIO
-    else
-      compile_OIIO
-    fi
+    compile_OIIO
   fi
 
   have_llvm=false
@@ -2723,13 +2683,7 @@ install_ARCH() {
   if $OIIO_SKIP; then
     WARNING "Skipping OpenImageIO installation, as requested..."
   else
-    check_package_version_ge_ARCH openimageio $OIIO_VERSION_MIN
-    if [ $? -eq 0 ]; then
-      install_packages_ARCH openimageio
-      clean_OIIO
-    else
-      compile_OIIO
-    fi
+    compile_OIIO
   fi
 
   have_llvm=false

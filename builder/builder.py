@@ -146,6 +146,8 @@ class Builder:
 	to_addons           = None
 	status              = None
 
+	vc2013 = None
+
 	def __init__(self, params):
 		if not params:
 			sys.stdout.write("Params are empty - using defaults...\n")
@@ -284,8 +286,12 @@ class Builder:
 					lib_dir = utils.path_join(self.dir_source, "lib", "windows")
 					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/windows lib/windows"
 					if self.host_arch == "x86_64":
-						lib_dir = utils.path_join(self.dir_source, "lib", "win64")
-						svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64 lib/win64"
+						if self.vc2013:
+							lib_dir = utils.path_join(self.dir_source, "lib", "win64_vc12")
+							svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12"
+						else:
+							lib_dir = utils.path_join(self.dir_source, "lib", "win64")
+							svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64 lib/win64"
 				elif self.host_os == utils.MAC:
 					lib_dir = utils.path_join(self.dir_source, "lib", "darwin-9.x.universal")
 					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal"

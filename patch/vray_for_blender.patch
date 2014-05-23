@@ -1,8 +1,8 @@
 diff --git a/CMakeLists.txt b/CMakeLists.txt
-index 74a662a..47b898d 100644
+index 2962b58..2ea8790 100644
 --- a/CMakeLists.txt
 +++ b/CMakeLists.txt
-@@ -268,6 +268,9 @@ set(CYCLES_CUDA_BINARIES_ARCH sm_20 sm_21 sm_30 sm_35 CACHE STRING "CUDA archite
+@@ -268,6 +268,9 @@ set(CYCLES_CUDA_BINARIES_ARCH sm_20 sm_21 sm_30 sm_35 sm_50 CACHE STRING "CUDA a
  mark_as_advanced(CYCLES_CUDA_BINARIES_ARCH)
  unset(PLATFORM_DEFAULT)
  
@@ -25,7 +25,7 @@ index 74a662a..47b898d 100644
  #-----------------------------------------------------------------------------
  # Check for valid directories
  # ... a partial checkout may cause this.
-@@ -2401,6 +2410,7 @@ if(FIRST_RUN)
+@@ -2390,6 +2399,7 @@ if(FIRST_RUN)
  	info_cfg_option(WITH_INPUT_NDOF)
  	info_cfg_option(WITH_CYCLES)
  	info_cfg_option(WITH_FREESTYLE)
@@ -34,7 +34,7 @@ index 74a662a..47b898d 100644
  
  	info_cfg_text("Compiler Options:")
 diff --git a/SConstruct b/SConstruct
-index 0258f77..efb1991 100644
+index 251f7ea..d942829 100644
 --- a/SConstruct
 +++ b/SConstruct
 @@ -260,6 +260,7 @@ if 'blenderlite' in B.targets:
@@ -46,7 +46,7 @@ index 0258f77..efb1991 100644
      # Merge blenderlite, let command line to override
      for k,v in target_env_defs.iteritems():
 diff --git a/build_files/scons/tools/Blender.py b/build_files/scons/tools/Blender.py
-index 29e04ba..c7c0b63 100644
+index 496f90d..6e434e9 100644
 --- a/build_files/scons/tools/Blender.py
 +++ b/build_files/scons/tools/Blender.py
 @@ -391,6 +391,9 @@ def creator(env):
@@ -60,7 +60,7 @@ index 29e04ba..c7c0b63 100644
          incs.append(env['BF_PTHREADS_INC'])
          incs.append('#/intern/utfconv')
 diff --git a/build_files/scons/tools/btools.py b/build_files/scons/tools/btools.py
-index 3450f29..201c95a 100644
+index c021cc8..cdf0a52 100644
 --- a/build_files/scons/tools/btools.py
 +++ b/build_files/scons/tools/btools.py
 @@ -133,6 +133,8 @@ def validate_arguments(args, bc):
@@ -106,10 +106,10 @@ index de052f2..5920602 100644
 +    SConscript (['exporter/SConscript'])
 +    SConscript (['vray_for_blender/SConscript'])
 diff --git a/source/blender/blenkernel/intern/object.c b/source/blender/blenkernel/intern/object.c
-index f601840..e8f3939 100644
+index 3ea535e..ac4e5f2 100644
 --- a/source/blender/blenkernel/intern/object.c
 +++ b/source/blender/blenkernel/intern/object.c
-@@ -66,6 +66,7 @@
+@@ -65,6 +65,7 @@
  #include "BLI_utildefines.h"
  #include "BLI_linklist.h"
  #include "BLI_kdtree.h"
@@ -117,7 +117,7 @@ index f601840..e8f3939 100644
  
  #include "BLF_translation.h"
  
-@@ -3023,8 +3024,13 @@ void BKE_object_handle_update_ex(EvaluationContext *eval_ctx,
+@@ -3014,8 +3015,13 @@ void BKE_object_handle_update_ex(EvaluationContext *eval_ctx,
  						psys_get_modifier(ob, psys)->flag &= ~eParticleSystemFlag_psys_updated;
  				}
  			}
@@ -146,7 +146,7 @@ index 8d5ea91..95f41f5 100644
  	BLI_CB_EVT_GAME_POST,
  	BLI_CB_EVT_TOT
 diff --git a/source/blender/editors/include/UI_icons.h b/source/blender/editors/include/UI_icons.h
-index eeb5498..08fb7e6 100644
+index c776026..13477e0 100644
 --- a/source/blender/editors/include/UI_icons.h
 +++ b/source/blender/editors/include/UI_icons.h
 @@ -273,15 +273,16 @@ DEF_ICON(GROUP_UVS)
@@ -2607,7 +2607,7 @@ index 0000000..71f2976
 +    WM_operatortype_append(VRAY_OT_export_meshes);
 +}
 diff --git a/source/blender/makesdna/DNA_texture_types.h b/source/blender/makesdna/DNA_texture_types.h
-index a3025a7..867e7bd 100644
+index 1906f71..4854a4e 100644
 --- a/source/blender/makesdna/DNA_texture_types.h
 +++ b/source/blender/makesdna/DNA_texture_types.h
 @@ -315,6 +315,7 @@ typedef struct ColorMapping {
@@ -2619,7 +2619,7 @@ index a3025a7..867e7bd 100644
  /* musgrave stype */
  #define TEX_MFRACTAL		0
 diff --git a/source/blender/makesrna/intern/rna_texture.c b/source/blender/makesrna/intern/rna_texture.c
-index 0d327d6..762895f 100644
+index f098a65..e4ab61f 100644
 --- a/source/blender/makesrna/intern/rna_texture.c
 +++ b/source/blender/makesrna/intern/rna_texture.c
 @@ -63,6 +63,7 @@ static EnumPropertyItem texture_filter_items[] = {
@@ -2663,7 +2663,7 @@ index 0605f40..cec86db 100644
  	list(APPEND INC
  		../../freestyle/intern/python
 diff --git a/source/blender/python/intern/bpy_app_handlers.c b/source/blender/python/intern/bpy_app_handlers.c
-index f8725d6..faf1b27 100644
+index b3be5a8..969d85e 100644
 --- a/source/blender/python/intern/bpy_app_handlers.c
 +++ b/source/blender/python/intern/bpy_app_handlers.c
 @@ -44,21 +44,23 @@ void bpy_app_generic_callback(struct Main *main, struct ID *id, void *arg);
@@ -2706,10 +2706,10 @@ index f8725d6..faf1b27 100644
  	/* sets the permanent tag */
  #   define APP_CB_OTHER_FIELDS 1
 diff --git a/source/blender/python/intern/bpy_interface.c b/source/blender/python/intern/bpy_interface.c
-index 93bced3..59004e2 100644
+index 045acc6..5b529f1 100644
 --- a/source/blender/python/intern/bpy_interface.c
 +++ b/source/blender/python/intern/bpy_interface.c
-@@ -80,6 +80,10 @@
+@@ -82,6 +82,10 @@
  #include "../bmesh/bmesh_py_api.h"
  #include "../mathutils/mathutils.h"
  
@@ -2720,7 +2720,7 @@ index 93bced3..59004e2 100644
  
  /* for internal use, when starting and ending python scripts */
  
-@@ -209,6 +213,13 @@ static PyObject *CCL_initPython(void)
+@@ -211,6 +215,13 @@ static PyObject *CCL_initPython(void)
  }
  #endif
  
@@ -2734,7 +2734,7 @@ index 93bced3..59004e2 100644
  static struct _inittab bpy_internal_modules[] = {
  	{(char *)"mathutils", PyInit_mathutils},
  //	{(char *)"mathutils.geometry", PyInit_mathutils_geometry},
-@@ -227,11 +238,15 @@ static struct _inittab bpy_internal_modules[] = {
+@@ -229,11 +240,15 @@ static struct _inittab bpy_internal_modules[] = {
  #ifdef WITH_CYCLES
  	{(char *)"_cycles", CCL_initPython},
  #endif
@@ -2751,10 +2751,10 @@ index 93bced3..59004e2 100644
  void BPY_python_start(int argc, const char **argv)
  {
 diff --git a/source/blender/python/intern/bpy_rna.c b/source/blender/python/intern/bpy_rna.c
-index e0c8df7..40b2504 100644
+index 38a0f74..ee5ae6e 100644
 --- a/source/blender/python/intern/bpy_rna.c
 +++ b/source/blender/python/intern/bpy_rna.c
-@@ -83,7 +83,7 @@
+@@ -81,7 +81,7 @@
  #  include "BLF_translation.h"
  #endif
  
@@ -5706,7 +5706,7 @@ index 0000000..89ee127
 +
 +#endif // VRSCENE_H
 diff --git a/source/blender/windowmanager/intern/wm_window.c b/source/blender/windowmanager/intern/wm_window.c
-index e850b4f..6d99e59 100644
+index ddc20e3..a8cd27c 100644
 --- a/source/blender/windowmanager/intern/wm_window.c
 +++ b/source/blender/windowmanager/intern/wm_window.c
 @@ -324,12 +324,12 @@ void wm_window_title(wmWindowManager *wm, wmWindow *win)
@@ -5726,10 +5726,10 @@ index e850b4f..6d99e59 100644
  		/* Informs GHOST of unsaved changes, to set window modified visual indicator (MAC OS X)
  		 * and to give hint of unsaved changes for a user warning mechanism
 diff --git a/source/creator/CMakeLists.txt b/source/creator/CMakeLists.txt
-index a7a3d60..471997e 100644
+index 4943256..5849cff 100644
 --- a/source/creator/CMakeLists.txt
 +++ b/source/creator/CMakeLists.txt
-@@ -1120,6 +1120,11 @@ endif()
+@@ -1084,6 +1084,11 @@ endif()
  		list_insert_after(BLENDER_SORTED_LIBS "ge_logic_ngnetwork" "extern_bullet")
  	endif()
  

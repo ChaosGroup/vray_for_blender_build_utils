@@ -92,11 +92,11 @@ parser.add_option('', '--github-repo',   action='store_true', dest="use_github_r
 parser.add_option('', '--github-src-branch',                  dest="use_github_branch", default="dev/vray_for_blender/stable", help="Use sources from project's github branch")
 parser.add_option('', '--github-exp-branch',                  dest="use_exp_branch",    default="master", help="Use exporter from specific branch")
 
-parser.add_option('', '--to-addons',
+parser.add_option('', '--vb30',
 	action  = 'store_true',
-	dest    = "to_addons",
+	dest    = "vb30",
 	default = False,
-	help    = "Clone exporter to 'addons' sub directory"
+	help    = "Build vb30"
 )
 
 (options, args) = parser.parse_args()
@@ -190,8 +190,8 @@ if options.use_github_repo:
 	params['add_extra']         = False
 
 params['use_exp_branch'] = options.use_exp_branch
-params['to_addons']      = options.to_addons
 
+params['vb30']   = options.vb30
 params['vc2013'] = options.vc2013
 
 builder = build_system.Builder(params)

@@ -143,9 +143,9 @@ class Builder:
 	use_github_repo     = None
 	use_github_branch   = None
 	use_exp_branch      = None
-	to_addons           = None
 	status              = None
 
+	vb30   = None
 	vc2013 = None
 
 	def __init__(self, params):
@@ -171,7 +171,7 @@ class Builder:
 		self.status = 'stable'
 		if self.use_github_repo:
 			self.status = 'dev'
-			if self.to_addons:
+			if self.vb30:
 				self.status = 'vb30'
 
 
@@ -510,7 +510,7 @@ class Builder:
 		addonsPath  = utils.path_join(scriptsPath, "addons")
 		startupPath = utils.path_join(scriptsPath, "startup")
 
-		clonePath = addonsPath if self.to_addons else startupPath
+		clonePath = addonsPath if self.vb30 else startupPath
 
 		sys.stdout.write("Adding exporter...\n")
 		sys.stdout.write("  in: %s\n" % clonePath)
@@ -538,8 +538,7 @@ class Builder:
 			os.system("git submodule foreach git checkout master")
 			os.system("git submodule foreach git pull --rebase origin master")
 
-			# If 'to_addons' clone also 'vb30' stuff
-			if self.to_addons:
+			if self.vb30:
 				os.chdir(modulesPath)
 				pyNodesPath = utils.path_join(modulesPath, "pynodes_framework")
 				if os.path.exists(pyNodesPath):

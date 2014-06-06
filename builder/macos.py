@@ -43,7 +43,7 @@ class MacBuilder(Builder):
 			return
 
 		build_options = {
-			'WITH_VRAY_FOR_BLENDER' : self.add_patches or self.use_github_repo,
+			'WITH_VRAY_FOR_BLENDER' : True,
 
 			'WITH_BF_FREESTYLE': False,
 			'WITH_BF_3DMOUSE' : False,
@@ -79,7 +79,7 @@ class MacBuilder(Builder):
 			utils.path_create(release_path)
 
 		# Example: vrayblender-2.60-42181-macos-10.6-x86_64.tar.bz2
-		archive_name = "%s-%s-%s-%s-%s-macos-%s-%s.tar.bz2" % (self.project, self.status, self.version, self.commits, self.revision, self.osx_sdk, self.build_arch)
+		archive_name = utils.GetPackageName(self)
 		archive_path = utils.path_join(release_path, archive_name)
 
 		sys.stdout.write("Generating archive: %s\n" % (archive_name))

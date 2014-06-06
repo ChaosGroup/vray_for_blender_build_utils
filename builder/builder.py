@@ -140,10 +140,8 @@ class Builder:
 
 	use_proxy           = None
 
-	use_github_repo     = None
 	use_github_branch   = None
 	use_exp_branch      = None
-	status              = None
 
 	vb30   = None
 	vc2013 = None
@@ -165,14 +163,10 @@ class Builder:
 			sys.stderr.write("Source directory not specified!\n")
 			sys.exit(2)
 
-		if not (self.add_patches or self.use_github_repo):
-			self.project = "blender"
-
-		self.status = 'stable'
-		if self.use_github_repo:
-			self.status = 'dev'
-			if self.vb30:
-				self.status = 'vb30'
+		if self.vb30:
+			self.project += "3"
+		else:
+			self.project += "2"
 
 
 	def info(self):
@@ -199,18 +193,6 @@ class Builder:
 		  Getting/updating sources
 		"""
 
-		def genBuildInfo():
-			with open(os.path.join(self.dir_blender, "source", "creator", "buildinfo.h"), 'w') as f:
-				now = datetime.datetime.now()
-				gitHash, gitCnt = utils.get_svn_revision(self.dir_blender_svn)
-
-				f.write('#define BUILD_HASH "%s"\n' % gitHash)
-				f.write('#define BUILD_CHANGE ""\n')
-				f.write('#define BUILD_BRANCH "dev/vray_for_blender"\n')
-				f.write('#define BUILD_DATE "%s"\n' % now.strftime("%Y-%m-%d"))
-				f.write('#define BUILD_TIME "%s"\n' % now.strftime("%H:%M:%S"))
-				f.write('\n')
-
 		def exportSources():
 			sys.stdout.write("Exporting sources...\n")
 			if self.mode_test:
@@ -222,10 +204,9 @@ class Builder:
 			# Copy full tree to have proper build info.
 			shutil.copytree(self.dir_blender_svn, self.dir_blender)
 
-			if self.use_github_repo:
-				os.chdir(self.dir_blender)
-				os.system("git remote update github")
-				os.system("git checkout -b {branch} github/{branch}".format(branch=self.use_github_branch))
+			os.chdir(self.dir_blender)
+			os.system("git remote update github")
+			os.system("git checkout -b {branch} github/{branch}".format(branch=self.use_github_branch))
 
 			if self.checkout_revision is not None:
 				os.chdir(self.dir_blender)
@@ -244,19 +225,15 @@ class Builder:
 					os.chdir(self.dir_source)
 
 					# Obtain sources
-					if self.use_github_repo:
-						os.system("git clone %s blender" % GITHUB_REPO)
+					os.system("git clone %s blender" % GITHUB_REPO)
 
-						# Now set origin to Blender's git and additional github remote
-						# This is needed for proper submodules init
-						#
-						os.chdir(self.dir_blender)
-						os.system("git remote set-url origin %s" % OFFICIAL_REPO)
-						os.system("git remote add github %s" % GITHUB_REPO)
-						os.system("git remote update")
-						os.system("git pull --rebase")
-					else:
-						os.system("git clone %s" % OFFICIAL_REPO)
+					# Now set origin to Blender's git and additional github remote
+					# This is needed for proper submodules init
+					os.chdir(self.dir_blender)
+					os.system("git remote set-url origin %s" % OFFICIAL_REPO)
+					os.system("git remote add github %s" % GITHUB_REPO)
+					os.system("git remote update")
+					os.system("git pull --rebase")
 
 					os.chdir(self.dir_blender)
 					os.system("git submodule update --init --recursive")
@@ -328,7 +305,7 @@ class Builder:
 		self.version                = utils.get_blender_version(self.dir_blender_svn)
 
 		if self.build_release:
-			self.dir_install_name = "%s-%s-%s-%s-%s-%s" % (self.project, self.status, self.version, self.commits, self.revision, self.build_arch)
+			self.dir_install_name = utils.GetInstallDirName(self)
 		else:
 			self.dir_install_name = self.project
 
@@ -338,59 +315,11 @@ class Builder:
 	def patch(self):
 		patch_dir = utils.path_join(self.dir_source, "vb25-patch")
 
-		if not os.path.exists(patch_dir):
-			sys.stderr.write("Fatal error!\n")
-			sys.stderr.write("Patch directory (%s) not found!\n" % (patch_dir))
-			sys.exit(2)
-
-		if not os.path.exists(utils.path_join(patch_dir, "patch")):
-			sys.stderr.write("Fatal error!\n")
-			sys.stderr.write("Something wrong happened! Patch directory is incomplete!\n")
-			sys.exit(2)
-
-		# Blender clean exported souces
-		blender_dir = utils.path_join(self.dir_source, "blender")
-		if self.add_patches or self.add_extra:
-			if not os.path.exists(patch_dir):
-				sys.stderr.write("Fatal error!\n")
-				sys.stderr.write("Exported Blender sources (%s) not found!\n" % (blender_dir))
-				sys.exit(2)
-
-			patch_cmd  = utils.find_patch()
-
-			# Apply V-Ray/Blender patches
-			if self.add_patches:
-				sys.stdout.write("Adding V-Ray/Blender patches...\n")
-
-				cmd = "%s -Np1 -i %s" % (patch_cmd, utils.path_join(patch_dir, "patch", "vray_for_blender.patch"))
-
-				# Patching Blender sources
-				sys.stdout.write("Patching sources...\n")
-				sys.stdout.write("Patch command: %s\n" % (cmd))
-				if not self.mode_test:
-					os.chdir(blender_dir)
-					os.system(cmd)
-
-		# Apply extra patches
-		if self.add_extra:
-			extra_dir = path_join(patch_dir, "patch", "extra")
-
-			patches   = []
-			for f in os.listdir(extra_dir):
-				if f.endswith(".patch"):
-					patches.append(utils.path_join(extra_dir), f)
-
-			if not self.mode_test:
-				os.chdir(blender_dir)
-				for patch_file in patches:
-					cmd = "%s -Np0 -i %s" % (patch_cmd, patch_file)
-					os.system(cmd)
-
 		# Add datafiles: splash, default scene etc
 		if self.add_datafiles:
 			sys.stdout.write("Adding datafiles...\n")
 
-			datafiles_path = utils.path_join(blender_dir, "release", "datafiles")
+			datafiles_path = utils.path_join(self.dir_blender, "release", "datafiles")
 
 			if not self.mode_test:
 				# Change splash

@@ -79,7 +79,7 @@ class WindowsBuilder(Builder):
 			build_options['False'].append('WITH_BF_PLAYER')
 
 		if not self.with_tracker:
-			build_options['False'].append('WITH_BF_LIBMV')			
+			build_options['False'].append('WITH_BF_LIBMV')
 
 		if self.build_arch == 'x86_64':
 			build_options['False'].append('WITH_BF_JACK')
@@ -121,8 +121,7 @@ class WindowsBuilder(Builder):
 			uc.write("WITH_BF_OIIO      = False\n")
 			uc.write("\n")
 
-		if self.add_patches or self.use_github_repo:
-			uc.write("WITH_VRAY_FOR_BLENDER = True\n")
+		uc.write("WITH_VRAY_FOR_BLENDER = True\n")
 
 		# Write boolean options
 		for key in build_options:
@@ -144,7 +143,7 @@ class WindowsBuilder(Builder):
 		director_size = 0
 
 		# Example: vrayblender-2.60-42181-windows-x86_64.exe
-		installer_name = "%s-%s-%s-%s-%s-windows-%s.exe" % (self.project, self.status, self.version, self.commits, self.revision, self.build_arch)
+		installer_name = utils.GetPackageName(self)
 		installer_path = utils.path_slashify(utils.path_join(release_path, installer_name))
 		installer_root = utils.path_join(self.dir_source, "vb25-patch", "installer")
 

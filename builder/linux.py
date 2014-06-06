@@ -88,7 +88,7 @@ class LinuxBuilder(Builder):
 			return
 
 		build_options = {
-			'WITH_VRAY_FOR_BLENDER' : self.add_patches or self.use_github_repo,
+			'WITH_VRAY_FOR_BLENDER' : True,
 
 			'BF_DEBUG' : self.use_debug,
 
@@ -165,7 +165,7 @@ class LinuxBuilder(Builder):
 			uc.write("BF_OCIO_LIB_STATIC = '${BF_OCIO_LIBPATH}/libOpenColorIO.a ${BF_OCIO_LIBPATH}/libtinyxml.a ${BF_OCIO_LIBPATH}/libyaml-cpp.a'\n")
 			uc.write("BF_OCIO_LIBPATH = '${BF_OCIO}/lib'\n")
 			uc.write("\n")
-			
+
 			uc.write("WITH_BF_STATICOPENEXR = True\n")
 			uc.write("BF_OPENEXR = '/opt/openexr'\n")
 			uc.write("BF_OPENEXR_INC = '${BF_OPENEXR}/include/OpenEXR'\n")
@@ -193,8 +193,7 @@ class LinuxBuilder(Builder):
 		if not self.mode_test:
 			utils.path_create(release_path)
 
-		# Example: vrayblender-2.60-42181-Calculate-11.9-x86_64.tar.bz2
-		archive_name = "%s-%s-%s-%s-%s-%s-%s-%s.tar.bz2" % (self.project, self.status, self.version, self.commits, self.revision, self.host_linux['short_name'], self.host_linux['version'], self.build_arch)
+		archive_name = utils.GetPackageName(self)
 		archive_path = utils.path_join(release_path, archive_name)
 
 		sys.stdout.write("Generating archive: %s\n" % (archive_name))

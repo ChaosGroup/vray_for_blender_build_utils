@@ -350,3 +350,34 @@ def move_directory(src, dst):
 		os.system('move /Y "%s" "%s"' % (src, dst))
 	else:
 		shutil.move(src, dst)
+
+
+def GetInstallDirName(self):
+	branchID = self.use_github_branch.split("/")[-1]
+
+	params = {
+		'project' : self.project,
+		'branch' : branchID,
+		'version' : self.version,
+		'commit_count' : self.commits,
+		'hash' : self.revision,
+		'arch' : self.build_arch
+	}
+
+	return "{project}-{version}-{commit_count}-{hash}-{arch}-{branch}".format(**params)
+
+
+def GetPackageName(self):
+	def _get_host_package_type():
+		if get_host_os() == WIN:
+			return "exe"
+		else:
+			return "tar.bz2"
+
+	params = {
+		'build_name' : GetInstallDirName(self),
+		'os' : get_host_os(),
+		'ext' : _get_host_package_type(),
+	}
+
+	return "{build_name}-{os}.{ext}".format(**params)

@@ -450,12 +450,6 @@ class Builder:
 				return
 
 			if self.vb30:
-				os.chdir(modulesPath)
-				pyNodesPath = utils.path_join(modulesPath, "pynodes_framework")
-				if os.path.exists(pyNodesPath):
-					utils.remove_directory(pyNodesPath)
-				os.system("git clone https://git.gitorious.org/blender-trunk/pynodes_framework.git")
-
 				os.chdir(clonePath)
 				exporterPath = utils.path_join(clonePath, "vb30")
 				if os.path.exists(exporterPath):
@@ -467,13 +461,7 @@ class Builder:
 				exporterPath = utils.path_join(clonePath, "vb25")
 				if os.path.exists(exporterPath):
 					utils.remove_directory(exporterPath)
-
-				os.system("git clone https://github.com/bdancer/vb25.git")
-
-				os.chdir(exporterPath)
-				os.system("git submodule update --init --recursive")
-				os.system("git submodule foreach git checkout master")
-				os.system("git submodule foreach git pull --rebase origin master")
+				os.system("git clone --recursive https://github.com/bdancer/vb25.git")
 
 			if self.use_exp_branch not in {'master'}:
 				os.chdir(exporterPath)

@@ -435,7 +435,6 @@ class Builder:
 		if self.host_os == utils.MAC:
 			scriptsPath = utils.path_join(self.dir_install, self.dir_install_name, "blender.app", "Contents", "MacOS", self.version, "scripts")
 
-		modulesPath = utils.path_join(scriptsPath, "modules")
 		addonsPath  = utils.path_join(scriptsPath, "addons")
 		startupPath = utils.path_join(scriptsPath, "startup")
 
@@ -445,7 +444,7 @@ class Builder:
 		sys.stdout.write("  in: %s\n" % clonePath)
 
 		if not self.mode_test:
-			if not (os.path.exists(clonePath) or os.path.exists(modulesPath)):
+			if not os.path.exists(clonePath):
 				sys.stderr.write("Something went wrong! Can't add Python modules and exporter!\n")
 				return
 

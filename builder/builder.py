@@ -446,7 +446,7 @@ class Builder:
 		if not self.mode_test:
 			if not os.path.exists(clonePath):
 				sys.stderr.write("Something went wrong! Can't add Python modules and exporter!\n")
-				return
+				sys.exit(3)
 
 			if self.vb30:
 				os.chdir(clonePath)

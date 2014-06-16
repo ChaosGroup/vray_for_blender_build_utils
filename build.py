@@ -191,7 +191,7 @@ if options.user_user_config:
 	params['user_user_config'] = options.user_user_config
 
 params['use_github_branch'] = options.use_github_branch
-params['add_branch_name']   = option.add_branch_name
+params['add_branch_name']   = options.add_branch_name
 params['add_patches']       = False
 params['add_extra']         = False
 

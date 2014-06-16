@@ -357,14 +357,14 @@ def GetInstallDirName(self):
 
 	params = {
 		'project' : self.project,
-		'branch' : branchID,
+		'branch' : "-%s" % (branchID if self.add_branch_name else ""),
 		'version' : self.version,
 		'commit_count' : self.commits,
 		'hash' : self.revision,
 		'arch' : self.build_arch
 	}
 
-	return "{project}-{version}-{commit_count}-{hash}-{arch}-{branch}".format(**params)
+	return "{project}-{version}-{commit_count}-{hash}-{arch}{branch}".format(**params)
 
 
 def GetPackageName(self):

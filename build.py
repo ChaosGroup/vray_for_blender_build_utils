@@ -91,6 +91,14 @@ parser.add_option('', '--vc2013', action='store_true', dest="vc2013",       defa
 parser.add_option('', '--github-src-branch', dest="use_github_branch", default="dev/vray_for_blender/stable", help="Use sources from project's github branch")
 parser.add_option('', '--github-exp-branch', dest="use_exp_branch",    default="master", help="Use exporter from specific branch")
 
+parser.add_option('',
+	'--add-branch-name',
+	action='store_true',
+	dest="add_branch_name",
+	default=False,
+	help="Add branch name to the installer name"
+)
+
 parser.add_option('', '--vb30',
 	action  = 'store_true',
 	dest    = "vb30",
@@ -183,6 +191,7 @@ if options.user_user_config:
 	params['user_user_config'] = options.user_user_config
 
 params['use_github_branch'] = options.use_github_branch
+params['add_branch_name']   = option.add_branch_name
 params['add_patches']       = False
 params['add_extra']         = False
 

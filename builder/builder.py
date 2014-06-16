@@ -142,6 +142,7 @@ class Builder:
 
 	use_github_branch   = None
 	use_exp_branch      = None
+	add_branch_name     = None
 
 	vb30   = None
 	vc2013 = None

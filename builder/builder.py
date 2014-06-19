@@ -166,6 +166,8 @@ class Builder:
 
 		if self.vb30:
 			self.project += "3"
+		elif self.use_github_branch == "dev/vray_for_blender/stable"
+			self.project += "1"
 		else:
 			self.project += "2"
 

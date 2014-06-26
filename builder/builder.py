@@ -36,6 +36,8 @@ import utils
 OFFICIAL_REPO = "http://git.blender.org/blender.git"
 GITHUB_REPO   = "https://github.com/bdancer/blender-for-vray.git"
 
+BLENDER_HASH_271 = "772af36fc469e7666fc59d1d0b0e4dbcf52cfe2c"
+
 
 class Builder:
 	"""

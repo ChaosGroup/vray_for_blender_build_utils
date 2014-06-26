@@ -42,6 +42,7 @@ parser.add_option('', '--release',    action='store_true',   dest='release',    
 parser.add_option('', '--package',    action='store_true',   dest='package',      default=False,  help="Create archive (Linux, Mac OS) or installer (Windows, NSIS required).")
 parser.add_option('', '--upload',                            dest='upload',       default='off',  help="Upload build", type='choice', choices=('off', 'ftp', 'http'))
 parser.add_option('', '--proxy',                             dest='proxy',        default="",     help="Upload using proxy")
+parser.add_option('', '--export_only', action='store_true',  dest='export_only',  default=False,  help="Don't compile")
 
 # Blender options
 parser.add_option('', '--with_collada', action='store_true',  dest='collada',      default=False,  help="Add OpenCollada support.")
@@ -199,6 +200,7 @@ params['use_exp_branch'] = options.use_exp_branch
 
 params['vb30']   = options.vb30
 params['vc2013'] = options.vc2013
+params['export_only'] = options.export_only
 
 builder = build_system.Builder(params)
 builder.build()

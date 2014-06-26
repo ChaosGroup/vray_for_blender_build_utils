@@ -149,6 +149,9 @@ class Builder:
 	vb30   = None
 	vc2013 = None
 
+	# Only prepare sources
+	export_only = None
+
 	def __init__(self, params):
 		if not params:
 			sys.stdout.write("Params are empty - using defaults...\n")
@@ -496,24 +499,26 @@ class Builder:
 		self.info()
 
 		self.patch()
-		self.config()
-		self.compile()
 
-		if not self.mode_developer:
-			self.exporter()
+		if not self.export_only:
+			self.config()
+			self.compile()
 
-		self.docs()
+			if not self.mode_developer:
+				self.exporter()
 
-		if self.generate_package:
-			if self.mode_developer:
-				sys.stdout.write("Package generation is disabled in 'Developer' mode.\n")
-			else:
-				if self.build_release:
-					releaeSubdir, releasePackage = self.package()
-					if self.build_upload != 'off':
-						self.upload(releaeSubdir, releasePackage)
+			self.docs()
+
+			if self.generate_package:
+				if self.mode_developer:
+					sys.stdout.write("Package generation is disabled in 'Developer' mode.\n")
 				else:
-					sys.stdout.write("Package generation is disabled in non-release mode.\n")
+					if self.build_release:
+						releaeSubdir, releasePackage = self.package()
+						if self.build_upload != 'off':
+							self.upload(releaeSubdir, releasePackage)
+					else:
+						sys.stdout.write("Package generation is disabled in non-release mode.\n")
 
 
 	def upload(self, subdir, filepath):

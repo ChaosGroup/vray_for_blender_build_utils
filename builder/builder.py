@@ -144,6 +144,7 @@ class Builder:
 
 	use_github_branch   = None
 	use_exp_branch      = None
+	use_blender_hash    = None
 	add_branch_name     = None
 
 	vb30   = None
@@ -322,6 +323,21 @@ class Builder:
 
 	def patch(self):
 		patch_dir = utils.path_join(self.dir_source, "vb25-patch")
+
+		if self.use_blender_hash:
+			patchBin      = utils.find_patch()
+			patchFilepath = os.path.join(tempfile.gettempdir(), "vray_for_blender.patch")
+
+			os.chdir(self.dir_blender)
+
+			os.system("git checkout %s" % self.use_github_branch) # Checkout exporter branch
+			os.system("git diff master > %s" % patchFilepath)     # Generate diff with master
+			os.system("git fetch --tags")                         # Hash could be tag also
+			os.system("git checkout %s" % self.use_blender_hash)  # Checkout needed revision
+			os.system("git checkout -b vray_for_blender")         # Create some branch for patching
+			os.system("patch -Np1 -i %s" % patchFilepath)         # Apply patch
+
+			os.remove(patchFilepath)
 
 		# Add datafiles: splash, default scene etc
 		if self.add_datafiles:

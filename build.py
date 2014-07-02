@@ -107,6 +107,12 @@ parser.add_option('', '--vb30',
 	help    = "Build vb30"
 )
 
+parser.add_option('', '--use_blender_hash',
+	dest    = "use_blender_hash",
+	default = "",
+	help    = "Use revision (like 772af36fc469e7666fc59d1d0b0e4dbcf52cfe2c)"
+)
+
 (options, args) = parser.parse_args()
 
 
@@ -201,6 +207,7 @@ params['use_exp_branch'] = options.use_exp_branch
 params['vb30']   = options.vb30
 params['vc2013'] = options.vc2013
 params['export_only'] = options.export_only
+params['use_blender_hash'] = options.use_blender_hash
 
 builder = build_system.Builder(params)
 builder.build()

@@ -353,18 +353,31 @@ def move_directory(src, dst):
 
 
 def GetInstallDirName(self):
-	branchID = self.use_github_branch.split("/")[-1]
+	branchID = ""
+	if self.add_branch_name:
+		branchID = self.use_github_branch.split("/")[-1]
+
+	version  = self.version
+	project  = self.project
+	nCommits = self.commits
+	arch     = self.build_arch
 
 	params = {
-		'project' : self.project,
-		'branch' : "-%s" % branchID if self.add_branch_name else "",
-		'version' : self.version,
-		'commit_count' : self.commits,
-		'hash' : self.revision,
-		'arch' : self.build_arch
+		'project'  : self.project,
+		'version'  : "-%s" % self.version,
+		'nCommits' : "-%s" % self.commits,
+		'hash'     : "-%s" % self.revision,
+		'arch'     : "-%s" % self.build_arch,
+		'branch'   : "-%s" % branchID,
 	}
 
-	return "{project}-{version}-{commit_count}-{hash}-{arch}{branch}".format(**params)
+	if self.use_blender_hash:
+		params.update({
+			'version' : "-%s" % self.use_blender_hash,
+			'hash'    : "",
+		})
+
+	return "{project}{version}{nCommits}{hash}{arch}{branch}".format(**params)
 
 
 def GetPackageName(self):

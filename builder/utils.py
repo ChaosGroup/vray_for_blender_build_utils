@@ -355,7 +355,7 @@ def move_directory(src, dst):
 def GetInstallDirName(self):
 	branchID = ""
 	if self.add_branch_name:
-		branchID = self.use_github_branch.split("/")[-1]
+		branchID = "-%s" % self.use_github_branch.split("/")[-1]
 
 	version  = self.version
 	project  = self.project
@@ -368,7 +368,7 @@ def GetInstallDirName(self):
 		'nCommits' : "-%s" % self.commits,
 		'hash'     : "-%s" % self.revision,
 		'arch'     : "-%s" % self.build_arch,
-		'branch'   : "-%s" % branchID,
+		'branch'   : branchID,
 	}
 
 	if self.use_blender_hash:

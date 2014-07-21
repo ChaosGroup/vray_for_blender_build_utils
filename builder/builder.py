@@ -430,6 +430,9 @@ class Builder:
 		if self.use_env_msvc:
 			compileCmd.append(r'env="PATH:%PATH%,INCLUDE:%INCLUDE%,LIB:%LIB%"')
 
+		if self.vc2013:
+			compileCmd.append(r'MSVS_VERSION=12.0')
+
 		cleanCmd = [sys.executable]
 		cleanCmd.append("scons/scons.py")
 		cleanCmd.append("clean")

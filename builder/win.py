@@ -87,11 +87,6 @@ class WindowsBuilder(Builder):
 			build_options['False'].append('WITH_BF_FFMPEG')
 			build_options['False'].append('WITH_BF_OPENAL')
 
-			if self.vc2013:
-				uc.write("LCGDIR = '#../lib/win64_vc12'\n")
-			else:
-				uc.write("LCGDIR = '#../lib/win64'\n")
-			uc.write("LIBDIR = '${LCGDIR}'\n")
 			uc.write("BF_PNG_LIB = 'libpng'\n")
 			uc.write("\n")
 

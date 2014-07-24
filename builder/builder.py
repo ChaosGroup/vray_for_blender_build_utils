@@ -451,7 +451,18 @@ class Builder:
 				sys.exit(1)
 
 			if self.host_os == utils.WIN:
-				shutil.copy(utils.path_join(self.dir_source, "vb25-patch", "non-gpl", self.build_arch, "vcomp90.dll"), self.dir_install_path)
+				runtimeDir = utils.path_join(self.dir_source, "vb25-patch", "non-gpl", self.build_arch)
+				files = []
+				if self.vc2013:
+					files.extend([
+						"msvcp120.dll",
+						"msvcr120.dll",
+						"vcomp120.dll",
+					])
+				else:
+					files.append("vcomp90.dll")
+				for f in files:
+					shutil.copy(utils.path_join(runtimeDir, f), self.dir_install_path)
 
 
 	def exporter(self):

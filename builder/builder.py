@@ -471,7 +471,7 @@ class Builder:
 		"""
 		scriptsPath = utils.path_join(self.dir_install, self.dir_install_name, self.version, "scripts")
 		if self.host_os == utils.MAC:
-			scriptsPath = utils.path_join(self.dir_install, self.dir_install_name, "blender.app", "Contents", "MacOS", self.version, "scripts")
+			scriptsPath = utils.path_join(self.dir_install, self.dir_install_name, "blender.app", "Contents", "Resources", self.version, "scripts")
 
 		addonsPath  = utils.path_join(scriptsPath, "addons")
 		startupPath = utils.path_join(scriptsPath, "startup")

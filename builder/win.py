@@ -160,6 +160,8 @@ class WindowsBuilder(Builder):
 		uninstaller_files = []
 
 		for dirpath, dirnames, filenames in os.walk(self.dir_install_path):
+			if dirpath.startswith('.svn'):
+				continue
 			if dirpath.endswith('__pycache__'):
 				continue
 

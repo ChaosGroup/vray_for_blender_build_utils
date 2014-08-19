@@ -427,6 +427,10 @@ class Builder:
 			compileCmd.append("--implicit-deps-unchanged")
 			compileCmd.append("--max-drift=1")
 
+		if self.host_os != utils.WIN:
+			compileCmd.append('CXXFLAGS="-w"')
+			compileCmd.append('CCFLAGS="-w"')
+
 		if self.use_env_msvc:
 			compileCmd.append(r'env="PATH:%PATH%,INCLUDE:%INCLUDE%,LIB:%LIB%"')
 

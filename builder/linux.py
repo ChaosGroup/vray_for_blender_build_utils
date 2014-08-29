@@ -25,6 +25,8 @@
 
 import os
 import sys
+import shutil
+import subprocess
 
 from builder import utils
 from builder import Builder
@@ -73,7 +75,7 @@ class LinuxBuilder(Builder):
 			sys.exit(0)
 
 
-	def config(self):
+	def config_scons(self):
 		sys.stdout.write("Generating build configuration:\n")
 		sys.stdout.write("  in: %s\n" % (self.user_config))
 
@@ -180,6 +182,104 @@ class LinuxBuilder(Builder):
 			# Write boolean options
 			for key in build_options:
 				uc.write("%s = %s\n" % (key, build_options[key]))
+
+
+	def config(self):
+		if sys.platform == 'win32':
+			self.config_scons()
+
+
+	def compile_linux(self):
+		cmake_build_dir = os.path.join(self.dir_source, "blender-cmake-build")
+		if not os.path.exists(cmake_build_dir):
+			os.makedirs(cmake_build_dir)
+		os.chdir(cmake_build_dir)
+
+		cmake = ['cmake']
+
+		cmake.append("-G")
+		cmake.append("Ninja")
+
+		cmake.append("-DCMAKE_BUILD_TYPE=Release")
+		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
+
+		cmake.append("-DBoost_DIR=/opt/boost")
+		cmake.append("-DBoost_INCLUDE_DIR=/opt/boost/include")
+		cmake.append("-DBoost_LIBRARY_DIRS=/opt/boost/lib")
+		cmake.append("-DBoost_DATE_TIME_LIBRARY=/opt/boost/lib/libboost_date_time.a")
+		cmake.append("-DBoost_DATE_TIME_LIBRARY_DEBUG=/opt/boost/lib/libboost_date_time.a")
+		cmake.append("-DBoost_DATE_TIME_LIBRARY_RELEASE=/opt/boost/lib/libboost_date_time.a")
+		cmake.append("-DBoost_FILESYSTEM_LIBRARY=/opt/boost/lib/libboost_filesystem.a")
+		cmake.append("-DBoost_FILESYSTEM_LIBRARY_DEBUG=/opt/boost/lib/libboost_filesystem.a")
+		cmake.append("-DBoost_FILESYSTEM_LIBRARY_RELEASE=/opt/boost/lib/libboost_filesystem.a")
+		cmake.append("-DBoost_REGEX_LIBRARY=/opt/boost/lib/libboost_regex.a")
+		cmake.append("-DBoost_REGEX_LIBRARY_DEBUG=/opt/boost/lib/libboost_regex.a")
+		cmake.append("-DBoost_REGEX_LIBRARY_RELEASE=/opt/boost/lib/libboost_regex.a")
+		cmake.append("-DBoost_SYSTEM_LIBRARY=/opt/boost/lib/libboost_system.a")
+		cmake.append("-DBoost_SYSTEM_LIBRARY_DEBUG=/opt/boost/lib/libboost_system.a")
+		cmake.append("-DBoost_SYSTEM_LIBRARY_RELEASE=/opt/boost/lib/libboost_system.a")
+		cmake.append("-DBoost_THREAD_LIBRARY=/opt/boost/lib/libboost_thread.a")
+		cmake.append("-DBoost_THREAD_LIBRARY_DEBUG=/opt/boost/lib/libboost_thread.a")
+		cmake.append("-DBoost_THREAD_LIBRARY_RELEASE=/opt/boost/lib/libboost_thread.a")
+		cmake.append("-DBoost_LOCALE_LIBRARY=/opt/boost/lib/libboost_locale.a")
+		cmake.append("-DBoost_LOCALE_LIBRARY_DEBUG=/opt/boost/lib/libboost_locale.a")
+		cmake.append("-DBoost_LOCALE_LIBRARY_RELEASE=/opt/boost/lib/libboost_locale.a")
+
+		cmake.append("-DOPENEXR_ROOT_DIR=/opt/openexr")
+		cmake.append("-DOPENEXR_ILMIMF_LIBRARY=/opt/openexr/lib/libIlmImf-2_1.a")
+
+		cmake.append("-D_opencolorio_LIBRARIES=/opt/ocio/lib/libOpenColorIO.a")
+		cmake.append("-DOPENCOLORIO_INCLUDE_DIR=/opt/ocio/include")
+		cmake.append("-DOPENCOLORIO_TINYXML_LIBRARY=/opt/ocio/lib/libtinyxml.a")
+		cmake.append("-DOPENCOLORIO_YAML-CPP_LIBRARY=/opt/ocio/lib/libyaml-cpp.a")
+		cmake.append("-DOPENIMAGEIO_INCLUDE_DIR=/opt/oiio/include/")
+		cmake.append("-DOPENIMAGEIO_LIBRARY=/opt/oiio/lib/libOpenImageIO.a")
+
+		cmake.append("-DPYTHON_VERSION=3.4")
+		cmake.append("-DPYTHON_ROOT_DIR=/opt/python-3.3")
+		cmake.append("-DPYTHON_LIBRARY=/opt/python-3.3/lib/libpython3.4m.a")
+		cmake.append("-DPYTHON_LIBPATH=/opt/python-3.3/lib")
+		cmake.append("-DPYTHON_LIBRARIES=/opt/python-3.3/lib")
+		cmake.append("-DPYTHON_INCLUDE_DIR=/opt/python-3.3/include/python3.4m")
+		cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=/opt/python-3.3/include/python3.4m")
+		cmake.append("-DPYTHON_NUMPY_PATH=/opt/python-3.3/lib/python3.4/site-packages")
+
+		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
+
+		cmake.append("../blender")
+
+		res = subprocess.call(cmake)
+		if not res == 0:
+			sys.stderr.write("There was an error during configuration!\n")
+			sys.exit(1)
+
+		make = ['ninja']
+		make.append('-j10')
+		make.append('install')
+
+		res = subprocess.call(make)
+		if not res == 0:
+			sys.stderr.write("There was an error during the compilation!\n")
+			sys.exit(1)
+
+		# Copy data to the release directory
+		install_dir = self.dir_install_path
+		if os.path.exists(install_dir):
+			shutil.rmtree(install_dir)
+
+		def install_filter(src, names):
+			return (
+				'blender.1',
+				'datatoc',
+				'datatoc_icon',
+				'makesdna',
+				'makesrna',
+				'msgfmt',
+			)
+
+		cmake_install_dir = os.path.join(cmake_build_dir, "bin")
+
+		shutil.copytree(cmake_install_dir, install_dir, ignore=install_filter)
 
 
 	def package(self):

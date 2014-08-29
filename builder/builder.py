@@ -420,53 +420,58 @@ class Builder:
 
 
 	def compile(self):
-		compileCmd = [sys.executable]
-		compileCmd.append("scons/scons.py")
+		if self.host_os == utils.LNX and hasattr(self, 'compile_linux'):
+			self.compile_linux()
+		else:
+			compileCmd = [sys.executable]
+			compileCmd.append("scons/scons.py")
 
-		if not self.build_clean:
-			compileCmd.append("--implicit-deps-unchanged")
-			compileCmd.append("--max-drift=1")
+			if not self.build_clean:
+				compileCmd.append("--implicit-deps-unchanged")
+				compileCmd.append("--max-drift=1")
 
-		if self.host_os != utils.WIN:
-			compileCmd.append('CXXFLAGS="-w"')
-			compileCmd.append('CCFLAGS="-w"')
+			if self.host_os != utils.WIN:
+				compileCmd.append('CXXFLAGS="-w"')
+				compileCmd.append('CCFLAGS="-w"')
 
-		if self.use_env_msvc:
-			compileCmd.append(r'env="PATH:%PATH%,INCLUDE:%INCLUDE%,LIB:%LIB%"')
+			if self.use_env_msvc:
+				compileCmd.append(r'env="PATH:%PATH%,INCLUDE:%INCLUDE%,LIB:%LIB%"')
 
-		if self.vc2013:
-			compileCmd.append(r'MSVS_VERSION=12.0')
+			if self.vc2013:
+				compileCmd.append(r'MSVS_VERSION=12.0')
 
-		cleanCmd = [sys.executable]
-		cleanCmd.append("scons/scons.py")
-		cleanCmd.append("clean")
+			cleanCmd = [sys.executable]
+			cleanCmd.append("scons/scons.py")
+			cleanCmd.append("clean")
 
-		if not self.mode_test:
-			os.chdir(self.dir_blender)
+			if not self.mode_test:
+				os.chdir(self.dir_blender)
 
-			if self.build_clean:
-				sys.stdout.write("Calling: %s\n" % (" ".join(cleanCmd)))
-				subprocess.call(cleanCmd)
+				if self.build_clean:
+					sys.stdout.write("Calling: %s\n" % (" ".join(cleanCmd)))
+					subprocess.call(cleanCmd)
 
-			sys.stdout.write("Calling: %s\n" % (" ".join(compileCmd)))
-			res = subprocess.call(compileCmd)
-			if not res == 0:
-				sys.stderr.write("There was an error during the compilation!\n")
-				sys.exit(1)
+				sys.stdout.write("Calling: %s\n" % (" ".join(compileCmd)))
+				res = subprocess.call(compileCmd)
+				if not res == 0:
+					sys.stderr.write("There was an error during the compilation!\n")
+					sys.exit(1)
 
-			if self.host_os == utils.WIN:
-				runtimeDir = utils.path_join(self.dir_source, "vb25-patch", "non-gpl", self.build_arch)
-				files = []
-				if self.vc2013:
-					files.extend([
-						"msvcp120.dll",
-						"msvcr120.dll",
-						"vcomp120.dll",
-					])
-				else:
-					files.append("vcomp90.dll")
-				for f in files:
-					shutil.copy(utils.path_join(runtimeDir, f), self.dir_install_path)
+
+	def compile_post(self):
+		if self.host_os == utils.WIN:
+			runtimeDir = utils.path_join(self.dir_source, "vb25-patch", "non-gpl", self.build_arch)
+			files = []
+			if self.vc2013:
+				files.extend([
+					"msvcp120.dll",
+					"msvcr120.dll",
+					"vcomp120.dll",
+				])
+			else:
+				files.append("vcomp90.dll")
+			for f in files:
+				shutil.copy(utils.path_join(runtimeDir, f), self.dir_install_path)
 
 
 	def exporter(self):
@@ -537,6 +542,7 @@ class Builder:
 		if not self.export_only:
 			self.config()
 			self.compile()
+			self.compile_post()
 
 			if not self.mode_developer:
 				self.exporter()

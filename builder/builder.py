@@ -46,7 +46,8 @@ class Builder:
 
 	project        = "vrayblender"
 	version        = utils.VERSION
-	revision       = utils.REVISION
+	revision       = utils.REVISION # Patches revision
+	brev           = None           # Blender master revision
 	commits        = '0'
 
 	# Directories
@@ -310,8 +311,8 @@ class Builder:
 
 
 	def update(self):
-		self.revision, self.commits = utils.get_svn_revision(self.dir_blender)
-		self.version                = utils.get_blender_version(self.dir_blender)
+		self.revision, self.brev, self.commits = utils.get_svn_revision(self.dir_blender)
+		self.version = utils.get_blender_version(self.dir_blender)
 
 		if self.build_release:
 			self.dir_install_name = utils.GetInstallDirName(self)

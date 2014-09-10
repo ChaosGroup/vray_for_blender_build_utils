@@ -281,12 +281,14 @@ def _get_cmd_output(cmd, workDir=None):
 
 def get_svn_revision(svn_root):
 	git_rev = ['git', 'rev-parse', '--short', 'HEAD']
+	b_rev   = ['git', 'rev-parse', '--short', 'master']
 	git_cnt = ['git', 'rev-list',  '--count', 'HEAD']
 
 	rev = _get_cmd_output(git_rev, svn_root)
+	brev = _get_cmd_output(git_rev, svn_root)
 	cnt = _get_cmd_output(git_cnt, svn_root)
 
-	return rev, cnt
+	return rev, brev, cnt
 
 
 def get_blender_version(root_dir):
@@ -367,6 +369,7 @@ def GetInstallDirName(self):
 		'version'  : "-%s" % self.version,
 		'nCommits' : "-%s" % self.commits,
 		'hash'     : "-%s" % self.revision,
+		'bhash'    : "-%s" % self.brev,
 		'arch'     : "-%s" % self.build_arch,
 		'branch'   : branchID,
 	}
@@ -377,7 +380,7 @@ def GetInstallDirName(self):
 			'hash'    : "",
 		})
 
-	return "{project}{version}{nCommits}{hash}{arch}{branch}".format(**params)
+	return "{project}{version}{nCommits}{bhash}{hash}{arch}{branch}".format(**params)
 
 
 def GetPackageName(self):

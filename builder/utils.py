@@ -285,7 +285,7 @@ def get_svn_revision(svn_root):
 	git_cnt = ['git', 'rev-list',  '--count', 'HEAD']
 
 	rev = _get_cmd_output(git_rev, svn_root)
-	brev = _get_cmd_output(git_rev, svn_root)
+	brev = _get_cmd_output(b_rev, svn_root)
 	cnt = _get_cmd_output(git_cnt, svn_root)
 
 	return rev, brev, cnt

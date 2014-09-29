@@ -192,7 +192,7 @@ params['with_cuda']   = options.with_cuda
 params['cuda_gpu']    = options.cuda_gpu
 params['with_osl']    = options.with_osl
 
-params['use_collada'] = option.with_collada
+params['use_collada'] = options.with_collada
 
 params['use_env_msvc'] = options.use_env_msvc
 

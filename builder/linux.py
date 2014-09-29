@@ -245,6 +245,8 @@ class LinuxBuilder(Builder):
 		cmake.append("-DPYTHON_NUMPY_PATH=/opt/python-3.3/lib/python3.4/site-packages")
 
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
+		if self.use_collada:
+			cmake.append("-DWITH_OPENCOLLADA=ON")
 
 		cmake.append("../blender")
 

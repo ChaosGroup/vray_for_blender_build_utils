@@ -127,7 +127,7 @@ class WindowsBuilder(Builder):
 		uc.close()
 
 
-	def intaller_cgr(self, installer_path):
+	def installer_cgr(self, installer_path):
 		def unix_slashes(path):
 			p = os.path.normpath(path.replace("\\", "/"))
 			return p
@@ -213,7 +213,6 @@ class WindowsBuilder(Builder):
 
 		if not self.mode_test:
 			utils.path_create(release_path)
-
 
 		# Example: vrayblender-2.60-42181-windows-x86_64.exe
 		installer_name = utils.GetPackageName(self)

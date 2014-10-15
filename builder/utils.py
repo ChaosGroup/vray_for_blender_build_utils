@@ -319,6 +319,8 @@ def get_blender_version(root_dir):
 			verSub = _get_define_value(line)
 		elif line.find("BLENDER_VERSION_CHAR") != -1:
 			verChar = _get_define_value(line)
+			if len(verChar) > 1:
+				verChar = ""
 
 	return (ver, verMaj, verMin, verSub, verChar)
 

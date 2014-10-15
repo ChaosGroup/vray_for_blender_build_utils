@@ -221,7 +221,7 @@ class WindowsBuilder(Builder):
 
 		if self.with_installer == 'CGR':
 			self.installer_cgr(installer_path)
-			return
+			return subdir, installer_path
 
 		# Use NSIS log plugin
 		installer_log  = False

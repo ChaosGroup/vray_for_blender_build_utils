@@ -40,6 +40,7 @@ parser.add_option('', '--builddir',                          dest='builddir',   
 parser.add_option('', '--releasedir',                        dest='releasedir',                   help="Directory for package (installer or archive).", metavar= 'FILE')
 parser.add_option('', '--release',    action='store_true',   dest='release',      default=False,  help="Release build.")
 parser.add_option('', '--package',    action='store_true',   dest='package',      default=False,  help="Create archive (Linux, Mac OS) or installer (Windows, NSIS required).")
+parser.add_option('', '--installer',                         dest='installer',    default='NSIS', help="Installer to use", type= 'choice', choices=('NSIS', 'CGR'))
 parser.add_option('', '--upload',                            dest='upload',       default='off',  help="Upload build", type='choice', choices=('off', 'ftp', 'http'))
 parser.add_option('', '--proxy',                             dest='proxy',        default="",     help="Upload using proxy")
 parser.add_option('', '--export_only', action='store_true',  dest='export_only',  default=False,  help="Don't compile")
@@ -143,6 +144,7 @@ params['update_blender'] = True if options.upblender == 'on' else False
 params['update_patch']   = True if options.uppatch == 'on' else False
 
 params['generate_package'] = options.package
+params['with_installer'] = options.installer
 
 params['use_debug']  = options.debug
 

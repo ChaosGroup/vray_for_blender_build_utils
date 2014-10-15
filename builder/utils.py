@@ -293,22 +293,34 @@ def get_svn_revision(svn_root):
 
 def get_blender_version(root_dir):
 	BKE_blender_h_path = path_join(root_dir, "source", "blender", "blenkernel", "BKE_blender.h")
-
 	if not os.path.exists(BKE_blender_h_path):
 		return VERSION
 
 	BKE_blender_h = open(BKE_blender_h_path,'r').readlines()
 
+	ver     = VERSION
+
+	verMaj  = "2"
+	verMin  = "72"
+	verSub  = "1"
+	verChar = ""
+
+	def _get_define_value(l):
+		l = l.strip().replace('\t', ' ')
+		return l.split(' ')[-1].strip()
+
 	for line in BKE_blender_h:
 		if line.find("BLENDER_VERSION") != -1:
-			line = line.replace('\t', ' ')
+			version_number = _get_define_value(line)
+			verMaj = version_number[:1]
+			verMin = version_number[1:]
+			ver = verMaj + "." + verMin
+		elif line.find("BLENDER_SUBVERSION") != -1:
+			verSub = _get_define_value(line)
+		elif line.find("BLENDER_VERSION_CHAR") != -1:
+			verChar = _get_define_value(line)
 
-			version_number = line.split(' ')[-1].strip()
-			version        = version_number[:1] + "." + version_number[1:]
-
-			return version
-
-	return VERSION
+	return (ver, verMaj, verMin, verSub, verChar)
 
 
 def get_linux_distribution():

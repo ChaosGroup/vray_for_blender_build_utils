@@ -127,6 +127,85 @@ class WindowsBuilder(Builder):
 		uc.close()
 
 
+	def intaller_cgr(self, installer_path):
+		def unix_slashes(path):
+			p = os.path.normpath(path.replace("\\", "/"))
+			return p
+
+		InstallerDir = "H:/devel/vrayblender/cgr_installer"
+
+		sys.stdout.write("Generating CGR installer:\n")
+		sys.stdout.write("  %s\n" % installer_path)
+
+		# Collect installer files
+		#
+		removeJunk   = set()
+		installerFiles = []
+
+		for dirpath, dirnames, filenames in os.walk(self.dir_install_path):
+			if dirpath.startswith('.svn') or dirpath.endswith('__pycache__'):
+				continue
+
+			rel_dirpath = os.path.normpath(dirpath).replace(os.path.normpath(self.dir_install_path), "")
+
+			for f in os.listdir(dirpath):
+				f_path = os.path.join(dirpath, f)
+				if os.path.isdir(f_path):
+					continue
+
+				relInstDir  = unix_slashes(rel_dirpath)
+				absFilePath = unix_slashes(f_path)
+
+				removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">*.pyc</Files>' % (relInstDir))
+				removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">__pycache__</Files>' % (relInstDir))
+				installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]%s">%s</FN>' % (relInstDir, absFilePath))
+
+		# Write installer template
+		#
+		tmpl = open("%s/cgr_template.xml" % InstallerDir, 'r').read()
+		tmplFinal = "%s/installer.xml" % InstallerDir
+
+		with open(tmplFinal, 'w') as f:
+			tmpl = tmpl.replace("${APP_TITLE}",      "Blender (With V-Ray Additions)")
+			tmpl = tmpl.replace("${APP_TITLE_FULL}", "Blender ${VERSION_MAJOR}.${VERSION_MINOR} (With V-Ray Additions)")
+
+			# Files
+			tmpl = tmpl.replace("${FILE_LIST}", "\n".join(sorted(reversed(installerFiles))))
+			tmpl = tmpl.replace("${RUNTIME_JUNK_LIST}", "\n".join(sorted(removeJunk)))
+
+			# Versions
+			tmpl = tmpl.replace("${VERSION_MAJOR}", self.versionArr[1])
+			tmpl = tmpl.replace("${VERSION_MINOR}", self.versionArr[2])
+			tmpl = tmpl.replace("${VERSION_SUB}",   self.versionArr[3])
+			tmpl = tmpl.replace("${VERSION_CHAR}",  self.versionArr[4])
+
+			tmpl = tmpl.replace("${VERSION_HASH}",       self.brev)
+			tmpl = tmpl.replace("${VERSION_PATCH_HASH}", self.revision)
+
+			# Installer stuff
+			tmpl = tmpl.replace("${INSTALLER_DATA_ROOT}", InstallerDir)
+
+			# System stuff
+			tmpl = tmpl.replace("${PLATFORM}", "x86_64")
+
+			f.write(tmpl)
+
+		# Run installer generator
+		#
+		packer = ["%s/bin/packer.exe" % InstallerDir]
+		# packer.append('-debug=1')
+		packer.append('-exe')
+		packer.append('-xml=%s' % unix_slashes(tmplFinal))
+		packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
+		packer.append('-dest=%s' % installer_path)
+		packer.append('-installer=%s' % "%s/bin/installer.exe" % InstallerDir)
+		packer.append('-outbin=%s' % "C:/tmp/out.bin")
+		packer.append('-wmstr=""')
+		packer.append('-wmval=""')
+
+		subprocess.call(packer)
+
+
 	def package(self):
 		subdir = "windows" + "/" + self.build_arch
 
@@ -135,17 +214,20 @@ class WindowsBuilder(Builder):
 		if not self.mode_test:
 			utils.path_create(release_path)
 
-		director_size = 0
 
 		# Example: vrayblender-2.60-42181-windows-x86_64.exe
 		installer_name = utils.GetPackageName(self)
 		installer_path = utils.path_slashify(utils.path_join(release_path, installer_name))
 		installer_root = utils.path_join(self.dir_source, "vb25-patch", "installer")
 
+		if self.with_installer == 'CGR':
+			self.installer_cgr(installer_path)
+			return
+
 		# Use NSIS log plugin
 		installer_log  = False
 
-		sys.stdout.write("Generating installer: %s\n" % (installer_name))
+		sys.stdout.write("Generating NSIS installer: %s\n" % (installer_name))
 		sys.stdout.write("  in: %s\n" % (installer_path))
 
 		nsis = open(utils.path_join(installer_root, "template.nsi"), 'r').read()
@@ -155,6 +237,8 @@ class WindowsBuilder(Builder):
 		nsis = nsis.replace('{INSTALLER_OUTFILE}', installer_path)
 		nsis = nsis.replace('{VERSION}', self.version)
 		nsis = nsis.replace('{REVISION}', self.revision)
+
+		director_size = 0
 
 		installer_files   = ""
 		uninstaller_files = []

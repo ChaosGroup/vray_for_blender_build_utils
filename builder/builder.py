@@ -68,6 +68,7 @@ class Builder:
 	generate_package = False
 	generate_desktop = False
 	generate_docs    = False
+	with_installer   = 'NSIS'
 
 	# Test mode - just print messages, does nothing
 	mode_test      = True
@@ -312,7 +313,8 @@ class Builder:
 
 	def update(self):
 		self.revision, self.brev, self.commits = utils.get_svn_revision(self.dir_blender)
-		self.version = utils.get_blender_version(self.dir_blender)
+		self.version = utils.get_blender_version(self.dir_blender)[0]
+		self.versionArr = utils.get_blender_version(self.dir_blender)
 
 		if self.build_release:
 			self.dir_install_name = utils.GetInstallDirName(self)

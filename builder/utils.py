@@ -310,7 +310,7 @@ def get_blender_version(root_dir):
 		return l.split(' ')[-1].strip()
 
 	for line in BKE_blender_h:
-		if line.find("BLENDER_VERSION") != -1:
+		if line.find("BLENDER_VERSION ") != -1:
 			version_number = _get_define_value(line)
 			verMaj = version_number[:1]
 			verMin = version_number[1:]

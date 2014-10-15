@@ -195,6 +195,9 @@ class LinuxBuilder(Builder):
 			os.makedirs(cmake_build_dir)
 		os.chdir(cmake_build_dir)
 
+		if self.mode_test:
+			return
+
 		cmake = ['cmake']
 
 		cmake.append("-G")

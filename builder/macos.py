@@ -107,25 +107,6 @@ class MacBuilder(Builder):
 			sys.stderr.write("There was an error during the compilation!\n")
 			sys.exit(1)
 
-		# Copy data to the release directory
-		install_dir = self.dir_install_path
-		if os.path.exists(install_dir):
-			shutil.rmtree(install_dir)
-
-		def install_filter(src, names):
-			return (
-				'blender.1',
-				'datatoc',
-				'datatoc_icon',
-				'makesdna',
-				'makesrna',
-				'msgfmt',
-			)
-
-		cmake_install_dir = os.path.join(cmake_build_dir, "bin")
-
-		shutil.copytree(cmake_install_dir, install_dir, ignore=install_filter)
-
 	def package(self):
 		subdir = "macos" + "/" + self.build_arch
 

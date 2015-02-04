@@ -30,7 +30,7 @@ import tempfile
 import subprocess
 import datetime
 
-import utils
+from . import utils
 
 
 OFFICIAL_REPO = "http://git.blender.org/blender.git"
@@ -595,9 +595,9 @@ class Builder:
 			requests.post("http://cgdo.ru/upload", files=files, data=data, proxies=proxies)
 
 		elif self.build_upload == 'ftp':
-			from ConfigParser import RawConfigParser
+			import configparser
 
-			config = RawConfigParser()
+			config = configparser.ConfigParser()
 			config.read(os.path.expanduser("~/.passwd"))
 
 			now = datetime.datetime.now()

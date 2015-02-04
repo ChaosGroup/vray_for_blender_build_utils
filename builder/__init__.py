@@ -25,19 +25,19 @@
 
 import sys
 
-import utils
+from . import utils
 
 
 host_os = utils.get_host_os()
 
 if host_os == utils.WIN:
-	from win import WindowsBuilder as Builder
+	from .win import WindowsBuilder as Builder
 
 elif host_os == utils.LNX:
-	from linux import LinuxBuilder as Builder
+	from .linux import LinuxBuilder as Builder
 
 elif host_os == utils.MAC:
-	from macos import MacBuilder as Builder
+	from .macos import MacBuilder as Builder
 
 else:
 	sys.stderr.write("Fatal error!\n")

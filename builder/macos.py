@@ -34,42 +34,8 @@ from builder import Builder
 
 class MacBuilder(Builder):
 	def config(self):
-		sys.stdout.write("Generating build configuration:\n")
-		sys.stdout.write("  in: %s\n" % (self.user_config))
-
-		if self.mode_test:
-			return
-
-		if self.user_user_config:
-			open(self.user_config, 'w').write(open(self.user_user_config, 'r').read())
-			return
-
-		build_options = {
-			'WITH_VRAY_FOR_BLENDER' : True,
-
-			'WITH_BF_FREESTYLE': False,
-			'WITH_BF_3DMOUSE' : False,
-
-			'WITH_BF_CYCLES' : self.with_cycles,
-
-			'WITH_BF_GAMEENGINE' : self.with_ge,
-			'WITH_BF_PLAYER'     : self.with_player,
-
-			'BF_DEBUG' : self.use_debug,
-		}
-
-		with open(self.user_config, 'w') as uc:
-			uc.write("BF_INSTALLDIR = '%s'\n" % (self.dir_install_path))
-			uc.write("BF_BUILDDIR = '%s'\n" % (self.dir_build))
-			uc.write("\n")
-			uc.write("BF_NUMJOBS  = %s\n" % self.build_threads)
-			uc.write("\n")
-			uc.write("MACOSX_ARCHITECTURE = '%s'\n" % ('i386' if self.build_arch == 'x86' else 'x86_64'))
-			uc.write("BF_3DMOUSE_LIB = 'spnav'\n")
-			# Write boolean options
-			for key in build_options:
-				uc.write("%s = %s\n" % (key, build_options[key]))
-			uc.write("\n")
+		# Not used on OS X anymore
+		pass
 
 
 	def compile_osx(self):

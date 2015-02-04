@@ -23,7 +23,6 @@
 #
 
 
-import commands
 import getpass
 import os
 import platform
@@ -58,7 +57,7 @@ def get_host_architecture():
 	arch = 'x86' if platform.architecture()[0] == '32bit' else 'x86_64'
 
 	if get_host_os() == "macos":
-		arch = 'x86' if commands.getoutput('uname -p') == 'i386' else 'x86_64'
+		arch = 'x86' if subprocess.check_output(['uname', '-p']) == 'i386' else 'x86_64'
 
 	return arch
 
@@ -271,7 +270,7 @@ def _get_cmd_output(cmd, workDir=None):
 		res = subprocess.check_output(cmd)
 	else:
 		res = subprocess.Popen(cmd, stdout=subprocess.PIPE).communicate()[0]
-	res = res.strip(" \n\r\t")
+	res = res.decode().strip(" \n\r\t")
 
 	if workDir:
 		os.chdir(pwd)
@@ -334,9 +333,11 @@ def get_linux_distribution():
 	info['short_name'] = short_info[0].lower().replace(' ','_').strip()
 	info['version']    = short_info[1].strip()
 
-	# I'm a happy Calculate Linux user =)
 	if info['long_name'].find('Calculate Linux') != -1:
 		info['short_name'] = 'Calculate'
+
+	if info['long_name'].find('arch') != -1:
+		info['short_name'] = 'archlinux'
 
 	return info
 
@@ -404,9 +405,13 @@ def GetPackageName(self):
 		else:
 			return "tar.bz2"
 
+	os = get_host_os()
+	if os == 'linux':
+		os = get_linux_distribution()['short_name']
+
 	params = {
 		'build_name' : GetInstallDirName(self),
-		'os' : get_host_os(),
+		'os' : os,
 		'ext' : _get_host_package_type(),
 	}
 

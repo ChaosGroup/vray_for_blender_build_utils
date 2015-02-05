@@ -27,8 +27,8 @@ import os
 import sys
 import subprocess
 
-from builder import utils
-from builder import Builder
+from .builder import utils
+from .builder import Builder
 
 
 class WindowsBuilder(Builder):

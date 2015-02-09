@@ -52,6 +52,8 @@ class MacBuilder(Builder):
 		cmake.append("-DCMAKE_BUILD_TYPE=Release")
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
 
+		cmake.append("-DWITH_MOD_OCEANSIM=ON")
+
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 
 		if self.use_collada:

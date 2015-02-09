@@ -416,3 +416,7 @@ def GetPackageName(self):
 	}
 
 	return "{build_name}-{os}.{ext}".format(**params)
+
+
+def GetCmakeOnOff(val):
+	return "ON" if val else "OFF"

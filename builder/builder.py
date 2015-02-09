@@ -427,6 +427,8 @@ class Builder:
 			self.compile_linux()
 		elif self.host_os == utils.MAC and hasattr(self, 'compile_osx'):
 			self.compile_osx()
+		elif self.host_os == utils.WIN and hasattr(self, 'compile_windows'):
+			self.compile_windows()
 		else:
 			compileCmd = [sys.executable]
 			compileCmd.append("scons/scons.py")

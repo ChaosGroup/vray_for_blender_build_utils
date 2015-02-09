@@ -32,7 +32,50 @@ from .builder import Builder
 
 
 class WindowsBuilder(Builder):
+	def compile_windows(self):
+		cmake_build_dir = os.path.join(self.dir_source, "blender-cmake-build")
+		if not os.path.exists(cmake_build_dir):
+			os.makedirs(cmake_build_dir)
+		os.chdir(cmake_build_dir)
+
+		if self.mode_test:
+			return
+
+		cmake = ['cmake']
+
+		cmake.append("-G")
+		cmake.append("Ninja")
+
+		cmake.append("-DCMAKE_BUILD_TYPE=Release")
+		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
+
+		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
+
+		# cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
+		# cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))
+		# cmake.append("-DWITH_LIBMV=%s" % utils.GetCmakeOnOff(self.with_tracker))
+		# cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.use_collada))
+
+		cmake.append("../blender")
+
+		res = subprocess.call(cmake)
+		if not res == 0:
+			sys.stderr.write("There was an error during configuration!\n")
+			sys.exit(1)
+
+		make = ['ninja']
+		make.append('install')
+
+		res = subprocess.call(make)
+		if not res == 0:
+			sys.stderr.write("There was an error during the compilation!\n")
+			sys.exit(1)
+
 	def config(self):
+		# Not used on Windows anymore
+		pass
+
+	def config_scons(self):
 		sys.stdout.write("Generating build configuration:\n")
 		sys.stdout.write("  in: %s\n" % (self.user_config))
 

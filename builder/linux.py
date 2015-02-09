@@ -139,6 +139,10 @@ class LinuxBuilder(Builder):
 		cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=/opt/python-3.3/include/python3.4m")
 		cmake.append("-DPYTHON_NUMPY_PATH=/opt/python-3.3/lib/python3.4/site-packages")
 
+		cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
+		cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))
+		cmake.append("-DWITH_LIBMV=%s" % utils.GetCmakeOnOff(self.with_tracker))
+		cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.use_collada))
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")
 
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")

@@ -420,3 +420,86 @@ def GetPackageName(self):
 
 def GetCmakeOnOff(val):
 	return "ON" if val else "OFF"
+
+
+def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr_installer"):
+	def unix_slashes(path):
+		p = os.path.normpath(path.replace("\\", "/"))
+		return p
+
+	sys.stdout.write("Generating CGR installer:\n")
+	sys.stdout.write("  %s\n" % installer_path)
+
+	# Collect installer files
+	#
+	removeJunk   = set()
+	installerFiles = []
+
+	for dirpath, dirnames, filenames in os.walk(self.dir_install_path):
+		if dirpath.startswith('.svn') or dirpath.endswith('__pycache__'):
+			continue
+
+		rel_dirpath = os.path.normpath(dirpath).replace(os.path.normpath(self.dir_install_path), "")
+
+		for f in os.listdir(dirpath):
+			f_path = os.path.join(dirpath, f)
+			if os.path.isdir(f_path):
+				continue
+
+			relInstDir  = unix_slashes(rel_dirpath)
+			absFilePath = unix_slashes(f_path)
+
+			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">*.pyc</Files>' % (relInstDir))
+			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">__pycache__</Files>' % (relInstDir))
+			installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]%s">%s</FN>' % (relInstDir, absFilePath))
+
+	# Write installer template
+	#
+	tmpl = open("%s/cgr_template.xml" % InstallerDir, 'r').read()
+	tmplFinal = "%s/installer.xml" % InstallerDir
+
+	with open(tmplFinal, 'w') as f:
+		tmpl = tmpl.replace("${APP_TITLE}",      "Blender (With V-Ray Additions)")
+		tmpl = tmpl.replace("${APP_TITLE_FULL}", "Blender ${VERSION_MAJOR}.${VERSION_MINOR} (With V-Ray Additions)")
+
+		# Files
+		tmpl = tmpl.replace("${FILE_LIST}", "\n".join(sorted(reversed(installerFiles))))
+		tmpl = tmpl.replace("${RUNTIME_JUNK_LIST}", "\n".join(sorted(removeJunk)))
+
+		# Versions
+		tmpl = tmpl.replace("${VERSION_MAJOR}", self.versionArr[1])
+		tmpl = tmpl.replace("${VERSION_MINOR}", self.versionArr[2])
+		tmpl = tmpl.replace("${VERSION_SUB}",   self.versionArr[3])
+		tmpl = tmpl.replace("${VERSION_CHAR}",  self.versionArr[4])
+
+		tmpl = tmpl.replace("${VERSION_HASH}",       self.brev)
+		tmpl = tmpl.replace("${VERSION_PATCH_HASH}", self.revision)
+
+		# Installer stuff
+		tmpl = tmpl.replace("${INSTALLER_DATA_ROOT}", InstallerDir)
+
+		# System stuff
+		tmpl = tmpl.replace("${PLATFORM}", "x86_64")
+
+		# Release or nighlty
+		tmpl = tmpl.replace("${IS_RELEASE_BUILD}", "%i" % self.is_release)
+
+		f.write(tmpl)
+
+	# Run installer generator
+	#
+	packer = ["%s/bin/packer.exe" % InstallerDir]
+	# packer.append('-debug=1')
+	packer.append('-exe')
+	packer.append('-xml=%s' % unix_slashes(tmplFinal))
+	packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
+	packer.append('-dest=%s' % installer_path)
+	packer.append('-installer=%s' % "%s/bin/installer.exe" % InstallerDir)
+	packer.append('-outbin=%s' % "C:/tmp/out.bin")
+	packer.append('-wmstr=""')
+	packer.append('-wmval=""')
+
+	if self.mode_test:
+		print(" ".join(packer))
+	else:
+		subprocess.call(packer)

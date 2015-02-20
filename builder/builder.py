@@ -50,6 +50,8 @@ class Builder:
 	brev           = None           # Blender master revision
 	commits        = '0'
 
+	is_release = False
+
 	# Directories
 	dir_build      = utils.path_join(os.getcwd(), "build")
 	dir_install    = utils.path_join(os.getcwd(), "install")

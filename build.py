@@ -202,7 +202,7 @@ parser.add_argument('--dev_static_libs',
 	help    = argparse.SUPPRESS # Use my precompiled static dependency libraries
 )
 parser.add_argument('--build_mode',
-	default = 'release',
+	default = 'nightly',
 	choices = {'release', 'nightly'},
 	help    = argparse.SUPPRESS # Option for CGR installer
 )

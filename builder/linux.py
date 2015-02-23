@@ -87,28 +87,25 @@ def DepsInstall(self):
 
 
 def DepsBuild(self):
-	cmd = "sudo -E %s/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source, 'vb25-patch'), utils.path_join(self.dir_source, "blender-deps"))
+	cmd = "sudo -E %s/install_deps.sh --source %s --install /opt" % (
+		utils.path_join(self.dir_source, 'vb25-patch'),
+		utils.path_join(self.dir_source, "blender-deps")
+	)
 
 	if not self.with_osl:
 		cmd += " --skip-llvm"
 		cmd += " --skip-osl"
 
-	if self.use_collada:
+	if self.with_collada:
 		cmd += " --with-opencollada"
 	else:
 		cmd += " --skip-opencollada"
-
-	if self.build_release:
-		cmd += " --all-static"
 
 	if self.mode_test:
 		sys.stdout.write(cmd)
 		sys.stdout.write("\n")
 	else:
 		os.system(cmd)
-
-		os.system('sudo sh -c \"echo \"/opt/boost/lib\" > /etc/ld.so.conf.d/boost.conf\"')
-		os.system('sudo ldconfig')
 
 
 class LinuxBuilder(Builder):

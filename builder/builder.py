@@ -366,7 +366,10 @@ class Builder:
 		if self.use_package_upload == 'http':
 			import requests
 
-			from ConfigParser import RawConfigParser
+			try:
+				from configparser import RawConfigParser
+			except:
+				from ConfigParser import RawConfigParser
 
 			config = RawConfigParser()
 			config.read(os.path.expanduser("~/.passwd"))
@@ -391,9 +394,12 @@ class Builder:
 			requests.post("http://cgdo.ru/upload", files=files, data=data, proxies=proxies)
 
 		elif self.use_package_upload == 'ftp':
-			import configparser
+			try:
+				from configparser import ConfigParser
+			except:
+				from ConfigParser import ConfigParser
 
-			config = configparser.ConfigParser()
+			config = ConfigParser()
 			config.read(os.path.expanduser("~/.passwd"))
 
 			now = datetime.datetime.now()

@@ -49,6 +49,7 @@ class MacBuilder(Builder):
 		cmake.append("-G")
 		cmake.append("Ninja")
 
+		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 		cmake.append("-DCMAKE_BUILD_TYPE=Release")
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
 
@@ -58,11 +59,6 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.with_collada))
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")
 		cmake.append("-DWITH_FFTW3=ON")
-
-		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
-
-		if self.use_collada:
-			cmake.append("-DWITH_OPENCOLLADA=ON")
 
 		cmake.append("../blender")
 

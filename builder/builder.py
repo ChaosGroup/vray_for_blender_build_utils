@@ -183,7 +183,7 @@ class Builder:
 						os.system("svn update")
 
 		# Update V-Ray/Blender patchset
-		if self.uppatch and not self.mode_developer:
+		if self.uppatch == "on" and not self.mode_developer:
 			vb25_patch = utils.path_join(self.dir_source, "vb25-patch")
 
 			if os.path.exists(vb25_patch):

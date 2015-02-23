@@ -99,7 +99,7 @@ class WindowsBuilder(Builder):
 		installer_path = utils.path_slashify(utils.path_join(release_path, installer_name))
 		installer_root = utils.path_join(self.dir_source, "vb25-patch", "installer")
 
-		if self.with_installer == 'CGR':
+		if self.use_installer == 'CGR':
 			self.installer_cgr(installer_path)
 			return subdir, installer_path
 

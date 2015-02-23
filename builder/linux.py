@@ -44,7 +44,7 @@ Deps = {
 			'libavutil-dev',
 			'libfftw3-dev',
 			'libfreetype6-dev',
-			'libglew1.6-dev',
+			'libglew-dev',
 			'libglu1-mesa-dev',
 			'libjack-dev',
 			'libjack-dev',
@@ -75,10 +75,12 @@ def DepsInstall(self):
 	distr = utils.get_linux_distribution()['short_name']
 
 	if distr in Deps:
-		os.system("sudo %s %s" % (
+		cmd = "sudo %s %s" % (
 			Deps[distr]['cmd'],
 			" ".join(Deps[distr]['packages'])
-		))
+		)
+		sys.stdout.write("Calling: %s\n" % cmd)
+		os.system(cmd)
 
 	else:
 		sys.stdout.write("Your distribution \"%s\" doesn't support automatic dependencies installation!\n" % distr)

@@ -38,7 +38,7 @@ class MacBuilder(Builder):
 		pass
 
 
-	def compile_osx(self):
+	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_source, "blender-cmake-build")
 		if not os.path.exists(cmake_build_dir):
 			os.makedirs(cmake_build_dir)
@@ -72,7 +72,7 @@ class MacBuilder(Builder):
 			sys.exit(1)
 
 		make = ['ninja']
-		make.append('-j10')
+		make.append('-j%i' % self.build_jobs)
 		make.append('install')
 
 		res = subprocess.call(make)

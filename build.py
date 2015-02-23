@@ -23,199 +23,209 @@
 #
 
 
-import optparse
+import argparse
 import os
 import sys
+import multiprocessing
 
 import builder as build_system
 
-
+cwd     = os.getcwd()
 host_os = build_system.utils.get_host_os()
 
-parser = optparse.OptionParser(usage="python %prog [options]", version="2.0")
 
-parser.add_option('', '--sourcedir',                         dest='sourcedir',                    help="Source directory.", metavar= 'FILE')
-parser.add_option('', '--installdir',                        dest='installdir',                   help="Installation directory.", metavar= 'FILE')
-parser.add_option('', '--builddir',                          dest='builddir',                     help="Build directory.", metavar= 'FILE')
-parser.add_option('', '--releasedir',                        dest='releasedir',                   help="Directory for package (installer or archive).", metavar= 'FILE')
-parser.add_option('', '--release',    action='store_true',   dest='release',      default=False,  help="Release build.")
-parser.add_option('', '--package',    action='store_true',   dest='package',      default=False,  help="Create archive (Linux, Mac OS) or installer (Windows, NSIS required).")
-parser.add_option('', '--installer',                         dest='installer',    default='NSIS', help="Installer to use", type= 'choice', choices=('NSIS', 'CGR'))
-parser.add_option('', '--upload',                            dest='upload',       default='off',  help="Upload build", type='choice', choices=('off', 'ftp', 'http'))
-parser.add_option('', '--proxy',                             dest='proxy',        default="",     help="Upload using proxy")
-parser.add_option('', '--export_only', action='store_true',  dest='export_only',  default=False,  help="Don't compile")
-parser.add_option('', '--is_release',  action='store_true',  dest='is_release',   default=False,  help="This is a release build")
+parser = argparse.ArgumentParser(usage="python3 build.py [options]")
 
 
-# Blender options
-parser.add_option('', '--with_collada', action='store_true',  dest='collada',      default=False,  help="Add OpenCollada support.")
-parser.add_option('', '--with_player',  action='store_true',  dest='player',       default=False,  help="Build Blender Player.")
-parser.add_option('', '--with_game',    action='store_true',  dest='game',         default=False,  help="Build with Blender Game Engine.")
-parser.add_option('', '--with_cycles',  action='store_true',  dest='with_cycles',  default=False,  help="Add Cycles.")
-parser.add_option('', '--with_cuda',    action='store_true',  dest='with_cuda',    default=False,  help="Build Cycles with CUDA kernels.")
-parser.add_option('', '--cuda_gpu',                           dest='cuda_gpu',     default="sm_21",help="CUDA GPU version.")
-parser.add_option('', '--with_osl',     action='store_true',  dest='with_osl',     default=False,  help="Build Cycles with OSL support.")
-parser.add_option('', '--with_tracker', action='store_true',  dest='with_tracker', default=False,  help="Add motion tracker support.")
-
-# Updates
-parser.add_option('', '--upblender',                          dest='upblender',   default='on',   help="Update Blender sources.", type= 'choice', choices=('on', 'off'))
-parser.add_option('', '--uppatch',                            dest='uppatch',     default='on',   help="Update patch sources.",   type= 'choice', choices=('on', 'off'))
-
-# Building options
-parser.add_option('', '--exporter_cpp',action='store_true', dest='exporter_cpp',default=True,   help="Use new cpp exporter.")
-parser.add_option('', '--debug_build', action='store_true', dest='debug',       default=False,  help="Debug build.")
-parser.add_option('', '--rebuild',     action='store_true', dest='rebuild',     default=False,  help="Full rebuild.")
-parser.add_option('', '--revision',                         dest='revision',    default="",     help="Checkout particular SVN revision.")
-parser.add_option('', '--nopatches',   action='store_true', dest='nopatches',   default=False,  help="Don't apply V-Ray/Blender patches.")
-parser.add_option('', '--nodatafiles', action='store_true', dest='nodatafiles', default=False,  help="Don't add splash screen.")
-parser.add_option('', '--addextra',    action='store_true', dest='addextra',    default=False,  help="Apply \"extra\" patches.")
-parser.add_option('', '--optimize',    action='store_true', dest='optimize',    default=False,  help="Use compiler optimizations.")
-parser.add_option('', '--jobs',                             dest='jobs',        default=4,      help="Number of build threads.")
-if host_os == build_system.utils.MAC:
-	parser.add_option('', '--osx',                          dest='osx',         default="10.6", help="Mac OS X version.")
-	parser.add_option('', '--osx_arch',                     dest='osx_arch',    default="x86_64", help="Mac OS X architecture.", type= 'choice', choices=('x86', 'x86_64'))
-if host_os == build_system.utils.LNX:
-	parser.add_option('', '--build_deps',     action='store_true', dest='build_deps',     default=False,  help="Build dependencies using BF build script.")
-	parser.add_option('', '--use_build_deps', action='store_true', dest='use_build_deps', default=True,   help="Use builded dependencies.")
-	parser.add_option('', '--install_deps',   action='store_true', dest='deps',           default=False,  help="Install dependencies (Gentoo, OpenSuse, Fedora, Ubuntu).")
-	parser.add_option('', '--docs',           action='store_true', dest='docs',           default=False,  help="Build Python API documentation (python-sphinx required).")
-	parser.add_option('', '--desktop',        action='store_true', dest='desktop',        default=False,  help="Generate .desktop file.")
-
-# Script options
-parser.add_option('', '--clean',     action='store_true', dest='build_clean', default=False, help="Clear build directory before building")
-parser.add_option('', '--debug',     action='store_true', dest='mode_debug', default=False, help="Script debug output.")
-parser.add_option('', '--test',      action='store_true', dest='mode_test',  default=False, help="Test mode.")
-parser.add_option('', '--developer', action='store_true', dest='mode_devel', default=False, help=optparse.SUPPRESS_HELP) # Special mode used only by me =)
-
-parser.add_option('', '--user_config', dest='user_user_config', default="", help="User defined user-config.py")
-
-parser.add_option('', '--env',    action='store_true', dest="use_env_msvc", default=False, help="Use compiler from the environment")
-parser.add_option('', '--vc2013', action='store_true', dest="vc2013",       default=False, help="Use VC 2013 libraries")
-
-parser.add_option('', '--github-src-branch', dest="use_github_branch", default="dev/vray_for_blender/stable", help="Use sources from project's github branch")
-parser.add_option('', '--github-exp-branch', dest="use_exp_branch",    default="master", help="Use exporter from specific branch")
-
-parser.add_option('',
-	'--add-branch-name',
-	action='store_true',
-	dest="add_branch_name",
-	default=False,
-	help="Add branch name to the installer name"
+gr_paths = parser.add_argument_group(title="Paths")
+gr_paths.add_argument('--dir_source',
+	default = cwd,
+	help    = "Root directory",
+	metavar = 'FILE'
+)
+gr_paths.add_argument('--dir_build',
+	help    = "Build directory.",
+	default = os.path.join(cwd, "build"),
+	metavar = 'FILE'
+)
+gr_paths.add_argument('--dir_install',
+	help    = "Installation directory.",
+	default = os.path.join(cwd, "install"),
+	metavar = 'FILE'
+)
+gr_paths.add_argument('--dir_release',
+	help    = "Directory for installer / archive",
+	default = os.path.join(cwd, "release"),
+	metavar = 'FILE'
 )
 
-parser.add_option('', '--vb30',
-	action  = 'store_true',
-	dest    = "vb30",
+
+gr_compilation = parser.add_argument_group(title="Compilation")
+gr_compilation.add_argument('--build_type',
+	default = 'release',
+	choices = {'release', 'debug'},
+	help    = "Build type"
+)
+gr_compilation.add_argument('--build_clean',
+	dest    = 'build_clean',
 	default = False,
-	help    = "Build vb30"
+	action  = 'store_true',
+	help    = "Clear build directory before building"
+)
+gr_compilation.add_argument('--build_export_only',
+	dest    = 'export_only',
+	action  = 'store_true',
+	default = False,
+	help    = "Don't compile"
+)
+gr_compilation.add_argument('--build_jobs',
+	default = multiprocessing.cpu_count(),
+	help    = "Number of build threads"
+)
+gr_compilation.add_argument('--vc_from_env',
+	dest    = "use_env_msvc",
+	action  = 'store_true',
+	default = False,
+	help    = "Use compiler from the environment (Windows only)"
+)
+gr_compilation.add_argument('--vc_2013',
+	dest    = "vc2013",
+	action  = 'store_true',
+	default = False,
+	help    = "Use VC 2013 libraries (Windows only)"
 )
 
-parser.add_option('', '--use_blender_hash',
+
+gr_release = parser.add_argument_group(title="Release")
+gr_release.add_argument('--use_package',
+	action  = 'store_true',
+	default = False,
+	help    = "Create archive (Linux / OS X) or installer (Windows, NSIS required)"
+)
+gr_release.add_argument('--use_installer',
+	default =  'NSIS',
+	choices = {'NSIS', 'CGR'},
+	help    = "Installer system"
+)
+gr_release.add_argument('--add-branch-name',
+	action  = 'store_true',
+	dest    = "add_branch_name",
+	default = False,
+	help    = "Append branch name to the installer / archive name"
+)
+
+
+gr_comp = parser.add_argument_group(title="Blender Components")
+gr_comp.add_argument('--with_collada',
+	action='store_true',
+	help="Build with OpenCollada support"
+)
+gr_comp.add_argument('--with_player',
+	action='store_true',
+	help="Build with Blender Player"
+)
+gr_comp.add_argument('--with_ge',
+	action='store_true',
+	help="Build with Blender Game Engine"
+)
+gr_comp.add_argument('--with_cycles',
+	action='store_true',
+	help="Build with Cycles"
+)
+gr_comp.add_argument('--with_osl',
+	action='store_true',
+	help="Build Cycles with OSL support"
+)
+gr_comp.add_argument('--with_tracker',
+	action='store_true',
+	help="Build with motion tracker support"
+)
+
+
+gr_src = parser.add_argument_group(title="Sources")
+gr_src.add_argument('--upblender',
+	default = 'on',
+	choices = {'on', 'off'},
+	help    = "Update Blender sources"
+)
+gr_src.add_argument('--uppatch',
+	default = 'on',
+	choices = {'on', 'off'},
+	help="Update patch sources"
+)
+gr_src.add_argument(
+	'--github-src-branch',
+	dest    = "use_github_branch",
+	default = "dev/vray_for_blender/vb30",
+	help    = "Use sources from specific branch"
+)
+gr_src.add_argument(
+	'--github-exp-branch',
+	dest    = "use_exp_branch",
+	default = "master",
+	help    = "Use exporter from specific branch"
+)
+gr_src.add_argument(
+	'--use_blender_hash',
 	dest    = "use_blender_hash",
 	default = "",
-	help    = "Use revision (like 772af36fc469e7666fc59d1d0b0e4dbcf52cfe2c)"
+	help    = "Use specific revision"
 )
 
-(options, args) = parser.parse_args()
+
+gr_deps = parser.add_argument_group(title="Build Dependencies (Linux Only)")
+gr_deps.add_argument('--build_deps',
+	action  = 'store_true',
+	default = False,
+	help    = "Build dependencies using BF build script")
+gr_deps.add_argument('--install_deps',
+	action  = 'store_true',
+	default = False,
+	help="Install dependencies (Gentoo, OpenSuse, Fedora, Ubuntu)"
+)
 
 
-params = {}
+gr_script = parser.add_argument_group(title="Build Script Debug")
+gr_script.add_argument('--debug',  action='store_true', dest='mode_debug', default=False, help="Script debug output.")
+gr_script.add_argument('--test',   action='store_true', dest='mode_test',  default=False, help="Test mode.")
 
-# Assuming current directory as source directory by default
-params['dir_source']     = os.getcwd()
-if options.sourcedir:
-	params['dir_source'] = build_system.utils.path_slashify(options.sourcedir)
 
-# Default build directory
-if host_os == build_system.utils.WIN:
-	# Its vital to use short path here like C:\b\
-	params['dir_build'] = "C:\\b\\"
+# Special options used only my me
+#
+parser.add_argument('--mode_developer',
+	default = False,
+	help    = argparse.SUPPRESS # Don't clone exporter and update vb25-patch basically
+)
+parser.add_argument('--dev_static_libs',
+	dest    = 'dev_static_libs',
+	default = False,
+	help    = argparse.SUPPRESS # Use my precompiled static dependency libraries
+)
+parser.add_argument('--build_mode',
+	default = 'release',
+	choices = {'release', 'nightly'},
+	help    = argparse.SUPPRESS # Option for CGR installer
+)
+parser.add_argument('--use_package_upload',
+	default = 'off', 
+	choices = {'off', 'ftp', 'http'},
+	help    = argparse.SUPPRESS
+)
+parser.add_argument('--use_proxy',
+	default = "",
+	help    = argparse.SUPPRESS
+)
+
+
+args = parser.parse_args()
+
+
+if args.build_deps:
+	build_system.linux.DepsBuild(args)
+
+elif args.install_deps:
+	build_system.linux.DepsInstall(args)
+
 else:
-	params['dir_build'] = "/tmp/builder/"
-
-if options.builddir:
-	params['dir_build'] = build_system.utils.path_slashify(options.builddir)
-
-if options.installdir:
-	params['dir_install'] = build_system.utils.path_slashify(options.installdir)
-
-if options.releasedir:
-	params['dir_release'] = build_system.utils.path_slashify(options.releasedir)
-
-params['update_blender'] = True if options.upblender == 'on' else False
-params['update_patch']   = True if options.uppatch == 'on' else False
-
-params['generate_package'] = options.package
-params['with_installer'] = options.installer
-
-params['use_debug']  = options.debug
-
-params['build_release']  = options.release
-params['build_threads']  = int(options.jobs)
-
-params['mode_debug']     = options.mode_debug
-params['mode_developer'] = options.mode_devel
-params['mode_test']      = options.mode_test
-
-params['add_datafiles']  = not options.nodatafiles
-params['add_extra']      = options.addextra
-
-params['with_tracker']   = options.with_tracker
-params['with_player']    = options.player
-params['with_ge']        = options.game
-
-params['exporter_cpp']   = options.exporter_cpp
-
-params['build_clean'] = options.build_clean
-
-if host_os == build_system.utils.LNX:
-	params['generate_docs']  = options.docs
-	params['install_deps']   = options.deps
-	params['build_deps']     = options.build_deps
-	params['use_build_deps'] = options.use_build_deps
-
-if host_os == build_system.utils.MAC:
-	params['build_arch'] = options.osx_arch
-
-if params['build_release']:
-	# Just for sure to disable debug for release build
-	params['use_debug'] = False
-
-	params['build_upload'] = options.upload
-	params['use_proxy']    = options.proxy
-
-# Just for sure to disable 'Developer' mode if OS is not Linux
-if host_os != build_system.utils.LNX:
-	params['mode_developer'] = False
-
-if options.revision:
-	params['checkout_revision'] = options.revision
-
-params['with_cycles'] = options.with_cycles
-params['with_cuda']   = options.with_cuda
-params['cuda_gpu']    = options.cuda_gpu
-params['with_osl']    = options.with_osl
-
-params['use_collada'] = options.collada
-
-params['use_env_msvc'] = options.use_env_msvc
-
-if options.user_user_config:
-	params['user_user_config'] = options.user_user_config
-
-params['use_github_branch'] = options.use_github_branch
-params['add_branch_name']   = options.add_branch_name
-params['add_patches']       = False
-params['add_extra']         = False
-
-params['use_exp_branch'] = options.use_exp_branch
-
-params['vb30']   = options.vb30
-params['vc2013'] = options.vc2013
-params['export_only'] = options.export_only
-params['use_blender_hash'] = options.use_blender_hash
-
-params['is_release'] = options.is_release
-
-builder = build_system.Builder(params)
-builder.build()
+	builder = build_system.Builder(vars(args))
+	builder.build()

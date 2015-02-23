@@ -44,142 +44,31 @@ class Builder:
 	  A generic build class.
 	"""
 
-	project        = "vrayblender"
-	version        = utils.VERSION
-	revision       = utils.REVISION # Patches revision
-	brev           = None           # Blender master revision
-	commits        = '0'
-
-	is_release = False
-
-	# Directories
-	dir_build      = utils.path_join(os.getcwd(), "build")
-	dir_install    = utils.path_join(os.getcwd(), "install")
-	dir_release    = utils.path_join(os.getcwd(), "release")
-	dir_source     = ""
-
-	dir_blender     = ""
-	dir_blender_svn = ""
-
-	# Installation diractory name
-	dir_install_name = "vrayblender"
-	dir_install_path = utils.path_join(dir_install, dir_install_name)
-
-	# Build archive for Mac and Linux
-	# or NSIS installer for Windows
-	generate_package = False
-	generate_desktop = False
-	generate_docs    = False
-	with_installer   = 'NSIS'
-
-	# Test mode - just print messages, does nothing
-	mode_test      = True
-
-	# Special mode used only by me =)
-	mode_developer = False
-
-	# Debug output of the script
-	mode_debug     = False
-
-	# Add V-Ray/Blender patches
-	add_patches    = True
-
-	# Add V-Ray/Blender datafiles
-	add_datafiles  = True
-
-	# Add patches from "extra" directory
-	add_extra      = False
-
-	# Add themes from "themes" directory
-	add_themes     = False
-
-	# Host info
-	host_os        = utils.get_host_os()
-	host_arch      = utils.get_host_architecture()
-	host_name      = utils.get_hostname()
-	host_username  = utils.get_username()
-	host_linux     = utils.get_linux_distribution()
-
-	# Install dependencies
-	install_deps   = False
-	build_deps     = False
-	use_build_deps = False
-
-	# Update sources
-	update_blender = True
-	update_patch   = True
-
-	# Blender option
-	use_debug      = False
-	use_openmp     = True
-	use_collada    = False
-	use_sys_python = True
-	use_sys_ffmpeg = True
-
-	# Build settings
-	build_arch          = host_arch
-	build_threads       = 4
-	build_optimize      = False
-	build_optimize_type = "INTEL"
-	build_clean         = False
-	build_release       = False
-	build_upload        = False
-	checkout_revision   = None
-	use_env_msvc        = False
-
-	# user-config.py file path
-	user_config         = ""
-
-	# Use user defined user-config.py
-	user_user_config    = ""
-
-	# Max OS X specific
-	osx_sdk             = "10.6"
-
-	with_cycles         = False
-	with_tracker        = False
-	with_cuda           = False
-	cuda_gpu            = "sm_21"
-	with_osl            = False
-	with_player         = False
-	with_ge             = False
-
-	use_proxy           = None
-
-	use_github_branch   = None
-	use_exp_branch      = None
-	use_blender_hash    = None
-	add_branch_name     = None
-
-	vb30   = None
-	vc2013 = None
-
-	# Only prepare sources
-	export_only = None
-
 	def __init__(self, params):
-		if not params:
-			sys.stdout.write("Params are empty - using defaults...\n")
+		# Store options as attrs
+		for p in params:
+			setattr(self, p, params[p])
 
-		for param in params:
-			setattr(self, param, params[param])
+		# Always building vb30
+		self.project        = "vrayblender3"
+		self.version        = utils.VERSION
+		self.revision       = utils.REVISION
+		self.brev           = ""
+		self.commits        = '0'
 
-		if self.mode_debug:
-			for param in params:
-				print("%s => %s" % (param, params[param]))
-			print("")
+		# Installation diractory name
+		self.dir_install_name = "vrayblender"
+		self.dir_install_path = utils.path_join(self.dir_install, self.dir_install_name)
 
-		if not self.dir_source:
-			sys.stderr.write("Fatal error!\n")
-			sys.stderr.write("Source directory not specified!\n")
-			sys.exit(2)
+		# Host info
+		self.host_os        = utils.get_host_os()
+		self.host_arch      = utils.get_host_architecture()
+		self.host_name      = utils.get_hostname()
+		self.host_username  = utils.get_username()
+		self.host_linux     = utils.get_linux_distribution()
 
-		if self.vb30:
-			self.project += "3"
-		elif self.use_github_branch == "dev/vray_for_blender/stable":
-			self.project += "1"
-		else:
-			self.project += "2"
+		# Build architecture
+		self.build_arch     = self.host_arch
 
 
 	def info(self):
@@ -226,7 +115,7 @@ class Builder:
 				os.system("git checkout %s" % self.checkout_revision)
 
 		# Update Blender sources
-		if self.update_blender:
+		if self.upblender:
 			if os.path.exists(self.dir_blender):
 				sys.stdout.write("Removing exported sources...\n")
 				if not self.mode_test:
@@ -298,7 +187,7 @@ class Builder:
 						os.system("svn update")
 
 		# Update V-Ray/Blender patchset
-		if self.update_patch and not self.mode_developer:
+		if self.uppatch and not self.mode_developer:
 			vb25_patch = utils.path_join(self.dir_source, "vb25-patch")
 
 			if os.path.exists(vb25_patch):
@@ -318,11 +207,7 @@ class Builder:
 		self.version = utils.get_blender_version(self.dir_blender)[0]
 		self.versionArr = utils.get_blender_version(self.dir_blender)
 
-		if self.build_release:
-			self.dir_install_name = utils.GetInstallDirName(self)
-		else:
-			self.dir_install_name = self.project
-
+		self.dir_install_name = utils.GetInstallDirName(self)
 		self.dir_install_path = utils.path_join(self.dir_install, self.dir_install_name)
 
 
@@ -345,48 +230,25 @@ class Builder:
 			os.remove(patchFilepath)
 
 		# Add datafiles: splash, default scene etc
-		if self.add_datafiles:
-			sys.stdout.write("Adding datafiles...\n")
+		sys.stdout.write("Adding datafiles...\n")
 
-			datafiles_path = utils.path_join(self.dir_blender, "release", "datafiles")
+		datafiles_path = utils.path_join(self.dir_blender, "release", "datafiles")
 
-			if not self.mode_test:
-				# Change splash
-				for splash_filename in ["splash.png", "splash_2x.png"]:
-					splash_path_src = utils.path_join(patch_dir, "datafiles", splash_filename)
-					splash_path_dst = utils.path_join(datafiles_path, splash_filename)
+		if not self.mode_test:
+			# Change splash
+			for splash_filename in ["splash.png", "splash_2x.png"]:
+				splash_path_src = utils.path_join(patch_dir, "datafiles", splash_filename)
+				splash_path_dst = utils.path_join(datafiles_path, splash_filename)
 
-					shutil.copyfile(splash_path_src, splash_path_dst)
+				shutil.copyfile(splash_path_src, splash_path_dst)
 
-				# Change icons
-				for subdir in ["blender_icons16", "blender_icons32"]:
-					icons_path_src = utils.path_join(patch_dir, "datafiles", subdir)
-					icons_path_dst = utils.path_join(datafiles_path, subdir)
+			# Change icons
+			for subdir in ["blender_icons16", "blender_icons32"]:
+				icons_path_src = utils.path_join(patch_dir, "datafiles", subdir)
+				icons_path_dst = utils.path_join(datafiles_path, subdir)
 
-					shutil.rmtree(icons_path_dst)
-					shutil.copytree(icons_path_src, icons_path_dst)
-
-
-	def docs(self):
-		if self.generate_docs:
-			api_dir = utils.path_join(self.dir_install_path, "api")
-
-			sys.stdout.write("Generating API documentation: %s\n" % (api_dir))
-
-			if self.host_os != utils.LNX:
-				sys.stdout.write("API documentation generation is not supported on this platform.\n")
-
-			else:
-				if not self.mode_test:
-					sphinx_doc_gen = "doc/python_api/sphinx_doc_gen.py"
-
-					# Create API directory
-					os.system("mkdir -p %s" % api_dir)
-
-					# Generate API docs
-					os.chdir(self.dir_blender)
-					os.system("%s -b -P %s" % (utils.path_join(self.dir_install_path, "blender"), sphinx_doc_gen))
-					os.system("sphinx-build doc/python_api/sphinx-in %s" % api_dir)
+				shutil.rmtree(icons_path_dst)
+				shutil.copytree(icons_path_src, icons_path_dst)
 
 
 	def post_init(self):
@@ -397,7 +259,7 @@ class Builder:
 
 
 	def init_paths(self):
-		if self.generate_package:
+		if self.package:
 			if not self.mode_test:
 				utils.path_create(self.dir_release)
 
@@ -407,64 +269,17 @@ class Builder:
 
 		self.dir_blender      = utils.path_join(self.dir_source, "blender")
 		self.dir_blender_svn  = utils.path_join(self.dir_source, "blender-git")
-		self.user_config      = utils.path_join(self.dir_blender, "user-config.py")
-
-		if self.user_user_config:
-			self.user_user_config = utils.pathExpand(self.user_user_config)
 
 		if self.build_clean:
 			if os.path.exists(self.dir_build):
 				shutil.rmtree(self.dir_build)
 
 
-	def config(self):
+	def compile(self):
 		"""
 		  Override this method in subclass.
 		"""
-		sys.stderr.write("Base class method called: config() This souldn't happen.\n")
-
-
-	def compile(self):
-		if self.host_os == utils.LNX and hasattr(self, 'compile_linux'):
-			self.compile_linux()
-		elif self.host_os == utils.MAC and hasattr(self, 'compile_osx'):
-			self.compile_osx()
-		elif self.host_os == utils.WIN and hasattr(self, 'compile_windows'):
-			self.compile_windows()
-		else:
-			compileCmd = [sys.executable]
-			compileCmd.append("scons/scons.py")
-
-			if not self.build_clean:
-				compileCmd.append("--implicit-deps-unchanged")
-				compileCmd.append("--max-drift=1")
-
-			if self.host_os != utils.WIN:
-				compileCmd.append('CXXFLAGS="-w"')
-				compileCmd.append('CCFLAGS="-w"')
-
-			if self.use_env_msvc:
-				compileCmd.append(r'env="PATH:%PATH%,INCLUDE:%INCLUDE%,LIB:%LIB%"')
-
-			if self.vc2013:
-				compileCmd.append(r'MSVS_VERSION=12.0')
-
-			cleanCmd = [sys.executable]
-			cleanCmd.append("scons/scons.py")
-			cleanCmd.append("clean")
-
-			if not self.mode_test:
-				os.chdir(self.dir_blender)
-
-				if self.build_clean:
-					sys.stdout.write("Calling: %s\n" % (" ".join(cleanCmd)))
-					subprocess.call(cleanCmd)
-
-				sys.stdout.write("Calling: %s\n" % (" ".join(compileCmd)))
-				res = subprocess.call(compileCmd)
-				if not res == 0:
-					sys.stderr.write("There was an error during the compilation!\n")
-					sys.exit(1)
+		sys.stderr.write("Base class method called: package() This souldn't happen.\n")
 
 
 	def compile_post(self):
@@ -492,32 +307,19 @@ class Builder:
 			scriptsPath = utils.path_join(self.dir_install, self.dir_install_name, "blender.app", "Contents", "Resources", self.version, "scripts")
 
 		addonsPath  = utils.path_join(scriptsPath, "addons")
-		startupPath = utils.path_join(scriptsPath, "startup")
 
-		clonePath = addonsPath if self.vb30 else startupPath
-
-		sys.stdout.write("Adding exporter...\n")
-		sys.stdout.write("  in: %s\n" % clonePath)
+		sys.stdout.write("Adding exporter to:\n    %s\n" % addonsPath)
 
 		if not self.mode_test:
-			if not os.path.exists(clonePath):
+			if not os.path.exists(addonsPath):
 				sys.stderr.write("Something went wrong! Can't add Python modules and exporter!\n")
 				sys.exit(3)
 
-			if self.vb30:
-				os.chdir(clonePath)
-				exporterPath = utils.path_join(clonePath, "vb30")
-				if os.path.exists(exporterPath):
-					utils.remove_directory(exporterPath)
-				os.system("git clone --recursive https://github.com/bdancer/vb30.git")
-
-			else:
-				os.chdir(clonePath)
-				exporterPath = utils.path_join(clonePath, "vb25")
-				if os.path.exists(exporterPath):
-					utils.remove_directory(exporterPath)
-
-				os.system("git clone --recursive https://github.com/bdancer/vb25.git")
+			os.chdir(addonsPath)
+			exporterPath = utils.path_join(addonsPath, "vb30")
+			if os.path.exists(exporterPath):
+				utils.remove_directory(exporterPath)
+			os.system("git clone --recursive https://github.com/bdancer/vb30.git")
 
 			if self.use_exp_branch not in {'master'}:
 				os.chdir(exporterPath)
@@ -549,29 +351,23 @@ class Builder:
 		self.patch()
 
 		if not self.export_only:
-			self.config()
 			self.compile()
 			self.compile_post()
 
 			if not self.mode_developer:
 				self.exporter()
 
-			self.docs()
-
-			if self.generate_package:
+			if self.use_package:
 				if self.mode_developer:
 					sys.stdout.write("Package generation is disabled in 'Developer' mode.\n")
 				else:
-					if self.build_release:
-						releaeSubdir, releasePackage = self.package()
-						if self.build_upload != 'off':
-							self.upload(releaeSubdir, releasePackage)
-					else:
-						sys.stdout.write("Package generation is disabled in non-release mode.\n")
+					releaeSubdir, releasePackage = self.package()
+					if self.upload not in {'off'}:
+						self.upload(releaeSubdir, releasePackage)
 
 
 	def upload(self, subdir, filepath):
-		if self.build_upload == 'http':
+		if self.use_package_upload == 'http':
 			import requests
 
 			from ConfigParser import RawConfigParser
@@ -598,7 +394,7 @@ class Builder:
 			sys.stdout.write("Uploading package '%s' to '%s'...\n" % (filepath, subdir))
 			requests.post("http://cgdo.ru/upload", files=files, data=data, proxies=proxies)
 
-		elif self.build_upload == 'ftp':
+		elif self.use_package_upload == 'ftp':
 			import configparser
 
 			config = configparser.ConfigParser()

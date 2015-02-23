@@ -32,49 +32,81 @@ from .builder import utils
 from .builder import Builder
 
 
+Deps = {
+	'ubuntu': {
+		'cmd' : "apt-get install",
+		'packages' : (
+			'build-essential',
+			'libalut-dev',
+			'libavcodec-dev',
+			'libavdevice-dev',
+			'libavformat-dev',
+			'libavutil-dev',
+			'libfftw3-dev',
+			'libfreetype6-dev',
+			'libglew1.6-dev',
+			'libglu1-mesa-dev',
+			'libjack-dev',
+			'libjack-dev',
+			'libjpeg-dev',
+			'libmp3lame-dev',
+			'libopenal-dev',
+			'libopenexr-dev',
+			'libopenjpeg-dev',
+			'libpng12-dev',
+			'libsdl1.2-dev',
+			'libsndfile1-dev',
+			'libspnav-dev',
+			'libswscale-dev',
+			'libtheora-dev',
+			'libtiff4-dev',
+			'libvorbis-dev',
+			'libx264-dev',
+			'libxi-dev',
+			'python3.4-dev',
+		)
+	},
+}
+
+
 def DepsInstall(self):
-	pass
+	sys.stdout.write("Installing dependencies: ")
+
+	distr = self.host_linux['short_name']
+
+	if distr in Deps:
+		os.system("sudo %s %s" % (
+			Deps[distr]['cmd'],
+			Deps[distr]['packages'],
+		))
+
+	else:
+		sys.stdout.write("Your distribution \"%s\" doesn't support automatic dependencies installation!\n" % distr)
 
 
 def DepsBuild(self):
-	if self.install_deps:
-		sys.stdout.write("Installing dependencies: ")
+	cmd = "sudo -E %s/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source, 'vb25-patch'), utils.path_join(self.dir_source, "blender-deps"))
 
-		if self.host_linux['short_name'] == 'ubuntu':
-			packages = "libspnav-dev build-essential gettext libxi-dev libsndfile1-dev libpng12-dev libfftw3-dev libopenjpeg-dev libopenal-dev libalut-dev libvorbis-dev libglu1-mesa-dev libsdl-dev libfreetype6-dev libtiff4-dev libjack-dev libx264-dev libmp3lame-dev git-core"
-			sys.stdout.write("%s\n" % packages)
-			os.system("sudo apt-get install %s" % packages)
+	if not self.with_osl:
+		cmd += " --skip-llvm"
+		cmd += " --skip-osl"
 
-		else:
-			sys.stdout.write("Your distribution doesn't support automatic dependencies installation!\n")
+	if self.use_collada:
+		cmd += " --with-opencollada"
+	else:
+		cmd += " --skip-opencollada"
 
-		sys.exit(0)
+	if self.build_release:
+		cmd += " --all-static"
 
-	if self.build_deps:
-		cmd = "sudo -E %s/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source, 'vb25-patch'), utils.path_join(self.dir_source, "blender-deps"))
+	if self.mode_test:
+		sys.stdout.write(cmd)
+		sys.stdout.write("\n")
+	else:
+		os.system(cmd)
 
-		if not self.with_osl:
-			cmd += " --skip-llvm"
-			cmd += " --skip-osl"
-
-		if self.use_collada:
-			cmd += " --with-opencollada"
-		else:
-			cmd += " --skip-opencollada"
-
-		if self.build_release:
-			cmd += " --all-static"
-
-		if self.mode_test:
-			sys.stdout.write(cmd)
-			sys.stdout.write("\n")
-		else:
-			os.system(cmd)
-
-			os.system('sudo sh -c \"echo \"/opt/boost/lib\" > /etc/ld.so.conf.d/boost.conf\"')
-			os.system('sudo ldconfig')
-
-		sys.exit(0)
+		os.system('sudo sh -c \"echo \"/opt/boost/lib\" > /etc/ld.so.conf.d/boost.conf\"')
+		os.system('sudo ldconfig')
 
 
 class LinuxBuilder(Builder):

@@ -68,7 +68,7 @@ class WindowsBuilder(Builder):
 		ninja = utils.path_join(self.dir_source, "vb25-patch", "tools", "ninja.exe")
 
 		make = [ninja]
-		make.append('-j%i' % self.build_jobs)
+		make.append('-j%s' % self.build_jobs)
 		make.append('install')
 
 		res = subprocess.call(make)

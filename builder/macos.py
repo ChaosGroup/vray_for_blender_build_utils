@@ -72,7 +72,7 @@ class MacBuilder(Builder):
 			sys.exit(1)
 
 		make = ['ninja']
-		make.append('-j%i' % self.build_jobs)
+		make.append('-j%s' % self.build_jobs)
 		make.append('install')
 
 		res = subprocess.call(make)

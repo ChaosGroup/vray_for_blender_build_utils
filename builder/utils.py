@@ -406,7 +406,7 @@ def GetPackageName(self):
 
 	os = get_host_os()
 	if os == 'linux':
-		os = get_linux_distribution()['short_name']
+		os = "%s%s" % (get_linux_distribution()['short_name'], get_linux_distribution()['version'])
 
 	params = {
 		'build_name' : GetInstallDirName(self),

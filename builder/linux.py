@@ -72,7 +72,7 @@ Deps = {
 def DepsInstall(self):
 	sys.stdout.write("Installing dependencies: ")
 
-	distr = self.host_linux['short_name']
+	distr = utils.utils.get_linux_distribution()
 
 	if distr in Deps:
 		os.system("sudo %s %s" % (

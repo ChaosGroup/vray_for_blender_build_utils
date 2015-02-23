@@ -325,18 +325,37 @@ def get_blender_version(root_dir):
 
 
 def get_linux_distribution():
-	short_info = platform.dist()
-
 	info = {}
-	info['long_name']  = short_info[0].strip().lower().strip()
-	info['short_name'] = short_info[0].lower().replace(' ','_').strip()
-	info['version']    = short_info[1].strip()
+
+	lsb_release = "/etc/lsb-release"
+	if os.path.exists(lsb_release):
+		with open(lsb_release, 'r') as lsbFile:
+			for line in lsbFile.readlines():
+				values = line.strip().split('=')
+				if len(values) == 2:
+					if values[0] == 'DISTRIB_ID':
+						info['long_name']  = values[1]
+						info['short_name'] = values[1].replace(' ','_')
+
+					elif values[0] == 'DISTRIB_RELEASE':
+						info['version'] = values[1]
+
+	else:
+		short_info = platform.dist()
+
+		info['long_name']  = short_info[0]
+		info['short_name'] = short_info[0].replace(' ','_')
+		info['version']    = short_info[1]
+
+	for k in info:
+		info[k] = info[k].strip().lower()
 
 	if info['long_name'].find('Calculate Linux') != -1:
 		info['short_name'] = 'Calculate'
 
 	if info['long_name'].find('arch') != -1:
 		info['short_name'] = 'archlinux'
+		info['version']    = ''
 
 	return info
 

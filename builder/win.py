@@ -65,7 +65,9 @@ class WindowsBuilder(Builder):
 			sys.stderr.write("There was an error during configuration!\n")
 			sys.exit(1)
 
-		make = ['ninja']
+		ninja = utils.path_join(self.dir_source, "vb25-patch", "tools", "ninja.exe")
+
+		make = [ninja]
 		make.append('install')
 
 		res = subprocess.call(make)

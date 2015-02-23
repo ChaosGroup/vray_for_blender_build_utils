@@ -325,11 +325,10 @@ def get_blender_version(root_dir):
 
 
 def get_linux_distribution():
-	long_info  = platform.linux_distribution()
 	short_info = platform.dist()
 
 	info = {}
-	info['long_name']  = long_info[0].strip()
+	info['long_name']  = short_info[0].strip().lower().strip()
 	info['short_name'] = short_info[0].lower().replace(' ','_').strip()
 	info['version']    = short_info[1].strip()
 

@@ -197,7 +197,7 @@ parser.add_argument('--mode_developer',
 	help    = argparse.SUPPRESS # Don't clone exporter and update vb25-patch basically
 )
 parser.add_argument('--dev_static_libs',
-	dest    = 'dev_static_libs',
+	action  = 'store_true',
 	default = False,
 	help    = argparse.SUPPRESS # Use my precompiled static dependency libraries
 )

@@ -111,7 +111,7 @@ class Builder:
 			os.system("git checkout -b {branch} github/{branch}".format(branch=self.use_github_branch))
 
 		# Update Blender sources
-		if self.upblender:
+		if self.upblender == "on":
 			if os.path.exists(self.dir_blender):
 				sys.stdout.write("Removing exported sources...\n")
 				if not self.mode_test:

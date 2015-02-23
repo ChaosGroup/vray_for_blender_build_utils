@@ -32,7 +32,7 @@ from .builder import Builder
 
 
 class WindowsBuilder(Builder):
-	def compile_windows(self):
+	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_source, "blender-cmake-build")
 		if not os.path.exists(cmake_build_dir):
 			os.makedirs(cmake_build_dir)
@@ -54,7 +54,7 @@ class WindowsBuilder(Builder):
 		cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
 		cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))
 		cmake.append("-DWITH_LIBMV=%s" % utils.GetCmakeOnOff(self.with_tracker))
-		cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.use_collada))
+		cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.with_collada))
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")
 		cmake.append("-DWITH_FFTW3=ON")
 
@@ -68,6 +68,7 @@ class WindowsBuilder(Builder):
 		ninja = utils.path_join(self.dir_source, "vb25-patch", "tools", "ninja.exe")
 
 		make = [ninja]
+		make.append('-j%s' % self.build_jobs)
 		make.append('install')
 
 		res = subprocess.call(make)
@@ -75,103 +76,10 @@ class WindowsBuilder(Builder):
 			sys.stderr.write("There was an error during the compilation!\n")
 			sys.exit(1)
 
+
 	def config(self):
 		# Not used on Windows anymore
 		pass
-
-	def config_scons(self):
-		sys.stdout.write("Generating build configuration:\n")
-		sys.stdout.write("  in: %s\n" % (self.user_config))
-
-		if self.mode_test:
-			return
-
-		if self.user_user_config:
-			open(self.user_config, 'w').write(open(self.user_user_config, 'r').read())
-			return
-
-		uc= open(self.user_config, 'w')
-
-		build_options= {
-			'True': [
-				'WITH_BF_FFMPEG',
-				'WITH_BF_OPENAL',
-				'WITH_BF_SDL',
-				'WITH_BF_BULLET',
-				'WITH_BF_ZLIB',
-				'WITH_BF_FTGL',
-				'WITH_BF_RAYOPTIMIZATION',
-				'WITH_BUILDINFO',
-				'WITH_BF_OPENEXR',
-				'WITH_BF_ICONV',
-			],
-			'False': [
-				'WITH_BF_FREESTYLE',
-				'WITH_BF_QUICKTIME',
-				'WITH_BF_FMOD',
-				'WITH_BF_VERSE',
-				'WITH_BF_JACK',
-				'WITH_BF_FFTW3',
-			]
-		}
-
-		if self.with_ge:
-			build_options['True'].append('WITH_BF_GAMEENGINE')
-		else:
-			build_options['False'].append('WITH_BF_GAMEENGINE')
-
-		if self.with_player:
-			build_options['True'].append('WITH_BF_PLAYER')
-		else:
-			build_options['False'].append('WITH_BF_PLAYER')
-
-		if not self.with_tracker:
-			build_options['False'].append('WITH_BF_LIBMV')
-
-		if self.build_arch == 'x86_64':
-			build_options['False'].append('WITH_BF_JACK')
-			build_options['False'].append('WITH_BF_SNDFILE')
-			build_options['False'].append('WITH_BF_FFMPEG')
-			build_options['False'].append('WITH_BF_OPENAL')
-
-			uc.write("BF_PNG_LIB = 'libpng'\n")
-			uc.write("\n")
-
-		if self.use_collada:
-			build_options['True'].append('WITH_BF_COLLADA')
-		else:
-			build_options['False'].append('WITH_BF_COLLADA')
-
-		if self.use_debug:
-			build_options['True'].append('BF_DEBUG')
-
-		# Windows git/scons issue - scons can't clear installation directory
-		# when vb25 .git is installed
-		if os.path.exists(self.dir_install_path):
-			os.system("rmdir /Q /S %s" % (self.dir_install_path))
-
-		uc.write("BF_INSTALLDIR     = '%s'\n" % (self.dir_install_path))
-		uc.write("BF_BUILDDIR       = '%s'\n" % (self.dir_build))
-		uc.write("BF_SPLIT_SRC      = True\n")
-		uc.write("BF_TWEAK_MODE     = False\n")
-		uc.write("BF_NUMJOBS        = %s\n" % (self.build_threads))
-
-		# Cycles
-		#
-		if not self.with_cycles:
-			uc.write("WITH_BF_CYCLES    = False\n")
-			uc.write("WITH_BF_OIIO      = False\n")
-			uc.write("\n")
-
-		uc.write("WITH_VRAY_FOR_BLENDER = True\n")
-
-		# Write boolean options
-		for key in build_options:
-			for opt in build_options[key]:
-				uc.write("{0:25} = {1}\n".format(opt, key))
-
-		uc.write("\n")
-		uc.close()
 
 
 	def installer_cgr(self, installer_path):
@@ -191,7 +99,7 @@ class WindowsBuilder(Builder):
 		installer_path = utils.path_slashify(utils.path_join(release_path, installer_name))
 		installer_root = utils.path_join(self.dir_source, "vb25-patch", "installer")
 
-		if self.with_installer == 'CGR':
+		if self.use_installer == 'CGR':
 			self.installer_cgr(installer_path)
 			return subdir, installer_path
 

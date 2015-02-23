@@ -32,139 +32,171 @@ from .builder import utils
 from .builder import Builder
 
 
+Deps = {
+	'ubuntu': {
+		'cmd' : "apt-get install",
+		'packages' : (
+			'build-essential',
+			'libalut-dev',
+			'libavcodec-dev',
+			'libavdevice-dev',
+			'libavformat-dev',
+			'libavutil-dev',
+			'libfftw3-dev',
+			'libfreetype6-dev',
+			'libglew-dev',
+			'libcheese-dev', # Fixes libglew-dev installation
+			'libglu1-mesa-dev',
+			'libjack-dev',
+			'libjack-dev',
+			'libjpeg-dev',
+			'libmp3lame-dev',
+			'libopenal-dev',
+			'libopenexr-dev',
+			'libopenjpeg-dev',
+			'libpng12-dev',
+			'libsdl1.2-dev',
+			'libsndfile1-dev',
+			'libspnav-dev',
+			'libswscale-dev',
+			'libtheora-dev',
+			'libtiff4-dev',
+			'libvorbis-dev',
+			'libx264-dev',
+			'libxi-dev',
+			'python3.4-dev',
+			'python3-numpy',
+			'libopenimageio-dev',
+			'libopencolorio-dev',
+			'libboost-all-dev'
+		)
+	},
+}
+
+
+def DepsInstall(self):
+	sys.stdout.write("Installing dependencies: \n")
+
+	distr = utils.get_linux_distribution()['short_name']
+
+	if distr in Deps:
+		cmd = "sudo %s %s" % (
+			Deps[distr]['cmd'],
+			" ".join(Deps[distr]['packages'])
+		)
+		sys.stdout.write("Calling: %s\n" % cmd)
+		os.system(cmd)
+
+	else:
+		sys.stdout.write("Your distribution \"%s\" doesn't support automatic dependencies installation!\n" % distr)
+
+
+def DepsBuild(self):
+	cmd = "sudo -E %s/install_deps.sh --source %s --install /opt" % (
+		utils.path_join(self.dir_source, 'vb25-patch'),
+		utils.path_join(self.dir_source, "blender-deps")
+	)
+
+	if not self.with_osl:
+		cmd += " --skip-llvm"
+		cmd += " --skip-osl"
+
+	if self.with_collada:
+		cmd += " --with-opencollada"
+	else:
+		cmd += " --skip-opencollada"
+
+	if self.mode_test:
+		sys.stdout.write(cmd)
+		sys.stdout.write("\n")
+	else:
+		os.system(cmd)
+
+
 class LinuxBuilder(Builder):
 	def post_init(self):
-		if self.install_deps:
-			sys.stdout.write("Installing dependencies: ")
-
-			if self.host_linux['short_name'] == 'ubuntu':
-				packages = "libspnav-dev build-essential gettext libxi-dev libsndfile1-dev libpng12-dev libfftw3-dev libopenjpeg-dev libopenal-dev libalut-dev libvorbis-dev libglu1-mesa-dev libsdl-dev libfreetype6-dev libtiff4-dev libjack-dev libx264-dev libmp3lame-dev git-core"
-				if self.generate_docs:
-					packages += " python-sphinx"
-				sys.stdout.write("%s\n" % packages)
-				os.system("sudo apt-get install %s" % packages)
-
-			else:
-				sys.stdout.write("Your distribution doesn't support automatic dependencies installation!\n")
-
-			sys.exit(0)
-
-		if self.build_deps:
-			cmd = "sudo -E %s/install_deps.sh --source %s --install /opt" % (utils.path_join(self.dir_source, 'vb25-patch'), utils.path_join(self.dir_source, "blender-deps"))
-
-			if not self.with_osl:
-				cmd += " --skip-llvm"
-				cmd += " --skip-osl"
-
-			if self.use_collada:
-				cmd += " --with-opencollada"
-			else:
-				cmd += " --skip-opencollada"
-
-			if self.build_release:
-				cmd += " --all-static"
-
-			if self.mode_test:
-				sys.stdout.write(cmd)
-				sys.stdout.write("\n")
-			else:
-				os.system(cmd)
-
-				os.system('sudo sh -c \"echo \"/opt/boost/lib\" > /etc/ld.so.conf.d/boost.conf\"')
-				os.system('sudo ldconfig')
-
-			sys.exit(0)
-
-
-	def config(self):
-		# Not used on Linux anymore
 		pass
 
-
-	def compile_linux(self):
+	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_source, "blender-cmake-build")
 		if not os.path.exists(cmake_build_dir):
 			os.makedirs(cmake_build_dir)
 		os.chdir(cmake_build_dir)
-
-		if self.mode_test:
-			return
 
 		cmake = ['cmake']
 
 		cmake.append("-G")
 		cmake.append("Ninja")
 
-		cmake.append("-DCMAKE_BUILD_TYPE=Release")
+		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
+		cmake.append("-DCMAKE_BUILD_TYPE=%s" % self.build_type.capitalize())
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
 
-		cmake.append("-DBoost_DIR=/opt/boost")
-		cmake.append("-DBoost_INCLUDE_DIR=/opt/boost/include")
-		cmake.append("-DBoost_LIBRARY_DIRS=/opt/boost/lib")
-		cmake.append("-DBoost_DATE_TIME_LIBRARY=/opt/boost/lib/libboost_date_time.a")
-		cmake.append("-DBoost_DATE_TIME_LIBRARY_DEBUG=/opt/boost/lib/libboost_date_time.a")
-		cmake.append("-DBoost_DATE_TIME_LIBRARY_RELEASE=/opt/boost/lib/libboost_date_time.a")
-		cmake.append("-DBoost_FILESYSTEM_LIBRARY=/opt/boost/lib/libboost_filesystem.a")
-		cmake.append("-DBoost_FILESYSTEM_LIBRARY_DEBUG=/opt/boost/lib/libboost_filesystem.a")
-		cmake.append("-DBoost_FILESYSTEM_LIBRARY_RELEASE=/opt/boost/lib/libboost_filesystem.a")
-		cmake.append("-DBoost_REGEX_LIBRARY=/opt/boost/lib/libboost_regex.a")
-		cmake.append("-DBoost_REGEX_LIBRARY_DEBUG=/opt/boost/lib/libboost_regex.a")
-		cmake.append("-DBoost_REGEX_LIBRARY_RELEASE=/opt/boost/lib/libboost_regex.a")
-		cmake.append("-DBoost_SYSTEM_LIBRARY=/opt/boost/lib/libboost_system.a")
-		cmake.append("-DBoost_SYSTEM_LIBRARY_DEBUG=/opt/boost/lib/libboost_system.a")
-		cmake.append("-DBoost_SYSTEM_LIBRARY_RELEASE=/opt/boost/lib/libboost_system.a")
-		cmake.append("-DBoost_THREAD_LIBRARY=/opt/boost/lib/libboost_thread.a")
-		cmake.append("-DBoost_THREAD_LIBRARY_DEBUG=/opt/boost/lib/libboost_thread.a")
-		cmake.append("-DBoost_THREAD_LIBRARY_RELEASE=/opt/boost/lib/libboost_thread.a")
-		cmake.append("-DBoost_LOCALE_LIBRARY=/opt/boost/lib/libboost_locale.a")
-		cmake.append("-DBoost_LOCALE_LIBRARY_DEBUG=/opt/boost/lib/libboost_locale.a")
-		cmake.append("-DBoost_LOCALE_LIBRARY_RELEASE=/opt/boost/lib/libboost_locale.a")
-
-		cmake.append("-DOPENEXR_ROOT_DIR=/opt/openexr")
-		cmake.append("-DOPENEXR_ILMIMF_LIBRARY=/opt/openexr/lib/libIlmImf-2_1.a")
-
-		cmake.append("-D_opencolorio_LIBRARIES=/opt/ocio/lib/libOpenColorIO.a")
-		cmake.append("-DOPENCOLORIO_INCLUDE_DIR=/opt/ocio/include")
-		cmake.append("-DOPENCOLORIO_TINYXML_LIBRARY=/opt/ocio/lib/libtinyxml.a")
-		cmake.append("-DOPENCOLORIO_YAML-CPP_LIBRARY=/opt/ocio/lib/libyaml-cpp.a")
-		cmake.append("-DOPENIMAGEIO_INCLUDE_DIR=/opt/oiio/include/")
-		cmake.append("-DOPENIMAGEIO_LIBRARY=/opt/oiio/lib/libOpenImageIO.a")
-
-		cmake.append("-DPYTHON_VERSION=3.4")
-		cmake.append("-DPYTHON_ROOT_DIR=/opt/python-3.3")
-		cmake.append("-DPYTHON_LIBRARY=/opt/python-3.3/lib/libpython3.4m.a")
-		cmake.append("-DPYTHON_LIBPATH=/opt/python-3.3/lib")
-		cmake.append("-DPYTHON_LIBRARIES=/opt/python-3.3/lib")
-		cmake.append("-DPYTHON_INCLUDE_DIR=/opt/python-3.3/include/python3.4m")
-		cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=/opt/python-3.3/include/python3.4m")
-		cmake.append("-DPYTHON_NUMPY_PATH=/opt/python-3.3/lib/python3.4/site-packages")
+		if self.dev_static_libs:
+			cmake.append("-DBoost_DIR=/opt/boost")
+			cmake.append("-DBoost_INCLUDE_DIR=/opt/boost/include")
+			cmake.append("-DBoost_LIBRARY_DIRS=/opt/boost/lib")
+			cmake.append("-DBoost_DATE_TIME_LIBRARY=/opt/boost/lib/libboost_date_time.a")
+			cmake.append("-DBoost_DATE_TIME_LIBRARY_DEBUG=/opt/boost/lib/libboost_date_time.a")
+			cmake.append("-DBoost_DATE_TIME_LIBRARY_RELEASE=/opt/boost/lib/libboost_date_time.a")
+			cmake.append("-DBoost_FILESYSTEM_LIBRARY=/opt/boost/lib/libboost_filesystem.a")
+			cmake.append("-DBoost_FILESYSTEM_LIBRARY_DEBUG=/opt/boost/lib/libboost_filesystem.a")
+			cmake.append("-DBoost_FILESYSTEM_LIBRARY_RELEASE=/opt/boost/lib/libboost_filesystem.a")
+			cmake.append("-DBoost_REGEX_LIBRARY=/opt/boost/lib/libboost_regex.a")
+			cmake.append("-DBoost_REGEX_LIBRARY_DEBUG=/opt/boost/lib/libboost_regex.a")
+			cmake.append("-DBoost_REGEX_LIBRARY_RELEASE=/opt/boost/lib/libboost_regex.a")
+			cmake.append("-DBoost_SYSTEM_LIBRARY=/opt/boost/lib/libboost_system.a")
+			cmake.append("-DBoost_SYSTEM_LIBRARY_DEBUG=/opt/boost/lib/libboost_system.a")
+			cmake.append("-DBoost_SYSTEM_LIBRARY_RELEASE=/opt/boost/lib/libboost_system.a")
+			cmake.append("-DBoost_THREAD_LIBRARY=/opt/boost/lib/libboost_thread.a")
+			cmake.append("-DBoost_THREAD_LIBRARY_DEBUG=/opt/boost/lib/libboost_thread.a")
+			cmake.append("-DBoost_THREAD_LIBRARY_RELEASE=/opt/boost/lib/libboost_thread.a")
+			cmake.append("-DBoost_LOCALE_LIBRARY=/opt/boost/lib/libboost_locale.a")
+			cmake.append("-DBoost_LOCALE_LIBRARY_DEBUG=/opt/boost/lib/libboost_locale.a")
+			cmake.append("-DBoost_LOCALE_LIBRARY_RELEASE=/opt/boost/lib/libboost_locale.a")
+			cmake.append("-DOPENEXR_ROOT_DIR=/opt/openexr")
+			cmake.append("-DOPENEXR_ILMIMF_LIBRARY=/opt/openexr/lib/libIlmImf-2_1.a")
+			cmake.append("-D_opencolorio_LIBRARIES=/opt/ocio/lib/libOpenColorIO.a")
+			cmake.append("-DOPENCOLORIO_INCLUDE_DIR=/opt/ocio/include")
+			cmake.append("-DOPENCOLORIO_TINYXML_LIBRARY=/opt/ocio/lib/libtinyxml.a")
+			cmake.append("-DOPENCOLORIO_YAML-CPP_LIBRARY=/opt/ocio/lib/libyaml-cpp.a")
+			cmake.append("-DOPENIMAGEIO_INCLUDE_DIR=/opt/oiio/include/")
+			cmake.append("-DOPENIMAGEIO_LIBRARY=/opt/oiio/lib/libOpenImageIO.a")
+			cmake.append("-DPYTHON_VERSION=3.4")
+			cmake.append("-DPYTHON_ROOT_DIR=/opt/python-3.3")
+			cmake.append("-DPYTHON_LIBRARY=/opt/python-3.3/lib/libpython3.4m.a")
+			cmake.append("-DPYTHON_LIBPATH=/opt/python-3.3/lib")
+			cmake.append("-DPYTHON_LIBRARIES=/opt/python-3.3/lib")
+			cmake.append("-DPYTHON_INCLUDE_DIR=/opt/python-3.3/include/python3.4m")
+			cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=/opt/python-3.3/include/python3.4m")
+			cmake.append("-DPYTHON_NUMPY_PATH=/opt/python-3.3/lib/python3.4/site-packages")
 
 		cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
 		cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))
 		cmake.append("-DWITH_LIBMV=%s" % utils.GetCmakeOnOff(self.with_tracker))
-		cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.use_collada))
+		cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.with_collada))
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")
 		cmake.append("-DWITH_FFTW3=ON")
 
-		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
-		if self.use_collada:
-			cmake.append("-DWITH_OPENCOLLADA=ON")
-
 		cmake.append("../blender")
 
-		res = subprocess.call(cmake)
-		if not res == 0:
-			sys.stderr.write("There was an error during configuration!\n")
-			sys.exit(1)
+		if self.mode_test:
+			print(" ".join(cmake))
 
-		make = ['ninja']
-		make.append('-j10')
-		make.append('install')
+		else:
+			res = subprocess.call(cmake)
+			if not res == 0:
+				sys.stderr.write("There was an error during configuration!\n")
+				sys.exit(1)
 
-		res = subprocess.call(make)
-		if not res == 0:
-			sys.stderr.write("There was an error during the compilation!\n")
-			sys.exit(1)
+			make = ['ninja']
+			make.append('-j%s' % self.build_jobs)
+			make.append('install')
+
+			res = subprocess.call(make)
+			if not res == 0:
+				sys.stderr.write("There was an error during the compilation!\n")
+				sys.exit(1)
 
 
 	def package(self):

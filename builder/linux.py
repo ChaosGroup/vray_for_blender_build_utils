@@ -77,7 +77,7 @@ def DepsInstall(self):
 	if distr in Deps:
 		os.system("sudo %s %s" % (
 			Deps[distr]['cmd'],
-			Deps[distr]['packages']
+			" ".join(Deps[distr]['packages'])
 		))
 
 	else:

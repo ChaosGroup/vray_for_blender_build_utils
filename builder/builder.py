@@ -110,10 +110,6 @@ class Builder:
 			os.system("git remote update github")
 			os.system("git checkout -b {branch} github/{branch}".format(branch=self.use_github_branch))
 
-			if self.checkout_revision is not None:
-				os.chdir(self.dir_blender)
-				os.system("git checkout %s" % self.checkout_revision)
-
 		# Update Blender sources
 		if self.upblender:
 			if os.path.exists(self.dir_blender):

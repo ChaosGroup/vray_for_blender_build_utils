@@ -190,7 +190,7 @@ gr_script.add_argument('--debug',  action='store_true', dest='mode_debug', defau
 gr_script.add_argument('--test',   action='store_true', dest='mode_test',  default=False, help="Test mode.")
 
 
-# Special options used only my me
+# Special options used only by me
 #
 parser.add_argument('--mode_developer',
 	default = False,

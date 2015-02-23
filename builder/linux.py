@@ -65,6 +65,10 @@ Deps = {
 			'libx264-dev',
 			'libxi-dev',
 			'python3.4-dev',
+			'python3-numpy',
+			'libopenimageio-dev',
+			'libopencolorio-dev',
+			'libboost-all-dev'
 		)
 	},
 }

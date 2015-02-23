@@ -45,6 +45,7 @@ Deps = {
 			'libfftw3-dev',
 			'libfreetype6-dev',
 			'libglew-dev',
+			'libcheese-dev', # Fixes libglew-dev installation
 			'libglu1-mesa-dev',
 			'libjack-dev',
 			'libjack-dev',

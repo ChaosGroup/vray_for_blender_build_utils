@@ -138,6 +138,21 @@ and installer / archive under:
 BUILD_DIRECTORY/release/
 ```
 
+
+### Naming
+
+```
+vrayblender3-2.73-58783-67fcf52-6f8d89a-x86_64-windows.exe
+             ^^^^ ^^^^^ ^^^^^^^ ^^^^^^^ ^^^^^^ ^^^^^^^
+             |    |     |       |       |      `-  Operating system
+             |    |     |       |       `- Architecture
+             |    |     |       `- V-Ray patches revision
+             |    |     `- Blender master revision
+             |    `- Commint count
+             `--- Blender version
+```
+
+
 ### Contacts
 
 * Issues tracker: https://github.com/bdancer/vb25-patch/issues

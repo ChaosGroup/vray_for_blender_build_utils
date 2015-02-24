@@ -106,6 +106,7 @@ class Builder:
 			# Copy full tree to have proper build info.
 			shutil.copytree(self.dir_blender_svn, self.dir_blender)
 
+			# Update patched branch
 			os.chdir(self.dir_blender)
 			os.system("git remote update github")
 			os.system("git checkout -b {branch} github/{branch}".format(branch=self.use_github_branch))
@@ -123,32 +124,24 @@ class Builder:
 					os.chdir(self.dir_source)
 
 					# Obtain sources
-					os.system("git clone %s blender" % GITHUB_REPO)
+					os.system("git clone %s blender-git" % GITHUB_REPO)
+					os.chdir(self.dir_blender_svn)
 
-					# Now set origin to Blender's git and additional github remote
-					# This is needed for proper submodules init
-					os.chdir(self.dir_blender)
+					# Change remotes for correct submodule init
 					os.system("git remote set-url origin %s" % OFFICIAL_REPO)
 					os.system("git remote add github %s" % GITHUB_REPO)
-					os.system("git remote update")
-					os.system("git pull --rebase")
 
-					os.chdir(self.dir_blender)
+					# Init submodules
 					os.system("git submodule update --init --recursive")
 					os.system("git submodule foreach git checkout master")
 					os.system("git submodule foreach git pull --rebase origin master")
-
-					os.chdir(self.dir_source)
-					# Move "blender" to "blender-git"
-					utils.move_directory(self.dir_blender, self.dir_blender_svn)
 
 			else:
 				sys.stdout.write("Updating Blender sources...\n")
 				if not self.mode_test:
 					os.chdir(self.dir_blender_svn)
 
-					# Update sources
-					os.system("git pull --rebase")
+					# Update submodules
 					os.system("git submodule foreach git pull --rebase origin master")
 
 			exportSources()

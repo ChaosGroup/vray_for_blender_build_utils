@@ -97,13 +97,13 @@ git pull --rebase
 cd ..
 
 python vb25-patch/build.py ^
---uppatch=off       ^ :: Already updated
---with_game         ^ :: Build Game Engine support
---with_player       ^ :: Build Blender Player
---with_collada      ^ :: OpenCollada support
---with_cycles       ^ :: Enable Cycles
---vc2013            ^ :: Use this flag if you've installed Visual Studio 2013 (which is preffered)
---release --package ^ :: This will generate NSIS archive (if NSIS is installed)
+--uppatch=off       ^
+--with_game         ^
+--with_player       ^
+--with_collada      ^
+--with_cycles       ^
+--vc2013            ^
+--release --package ^
 %*
 ```
 

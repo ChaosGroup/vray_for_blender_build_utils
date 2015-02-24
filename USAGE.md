@@ -148,7 +148,7 @@ vrayblender3-2.73-58783-67fcf52-6f8d89a-x86_64-windows.exe
              |    |     |       |       `- Architecture
              |    |     |       `- V-Ray patches revision
              |    |     `- Blender master revision
-             |    `- Commint count
+             |    `- Commit count
              `--- Blender version
 ```
 

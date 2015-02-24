@@ -156,4 +156,4 @@ vrayblender3-2.73-58783-67fcf52-6f8d89a-x86_64-windows.exe
 ### Contacts
 
 * Issues tracker: https://github.com/bdancer/vb25-patch/issues
-* Email: Andrei Izrantcev andrei.izrantcev@chaosgroup.com
+* Email: Andrei Izrantcev <andrei.izrantcev@chaosgroup.com>

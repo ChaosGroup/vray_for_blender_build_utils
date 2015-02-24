@@ -280,7 +280,7 @@ def _get_cmd_output(cmd, workDir=None):
 
 def get_svn_revision(svn_root):
 	git_rev = ['git', 'rev-parse', '--short', 'HEAD']
-	b_rev   = ['git', 'rev-parse', '--short', 'master']
+	b_rev   = ['git', 'rev-parse', '--short', 'github/master']
 	git_cnt = ['git', 'rev-list',  '--count', 'HEAD']
 
 	rev = _get_cmd_output(git_rev, svn_root)

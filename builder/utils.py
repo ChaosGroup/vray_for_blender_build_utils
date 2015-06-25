@@ -416,7 +416,7 @@ def GetInstallDirName(self):
 	return "{project}{version}{nCommits}{bhash}{hash}{arch}{branch}".format(**params)
 
 
-def GetPackageName(self):
+def GetPackageName(self, ext=None):
 	def _get_host_package_type():
 		if get_host_os() == WIN:
 			return "exe"
@@ -430,7 +430,7 @@ def GetPackageName(self):
 	params = {
 		'build_name' : GetInstallDirName(self),
 		'os' : os,
-		'ext' : _get_host_package_type(),
+		'ext' : ext if ext else _get_host_package_type(),
 	}
 
 	return "{build_name}-{os}.{ext}".format(**params)

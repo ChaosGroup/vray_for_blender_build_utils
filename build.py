@@ -107,6 +107,10 @@ gr_release.add_argument('--use_installer',
 	choices = {'NSIS', 'CGR'},
 	help    = "Installer system"
 )
+gr_release.add_argument('--use_archive',
+	default = False,
+	help    = "Generate archive"
+)
 gr_release.add_argument('--add-branch-name',
 	action  = 'store_true',
 	dest    = "add_branch_name",

@@ -354,7 +354,7 @@ class Builder:
 					if self.upload not in {'off'}:
 						self.upload(releaeSubdir, releasePackage)
 
-					if hasattr(self, 'package_archive'):
+					if self.use_archive and hasattr(self, 'package_archive'):
 						releaeSubdir, releasePackage = self.package_archive()
 						if self.upload not in {'off'}:
 							self.upload(releaeSubdir, releasePackage)

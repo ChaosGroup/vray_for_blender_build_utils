@@ -178,6 +178,11 @@ class LinuxBuilder(Builder):
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")
 		cmake.append("-DWITH_FFTW3=ON")
 
+		cmake.append("-DWITH_SYSTEM_GLEW=OFF")
+
+		if utils.get_linux_distribution() == 'centos':
+			cmake.append("-DWITH_OPENAL=OFF")
+
 		cmake.append("../blender")
 
 		if self.mode_test:

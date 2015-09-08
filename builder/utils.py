@@ -340,12 +340,13 @@ def get_linux_distribution():
 					elif values[0] == 'DISTRIB_RELEASE':
 						info['version'] = values[1]
 
-	else:
-		short_info = platform.dist()
-
-		info['long_name']  = short_info[0]
-		info['short_name'] = short_info[0].replace(' ','_')
-		info['version']    = short_info[1]
+	dist_info = platform.dist()
+	if 'long_name' not in info:
+		info['long_name']  = dist_info[0]
+	if 'short_name' not in info:
+		info['short_name'] = dist_info[0].replace(' ','_')
+	if 'version' not in info:
+		info['version']    = dist_info[1]
 
 	for k in info:
 		info[k] = info[k].strip().lower()

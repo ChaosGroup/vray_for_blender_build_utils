@@ -133,6 +133,11 @@ class LinuxBuilder(Builder):
 		cmake.append("-G")
 		cmake.append("Ninja")
 
+		if self.gcc:
+			cmake.append("-DCMAKE_C_COMPILER=%s" % self.gcc)
+		if self.gxx:
+			cmake.append("-DCMAKE_CXX_COMPILER=%s" % self.gxx)
+
 		cmake.append("-DCMAKE_BUILD_TYPE=%s" % self.build_type.capitalize())
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
 

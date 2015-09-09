@@ -94,7 +94,16 @@ gr_compilation.add_argument('--vc_2013',
 	default = False,
 	help    = "Use VC 2013 libraries (Windows only)"
 )
-
+gr_compilation.add_argument('--gcc',
+	dest    = "gcc",
+	default = "",
+	help    = "GCC"
+)
+gr_compilation.add_argument('--gxx',
+	dest    = "gxx",
+	default = "",
+	help    = "G++"
+)
 
 gr_release = parser.add_argument_group(title="Release")
 gr_release.add_argument('--use_package',

@@ -119,69 +119,126 @@ class LinuxBuilder(Builder):
 
 	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_source, "blender-cmake-build")
-		if not os.path.exists(cmake_build_dir):
-			os.makedirs(cmake_build_dir)
+		if os.path.exists(cmake_build_dir):
+			utils.remove_directory(cmake_build_dir)
+		os.makedirs(cmake_build_dir)
 		os.chdir(cmake_build_dir)
+
+		PYTHON_VERSION = "3.4"
+
+		distr_info = utils.get_linux_distribution()
 
 		cmake = ['cmake']
 
 		cmake.append("-G")
 		cmake.append("Ninja")
 
-		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 		cmake.append("-DCMAKE_BUILD_TYPE=%s" % self.build_type.capitalize())
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
 
-		if self.dev_static_libs:
-			cmake.append("-DBoost_DIR=/opt/boost")
-			cmake.append("-DBoost_INCLUDE_DIR=/opt/boost/include")
-			cmake.append("-DBoost_LIBRARY_DIRS=/opt/boost/lib")
-			cmake.append("-DBoost_DATE_TIME_LIBRARY=/opt/boost/lib/libboost_date_time.a")
-			cmake.append("-DBoost_DATE_TIME_LIBRARY_DEBUG=/opt/boost/lib/libboost_date_time.a")
-			cmake.append("-DBoost_DATE_TIME_LIBRARY_RELEASE=/opt/boost/lib/libboost_date_time.a")
-			cmake.append("-DBoost_FILESYSTEM_LIBRARY=/opt/boost/lib/libboost_filesystem.a")
-			cmake.append("-DBoost_FILESYSTEM_LIBRARY_DEBUG=/opt/boost/lib/libboost_filesystem.a")
-			cmake.append("-DBoost_FILESYSTEM_LIBRARY_RELEASE=/opt/boost/lib/libboost_filesystem.a")
-			cmake.append("-DBoost_REGEX_LIBRARY=/opt/boost/lib/libboost_regex.a")
-			cmake.append("-DBoost_REGEX_LIBRARY_DEBUG=/opt/boost/lib/libboost_regex.a")
-			cmake.append("-DBoost_REGEX_LIBRARY_RELEASE=/opt/boost/lib/libboost_regex.a")
-			cmake.append("-DBoost_SYSTEM_LIBRARY=/opt/boost/lib/libboost_system.a")
-			cmake.append("-DBoost_SYSTEM_LIBRARY_DEBUG=/opt/boost/lib/libboost_system.a")
-			cmake.append("-DBoost_SYSTEM_LIBRARY_RELEASE=/opt/boost/lib/libboost_system.a")
-			cmake.append("-DBoost_THREAD_LIBRARY=/opt/boost/lib/libboost_thread.a")
-			cmake.append("-DBoost_THREAD_LIBRARY_DEBUG=/opt/boost/lib/libboost_thread.a")
-			cmake.append("-DBoost_THREAD_LIBRARY_RELEASE=/opt/boost/lib/libboost_thread.a")
-			cmake.append("-DBoost_LOCALE_LIBRARY=/opt/boost/lib/libboost_locale.a")
-			cmake.append("-DBoost_LOCALE_LIBRARY_DEBUG=/opt/boost/lib/libboost_locale.a")
-			cmake.append("-DBoost_LOCALE_LIBRARY_RELEASE=/opt/boost/lib/libboost_locale.a")
-			cmake.append("-DOPENEXR_ROOT_DIR=/opt/openexr")
-			cmake.append("-DOPENEXR_ILMIMF_LIBRARY=/opt/openexr/lib/libIlmImf-2_1.a")
-			cmake.append("-D_opencolorio_LIBRARIES=/opt/ocio/lib/libOpenColorIO.a")
-			cmake.append("-DOPENCOLORIO_INCLUDE_DIR=/opt/ocio/include")
-			cmake.append("-DOPENCOLORIO_TINYXML_LIBRARY=/opt/ocio/lib/libtinyxml.a")
-			cmake.append("-DOPENCOLORIO_YAML-CPP_LIBRARY=/opt/ocio/lib/libyaml-cpp.a")
-			cmake.append("-DOPENIMAGEIO_INCLUDE_DIR=/opt/oiio/include/")
-			cmake.append("-DOPENIMAGEIO_LIBRARY=/opt/oiio/lib/libOpenImageIO.a")
-			cmake.append("-DPYTHON_VERSION=3.4")
-			cmake.append("-DPYTHON_ROOT_DIR=/opt/python-3.3")
-			cmake.append("-DPYTHON_LIBRARY=/opt/python-3.3/lib/libpython3.4m.a")
-			cmake.append("-DPYTHON_LIBPATH=/opt/python-3.3/lib")
-			cmake.append("-DPYTHON_LIBRARIES=/opt/python-3.3/lib")
-			cmake.append("-DPYTHON_INCLUDE_DIR=/opt/python-3.3/include/python3.4m")
-			cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=/opt/python-3.3/include/python3.4m")
-			cmake.append("-DPYTHON_NUMPY_PATH=/opt/python-3.3/lib/python3.4/site-packages")
+		cmake.append("-DWITH_SYSTEM_GLEW=OFF")
+		cmake.append("-DWITH_FFTW3=ON")
+
+		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 
 		cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
 		cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))
 		cmake.append("-DWITH_LIBMV=%s" % utils.GetCmakeOnOff(self.with_tracker))
 		cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.with_collada))
+		cmake.append("-DWITH_CYCLES=%s" % utils.GetCmakeOnOff(self.with_cycles))
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")
-		cmake.append("-DWITH_FFTW3=ON")
+		cmake.append("-DWITH_OPENSUBDIV=ON")
 
-		cmake.append("-DWITH_SYSTEM_GLEW=OFF")
+		if self.dev_static_libs:
+			if distr_info['short_name'] == 'centos':
 
-		if utils.get_linux_distribution() == 'centos':
-			cmake.append("-DWITH_OPENAL=OFF")
+				# NOTES:
+				#   OpenJPEG is disabled in OpenImageIO
+				#   Smth wrong with OpenAL headers - disabling
+				#
+				cmake.append("-DWITH_OPENAL=OFF")
+
+				cmake.append("-DFFTW3_INCLUDE_DIR=/opt/lib/fftw-3.3.4/include")
+				cmake.append("-DFFTW3_LIBRARY=/opt/lib/fftw-3.3.4/lib/libfftw3.a")
+
+				cmake.append("-DBoost_DIR=/opt/lib/boost")
+				cmake.append("-DBoost_INCLUDE_DIR=/opt/lib/boost/include")
+				cmake.append("-DBoost_LIBRARY_DIRS=/opt/lib/boost/lib")
+				cmake.append("-DBoost_DATE_TIME_LIBRARY=/opt/lib/boost/lib/libboost_date_time.a")
+				cmake.append("-DBoost_DATE_TIME_LIBRARY_RELEASE=/opt/lib/boost/lib/libboost_date_time.a")
+				cmake.append("-DBoost_FILESYSTEM_LIBRARY=/opt/lib/boost/lib/libboost_filesystem.a")
+				cmake.append("-DBoost_FILESYSTEM_LIBRARY_RELEASE=/opt/lib/boost/lib/libboost_filesystem.a")
+				cmake.append("-DBoost_REGEX_LIBRARY=/opt/lib/boost/lib/libboost_regex.a")
+				cmake.append("-DBoost_REGEX_LIBRARY_RELEASE=/opt/lib/boost/lib/libboost_regex.a")
+				cmake.append("-DBoost_SYSTEM_LIBRARY=/opt/lib/boost/lib/libboost_system.a")
+				cmake.append("-DBoost_SYSTEM_LIBRARY_RELEASE=/opt/lib/boost/lib/libboost_system.a")
+				cmake.append("-DBoost_THREAD_LIBRARY=/opt/lib/boost/lib/libboost_thread.a")
+				cmake.append("-DBoost_THREAD_LIBRARY_RELEASE=/opt/lib/boost/lib/libboost_thread.a")
+				cmake.append("-DBoost_LOCALE_LIBRARY=/opt/lib/boost/lib/libboost_locale.a")
+				cmake.append("-DBoost_LOCALE_LIBRARY_RELEASE=/opt/lib/boost/lib/libboost_locale.a")
+
+				cmake.append("-DOPENEXR_HALF_LIBRARY=/opt/lib/openexr/lib/libHalf.a")
+				cmake.append("-DOPENEXR_IEX_LIBRARY=/opt/lib/openexr/lib/libIex.a")
+				cmake.append("-DOPENEXR_ILMIMF_LIBRARY=/opt/lib/openexr/lib/libIlmImf.a")
+				cmake.append("-DOPENEXR_ILMTHREAD_LIBRARY=/opt/lib/openexr/lib/libIlmThread.a")
+				cmake.append("-DOPENEXR_IMATH_LIBRARY=/opt/lib/openexr/lib/libImath.a")
+				cmake.append("-DOPENEXR_INCLUDE_DIR=/opt/lib/openexr/include")
+
+				cmake.append("-DOPENCOLORIO_INCLUDE_DIR=/opt/lib/ocio/include")
+				cmake.append("-DOPENCOLORIO_TINYXML_LIBRARY=/opt/lib/ocio/lib/libtinyxml.a")
+				cmake.append("-DOPENCOLORIO_YAML-CPP_LIBRARY=/opt/lib/ocio/lib/libyaml-cpp.a")
+				cmake.append("-D_opencolorio_LIBRARIES=/opt/lib/ocio/lib/libOpenColorIO.a")
+
+				cmake.append("-DOPENIMAGEIO_INCLUDE_DIR=/opt/lib/oiio/include/")
+				cmake.append("-DOPENIMAGEIO_LIBRARY=/opt/lib/oiio/lib/libOpenImageIO.a")
+
+				cmake.append("-DPYTHON_VERSION=%s" % PYTHON_VERSION)
+				cmake.append("-DPYTHON_ROOT_DIR=/opt/lib/python-%s" % PYTHON_VERSION)
+				cmake.append("-DPYTHON_LIBRARY=/opt/lib/python-%s/lib/libpython%sm.a" % (PYTHON_VERSION, PYTHON_VERSION))
+				cmake.append("-DPYTHON_LIBPATH=/opt/lib/python-%s/lib" % PYTHON_VERSION)
+				cmake.append("-DPYTHON_LIBRARIES=/opt/lib/python-%s/lib" % PYTHON_VERSION)
+				cmake.append("-DPYTHON_INCLUDE_DIR=/opt/lib/python-%s/include/python%sm" % (PYTHON_VERSION, PYTHON_VERSION))
+				cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=/opt/lib/python-%s/include/python%sm" % (PYTHON_VERSION, PYTHON_VERSION))
+				cmake.append("-DPYTHON_NUMPY_PATH=/opt/lib/python-%s/lib/python%s/site-packages" % (PYTHON_VERSION, PYTHON_VERSION))
+
+			else:
+				cmake.append("-DBoost_DIR=/opt/lib/boost")
+				cmake.append("-DBoost_INCLUDE_DIR=/opt/lib/boost/include")
+				cmake.append("-DBoost_LIBRARY_DIRS=/opt/lib/boost/lib")
+				cmake.append("-DBoost_DATE_TIME_LIBRARY=/opt/lib/boost/lib/libboost_date_time.a")
+				cmake.append("-DBoost_DATE_TIME_LIBRARY_DEBUG=/opt/lib/boost/lib/libboost_date_time.a")
+				cmake.append("-DBoost_DATE_TIME_LIBRARY_RELEASE=/opt/lib/boost/lib/libboost_date_time.a")
+				cmake.append("-DBoost_FILESYSTEM_LIBRARY=/opt/lib/boost/lib/libboost_filesystem.a")
+				cmake.append("-DBoost_FILESYSTEM_LIBRARY_DEBUG=/opt/lib/boost/lib/libboost_filesystem.a")
+				cmake.append("-DBoost_FILESYSTEM_LIBRARY_RELEASE=/opt/lib/boost/lib/libboost_filesystem.a")
+				cmake.append("-DBoost_REGEX_LIBRARY=/opt/lib/boost/lib/libboost_regex.a")
+				cmake.append("-DBoost_REGEX_LIBRARY_DEBUG=/opt/lib/boost/lib/libboost_regex.a")
+				cmake.append("-DBoost_REGEX_LIBRARY_RELEASE=/opt/lib/boost/lib/libboost_regex.a")
+				cmake.append("-DBoost_SYSTEM_LIBRARY=/opt/lib/boost/lib/libboost_system.a")
+				cmake.append("-DBoost_SYSTEM_LIBRARY_DEBUG=/opt/lib/boost/lib/libboost_system.a")
+				cmake.append("-DBoost_SYSTEM_LIBRARY_RELEASE=/opt/lib/boost/lib/libboost_system.a")
+				cmake.append("-DBoost_THREAD_LIBRARY=/opt/lib/boost/lib/libboost_thread.a")
+				cmake.append("-DBoost_THREAD_LIBRARY_DEBUG=/opt/lib/boost/lib/libboost_thread.a")
+				cmake.append("-DBoost_THREAD_LIBRARY_RELEASE=/opt/lib/boost/lib/libboost_thread.a")
+				cmake.append("-DBoost_LOCALE_LIBRARY=/opt/lib/boost/lib/libboost_locale.a")
+				cmake.append("-DBoost_LOCALE_LIBRARY_DEBUG=/opt/lib/boost/lib/libboost_locale.a")
+				cmake.append("-DBoost_LOCALE_LIBRARY_RELEASE=/opt/lib/boost/lib/libboost_locale.a")
+				cmake.append("-DOPENEXR_ROOT_DIR=/opt/openexr")
+				cmake.append("-DOPENEXR_ILMIMF_LIBRARY=/opt/openexr/lib/libIlmImf-2_1.a")
+				cmake.append("-D_opencolorio_LIBRARIES=/opt/lib/ocio/lib/libOpenColorIO.a")
+				cmake.append("-DOPENCOLORIO_INCLUDE_DIR=/opt/lib/ocio/include")
+				cmake.append("-DOPENCOLORIO_TINYXML_LIBRARY=/opt/lib/ocio/lib/libtinyxml.a")
+				cmake.append("-DOPENCOLORIO_YAML-CPP_LIBRARY=/opt/lib/ocio/lib/libyaml-cpp.a")
+				cmake.append("-DOPENIMAGEIO_INCLUDE_DIR=/opt/oiio/include/")
+				cmake.append("-DOPENIMAGEIO_LIBRARY=/opt/oiio/lib/libOpenImageIO.a")
+				cmake.append("-DPYTHON_VERSION=3.4")
+				cmake.append("-DPYTHON_ROOT_DIR=/opt/python-3.3")
+				cmake.append("-DPYTHON_LIBRARY=/opt/python-3.3/lib/libpython3.4m.a")
+				cmake.append("-DPYTHON_LIBPATH=/opt/python-3.3/lib")
+				cmake.append("-DPYTHON_LIBRARIES=/opt/python-3.3/lib")
+				cmake.append("-DPYTHON_INCLUDE_DIR=/opt/python-3.3/include/python3.4m")
+				cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=/opt/python-3.3/include/python3.4m")
+				cmake.append("-DPYTHON_NUMPY_PATH=/opt/python-3.3/lib/python3.4/site-packages")
 
 		cmake.append("../blender")
 

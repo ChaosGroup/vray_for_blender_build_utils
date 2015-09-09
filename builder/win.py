@@ -34,8 +34,9 @@ from .builder import Builder
 class WindowsBuilder(Builder):
 	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_source, "blender-cmake-build")
-		if not os.path.exists(cmake_build_dir):
-			os.makedirs(cmake_build_dir)
+		if os.path.exists(cmake_build_dir):
+			utils.remove_directory(cmake_build_dir)
+		os.makedirs(cmake_build_dir)
 		os.chdir(cmake_build_dir)
 
 		if self.mode_test:

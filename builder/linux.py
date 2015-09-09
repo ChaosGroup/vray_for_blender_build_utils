@@ -206,6 +206,9 @@ class LinuxBuilder(Builder):
 				cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=/opt/lib/python-%s/include/python%sm" % (PYTHON_VERSION, PYTHON_VERSION))
 				cmake.append("-DPYTHON_NUMPY_PATH=/opt/lib/python-%s/lib/python%s/site-packages" % (PYTHON_VERSION, PYTHON_VERSION))
 
+				cmake.append("-DTIFF_INCLUDE_DIR=/opt/lib/tiff-3.9.7/include")
+				cmake.append("-DTIFF_LIBRARY=/opt/lib/tiff-3.9.7/lib/libtiff.a")
+
 			else:
 				cmake.append("-DBoost_DIR=/opt/lib/boost")
 				cmake.append("-DBoost_INCLUDE_DIR=/opt/lib/boost/include")

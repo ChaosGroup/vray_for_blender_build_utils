@@ -104,11 +104,17 @@ def main(args):
     cmd.append('--build_mode=release')
     cmd.append('--use_package')
     cmd.append('--use_installer=CGR')
-    cmd.append('--dir_install=H:/install/vray_for_blender')
-    cmd.append('--dir_release=H:/release/vray_for_blender')
+    
+    if sys.platform == 'win32':
+        cmd.append('--dir_install=H:/install/vray_for_blender')
+        cmd.append('--dir_release=H:/release/vray_for_blender')
+    else:
+        cmd.append('--dir_install=%s' % os.path.expanduser("~/install/vray_for_blender"))
+        cmd.append('--dir_release=%s' % os.path.expanduser("~/release/vray_for_blender"))
 
     if args.upload:
         cmd.append('--use_package_upload=ftp')
+        cmd.append('--use_proxy=http://10.0.0.1:1234')
 
     return subprocess.call(cmd, cwd=os.getcwd())
 

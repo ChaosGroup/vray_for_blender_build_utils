@@ -90,7 +90,7 @@ def main(args):
     cmd = [python_exe]
     cmd.append("vb25-patch/build.py")
     cmd.append("--teamcity")
-    cmd.append("--teamcity_branch_hash=\"%s\"" % args.teamcity_branch_hash)
+    cmd.append("--teamcity_branch_hash=%s" % args.teamcity_branch_hash)
 
     # Teamcity is cloning the sources for us
     cmd.append('--uppatch=off')

@@ -414,6 +414,11 @@ def GetInstallDirName(self):
 			'hash'    : "",
 		})
 
+	if self.teamcity:
+		params.update({
+			'bhash' : "",
+		})
+
 	return "{project}{version}{nCommits}{bhash}{hash}{arch}{branch}".format(**params)
 
 

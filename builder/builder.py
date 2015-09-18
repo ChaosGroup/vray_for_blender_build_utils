@@ -192,7 +192,13 @@ class Builder:
 
 
 	def update(self):
-		self.revision, self.brev, self.commits = utils.get_svn_revision(self.dir_blender)
+		if self.teamcity:
+			self.revision = self.teamcity_branch_hash
+			self.brev = ""
+			self.commits = ""
+		else:
+			self.revision, self.brev, self.commits = utils.get_svn_revision(self.dir_blender)
+
 		self.version = utils.get_blender_version(self.dir_blender)[0]
 		self.versionArr = utils.get_blender_version(self.dir_blender)
 

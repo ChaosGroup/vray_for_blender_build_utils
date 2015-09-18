@@ -105,10 +105,10 @@ def main(args):
     cmd.append('--vc_2013')
     cmd.append('--build_mode=release')
     cmd.append('--use_package')
-    cmd.append('--use_installer="CGR"')
+    cmd.append('--use_installer=CGR')
 
     if args.upload:
-        cmd.append('--use_package_upload="ftp"')
+        cmd.append('--use_package_upload=ftp')
 
     return subprocess.call(cmd, cwd=os.getcwd())
 

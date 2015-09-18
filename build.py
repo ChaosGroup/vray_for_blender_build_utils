@@ -58,7 +58,11 @@ gr_paths.add_argument('--dir_release',
 	default = os.path.join(cwd, "release"),
 	metavar = 'FILE'
 )
-
+gr_paths.add_argument('--dir_cgr_installer',
+	help    = "Directory for installer / archive",
+	default = "H:/src/cgr_installer",
+	metavar = 'FILE'
+)
 
 gr_compilation = parser.add_argument_group(title="Compilation")
 gr_compilation.add_argument('--build_type',

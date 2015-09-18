@@ -32,6 +32,7 @@ def main(args):
 
     if sys.platform == 'win32':
         # Setup Visual Studio 2013 variables for usage from command line
+        # Assumes default installation path
         #
         # PATH
         #
@@ -103,6 +104,8 @@ def main(args):
     cmd.append('--build_mode=release')
     cmd.append('--use_package')
     cmd.append('--use_installer=CGR')
+    cmd.append('--dir_install=H:/install/vray_for_blender')
+    cmd.append('--dir_release=H:/release/vray_for_blender')
 
     if args.upload:
         cmd.append('--use_package_upload=ftp')

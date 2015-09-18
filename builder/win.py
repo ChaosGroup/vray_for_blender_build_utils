@@ -84,7 +84,7 @@ class WindowsBuilder(Builder):
 
 
 	def installer_cgr(self, installer_path):
-		utils.GenCGRInstaller(self, installer_path)
+		utils.GenCGRInstaller(self, installer_path, InstallerDir=self.dir_cgr_installer)
 
 
 	def package(self):

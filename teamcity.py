@@ -101,7 +101,7 @@ def main(args):
     cmd.append("--release")
     cmd.append("--package")
 
-    if upload:
+    if args.upload:
         cmd.append("--upload=ftp")
         cmd.append("--proxy=10.0.0.1:1234")
 

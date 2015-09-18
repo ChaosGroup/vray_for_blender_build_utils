@@ -33,10 +33,10 @@ def main(args):
     if sys.platform == 'win32':
         # Setup Visual Studio 2013 variables for usage from command line
         #
-
         # PATH
         #
-        PATH = (
+        PATH = os.environ['PATH'].split(';')
+        PATH.extend([
             r'C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\IDE\CommonExtensions\Microsoft\TestWindow',
             r'C:\Program Files (x86)\MSBuild\12.0\bin\amd64',
             r'C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\BIN\amd64',
@@ -55,12 +55,9 @@ def main(args):
             r'C:\Windows',
             r'C:\Windows\System32\Wbem',
             r'C:\Windows\System32\WindowsPowerShell\v1.0',
-            r'C:\Program Files (x86)\NVIDIA Corporation\PhysX\Common',
-            r'C:\Program Files\Git\cmd',
-            r'C:\Program Files\SlikSvn\bin',
             r'C:\Program Files (x86)\Windows Kits\8.1\Windows Performance Toolkit',
             r'C:\Program Files\Microsoft SQL Server\110\Tools\Binn',
-        )
+        ])
 
         INCLUDE = (
             r'C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\INCLUDE',

@@ -95,7 +95,7 @@ def main(args):
     cmd.append("--teamcity_branch_hash=\"%s\"" % args.teamcity_branch_hash)
 
     # Teamcity is cloning the sources for us
-    cmd.append('--uppatch="off"')
+    cmd.append('--uppatch=off')
     cmd.append('--upblender=off')
 
     cmd.append('--with_ge')

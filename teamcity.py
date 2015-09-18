@@ -103,7 +103,7 @@ def main(args):
     cmd.append('--with_collada')
     cmd.append('--with_cycles')
     cmd.append('--vc_2013')
-    cmd.append('--build_mode="release"')
+    cmd.append('--build_mode=release')
     cmd.append('--use_package')
     cmd.append('--use_installer="CGR"')
 

@@ -95,15 +95,20 @@ def main(args):
     cmd.append("--teamcity_branch_hash=\"%s\"" % args.teamcity_branch_hash)
 
     # Teamcity is cloning the sources for us
-    cmd.append("--uppatch=off")
-    cmd.append("--upblender=off")
+    cmd.append('--uppatch="off"')
+    cmd.append('--upblender=off')
 
-    cmd.append("--release")
-    cmd.append("--package")
+    cmd.append('--with_ge')
+    cmd.append('--with_player')
+    cmd.append('--with_collada')
+    cmd.append('--with_cycles')
+    cmd.append('--vc_2013')
+    cmd.append('--build_mode="release"')
+    cmd.append('--use_package')
+    cmd.append('--use_installer="CGR"')
 
     if args.upload:
-        cmd.append("--upload=ftp")
-        cmd.append("--proxy=10.0.0.1:1234")
+        cmd.append('--use_package_upload="ftp"')
 
     return subprocess.call(cmd, cwd=os.getcwd())
 

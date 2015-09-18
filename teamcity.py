@@ -110,6 +110,7 @@ def main(args):
 
 if __name__ == '__main__':
     import argparse
+    import sys
 
     parser = argparse.ArgumentParser(usage="python3 build.py [options]")
 
@@ -125,4 +126,4 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    return main(args)
+    sys.exit(main(args))

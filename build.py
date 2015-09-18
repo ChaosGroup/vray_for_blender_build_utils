@@ -232,7 +232,7 @@ parser.add_argument('--use_proxy',
 # Teamcity
 #
 parser.add_argument('--teamcity',
-	default = False,
+	action  = 'store_true',
 	help    = argparse.SUPPRESS
 )
 parser.add_argument('--teamcity_branch_hash',

@@ -418,6 +418,7 @@ def GetInstallDirName(self):
 		params.update({
 			'bhash' : "",
 			'nCommits' : "",
+			'hash'     : "-%s" % self.revision[:7],
 		})
 
 	return "{project}{version}{nCommits}{bhash}{hash}{arch}{branch}".format(**params)

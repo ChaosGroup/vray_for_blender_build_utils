@@ -51,6 +51,9 @@ class Builder:
 
 		# Always building vb30
 		self.project        = "vrayblender3"
+		if self.use_github_branch in {'dev/vray_for_blender/vb35'}:
+			self.project = "vrayblender35"
+
 		self.version        = utils.VERSION
 		self.revision       = utils.REVISION
 		self.brev           = ""

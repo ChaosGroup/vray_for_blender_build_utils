@@ -91,6 +91,7 @@ def main(args):
     cmd.append("vb25-patch/build.py")
     cmd.append("--teamcity")
     cmd.append("--teamcity_branch_hash=%s" % args.teamcity_branch_hash)
+    cmd.append('--github-src-branch=%s' % args.teamcity_branch)
 
     # Teamcity is cloning the sources for us
     cmd.append('--uppatch=off')
@@ -137,8 +138,11 @@ if __name__ == '__main__':
     )
 
     parser.add_argument('--teamcity_branch_hash',
-        default = "",
-        help    = argparse.SUPPRESS
+        default = ""
+    )
+
+    parser.add_argument('--teamcity_branch',
+        default = "dev/vray_for_blender/vb30",
     )
 
     args = parser.parse_args()

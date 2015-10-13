@@ -52,9 +52,11 @@ class MacBuilder(Builder):
 		cmake.append("-G")
 		cmake.append("Ninja")
 
-		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 		cmake.append("-DCMAKE_BUILD_TYPE=Release")
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
+		cmake.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=10.11")
+
+		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 
 		cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
 		cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))

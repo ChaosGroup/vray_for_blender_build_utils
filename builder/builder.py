@@ -245,9 +245,11 @@ class Builder:
 				icons_path_src = utils.path_join(patch_dir, "datafiles", subdir)
 				icons_path_dst = utils.path_join(datafiles_path, subdir)
 
-				shutil.rmtree(icons_path_dst)
-				shutil.copytree(icons_path_src, icons_path_dst)
+				for fileName in os.listdir(icons_path_src):
+					iconFilepathSrc = os.path.join(icons_path_src, fileName)
+					iconFilepathDst = os.path.join(icons_path_dst, fileName)
 
+					shutil.copyfile(iconFilepathSrc, iconFilepathDst)
 
 	def post_init(self):
 		"""

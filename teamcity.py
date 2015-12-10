@@ -97,6 +97,9 @@ def main(args):
     cmd.append('--uppatch=off')
     cmd.append('--upblender=off')
 
+    if args.clean:
+        cmd.append('--build_clean')
+
     cmd.append('--with_ge')
     cmd.append('--with_player')
     cmd.append('--with_collada')
@@ -135,6 +138,11 @@ if __name__ == '__main__':
     parser.add_argument('--upload',
         default=False,
         help="Upload build"
+    )
+
+    parser.add_argument('--clean',
+        default=False,
+        help="Clean build directory"
     )
 
     parser.add_argument('--teamcity_branch_hash',

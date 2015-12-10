@@ -119,12 +119,12 @@ class LinuxBuilder(Builder):
 
 	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_source, "blender-cmake-build")
-		if os.path.exists(cmake_build_dir):
-			if self.build_clean:
-				utils.remove_directory(cmake_build_dir)
-		else:
+		if self.build_clean and os.path.exists(cmake_build_dir):
+			utils.remove_directory(cmake_build_dir)
+		if not os.path.exists(cmake_build_dir):
 			os.makedirs(cmake_build_dir)
 		os.chdir(cmake_build_dir)
+
 		PYTHON_VERSION = "3.4"
 
 		distr_info = utils.get_linux_distribution()

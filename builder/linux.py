@@ -125,7 +125,7 @@ class LinuxBuilder(Builder):
 			os.makedirs(cmake_build_dir)
 		os.chdir(cmake_build_dir)
 
-		PYTHON_VERSION = "3.4"
+		PYTHON_VERSION = "3.5"
 
 		distr_info = utils.get_linux_distribution()
 

@@ -73,6 +73,8 @@ class Builder:
 		# Build architecture
 		self.build_arch     = self.host_arch
 
+		os.system("git config --global https.proxy 10.0.0.1:1234")
+
 
 	def info(self):
 		sys.stdout.write("\n")

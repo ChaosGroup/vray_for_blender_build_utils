@@ -164,7 +164,7 @@ class LinuxBuilder(Builder):
 				#   OpenJPEG is disabled in OpenImageIO
 				#   Smth wrong with OpenAL headers - disabling
 				#
-				cmake.append("-DWITH_OPENAL=OFF")
+				cmake.append("-DWITH_OPENAL=ON")
 
 				cmake.append("-DFFTW3_INCLUDE_DIR=/opt/lib/fftw-3.3.4/include")
 				cmake.append("-DFFTW3_LIBRARY=/opt/lib/fftw-3.3.4/lib/libfftw3.a")

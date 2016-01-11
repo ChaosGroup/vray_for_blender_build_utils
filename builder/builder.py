@@ -319,7 +319,7 @@ class Builder:
 			exporterPath = utils.path_join(addonsPath, "vb30")
 			if os.path.exists(exporterPath):
 				utils.remove_directory(exporterPath)
-			os.system("git clone --recursive git://github.com/bdancer/vb30.git")
+			os.system("git clone --recursive https://github.com/bdancer/vb30.git")
 
 			if self.use_exp_branch not in {'master'}:
 				os.chdir(exporterPath)

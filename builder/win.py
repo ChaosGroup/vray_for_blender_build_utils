@@ -166,16 +166,24 @@ class WindowsBuilder(Builder):
 
 			if instlaler_log:
 				installer_files += '\tStrCpy $VB_TMP "%s"\n' % (destination_path)
+				print('\tStrCpy $VB_TMP "%s"\n' % (destination_path))
 				installer_files += '\t${SetOutPath} $VB_TMP\n'
+				print('\t${SetOutPath} $VB_TMP\n')
 
 				installer_files += '\t${File} "%s" "%s" "$VB_TMP"\n' % (zmq_path, zmq_path)
+				print('\t${File} "%s" "%s" "$VB_TMP"\n' % (zmq_path, zmq_path))
 			else:
 				installer_files += '\tSetOutPath "%s"\n' % (destination_path)
+				print('\tSetOutPath "%s"\n' % (destination_path))
 				installer_files += '\tFile "%s"\n' % (zmq_path)
+				print('\tFile "%s"\n' % (zmq_path))
 
 				uninstaller_files.append('\tRMDir "%s"\n' % (destination_path))
+				print('\tRMDir "%s"\n' % (destination_path))
 				uninstaller_files.append('\tDelete "%s\%s"\n' % (destination_path, destination_file))
+				print('\tDelete "%s\%s"\n' % (destination_path, destination_file))
 
+		print("self.teamcity_branch_hash=%s" % (self.teamcity_branch_hash))
 
 		uninstaller_files.reverse()
 

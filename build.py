@@ -243,7 +243,10 @@ parser.add_argument('--teamcity_branch_hash',
 	default = "",
 	help    = argparse.SUPPRESS
 )
-
+parser.add_argument('--teamcity_zmq_server_hash',
+	default = "",
+	help    = argparse.SUPPRESS
+)
 
 args = parser.parse_args()
 

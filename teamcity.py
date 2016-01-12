@@ -95,6 +95,7 @@ def main(args):
     cmd.append("--teamcity")
     cmd.append("--teamcity_branch_hash=%s" % args.teamcity_branch_hash)
     cmd.append('--github-src-branch=%s' % args.teamcity_branch)
+    cmd.append('--teamcity_zmq_server_hash=%s' % args.teamcity_zmq_server_hash)
 
     # Teamcity is cloning the sources for us
     cmd.append('--uppatch=off')
@@ -154,6 +155,10 @@ if __name__ == '__main__':
 
     parser.add_argument('--teamcity_branch',
         default = "dev/vray_for_blender/vb30",
+    )
+
+    parser.add_argument('--teamcity_zmq_server_hash',
+        default = "",
     )
 
     args = parser.parse_args()

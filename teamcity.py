@@ -95,6 +95,7 @@ def main(args):
     cmd.append("--teamcity")
     cmd.append("--teamcity_branch_hash=%s" % args.teamcity_branch_hash)
     cmd.append('--github-src-branch=%s' % args.teamcity_branch)
+    cmd.append('--teamcity_zmq_server_hash=%s' % args.teamcity_zmq_server_hash)
 
     # Teamcity is cloning the sources for us
     cmd.append('--uppatch=off')
@@ -110,7 +111,10 @@ def main(args):
     cmd.append('--build_mode=release')
     cmd.append('--use_package')
     cmd.append('--use_installer=CGR')
-    
+
+    if args.teamcity_zmq_server_hash != '':
+        cmd.append('--github-exp-branch=dev/vb35')
+
     if sys.platform == 'win32':
         cmd.append('--dir_install=H:/install/vray_for_blender')
         cmd.append('--dir_release=H:/release/vray_for_blender')
@@ -154,6 +158,10 @@ if __name__ == '__main__':
 
     parser.add_argument('--teamcity_branch',
         default = "dev/vray_for_blender/vb30",
+    )
+
+    parser.add_argument('--teamcity_zmq_server_hash',
+        default = "",
     )
 
     args = parser.parse_args()

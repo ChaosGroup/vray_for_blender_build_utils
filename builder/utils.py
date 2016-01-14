@@ -479,6 +479,14 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">__pycache__</Files>' % (relInstDir))
 			installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]%s">%s</FN>' % (relInstDir, absFilePath))
 
+	if self.teamcity_zmq_server_hash != '':
+		zmq_path = "H:/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer.exe" % self.teamcity_zmq_server_hash
+
+		destination_path = "C:/Program Files/Chaos Group/V-Ray/VRayZmqServer/"
+		destination_file = "VRayZmqServer.exe"
+
+		installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (destination_path, zmq_path))
+
 	# Write installer template
 	#
 	tmpl = open("%s/cgr_template.xml" % InstallerDir, 'r').read()

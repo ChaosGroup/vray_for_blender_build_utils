@@ -111,7 +111,10 @@ def main(args):
     cmd.append('--build_mode=release')
     cmd.append('--use_package')
     cmd.append('--use_installer=CGR')
-    
+
+    if args.teamcity_zmq_server_hash != '':
+        cmd.append('--github-exp-branch=dev/vb35')
+
     if sys.platform == 'win32':
         cmd.append('--dir_install=H:/install/vray_for_blender')
         cmd.append('--dir_release=H:/release/vray_for_blender')

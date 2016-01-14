@@ -158,33 +158,6 @@ class WindowsBuilder(Builder):
 
 				director_size += os.path.getsize(f_path)
 
-		if self.teamcity_zmq_server_hash != '':
-			zmq_path = "H:/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer.exe" % self.teamcity_zmq_server_hash
-
-			destination_path = "C:/Program Files/Chaos Group/V-Ray/VRayZmqServer/"
-			destination_file = "VRayZmqServer.exe"
-
-			if instlaler_log:
-				installer_files += '\tStrCpy $VB_TMP "%s"\n' % (destination_path)
-				sys.stdout.write('VRayServer: StrCpy $VB_TMP "%s"\n' % (destination_path))
-				installer_files += '\t${SetOutPath} $VB_TMP\n'
-				sys.stdout.write('VRayServer: ${SetOutPath} $VB_TMP\n')
-
-				installer_files += '\t${File} "%s" "%s" "$VB_TMP"\n' % (zmq_path, zmq_path)
-				sys.stdout.write('VRayServer: ${File} "%s" "%s" "$VB_TMP"\n' % (zmq_path, zmq_path))
-			else:
-				installer_files += '\tSetOutPath "%s"\n' % (destination_path)
-				sys.stdout.write('VRayServer: SetOutPath "%s"\n' % (destination_path))
-				installer_files += '\tFile "%s"\n' % (zmq_path)
-				sys.stdout.write('VRayServer: File "%s"\n' % (zmq_path))
-
-				uninstaller_files.append('\tRMDir "%s"\n' % (destination_path))
-				sys.stdout.write('VRayServer: RMDir "%s"\n' % (destination_path))
-				uninstaller_files.append('\tDelete "%s\%s"\n' % (destination_path, destination_file))
-				sys.stdout.write('VRayServer: Delete "%s\%s"\n' % (destination_path, destination_file))
-
-		sys.stdout.write("self.teamcity_zmq_server_hash=%s\n" % (self.teamcity_zmq_server_hash))
-
 		uninstaller_files.reverse()
 
 		installer_dir = utils.path_join(self.dir_source, "vb25-patch", "installer")

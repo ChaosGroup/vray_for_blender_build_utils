@@ -31,7 +31,7 @@ import socket
 import sys
 import subprocess
 import shutil
-
+import tempfile
 
 VERSION  = "2.61"
 REVISION = "svn"
@@ -479,23 +479,34 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">__pycache__</Files>' % (relInstDir))
 			installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]%s">%s</FN>' % (relInstDir, absFilePath))
 
+	cg_root = ''
+	zmq_name = ''
+	appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], os.environ['CGR_APPSDK_VERSION'], get_host_os(), 'bin');
+
+	if get_host_os() == WIN:
+		cg_root = "C:/Program Files/Chaos Group/V-Ray/VRayZmqServer/"
+		zmq_name = "VRayZmqServer.exe"
+		appsdk = os.path.join(appsdk, 'VRaySDKLibrary.dll')
+	elif get_host_os() == LNX:
+		zmq_name = "VRayZmqServer"
+		cg_root = "/usr/ChaosGroup/V-Ray/VRayZmqServer"
+		appsdk = os.path.join(appsdk, 'libVRaySDKLibrary.so')
+
+	# add the appsdk
+	installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (cg_root, appsdk))
+
+	# add the zmq server if enabled
 	if self.teamcity_zmq_server_hash != '':
-		zmq_path = "H:/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer.exe" % self.teamcity_zmq_server_hash
-
-		destination_file = "VRayZmqServer.exe"
-		destination_path = "C:/Program Files/Chaos Group/V-Ray/VRayZmqServer/"
-
-		if get_host_os() == LNX:
-			zmq_path = "/home/builder/workspace/vrayserverzmq_build/server/VRayZmqServer"
-			destination_file = "VRayZmqServer"
-			destination_path = "/usr/ChaosGroup/V-Ray/VRayZmqServer"
+		if get_host_os() == WIN:
+			zmq_build_path = "H:/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer.exe" % self.teamcity_zmq_server_hash
+		elif get_host_os() == LNX:
+			zmq_build_path = "/home/teamcity/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer.exe" % self.teamcity_zmq_server_hash
 
 		installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (destination_path, zmq_path))
 
 	# Write installer template
-	#
 	tmpl = open("%s/cgr_template.xml" % InstallerDir, 'r').read()
-	tmplFinal = "%s/tmp/installer.xml" % InstallerDir
+	tmplFinal = "%s/installer.xml" % tempfile.gettempdir()
 
 	with open(tmplFinal, 'w') as f:
 		tmpl = tmpl.replace("${APP_TITLE}",      "Blender (With V-Ray Additions)")
@@ -535,7 +546,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
 		packer.append('-dest=%s' % installer_path)
 		packer.append('-installer=%s' % "%s/bin/installer.exe" % InstallerDir)
-		packer.append('-outbin=%s' % "%s/tmp/out.bin")
+		packer.append('-outbin=%s' % "%s/out.bin" % tempfile.gettempdir())
 		packer.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
 		packer.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
 
@@ -550,19 +561,22 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		# packer.append('-debug=1')
 		packer.append('-xml=%s' % unix_slashes(tmplFinal))
 		packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
-		packer.append('-dest=%s' % "%s/tmp/console.bin" % InstallerDir)
+		packer.append('-dest=%s' % "%s/console.bin" % tempfile.gettempdir())
 		packer.append('-installer=%s' % "%s/linux/installer/console/installer.bin" % InstallerDir)
-		packer.append('-outbin=%s' % "%s/tmp/out.ibin" % InstallerDir)
+		packer.append('-outbin=%s' % "%s/lnx_intermediate.ibin" % tempfile.gettempdir())
 		packer.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
 		packer.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
 
-		subprocess.call(packer)
+		if self.mode_test:
+			print(" ".join(packer))
+		else:
+			subprocess.call(packer)
 
 		tmpl = open("%s/linux/launcher_wrapper.xml" % InstallerDir, 'r').read()
-		wrapper_xml = "%s/tmp/launcher_wrapper.xml" % InstallerDir
+		wrapper_xml = "%s/launcher_wrapper.xml" % tempfile.gettempdir()
 
 		with open(wrapper_xml, "w+") as f:
-			tmpl = tmpl.replace("($IBIN_FILE)",        "%s/tmp/out.ibin" % InstallerDir)
+			tmpl = tmpl.replace("($IBIN_FILE)",        "%s/lnx_intermediate.ibin" % tempfile.gettempdir())
 			tmpl = tmpl.replace("($INSTALLER_BIN)",    "installer.bin")
 			tmpl = tmpl.replace("($UNINSTALLER_BIN)",  "uninstaller.bin")
 			f.write(tmpl)
@@ -574,12 +588,13 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		cmd.append('-xml=%s' % wrapper_xml)
 		cmd.append('-installer=%s' % "%s/linux/installer/launcher.bin" % InstallerDir)
 		cmd.append('-filesdir=%s' % "%s/linux/installer" % InstallerDir)
-		cmd.append('-outbin=%s' % "%s/tmp/packed.bin" % InstallerDir)
+		cmd.append('-outbin=%s' % "%s/packed.bin" % tempfile.gettempdir())
 		cmd.append('-dest=%s' % installer_path)
 		cmd.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
 		cmd.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
 
-		subprocess.call(cmd)
+		if self.mode_test:
+			print(" ".join(cmd))
+		else:
+			subprocess.call(cmd)
 
-	shutil.rmtree("%s/tmp" % InstallerDir)
-	os.mkdir("%s/tmp" % InstallerDir)

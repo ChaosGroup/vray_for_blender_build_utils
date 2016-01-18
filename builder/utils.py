@@ -429,7 +429,7 @@ def GetPackageName(self, ext=None):
 		if get_host_os() == WIN:
 			return "exe"
 		else:
-			return "tar.bz2"
+			return "bin"
 
 	os = get_host_os()
 	if os == 'linux':
@@ -482,15 +482,20 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	if self.teamcity_zmq_server_hash != '':
 		zmq_path = "H:/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer.exe" % self.teamcity_zmq_server_hash
 
-		destination_path = "C:/Program Files/Chaos Group/V-Ray/VRayZmqServer/"
 		destination_file = "VRayZmqServer.exe"
+		destination_path = "C:/Program Files/Chaos Group/V-Ray/VRayZmqServer/"
 
-		installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (destination_path, zmq_path))
+		if get_host_os() == LNX:
+			zmq_path = "/home/builder/workspace/vrayserverzmq_build/server/VRayZmqServer"
+			destination_file = "VRayZmqServer"
+			destination_path = "/usr/ChaosGroup/V-Ray/VRayZmqServer"
+
+		installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (destination_path, zmq_path))
 
 	# Write installer template
 	#
 	tmpl = open("%s/cgr_template.xml" % InstallerDir, 'r').read()
-	tmplFinal = "%s/installer.xml" % InstallerDir
+	tmplFinal = "%s/tmp/installer.xml" % InstallerDir
 
 	with open(tmplFinal, 'w') as f:
 		tmpl = tmpl.replace("${APP_TITLE}",      "Blender (With V-Ray Additions)")
@@ -520,20 +525,61 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 		f.write(tmpl)
 
+	packer = []
 	# Run installer generator
-	#
-	packer = ["%s/bin/packer.exe" % InstallerDir]
-	# packer.append('-debug=1')
-	packer.append('-exe')
-	packer.append('-xml=%s' % unix_slashes(tmplFinal))
-	packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
-	packer.append('-dest=%s' % installer_path)
-	packer.append('-installer=%s' % "%s/bin/installer.exe" % InstallerDir)
-	packer.append('-outbin=%s' % "C:/tmp/out.bin")
-	packer.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
-	packer.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
+	if get_host_os() == WIN:
+		packer = ["%s/bin/packer.exe" % InstallerDir]
+		# packer.append('-debug=1')
+		packer.append('-exe')
+		packer.append('-xml=%s' % unix_slashes(tmplFinal))
+		packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
+		packer.append('-dest=%s' % installer_path)
+		packer.append('-installer=%s' % "%s/bin/installer.exe" % InstallerDir)
+		packer.append('-outbin=%s' % "%s/tmp/out.bin")
+		packer.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
+		packer.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
 
-	if self.mode_test:
-		print(" ".join(packer))
-	else:
+		if self.mode_test:
+			print(" ".join(packer))
+		else:
+			subprocess.call(packer)
+
+	elif get_host_os() == LNX:
+		packer = ["%s/linux/packer.bin" % InstallerDir]
+		packer.append('-exe')
+		# packer.append('-debug=1')
+		packer.append('-xml=%s' % unix_slashes(tmplFinal))
+		packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
+		packer.append('-dest=%s' % "%s/tmp/console.bin" % InstallerDir)
+		packer.append('-installer=%s' % "%s/linux/installer/console/installer.bin" % InstallerDir)
+		packer.append('-outbin=%s' % "%s/tmp/out.ibin" % InstallerDir)
+		packer.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
+		packer.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
+
 		subprocess.call(packer)
+
+		tmpl = open("%s/linux/launcher_wrapper.xml" % InstallerDir, 'r').read()
+		wrapper_xml = "%s/tmp/launcher_wrapper.xml" % InstallerDir
+
+		with open(wrapper_xml, "w+") as f:
+			tmpl = tmpl.replace("($IBIN_FILE)",        "%s/tmp/out.ibin" % InstallerDir)
+			tmpl = tmpl.replace("($INSTALLER_BIN)",    "installer.bin")
+			tmpl = tmpl.replace("($UNINSTALLER_BIN)",  "uninstaller.bin")
+			f.write(tmpl)
+
+		cmd = ["%s/linux/packer.bin" % InstallerDir]
+
+		# cmd.append('-debug=1')
+		cmd.append('-exe')
+		cmd.append('-xml=%s' % wrapper_xml)
+		cmd.append('-installer=%s' % "%s/linux/installer/launcher.bin" % InstallerDir)
+		cmd.append('-filesdir=%s' % "%s/linux/installer" % InstallerDir)
+		cmd.append('-outbin=%s' % "%s/tmp/packed.bin" % InstallerDir)
+		cmd.append('-dest=%s' % installer_path)
+		cmd.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
+		cmd.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
+
+		subprocess.call(cmd)
+
+	shutil.rmtree("%s/tmp" % InstallerDir)
+	os.mkdir("%s/tmp" % InstallerDir)

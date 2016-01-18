@@ -286,13 +286,9 @@ class LinuxBuilder(Builder):
 		sys.stdout.write("Generating archive: %s\n" % (archive_name))
 		sys.stdout.write("  in: %s\n" % (release_path))
 
-		cmd = "tar jcf %s %s" % (archive_path, self.dir_install_name)
+		installer_name = utils.GetPackageName(self)
+		installer_path = utils.path_slashify(utils.path_join(release_path, installer_name))
+		installer_root = utils.path_join(self.dir_source, "vb25-patch", "installer")
 
-		sys.stdout.write("Calling: %s\n" % (cmd))
-		sys.stdout.write("  in: %s\n" % (self.dir_install))
-
-		if not self.mode_test:
-			os.chdir(self.dir_install)
-			os.system(cmd)
-
-		return subdir, archive_path
+		utils.GenCGRInstaller(self, installer_path, "/home/builder/workspace/installer_root")
+		return subdir, installer_path

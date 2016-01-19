@@ -95,7 +95,7 @@ def main(args):
     cmd.append("--teamcity")
     cmd.append("--teamcity_branch_hash=%s" % args.teamcity_branch_hash)
     cmd.append('--github-src-branch=%s' % args.teamcity_branch)
-    cmd.append('--teamcity_zmq_server_hash=%s' % args.teamcity_zmq_server_hash)
+    cmd.append('--teamcity_zmq_server_hash=%s' % args.teamcity_zmq_server_hash[:7])
 
     # Teamcity is cloning the sources for us
     cmd.append('--uppatch=off')

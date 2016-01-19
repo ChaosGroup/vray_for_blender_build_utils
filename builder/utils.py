@@ -497,12 +497,13 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 	# add the zmq server if enabled
 	if self.teamcity_zmq_server_hash != '':
+		zmq_build_path = ''
 		if get_host_os() == WIN:
 			zmq_build_path = "H:/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer.exe" % self.teamcity_zmq_server_hash
 		elif get_host_os() == LNX:
-			zmq_build_path = "/home/teamcity/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer.exe" % self.teamcity_zmq_server_hash
+			zmq_build_path = "/home/teamcity/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer" % self.teamcity_zmq_server_hash
 
-		installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (destination_path, zmq_path))
+		installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (cg_root, zmq_build_path))
 
 	# Write installer template
 	tmpl = open("%s/cgr_template.xml" % InstallerDir, 'r').read()

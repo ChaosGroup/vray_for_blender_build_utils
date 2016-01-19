@@ -482,16 +482,18 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	cg_root = ''
 	zmq_name = ''
 	appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], os.environ['CGR_APPSDK_VERSION'], get_host_os(), 'bin');
+	appsdkFile = ''
 
 	if get_host_os() == WIN:
 		cg_root = "C:/Program Files/Chaos Group/V-Ray/VRayZmqServer/"
 		zmq_name = "VRayZmqServer.exe"
-		appsdk = os.path.join(appsdk, 'VRaySDKLibrary.dll')
+		appsdkFile = 'VRaySDKLibrary.dll'
 	elif get_host_os() == LNX:
 		zmq_name = "VRayZmqServer"
 		cg_root = "/usr/ChaosGroup/V-Ray/VRayZmqServer"
-		appsdk = os.path.join(appsdk, 'libVRaySDKLibrary.so')
+		appsdkFile = 'libVRaySDKLibrary.so'
 
+	appsdk = os.path.join(appsdk, appsdkFile)
 	# add the appsdk
 	installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (cg_root, appsdk))
 
@@ -519,7 +521,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		tmpl = tmpl.replace("${INSTALL_XML_PATH}", tmplFinal)
 
 		# Appsdk env var path
-		tmpl = tmpl.replace("${VRAY_APPSDK_PATH}", cg_root)
+		tmpl = tmpl.replace("${VRAY_APPSDK_PATH}", "%s/%s" % (cg_root, appsdkFile))
 
 		# Versions
 		tmpl = tmpl.replace("${VERSION_MAJOR}", self.versionArr[1])

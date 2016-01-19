@@ -541,7 +541,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	# Run installer generator
 	if get_host_os() == WIN:
 		packer = ["%s/windows/packer.exe" % InstallerDir]
-		# packer.append('-debug=1')
+		packer.append('-debug=1')
 		packer.append('-exe')
 		packer.append('-xml=%s' % unix_slashes(tmplFinal))
 		packer.append('-filesdir=%s' % unix_slashes(InstallerDir))

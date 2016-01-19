@@ -60,7 +60,7 @@ gr_paths.add_argument('--dir_release',
 )
 gr_paths.add_argument('--dir_cgr_installer',
 	help    = "Directory for installer / archive",
-	default = "H:/src/cgr_installer",
+	default = "",
 	metavar = 'FILE'
 )
 

@@ -290,5 +290,5 @@ class LinuxBuilder(Builder):
 		installer_path = utils.path_slashify(utils.path_join(release_path, installer_name))
 		installer_root = utils.path_join(self.dir_source, "vb25-patch", "installer")
 
-		utils.GenCGRInstaller(self, installer_path, "/home/builder/workspace/installer_root")
+		utils.GenCGRInstaller(self, installer_path, InstallerDir=self.dir_cgr_installer)
 		return subdir, installer_path

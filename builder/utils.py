@@ -516,6 +516,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		# Files
 		tmpl = tmpl.replace("${FILE_LIST}", "\n".join(sorted(reversed(installerFiles))))
 		tmpl = tmpl.replace("${RUNTIME_JUNK_LIST}", "\n".join(sorted(removeJunk)))
+		tmpl = tmpl.replace("${INSTALL_XML_PATH}", tmplFinal)
 
 		# Versions
 		tmpl = tmpl.replace("${VERSION_MAJOR}", self.versionArr[1])

@@ -551,9 +551,8 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		packer.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
 		packer.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
 
-		if self.mode_test:
-			print(" ".join(packer))
-		else:
+		print(" ".join(packer))
+		if not self.mode_test:
 			subprocess.call(packer)
 
 	elif get_host_os() == LNX:
@@ -568,9 +567,8 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		packer.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
 		packer.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
 
-		if self.mode_test:
-			print(" ".join(packer))
-		else:
+		print(" ".join(packer))
+		if not self.mode_test:
 			subprocess.call(packer)
 
 		tmpl = open("%s/linux/launcher_wrapper.xml" % InstallerDir, 'r').read()
@@ -594,8 +592,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		cmd.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
 		cmd.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
 
-		if self.mode_test:
-			print(" ".join(cmd))
-		else:
+		print(" ".join(cmd))
+		if not self.mode_test:
 			subprocess.call(cmd)
 

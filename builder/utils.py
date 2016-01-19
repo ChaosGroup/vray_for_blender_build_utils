@@ -518,6 +518,9 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		tmpl = tmpl.replace("${RUNTIME_JUNK_LIST}", "\n".join(sorted(removeJunk)))
 		tmpl = tmpl.replace("${INSTALL_XML_PATH}", tmplFinal)
 
+		# Appsdk env var path
+		tmpl = tmpl.replace("${VRAY_APPSDK_PATH}", cg_root)
+
 		# Versions
 		tmpl = tmpl.replace("${VERSION_MAJOR}", self.versionArr[1])
 		tmpl = tmpl.replace("${VERSION_MINOR}", self.versionArr[2])

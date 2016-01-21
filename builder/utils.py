@@ -482,13 +482,16 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	cg_root = ''
 	zmq_name = ''
 	appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], os.environ['CGR_APPSDK_VERSION'], get_host_os(), 'bin');
+	appsdkFile = ''
 
 	if get_host_os() == WIN:
 		cg_root = "C:/Program Files/Chaos Group/V-Ray/VRayZmqServer/"
 		zmq_name = "VRayZmqServer.exe"
+		appsdkFile = 'VRaySDKLibrary.dll'
 	elif get_host_os() == LNX:
 		zmq_name = "VRayZmqServer"
 		cg_root = "/usr/ChaosGroup/V-Ray/VRayZmqServer"
+		appsdkFile = 'libVRaySDKLibrary.so'
 
 	appsdk_root = os.path.join(cg_root, 'appsdk')
 

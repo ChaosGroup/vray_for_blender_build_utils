@@ -502,6 +502,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		for file_name in filenames:
 			source_path = os.path.join(dirpath, file_name)
 			installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (dest_path, source_path))
+			print(source_path + " -> " + dest_path)
 
 	# add the zmq server if enabled
 	if self.teamcity_zmq_server_hash != '':
@@ -553,7 +554,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	# Run installer generator
 	if get_host_os() == WIN:
 		packer = ["%s/windows/packer.exe" % InstallerDir]
-		packer.append('-debug=1')
+		# packer.append('-debug=1')
 		packer.append('-exe')
 		packer.append('-xml=%s' % unix_slashes(tmplFinal))
 		packer.append('-filesdir=%s' % unix_slashes(InstallerDir))

@@ -497,12 +497,11 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 	# add the appsdk files
 	for dirpath, dirnames, filenames in os.walk(appsdk):
-		rel_path = os.path.normpath(dirpath).replace(os.path.normpath(appsdk), "")
+		rel_path = os.path.relpath(dirpath, appsdk)
 		dest_path = os.path.join(appsdk_root, rel_path)
 		for file_name in filenames:
 			source_path = os.path.join(dirpath, file_name)
 			installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (dest_path, source_path))
-			print(source_path + " -> " + dest_path)
 
 	# add the zmq server if enabled
 	if self.teamcity_zmq_server_hash != '':

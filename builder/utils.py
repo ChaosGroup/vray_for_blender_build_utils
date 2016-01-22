@@ -473,6 +473,8 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 				continue
 
 			relInstDir  = unix_slashes(rel_dirpath)
+			relInstDir  = relInstDir if relInstDir != '.' else ''
+
 			absFilePath = unix_slashes(f_path)
 
 			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">*.pyc</Files>' % (relInstDir))
@@ -499,6 +501,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	for dirpath, dirnames, filenames in os.walk(appsdk):
 		rel_path = os.path.relpath(dirpath, appsdk)
 		dest_path = os.path.join(appsdk_root, rel_path)
+		dest_path = dest_path if dest_path != '.' else ''
 		for file_name in filenames:
 			source_path = os.path.join(dirpath, file_name)
 			installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (dest_path, source_path))

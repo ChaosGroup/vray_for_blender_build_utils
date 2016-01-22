@@ -544,6 +544,12 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		# Installer stuff
 		tmpl = tmpl.replace("${INSTALLER_DATA_ROOT}", InstallerDir)
 
+		# shortcuts
+		if get_host_os() == WIN:
+			tmpl = tmpl.replace("${SHORTCUTS_SECTION}", open("%s/shortcuts.xml" % InstallerDir, 'r').read())
+		else:
+			tmpl = tmpl.replace("${SHORTCUTS_SECTION}", '')
+
 		# System stuff
 		tmpl = tmpl.replace("${PLATFORM}", "x86_64")
 

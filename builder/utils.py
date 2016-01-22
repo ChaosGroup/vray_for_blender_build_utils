@@ -585,8 +585,8 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		packer.append('-dest=%s' % "%s/console.bin" % tempfile.gettempdir())
 		packer.append('-installer=%s' % "%s/linux/installer/console/installer.bin" % InstallerDir)
 		packer.append('-outbin=%s' % "%s/lnx_intermediate.ibin" % tempfile.gettempdir())
-		packer.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
-		packer.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
+		packer.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
+		packer.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
 
 		print(" ".join(packer))
 		if not self.mode_test:
@@ -610,8 +610,8 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		cmd.append('-filesdir=%s' % "%s/linux/installer" % InstallerDir)
 		cmd.append('-outbin=%s' % "%s/packed.bin" % tempfile.gettempdir())
 		cmd.append('-dest=%s' % installer_path)
-		cmd.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
-		cmd.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
+		cmd.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
+		cmd.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
 
 		print(" ".join(cmd))
 		if not self.mode_test:

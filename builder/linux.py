@@ -46,7 +46,7 @@ LLVM_VERSION="3.4"
 def getDepsCompilationData(prefix, wd, jobs):
 	def dbg(x):
 		sys.stdout.write(x)
-		sys.stdout.write("")
+		sys.stdout.write("\n")
 		return True
 
 	def getChDirCmd(newDir):

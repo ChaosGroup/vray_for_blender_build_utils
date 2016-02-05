@@ -286,10 +286,10 @@ def DepsBuild(self):
 	sys.stdout.write('Building dependencies...\n')
 
 	for item in data:
-		sys.stdout.write('Installing %s...' % item[0])
+		sys.stdout.write('Installing %s...\n' % item[0])
 		shouldStop = False
 		if os.path.isdir(item[1]):
-			sys.stdout.write('DEP %s already installed, skipping ...\n' % item[1])
+			sys.stdout.write('%s already installed, skipping ...\n' % item[1])
 			# we already have this lib
 			continue
 
@@ -298,19 +298,17 @@ def DepsBuild(self):
 			if callable(step):
 				sys.stdout.write('Callable step: \n\t%s\n' % inspect.getsource(step).strip())
 				if not step():
-					sys.stdout.write('Failed! Stopping...')
-					shouldStop = True
-					break
-				sys.stdout.write('')
+					sys.stdout.write('Failed! Stopping...\n')
+					sys.exit(1)
+				sys.stdout.write('\n')
 			else:
 				sys.stdout.write('Command step: \n\t%s\n' % step)
 				res = subprocess.call(step, shell=True)
 				if res != 0:
-					sys.stdout.write('Failed! Stopping...')
-					shouldStop = True
-					break;
-		if shouldStop:
-			break
+					sys.stdout.write('Failed! Stopping...\n')
+					sys.exit(1)
+			sys.stdout.flush()
+
 
 
 class LinuxBuilder(Builder):

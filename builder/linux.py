@@ -27,9 +27,180 @@ import os
 import sys
 import shutil
 import subprocess
+import inspect
 
 from .builder import utils
 from .builder import Builder
+
+
+def getDepsCompilationData(prefix, wd):
+	PYTHON_VERSION="3.5.1"
+	PYTHON_VERSION_BIG="3.5"
+	NUMPY_VERSION="1.10.1"
+	BOOST_VERSION="1.60.0"
+	OCIO_VERSION="1.0.9"
+	OPENEXR_VERSION="2.2.0"
+	ILMBASE_VERSION="2.2.0"
+	OIIO_VERSION="1.6.9"
+	LLVM_VERSION="3.4"
+
+	def dbg(x):
+		sys.stdout.write(x)
+		sys.stdout.write("")
+		return True
+
+	def getChDirCmd(newDir):
+		return lambda: os.chdir(newDir) or True
+
+	def getDownloadCmd(url, name):
+		return lambda: dbg('wget -c %s -O %s/%s' % (url, wd, name)) and 0 == os.system('wget -c %s -O %s/%s' % (url, wd, name))
+
+	def patchOpenEXRCmake():
+		with open(os.path.join(wd, 'OpenEXR-%s' % OPENEXR_VERSION, 'IlmImf', 'CMakeLists.txt'), 'r+') as f:
+			content = [l.rstrip('\n') for l in f.readlines()]
+			sys.stdout.write("Swapping lines: \n\t%s\n\t%s\n" % (content[27], content[28]))
+			content[27], content[28] = content[28], content[27]
+			f.seek(0)
+			f.write('\n'.join(content))
+			f.truncate()
+		return True
+
+	def patchLLVMCmake():
+		with open(os.path.join(wd, 'LLVM-%s' % LLVM_VERSION, 'CMakeLists.txt'), 'r+') as f:
+			content = [l.rstrip('\n') for l in f.readlines()]
+			# set(PACKAGE_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}svn")
+			content[16] = '  set(PACKAGE_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}")'
+			f.seek(0)
+			f.write('\n'.join(content))
+			f.truncate()
+		return True
+
+	def getOrCmd(a, b):
+		return lambda: a() or b()
+
+	steps = (
+		('python', (
+			getChDirCmd(wd),
+			getDownloadCmd("https://www.python.org/ftp/python/%s/Python-%s.tgz" % (PYTHON_VERSION, PYTHON_VERSION), 'python.tgz'),
+			'tar -C . -xf python.tgz',
+			getChDirCmd(os.path.join(wd, 'Python-%s' % PYTHON_VERSION)),
+			'./configure --prefix=%s/python-%s --libdir=%s/python-%s/lib --enable-ipv6 --enable-loadable-sqlite-extensions --with-dbmliborder=bdb --with-computed-gotos --with-pymalloc'
+				% (prefix, PYTHON_VERSION, prefix, PYTHON_VERSION),
+			'make -j 4',
+			'make install',
+			'ln -s %s/python-%s %s/python' % (prefix, PYTHON_VERSION, prefix),
+		)),
+		('numpy', (
+			getChDirCmd(wd),
+			getDownloadCmd("http://sourceforge.net/projects/numpy/files/NumPy/%s/numpy-%s.tar.gz" % (NUMPY_VERSION, NUMPY_VERSION), 'numpy.tar.gz'),
+			'tar -C . -xf numpy.tar.gz',
+			getChDirCmd(os.path.join(wd, 'numpy-%s' % NUMPY_VERSION)),
+			'%s/python/bin/python3 setup.py install --prefix=%s/numpy-%s' % (prefix, prefix, NUMPY_VERSION),
+			'ln -s %s/numpy-%s %s/python/lib/python%s/site-packages/numpy' % (prefix, NUMPY_VERSION, prefix, PYTHON_VERSION_BIG)
+		)),
+		('boost', (
+			getChDirCmd(wd),
+			getDownloadCmd("http://sourceforge.net/projects/boost/files/boost/%s/boost_%s.tar.bz2/download" % (BOOST_VERSION, BOOST_VERSION.replace('.', '_')), 'boost.tar.bz2'),
+			'tar -C . --transform "s,(.*/?)boost_1_[^/]+(.*),\\1boost-%s\\2,x" -xf boost.tar.bz2' % BOOST_VERSION,
+			getChDirCmd(os.path.join(wd, 'boost-%s' % BOOST_VERSION)),
+			'./bootstrap.sh',
+			'./b2 -j 4 -a --with-system --with-filesystem --with-thread --with-regex --with-locale --with-date_time --with-wave --prefix=%s/boost-%s --disable-icu boost.locale.icu=off install'
+				% (prefix, BOOST_VERSION),
+			'./b2 clean',
+			'ln -s %s/boost-%s %s/boost' % (prefix, BOOST_VERSION, prefix),
+		)),
+		('ocio', (
+			getChDirCmd(wd),
+			getDownloadCmd("https://github.com/imageworks/OpenColorIO/tarball/v%s" % OCIO_VERSION, 'ocio.tar.gz'),
+			'tar -C . --transform "s,(.*/?)imageworks-OpenColorIO[^/]*(.*),\\1OpenColorIO-%s\\2,x" -xf ocio.tar.gz' % OCIO_VERSION,
+			'mkdir -p OpenColorIO-%s/build' % OCIO_VERSION,
+			getChDirCmd(os.path.join(wd, 'OpenColorIO-%s' % OCIO_VERSION, 'build')),
+			' '.join(["cmake", "-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s/ocio-%s" % (prefix, OCIO_VERSION),
+					  "-D CMAKE_INSTALL_PREFIX=%s/ocio-%s" % (prefix, OCIO_VERSION), "-D OCIO_BUILD_APPS=OFF",
+					  "-D OCIO_BUILD_PYGLUE=OFF", "-D CMAKE_CXX_FLAGS=\"-fPIC\"", "-D CMAKE_EXE_LINKER_FLAGS=\"-lgcc_s -lgcc\"", ".."]),
+			'make -j 4',
+			'make install',
+			'rm -f %s/ocio-%s/lib/*.so*' % (prefix, OCIO_VERSION),
+			'cp ext/dist/lib/libtinyxml.a %s/ocio-%s/lib' % (prefix, OCIO_VERSION),
+			'cp ext/dist/lib/libyaml-cpp.a %s/ocio-%s/lib' % (prefix, OCIO_VERSION),
+			'make clean',
+			'ln -s %s/ocio-%s %s/ocio' % (prefix, OCIO_VERSION, prefix),
+		)),
+		('ilmbase', (
+			getChDirCmd(wd),
+			getDownloadCmd("http://download.savannah.nongnu.org/releases/openexr/ilmbase-%s.tar.gz" % ILMBASE_VERSION, 'ilmbase.tar.gz'),
+			'tar -C . --transform "s,(.*/?)ilmbase-[^/]*(.*),\\1ILMBase-%s\\2,x" -xf ilmbase.tar.gz' % ILMBASE_VERSION,
+			'mkdir -p ILMBase-%s/build' % ILMBASE_VERSION,
+			getChDirCmd(os.path.join(wd, 'ILMBase-%s' % ILMBASE_VERSION, 'build')),
+			" ".join(["cmake", "-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s/ilmbase-%s" % (prefix, ILMBASE_VERSION),
+					  "-D CMAKE_INSTALL_PREFIX=%s/ilmbase-%s" % (prefix, ILMBASE_VERSION), "-D BUILD_SHARED_LIBS=OFF",
+					  "-D NAMESPACE_VERSIONING=OFF", "-D CMAKE_CXX_FLAGS=\"-fPIC\"", "-D CMAKE_EXE_LINKER_FLAGS=\"-lgcc_s -lgcc\"", ".."]),
+			'make -j 4',
+			'make install',
+			'make clean',
+		)),
+		('openexr', (
+			getChDirCmd(wd),
+			getDownloadCmd("http://download.savannah.nongnu.org/releases/openexr/openexr-%s.tar.gz" % OPENEXR_VERSION, 'openexr.tar.gz'),
+			'tar -C . --transform "s,(.*/?)openexr[^/]*(.*),\\1OpenEXR-%s\\2,x" -xf openexr.tar.gz' % OPENEXR_VERSION,
+			'mkdir -p OpenEXR-%s/build' % OPENEXR_VERSION,
+			patchOpenEXRCmake,
+			getChDirCmd(os.path.join(wd, 'OpenEXR-%s' % OPENEXR_VERSION, 'build')),
+			' '.join(["cmake" , "-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s/openexr-%s" % (prefix, OPENEXR_VERSION),
+					  "-D CMAKE_INSTALL_PREFIX=%s/openexr-%s" % (prefix, OPENEXR_VERSION),
+					  "-D ILMBASE_PACKAGE_PREFIX=%s/ilmbase-%s" % (prefix, ILMBASE_VERSION), "-D BUILD_SHARED_LIBS=OFF",
+					  "-D NAMESPACE_VERSIONING=OFF", "-D CMAKE_CXX_FLAGS=\"-fPIC\"",  "-D CMAKE_EXE_LINKER_FLAGS=\"-lgcc_s -lgcc\"", ".."]),
+			'make -j 4',
+			'make install',
+			'make clean',
+			'cp -Lrn %s/ilmbase-%s/* %s/openexr-%s' % (prefix, ILMBASE_VERSION, prefix, OPENEXR_VERSION),
+			'ln -s %s/openexr-%s %s/openexr' % (prefix, OPENEXR_VERSION, prefix),
+		)),
+		('oiio', (
+			getChDirCmd(wd),
+			getDownloadCmd("https://github.com/OpenImageIO/oiio/archive/Release-%s.tar.gz" % OIIO_VERSION, 'oiio.tar.gz'),
+			'mkdir -p OpenImageIO-%s' % OIIO_VERSION,
+			'tar -C OpenImageIO-%s --strip-components=1 --transform "s,(.*/?)oiio-Release-[^/]*(.*),\\1OpenImageIO-%s\\2,x" -xf oiio.tar.gz'
+				% (OIIO_VERSION, OIIO_VERSION),
+			'mkdir -p OpenImageIO-%s/build' % OIIO_VERSION,
+			getChDirCmd(os.path.join(wd, 'OpenImageIO-%s' % OIIO_VERSION, 'build')),
+			' '.join(
+				["cmake", "-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s" % prefix,
+				 "-D CMAKE_INSTALL_PREFIX=%s/oiio-%s" % (prefix, OIIO_VERSION),
+				 "-D STOP_ON_WARNING=OFF", "-D BUILDSTATIC=ON", "-D LINKSTATIC=ON", "-D USE_QT=OFF", "-D USE_PYTHON=OFF",
+				 "-D BUILD_TESTING=OFF", "-D OIIO_BUILD_TESTS=OFF", "-D OIIO_BUILD_TOOLS=OFF",
+				 "-D ILMBASE_VERSION=%s" % ILMBASE_VERSION ,"-D OPENEXR_VERSION=%s" % OPENEXR_VERSION,
+				 "-D ILMBASE_HOME=%s/openexr" % prefix, "-D OPENEXR_HOME=%s/openexr" % prefix,
+				 "-D BOOST_ROOT=%s/boost" % prefix, "-D Boost_NO_SYSTEM_PATHS=ON", "-D USE_OCIO=OFF",
+				 "-D CMAKE_CXX_FLAGS=\"-fPIC\"", "-D CMAKE_EXE_LINKER_FLAGS=\"-lgcc_s -lgcc\"", ".."]),
+			'make -j 4',
+			'make install',
+			'make clean',
+			'ln -s %s/oiio-%s %s/oiio' % (prefix, OIIO_VERSION, prefix),
+		)),
+		('clang', (
+			getChDirCmd(wd),
+			getDownloadCmd("http://llvm.org/releases/%s/llvm-%s.src.tar.gz" % (LLVM_VERSION, LLVM_VERSION), 'llvm.tar.gz'),
+			getOrCmd(
+				getDownloadCmd("http://llvm.org/releases/%s/clang-%s.src.tar.gz" % (LLVM_VERSION, LLVM_VERSION), 'clang.tar.gz'),
+				getDownloadCmd("http://llvm.org/releases/%s/cfe-%s.src.tar.gz" % (LLVM_VERSION, LLVM_VERSION), 'clang.tar.gz')
+			),
+			'tar -C . --transform "s,([^/]*/?)llvm-[^/]*(.*),\\1LLVM-%s\\2,x" -xf llvm.tar.gz' % LLVM_VERSION,
+			'tar -C LLVM-%s/tools --transform "s,([^/]*/?)(clang|cfe)-[^/]*(.*),\\1clang\\3,x" -xf clang.tar.gz' % LLVM_VERSION,
+			'mkdir -p LLVM-%s/build' % LLVM_VERSION,
+			getChDirCmd(os.path.join(wd, 'LLVM-%s' % LLVM_VERSION, 'build')),
+			patchLLVMCmake,
+			' '.join(["cmake", "-D CMAKE_BUILD_TYPE=Release",
+					  "-D CMAKE_INSTALL_PREFIX=%s/llvm-%s" % (prefix, LLVM_VERSION),
+					  "-D LLVM_TARGETS_TO_BUILD=X86",
+					  "-D LLVM_ENABLE_TERMINFO=OFF", ".."]),
+			'make -j 4',
+			'make install',
+			'make clean',
+		)),
+	)
+
+	return steps
 
 
 Deps = {
@@ -92,25 +263,45 @@ def DepsInstall(self):
 
 
 def DepsBuild(self):
-	cmd = "sudo -E %s/install_deps.sh --source %s --install /opt" % (
-		utils.path_join(self.dir_source, 'vb25-patch'),
-		utils.path_join(self.dir_source, "blender-deps")
-	)
+	# if not self.with_osl:
+	# 	cmd += " --skip-llvm"
+	# 	cmd += " --skip-osl"
 
-	if not self.with_osl:
-		cmd += " --skip-llvm"
-		cmd += " --skip-osl"
+	# if self.with_collada:
+	# 	cmd += " --with-opencollada"
+	# else:
+	# 	cmd += " --skip-opencollada"
+	wd = '/root/src'
+	os.makedirs(wd)
+	prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
 
-	if self.with_collada:
-		cmd += " --with-opencollada"
-	else:
-		cmd += " --skip-opencollada"
+	data = getDepsCompilationData(prefix, wd)
 
 	if self.mode_test:
-		sys.stdout.write(cmd)
-		sys.stdout.write("\n")
-	else:
-		os.system(cmd)
+		# TODO: print out commands
+		return
+
+	for item in data:
+		sys.stdout.write('Installing %s...' % item[0])
+		shouldStop = False
+		for step in item[1]:
+			sys.stdout.write("CWD %s" % os.getcwd())
+			if callable(step):
+				sys.stdout.write('Callable step: \n\t%s\n' % inspect.getsource(step).strip())
+				if not step():
+					sys.stdout.write('Failed! Stopping...')
+					shouldStop = True
+					break
+				sys.stdout.write('')
+			else:
+				sys.stdout.write('Command step: \n\t%s\n' % step)
+				res = subprocess.call(step, shell=True)
+				if res != 0:
+					sys.stdout.write('Failed! Stopping...')
+					shouldStop = True
+					break;
+		if shouldStop:
+			break
 
 
 class LinuxBuilder(Builder):

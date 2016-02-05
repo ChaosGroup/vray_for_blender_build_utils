@@ -32,18 +32,18 @@ import inspect
 from .builder import utils
 from .builder import Builder
 
+PYTHON_VERSION="3.5.1"
+PYTHON_VERSION_BIG="3.5"
+NUMPY_VERSION="1.10.1"
+BOOST_VERSION="1.60.0"
+OCIO_VERSION="1.0.9"
+OPENEXR_VERSION="2.2.0"
+ILMBASE_VERSION="2.2.0"
+OIIO_VERSION="1.6.9"
+LLVM_VERSION="3.4"
+
 
 def getDepsCompilationData(prefix, wd, jobs):
-	PYTHON_VERSION="3.5.1"
-	PYTHON_VERSION_BIG="3.5"
-	NUMPY_VERSION="1.10.1"
-	BOOST_VERSION="1.60.0"
-	OCIO_VERSION="1.0.9"
-	OPENEXR_VERSION="2.2.0"
-	ILMBASE_VERSION="2.2.0"
-	OIIO_VERSION="1.6.9"
-	LLVM_VERSION="3.4"
-
 	def dbg(x):
 		sys.stdout.write(x)
 		sys.stdout.write("")
@@ -323,8 +323,6 @@ class LinuxBuilder(Builder):
 			os.makedirs(cmake_build_dir)
 		os.chdir(cmake_build_dir)
 
-		PYTHON_VERSION = "3.5"
-
 		distr_info = utils.get_linux_distribution()
 
 		cmake = ['cmake']
@@ -398,14 +396,14 @@ class LinuxBuilder(Builder):
 				cmake.append("-DOPENIMAGEIO_INCLUDE_DIR=/opt/lib/oiio/include/")
 				cmake.append("-DOPENIMAGEIO_LIBRARY=/opt/lib/oiio/lib/libOpenImageIO.a")
 
-				cmake.append("-DPYTHON_VERSION=%s" % PYTHON_VERSION)
-				cmake.append("-DPYTHON_ROOT_DIR=/opt/lib/python-%s" % PYTHON_VERSION)
-				cmake.append("-DPYTHON_LIBRARY=/opt/lib/python-%s/lib/libpython%sm.a" % (PYTHON_VERSION, PYTHON_VERSION))
-				cmake.append("-DPYTHON_LIBPATH=/opt/lib/python-%s/lib" % PYTHON_VERSION)
-				cmake.append("-DPYTHON_LIBRARIES=/opt/lib/python-%s/lib" % PYTHON_VERSION)
-				cmake.append("-DPYTHON_INCLUDE_DIR=/opt/lib/python-%s/include/python%sm" % (PYTHON_VERSION, PYTHON_VERSION))
-				cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=/opt/lib/python-%s/include/python%sm" % (PYTHON_VERSION, PYTHON_VERSION))
-				cmake.append("-DPYTHON_NUMPY_PATH=/opt/lib/python-%s/lib/python%s/site-packages" % (PYTHON_VERSION, PYTHON_VERSION))
+				cmake.append("-DPYTHON_VERSION=%s" % PYTHON_VERSION_BIG)
+				cmake.append("-DPYTHON_ROOT_DIR=/opt/lib/python-%s" % PYTHON_VERSION_BIG)
+				cmake.append("-DPYTHON_LIBRARY=/opt/lib/python-%s/lib/libpython%sm.a" % (PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+				cmake.append("-DPYTHON_LIBPATH=/opt/lib/python-%s/lib" % PYTHON_VERSION_BIG)
+				cmake.append("-DPYTHON_LIBRARIES=/opt/lib/python-%s/lib" % PYTHON_VERSION_BIG)
+				cmake.append("-DPYTHON_INCLUDE_DIR=/opt/lib/python-%s/include/python%sm" % (PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+				cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=/opt/lib/python-%s/include/python%sm" % (PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+				cmake.append("-DPYTHON_NUMPY_PATH=/opt/lib/python-%s/lib/python%s/site-packages" % (PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
 
 				cmake.append("-DTIFF_INCLUDE_DIR=/opt/lib/tiff-3.9.7/include")
 				cmake.append("-DTIFF_LIBRARY=/opt/lib/tiff-3.9.7/lib/libtiff.a")
@@ -440,14 +438,15 @@ class LinuxBuilder(Builder):
 				cmake.append("-DOPENCOLORIO_YAML-CPP_LIBRARY=/opt/ocio/lib/libyaml-cpp.a")
 				cmake.append("-DOPENIMAGEIO_INCLUDE_DIR=/opt/oiio/include/")
 				cmake.append("-DOPENIMAGEIO_LIBRARY=/opt/oiio/lib/libOpenImageIO.a")
-				cmake.append("-DPYTHON_VERSION=3.4")
-				cmake.append("-DPYTHON_ROOT_DIR=/opt/python-3.3")
-				cmake.append("-DPYTHON_LIBRARY=/opt/python-3.3/lib/libpython3.4m.a")
-				cmake.append("-DPYTHON_LIBPATH=/opt/python-3.3/lib")
-				cmake.append("-DPYTHON_LIBRARIES=/opt/python-3.3/lib")
-				cmake.append("-DPYTHON_INCLUDE_DIR=/opt/python-3.3/include/python3.4m")
-				cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=/opt/python-3.3/include/python3.4m")
-				cmake.append("-DPYTHON_NUMPY_PATH=/opt/python-3.3/lib/python3.4/site-packages")
+
+				cmake.append("-DPYTHON_VERSION=%s" % PYTHON_VERSION_BIG)
+				cmake.append("-DPYTHON_ROOT_DIR=/opt/python-%s" % PYTHON_VERSION_BIG)
+				cmake.append("-DPYTHON_LIBRARY=/opt/python-%s/lib/libpython%sm.a" % (PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+				cmake.append("-DPYTHON_LIBPATH=/opt/python-%s/lib" % PYTHON_VERSION_BIG)
+				cmake.append("-DPYTHON_LIBRARIES=/opt/python-%s/lib" % PYTHON_VERSION_BIG)
+				cmake.append("-DPYTHON_INCLUDE_DIR=/opt/python-%s/include/python%sm" % (PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+				cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=/opt/python-%s/include/python%sm" % (PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+				cmake.append("-DPYTHON_NUMPY_PATH=/opt/python-%s/lib/python%s/site-packages" % (PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
 
 		cmake.append("-DCMAKE_MAKE_PROGRAM=ninja")
 		cmake.append("-DCMAKE_C_COMPILER_ENV_VAR=CC")

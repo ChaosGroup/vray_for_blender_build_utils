@@ -53,7 +53,7 @@ def getDepsCompilationData(prefix, wd, jobs):
 		return lambda: os.chdir(newDir) or True
 
 	def getDownloadCmd(url, name):
-		return lambda: dbg('sudo -E wget -c %s -O %s/%s' % (url, wd, name)) and 0 == os.system('sudo -E wget -c %s -O %s/%s' % (url, wd, name))
+		return lambda: dbg('wget -c %s -O %s/%s' % (url, wd, name)) and 0 == os.system('wget -c %s -O %s/%s' % (url, wd, name))
 
 	def patchOpenEXRCmake():
 		with open(os.path.join(wd, 'OpenEXR-%s' % OPENEXR_VERSION, 'IlmImf', 'CMakeLists.txt'), 'r+') as f:
@@ -294,7 +294,7 @@ def DepsBuild(self):
 			continue
 
 		for step in item[2]:
-			sys.stdout.write("CWD %s\n" % os.getcwd())
+			sys.stdout.write("CWD %s" % os.getcwd())
 			if callable(step):
 				sys.stdout.write('Callable step: \n\t%s\n' % inspect.getsource(step).strip())
 				if not step():
@@ -302,8 +302,8 @@ def DepsBuild(self):
 					sys.exit(1)
 				sys.stdout.write('\n')
 			else:
-				sys.stdout.write('Command step: \n\t%s\n' % ('sudo -E %s' % step))
-				res = subprocess.call('sudo -E %s' % step, shell=True)
+				sys.stdout.write('Command step: \n\t%s\n' % step)
+				res = subprocess.call(step, shell=True)
 				if res != 0:
 					sys.stdout.write('Failed! Stopping...\n')
 					sys.exit(1)

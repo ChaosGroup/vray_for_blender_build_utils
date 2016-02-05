@@ -33,7 +33,7 @@ from .builder import utils
 from .builder import Builder
 
 
-def getDepsCompilationData(prefix, wd):
+def getDepsCompilationData(prefix, wd, jobs):
 	PYTHON_VERSION="3.5.1"
 	PYTHON_VERSION_BIG="3.5"
 	NUMPY_VERSION="1.10.1"
@@ -86,7 +86,7 @@ def getDepsCompilationData(prefix, wd):
 			getChDirCmd(os.path.join(wd, 'Python-%s' % PYTHON_VERSION)),
 			'./configure --prefix=%s/python-%s --libdir=%s/python-%s/lib --enable-ipv6 --enable-loadable-sqlite-extensions --with-dbmliborder=bdb --with-computed-gotos --with-pymalloc'
 				% (prefix, PYTHON_VERSION, prefix, PYTHON_VERSION),
-			'make -j 4',
+			'make -j %s' % jobs,
 			'make install',
 			'ln -s %s/python-%s %s/python' % (prefix, PYTHON_VERSION, prefix),
 		)),
@@ -118,7 +118,7 @@ def getDepsCompilationData(prefix, wd):
 			' '.join(["cmake", "-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s/ocio-%s" % (prefix, OCIO_VERSION),
 					  "-D CMAKE_INSTALL_PREFIX=%s/ocio-%s" % (prefix, OCIO_VERSION), "-D OCIO_BUILD_APPS=OFF",
 					  "-D OCIO_BUILD_PYGLUE=OFF", "-D CMAKE_CXX_FLAGS=\"-fPIC\"", "-D CMAKE_EXE_LINKER_FLAGS=\"-lgcc_s -lgcc\"", ".."]),
-			'make -j 4',
+			'make -j %s' % jobs,
 			'make install',
 			'rm -f %s/ocio-%s/lib/*.so*' % (prefix, OCIO_VERSION),
 			'cp ext/dist/lib/libtinyxml.a %s/ocio-%s/lib' % (prefix, OCIO_VERSION),
@@ -135,7 +135,7 @@ def getDepsCompilationData(prefix, wd):
 			" ".join(["cmake", "-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s/ilmbase-%s" % (prefix, ILMBASE_VERSION),
 					  "-D CMAKE_INSTALL_PREFIX=%s/ilmbase-%s" % (prefix, ILMBASE_VERSION), "-D BUILD_SHARED_LIBS=OFF",
 					  "-D NAMESPACE_VERSIONING=OFF", "-D CMAKE_CXX_FLAGS=\"-fPIC\"", "-D CMAKE_EXE_LINKER_FLAGS=\"-lgcc_s -lgcc\"", ".."]),
-			'make -j 4',
+			'make -j %s' % jobs,
 			'make install',
 			'make clean',
 		)),
@@ -150,7 +150,7 @@ def getDepsCompilationData(prefix, wd):
 					  "-D CMAKE_INSTALL_PREFIX=%s/openexr-%s" % (prefix, OPENEXR_VERSION),
 					  "-D ILMBASE_PACKAGE_PREFIX=%s/ilmbase-%s" % (prefix, ILMBASE_VERSION), "-D BUILD_SHARED_LIBS=OFF",
 					  "-D NAMESPACE_VERSIONING=OFF", "-D CMAKE_CXX_FLAGS=\"-fPIC\"",  "-D CMAKE_EXE_LINKER_FLAGS=\"-lgcc_s -lgcc\"", ".."]),
-			'make -j 4',
+			'make -j %s' % jobs,
 			'make install',
 			'make clean',
 			'cp -Lrn %s/ilmbase-%s/* %s/openexr-%s' % (prefix, ILMBASE_VERSION, prefix, OPENEXR_VERSION),
@@ -173,7 +173,7 @@ def getDepsCompilationData(prefix, wd):
 				 "-D ILMBASE_HOME=%s/openexr" % prefix, "-D OPENEXR_HOME=%s/openexr" % prefix,
 				 "-D BOOST_ROOT=%s/boost" % prefix, "-D Boost_NO_SYSTEM_PATHS=ON", "-D USE_OCIO=OFF",
 				 "-D CMAKE_CXX_FLAGS=\"-fPIC\"", "-D CMAKE_EXE_LINKER_FLAGS=\"-lgcc_s -lgcc\"", ".."]),
-			'make -j 4',
+			'make -j %s' % jobs,
 			'make install',
 			'make clean',
 			'ln -s %s/oiio-%s %s/oiio' % (prefix, OIIO_VERSION, prefix),
@@ -194,7 +194,7 @@ def getDepsCompilationData(prefix, wd):
 					  "-D CMAKE_INSTALL_PREFIX=%s/llvm-%s" % (prefix, LLVM_VERSION),
 					  "-D LLVM_TARGETS_TO_BUILD=X86",
 					  "-D LLVM_ENABLE_TERMINFO=OFF", ".."]),
-			'make -j 4',
+			'make -j %s' % jobs,
 			'make install',
 			'make clean',
 		)),
@@ -275,7 +275,7 @@ def DepsBuild(self):
 	os.makedirs(wd)
 	prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
 
-	data = getDepsCompilationData(prefix, wd)
+	data = getDepsCompilationData(prefix, wd, self.build_jobs)
 
 	if self.mode_test:
 		# TODO: print out commands
@@ -306,7 +306,8 @@ def DepsBuild(self):
 
 class LinuxBuilder(Builder):
 	def post_init(self):
-		pass
+		if utils.get_host_os() == utils.LNX:
+			DepsBuild(self)
 
 	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_source, "blender-cmake-build")
@@ -442,6 +443,9 @@ class LinuxBuilder(Builder):
 				cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=/opt/python-3.3/include/python3.4m")
 				cmake.append("-DPYTHON_NUMPY_PATH=/opt/python-3.3/lib/python3.4/site-packages")
 
+		cmake.append("-DCMAKE_MAKE_PROGRAM=ninja")
+		cmake.append("-DCMAKE_C_COMPILER_ENV_VAR=CC")
+		cmake.append("-DCMAKE_CXX_COMPILER_ENV_VAR=CXX")
 		cmake.append("../blender")
 
 		if self.mode_test:

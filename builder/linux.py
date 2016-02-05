@@ -283,10 +283,13 @@ def DepsBuild(self):
 		# TODO: print out commands
 		return
 
+	sys.stdout.write('Building dependencies...\n')
+
 	for item in data:
 		sys.stdout.write('Installing %s...' % item[0])
 		shouldStop = False
 		if os.path.isdir(item[1]):
+			sys.stdout.write('DEP %s already installed, skipping ...\n' % item[1])
 			# we already have this lib
 			continue
 

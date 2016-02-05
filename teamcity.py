@@ -121,6 +121,7 @@ def main(args):
         cmd.append('--dir_release=H:/release/vray_for_blender')
         cmd.append('--with_cycles')
     else:
+        cmd.append('--dir_blender_libs=%s' % '/opt/tc-libs')
         cmd.append('--dir_install=%s' % os.path.expanduser("~/install/vray_for_blender"))
         cmd.append('--dir_release=%s' % os.path.expanduser("~/release/vray_for_blender"))
 

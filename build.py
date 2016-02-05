@@ -38,6 +38,11 @@ parser = argparse.ArgumentParser(usage="python3 build.py [options]")
 
 
 gr_paths = parser.add_argument_group(title="Paths")
+gr_paths.add_argument('--dir_blender_libs',
+	default = '',
+	help    = "Directory for blender lib deps",
+	metavar = 'FILE'
+)
 gr_paths.add_argument('--dir_source',
 	default = cwd,
 	help    = "Root directory",

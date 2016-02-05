@@ -79,7 +79,7 @@ def getDepsCompilationData(prefix, wd, jobs):
 		return lambda: a() or b()
 
 	steps = (
-		('python', (
+		('python', '%s/python-%s' % (prefix, PYTHON_VERSION), (
 			getChDirCmd(wd),
 			getDownloadCmd("https://www.python.org/ftp/python/%s/Python-%s.tgz" % (PYTHON_VERSION, PYTHON_VERSION), 'python.tgz'),
 			'tar -C . -xf python.tgz',
@@ -90,7 +90,7 @@ def getDepsCompilationData(prefix, wd, jobs):
 			'make install',
 			'ln -s %s/python-%s %s/python' % (prefix, PYTHON_VERSION, prefix),
 		)),
-		('numpy', (
+		('numpy', '%s/numpy-%s' % (prefix, NUMPY_VERSION), (
 			getChDirCmd(wd),
 			getDownloadCmd("http://sourceforge.net/projects/numpy/files/NumPy/%s/numpy-%s.tar.gz" % (NUMPY_VERSION, NUMPY_VERSION), 'numpy.tar.gz'),
 			'tar -C . -xf numpy.tar.gz',
@@ -98,7 +98,7 @@ def getDepsCompilationData(prefix, wd, jobs):
 			'%s/python/bin/python3 setup.py install --prefix=%s/numpy-%s' % (prefix, prefix, NUMPY_VERSION),
 			'ln -s %s/numpy-%s %s/python/lib/python%s/site-packages/numpy' % (prefix, NUMPY_VERSION, prefix, PYTHON_VERSION_BIG)
 		)),
-		('boost', (
+		('boost', '%s/boost-%s' % (prefix, BOOST_VERSION),(
 			getChDirCmd(wd),
 			getDownloadCmd("http://sourceforge.net/projects/boost/files/boost/%s/boost_%s.tar.bz2/download" % (BOOST_VERSION, BOOST_VERSION.replace('.', '_')), 'boost.tar.bz2'),
 			'tar -C . --transform "s,(.*/?)boost_1_[^/]+(.*),\\1boost-%s\\2,x" -xf boost.tar.bz2' % BOOST_VERSION,
@@ -109,7 +109,7 @@ def getDepsCompilationData(prefix, wd, jobs):
 			'./b2 clean',
 			'ln -s %s/boost-%s %s/boost' % (prefix, BOOST_VERSION, prefix),
 		)),
-		('ocio', (
+		('ocio', '%s/ocio-%s' % (prefix, OCIO_VERSION), (
 			getChDirCmd(wd),
 			getDownloadCmd("https://github.com/imageworks/OpenColorIO/tarball/v%s" % OCIO_VERSION, 'ocio.tar.gz'),
 			'tar -C . --transform "s,(.*/?)imageworks-OpenColorIO[^/]*(.*),\\1OpenColorIO-%s\\2,x" -xf ocio.tar.gz' % OCIO_VERSION,
@@ -126,7 +126,7 @@ def getDepsCompilationData(prefix, wd, jobs):
 			'make clean',
 			'ln -s %s/ocio-%s %s/ocio' % (prefix, OCIO_VERSION, prefix),
 		)),
-		('ilmbase', (
+		('ilmbase', '%s/ilmbase-%s' % (prefix, ILMBASE_VERSION), (
 			getChDirCmd(wd),
 			getDownloadCmd("http://download.savannah.nongnu.org/releases/openexr/ilmbase-%s.tar.gz" % ILMBASE_VERSION, 'ilmbase.tar.gz'),
 			'tar -C . --transform "s,(.*/?)ilmbase-[^/]*(.*),\\1ILMBase-%s\\2,x" -xf ilmbase.tar.gz' % ILMBASE_VERSION,
@@ -139,7 +139,7 @@ def getDepsCompilationData(prefix, wd, jobs):
 			'make install',
 			'make clean',
 		)),
-		('openexr', (
+		('openexr', '%s/openexr-%s' % (prefix, OPENEXR_VERSION), (
 			getChDirCmd(wd),
 			getDownloadCmd("http://download.savannah.nongnu.org/releases/openexr/openexr-%s.tar.gz" % OPENEXR_VERSION, 'openexr.tar.gz'),
 			'tar -C . --transform "s,(.*/?)openexr[^/]*(.*),\\1OpenEXR-%s\\2,x" -xf openexr.tar.gz' % OPENEXR_VERSION,
@@ -156,7 +156,7 @@ def getDepsCompilationData(prefix, wd, jobs):
 			'cp -Lrn %s/ilmbase-%s/* %s/openexr-%s' % (prefix, ILMBASE_VERSION, prefix, OPENEXR_VERSION),
 			'ln -s %s/openexr-%s %s/openexr' % (prefix, OPENEXR_VERSION, prefix),
 		)),
-		('oiio', (
+		('oiio', '%s/oiio-%s' % (prefix, OIIO_VERSION), (
 			getChDirCmd(wd),
 			getDownloadCmd("https://github.com/OpenImageIO/oiio/archive/Release-%s.tar.gz" % OIIO_VERSION, 'oiio.tar.gz'),
 			'mkdir -p OpenImageIO-%s' % OIIO_VERSION,
@@ -178,7 +178,7 @@ def getDepsCompilationData(prefix, wd, jobs):
 			'make clean',
 			'ln -s %s/oiio-%s %s/oiio' % (prefix, OIIO_VERSION, prefix),
 		)),
-		('clang', (
+		('clang', '%s/llvm-%s' % (prefix, LLVM_VERSION), (
 			getChDirCmd(wd),
 			getDownloadCmd("http://llvm.org/releases/%s/llvm-%s.src.tar.gz" % (LLVM_VERSION, LLVM_VERSION), 'llvm.tar.gz'),
 			getOrCmd(
@@ -284,7 +284,11 @@ def DepsBuild(self):
 	for item in data:
 		sys.stdout.write('Installing %s...' % item[0])
 		shouldStop = False
-		for step in item[1]:
+		if os.path.isdir(item[1]):
+			# we already have this lib
+			continue
+
+		for step in item[2]:
 			sys.stdout.write("CWD %s" % os.getcwd())
 			if callable(step):
 				sys.stdout.write('Callable step: \n\t%s\n' % inspect.getsource(step).strip())

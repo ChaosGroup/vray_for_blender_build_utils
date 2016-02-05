@@ -277,7 +277,7 @@ def DepsBuild(self):
 		os.makedirs(wd)
 
 	prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
-	if self.dir_blender_libs != ''
+	if self.dir_blender_libs != '':
 		prefix = self.dir_blender_libs
 
 	self._blender_libs_location = prefix

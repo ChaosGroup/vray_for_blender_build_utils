@@ -272,8 +272,9 @@ def DepsBuild(self):
 	# 	cmd += " --with-opencollada"
 	# else:
 	# 	cmd += " --skip-opencollada"
-	wd = '/root/src'
-	os.makedirs(wd)
+	wd = os.path.expanduser('~/blender-libs-builds')
+	if not os.path.isdir(wd):
+		os.makedirs(wd)
 	prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
 
 	data = getDepsCompilationData(prefix, wd, self.build_jobs)

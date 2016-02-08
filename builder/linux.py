@@ -463,8 +463,7 @@ class LinuxBuilder(Builder):
 		cmake.append("-DCMAKE_CXX_COMPILER_ENV_VAR=CXX")
 		cmake.append("../blender")
 
-		if self.mode_test:
-			print(" ".join(cmake))
+		sys.stdout.write("%s\n" % '\n'.join(cmake))
 
 		else:
 			res = subprocess.call(cmake)

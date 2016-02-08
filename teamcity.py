@@ -87,11 +87,13 @@ def main(args):
         os.environ['LIB']     = ";".join(LIB)
         os.environ['LIBPATH'] = ";".join(LIBPATH)
 
-    os.environ['HTTP_PROXY'] = '10.0.0.1:1234'
-    os.environ['HTTPS_PROXY'] = '10.0.0.1:1234'
+    os.environ['http_proxy'] = '10.0.0.1:1234'
+    os.environ['https_proxy'] = '10.0.0.1:1234'
+    os.environ['ftp_proxy'] = '10.0.0.1:1234'
+    os.environ['socks_proxy'] = '10.0.0.1:1080'
 
-    os.environ['HTTP_PROXY'] = 'http://10.0.0.1:1234/'
-    os.environ['HTTPS_PROXY'] = 'https://10.0.0.1:1234/'
+    os.environ['http_proxy'] = 'http://10.0.0.1:1234/'
+    os.environ['https_proxy'] = 'https://10.0.0.1:1234/'
 
     cmd = [python_exe]
     cmd.append("vb25-patch/build.py")

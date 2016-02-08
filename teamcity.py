@@ -91,7 +91,7 @@ def main(args):
     os.environ['HTTPS_PROXY'] = '10.0.0.1:1234'
 
     os.environ['HTTP_PROXY'] = 'http://10.0.0.1:1234/'
-    os.environ['HTTPS_PROXY'] = 'http://10.0.0.1:1234/'
+    os.environ['HTTPS_PROXY'] = 'https://10.0.0.1:1234/'
 
     cmd = [python_exe]
     cmd.append("vb25-patch/build.py")

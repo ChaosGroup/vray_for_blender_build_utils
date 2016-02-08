@@ -441,7 +441,7 @@ class LinuxBuilder(Builder):
 				cmake.append("-DBoost_LOCALE_LIBRARY_DEBUG=%s/boost/lib/libboost_locale.a" % libs_prefix)
 				cmake.append("-DBoost_LOCALE_LIBRARY_RELEASE=%s/boost/lib/libboost_locale.a" % libs_prefix)
 				cmake.append("-DOPENEXR_ROOT_DIR=%s/openexr" % libs_prefix)
-				cmake.append("-DOPENEXR_ILMIMF_LIBRARY=%s/openexr/lib/libIlmImf-2_1.a" % libs_prefix)
+				cmake.append("-DOPENEXR_ILMIMF_LIBRARY=%s/openexr/lib/libIlmImf.a" % libs_prefix)
 				cmake.append("-D_opencolorio_LIBRARIES=%s/ocio/lib/libOpenColorIO.a" % libs_prefix)
 				cmake.append("-DOPENCOLORIO_INCLUDE_DIR=%s/ocio/include" % libs_prefix)
 				cmake.append("-DOPENCOLORIO_TINYXML_LIBRARY=%s/ocio/lib/libtinyxml.a" % libs_prefix)
@@ -464,6 +464,7 @@ class LinuxBuilder(Builder):
 		cmake.append("../blender")
 
 		sys.stdout.write("%s\n" % '\n'.join(cmake))
+		sys.stdout.flush()
 
 		if not self.mode_test:
 			res = subprocess.call(cmake)

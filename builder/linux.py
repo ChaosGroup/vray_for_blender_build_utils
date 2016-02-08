@@ -465,7 +465,7 @@ class LinuxBuilder(Builder):
 
 		sys.stdout.write("%s\n" % '\n'.join(cmake))
 
-		else:
+		if not self.mode_test:
 			res = subprocess.call(cmake)
 			if not res == 0:
 				sys.stderr.write("There was an error during configuration!\n")

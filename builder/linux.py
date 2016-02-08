@@ -45,8 +45,7 @@ LLVM_VERSION="3.4"
 
 def getDepsCompilationData(prefix, wd, jobs):
 	def dbg(x):
-		sys.stdout.write(x)
-		sys.stdout.write("\n")
+		sys.stdout.write('%s\n' % x)
 		return True
 
 	def getChDirCmd(newDir):
@@ -299,7 +298,7 @@ def DepsBuild(self):
 			continue
 
 		for step in item[2]:
-			sys.stdout.write("CWD %s" % os.getcwd())
+			sys.stdout.write("CWD %s\n" % os.getcwd())
 			if callable(step):
 				sys.stdout.write('Callable step: \n\t%s\n' % inspect.getsource(step).strip())
 				if not step():

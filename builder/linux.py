@@ -360,7 +360,7 @@ class LinuxBuilder(Builder):
 
 		libs_prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
 
-		if '_blender_libs_location' in self:
+		if hasattr(self, '_blender_libs_location'):
 			libs_prefix = self._blender_libs_location
 
 		if self.dev_static_libs:

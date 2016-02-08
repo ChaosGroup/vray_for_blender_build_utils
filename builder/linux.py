@@ -406,7 +406,7 @@ class LinuxBuilder(Builder):
 				cmake.append("-DOPENIMAGEIO_INCLUDE_DIR=%s/oiio/include/" % libs_prefix)
 				cmake.append("-DOPENIMAGEIO_LIBRARY=%s/oiio/lib/libOpenImageIO.a" % libs_prefix)
 
-				cmake.append("-DPYTHON_VERSION=%s" % (libs_prefix, PYTHON_VERSION_BIG))
+				cmake.append("-DPYTHON_VERSION=%s" % PYTHON_VERSION_BIG))
 				cmake.append("-DPYTHON_ROOT_DIR=%s/python-%s" % (libs_prefix, PYTHON_VERSION_BIG))
 				cmake.append("-DPYTHON_LIBRARY=%s/python-%s/lib/libpython%sm.a" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
 				cmake.append("-DPYTHON_LIBPATH=%s/python-%s/lib" % (libs_prefix, PYTHON_VERSION_BIG))

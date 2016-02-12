@@ -31,7 +31,7 @@ import socket
 import sys
 import subprocess
 import shutil
-
+import tempfile
 
 VERSION  = "2.61"
 REVISION = "svn"
@@ -429,7 +429,7 @@ def GetPackageName(self, ext=None):
 		if get_host_os() == WIN:
 			return "exe"
 		else:
-			return "tar.bz2"
+			return "bin"
 
 	os = get_host_os()
 	if os == 'linux':
@@ -461,6 +461,8 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	removeJunk   = set()
 	installerFiles = []
 
+	installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]">%s/postinstall.py</FN>' % InstallerDir)
+
 	for dirpath, dirnames, filenames in os.walk(self.dir_install_path):
 		if dirpath.startswith('.svn') or dirpath.endswith('__pycache__'):
 			continue
@@ -473,32 +475,70 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 				continue
 
 			relInstDir  = unix_slashes(rel_dirpath)
+			relInstDir  = relInstDir if relInstDir != '.' else ''
+
 			absFilePath = unix_slashes(f_path)
 
 			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">*.pyc</Files>' % (relInstDir))
 			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">__pycache__</Files>' % (relInstDir))
 			installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]%s">%s</FN>' % (relInstDir, absFilePath))
 
+	cg_root = ''
+	zmq_name = ''
+	appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], os.environ['CGR_APPSDK_VERSION'], get_host_os(), 'bin');
+	appsdkFile = ''
+
+	if get_host_os() == WIN:
+		cg_root = "C:/Program Files/Chaos Group/V-Ray/VRayZmqServer/"
+		zmq_name = "VRayZmqServer.exe"
+		appsdkFile = 'VRaySDKLibrary.dll'
+	elif get_host_os() == LNX:
+		zmq_name = "VRayZmqServer"
+		cg_root = "/usr/ChaosGroup/V-Ray/VRayZmqServer"
+		appsdkFile = 'libVRaySDKLibrary.so'
+
+	appsdk_root = os.path.join(cg_root, 'appsdk')
+
+	# add the appsdk files
+	for dirpath, dirnames, filenames in os.walk(appsdk):
+		rel_path = os.path.relpath(dirpath, appsdk)
+		dest_path = os.path.join(appsdk_root, rel_path)
+		dest_path = dest_path if dest_path != '.' else ''
+		for file_name in filenames:
+			source_path = os.path.join(dirpath, file_name)
+			installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (dest_path, source_path))
+
+	# add the zmq server if enabled
 	if self.teamcity_zmq_server_hash != '':
-		zmq_path = "H:/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer.exe" % self.teamcity_zmq_server_hash
+		zmq_build_path = ''
+		if get_host_os() == WIN:
+			zmq_build_path = "H:/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer.exe" % self.teamcity_zmq_server_hash
+		elif get_host_os() == LNX:
+			zmq_build_path = "/home/teamcity/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer" % self.teamcity_zmq_server_hash
 
-		destination_path = "C:/Program Files/Chaos Group/V-Ray/VRayZmqServer/"
-		destination_file = "VRayZmqServer.exe"
-
-		installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (destination_path, zmq_path))
+		installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (cg_root, zmq_build_path))
 
 	# Write installer template
-	#
 	tmpl = open("%s/cgr_template.xml" % InstallerDir, 'r').read()
-	tmplFinal = "%s/installer.xml" % InstallerDir
+	tmplFinal = "%s/installer.xml" % tempfile.gettempdir()
 
 	with open(tmplFinal, 'w') as f:
+		# shortcuts
+		if get_host_os() == WIN:
+			tmpl = tmpl.replace("${SHORTCUTS_SECTION}", open("%s/shortcuts.xml" % InstallerDir, 'r').read())
+		else:
+			tmpl = tmpl.replace("${SHORTCUTS_SECTION}", '')
+
 		tmpl = tmpl.replace("${APP_TITLE}",      "Blender (With V-Ray Additions)")
 		tmpl = tmpl.replace("${APP_TITLE_FULL}", "Blender ${VERSION_MAJOR}.${VERSION_MINOR} (With V-Ray Additions)")
 
 		# Files
 		tmpl = tmpl.replace("${FILE_LIST}", "\n".join(sorted(reversed(installerFiles))))
 		tmpl = tmpl.replace("${RUNTIME_JUNK_LIST}", "\n".join(sorted(removeJunk)))
+		tmpl = tmpl.replace("${INSTALL_XML_PATH}", tmplFinal)
+
+		# Appsdk env var path
+		tmpl = tmpl.replace("${VRAY_APPSDK_PATH}", "%s/%s" % (appsdk_root, appsdkFile))
 
 		# Versions
 		tmpl = tmpl.replace("${VERSION_MAJOR}", self.versionArr[1])
@@ -512,6 +552,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		# Installer stuff
 		tmpl = tmpl.replace("${INSTALLER_DATA_ROOT}", InstallerDir)
 
+
 		# System stuff
 		tmpl = tmpl.replace("${PLATFORM}", "x86_64")
 
@@ -520,20 +561,62 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 		f.write(tmpl)
 
+	packer = []
 	# Run installer generator
-	#
-	packer = ["%s/bin/packer.exe" % InstallerDir]
-	# packer.append('-debug=1')
-	packer.append('-exe')
-	packer.append('-xml=%s' % unix_slashes(tmplFinal))
-	packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
-	packer.append('-dest=%s' % installer_path)
-	packer.append('-installer=%s' % "%s/bin/installer.exe" % InstallerDir)
-	packer.append('-outbin=%s' % "C:/tmp/out.bin")
-	packer.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
-	packer.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
+	if get_host_os() == WIN:
+		packer = ["%s/windows/packer.exe" % InstallerDir]
+		# packer.append('-debug=1')
+		packer.append('-exe')
+		packer.append('-xml=%s' % unix_slashes(tmplFinal))
+		packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
+		packer.append('-dest=%s' % installer_path)
+		packer.append('-installer=%s' % "%s/windows/installer/installer.exe" % InstallerDir)
+		packer.append('-outbin=%s' % "%s/out.bin" % tempfile.gettempdir())
+		packer.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
+		packer.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
 
-	if self.mode_test:
 		print(" ".join(packer))
-	else:
-		subprocess.call(packer)
+		if not self.mode_test:
+			subprocess.call(packer)
+
+	elif get_host_os() == LNX:
+		packer = ["%s/linux/packer.bin" % InstallerDir]
+		packer.append('-exe')
+		# packer.append('-debug=1')
+		packer.append('-xml=%s' % unix_slashes(tmplFinal))
+		packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
+		packer.append('-dest=%s' % "%s/console.bin" % tempfile.gettempdir())
+		packer.append('-installer=%s' % "%s/linux/installer/console/installer.bin" % InstallerDir)
+		packer.append('-outbin=%s' % "%s/lnx_intermediate.ibin" % tempfile.gettempdir())
+		packer.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
+		packer.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
+
+		print(" ".join(packer))
+		if not self.mode_test:
+			subprocess.call(packer)
+
+		tmpl = open("%s/linux/launcher_wrapper.xml" % InstallerDir, 'r').read()
+		wrapper_xml = "%s/launcher_wrapper.xml" % tempfile.gettempdir()
+
+		with open(wrapper_xml, "w+") as f:
+			tmpl = tmpl.replace("($IBIN_FILE)",        "%s/lnx_intermediate.ibin" % tempfile.gettempdir())
+			tmpl = tmpl.replace("($INSTALLER_BIN)",    "installer.bin")
+			tmpl = tmpl.replace("($UNINSTALLER_BIN)",  "uninstaller.bin")
+			f.write(tmpl)
+
+		cmd = ["%s/linux/packer.bin" % InstallerDir]
+
+		# cmd.append('-debug=1')
+		cmd.append('-exe')
+		cmd.append('-xml=%s' % wrapper_xml)
+		cmd.append('-installer=%s' % "%s/linux/installer/launcher.bin" % InstallerDir)
+		cmd.append('-filesdir=%s' % "%s/linux/installer" % InstallerDir)
+		cmd.append('-outbin=%s' % "%s/packed.bin" % tempfile.gettempdir())
+		cmd.append('-dest=%s' % installer_path)
+		cmd.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
+		cmd.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
+
+		print(" ".join(cmd))
+		if not self.mode_test:
+			subprocess.call(cmd)
+

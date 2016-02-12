@@ -91,15 +91,20 @@ def main(args):
         os.environ['LIB']     = ";".join(LIB)
         os.environ['LIBPATH'] = ";".join(LIBPATH)
 
-        os.environ['HTTP_PROXY'] = '10.0.0.1:1234'
-        os.environ['HTTPS_PROXY'] = '10.0.0.1:1234'
+    os.environ['http_proxy'] = '10.0.0.1:1234'
+    os.environ['https_proxy'] = '10.0.0.1:1234'
+    os.environ['ftp_proxy'] = '10.0.0.1:1234'
+    os.environ['socks_proxy'] = '10.0.0.1:1080'
+
+    os.environ['http_proxy'] = 'http://10.0.0.1:1234/'
+    os.environ['https_proxy'] = 'https://10.0.0.1:1234/'
 
     cmd = [python_exe]
     cmd.append("vb25-patch/build.py")
     cmd.append("--teamcity")
     cmd.append("--teamcity_branch_hash=%s" % args.teamcity_branch_hash)
     cmd.append('--github-src-branch=%s' % args.teamcity_branch)
-    cmd.append('--teamcity_zmq_server_hash=%s' % args.teamcity_zmq_server_hash)
+    cmd.append('--teamcity_zmq_server_hash=%s' % args.teamcity_zmq_server_hash[:7])
 
     # Teamcity is cloning the sources for us
     cmd.append('--uppatch=off')
@@ -115,6 +120,7 @@ def main(args):
     cmd.append('--build_mode=release')
     cmd.append('--use_package')
     cmd.append('--use_installer=CGR')
+    cmd.append('--dir_cgr_installer=%s' % os.path.join(os.getcwd(), 'blender-for-vray-libs', 'cgr_installer'))
 
     if args.teamcity_zmq_server_hash != '':
         cmd.append('--github-exp-branch=dev/vb35')
@@ -124,6 +130,7 @@ def main(args):
         cmd.append('--dir_release=H:/release/vray_for_blender')
         cmd.append('--with_cycles')
     else:
+        cmd.append('--dir_blender_libs=%s' % '/opt/tc-libs')
         cmd.append('--dir_install=%s' % os.path.expanduser("~/install/vray_for_blender"))
         cmd.append('--dir_release=%s' % os.path.expanduser("~/release/vray_for_blender"))
 

@@ -461,7 +461,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	removeJunk   = set()
 	installerFiles = []
 
-	installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]">%s/shortcuts.py</FN>' % InstallerDir)
+	installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]">%s/postinstall.py</FN>' % InstallerDir)
 
 	for dirpath, dirnames, filenames in os.walk(self.dir_install_path):
 		if dirpath.startswith('.svn') or dirpath.endswith('__pycache__'):

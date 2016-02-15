@@ -494,7 +494,7 @@ class LinuxBuilder(Builder):
 		sys.stdout.write("Generating installer: %s\n" % (installer_path))
 		utils.GenCGRInstaller(self, installer_path, InstallerDir=self.dir_cgr_installer)
 
-		cmd = "tar jcf %s %s" % (installer_path, installer_path.replace('.bin', '.tar.bz2'))
+		cmd = "tar jcf %s %s" % (installer_path.replace('.bin', '.tar.bz2'), installer_path)
 
 		sys.stdout.write(cmd)
 		sys.stdout.flush()

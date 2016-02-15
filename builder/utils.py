@@ -53,6 +53,15 @@ def get_host_os():
 	sys.exit(2)
 
 
+def get_default_install_path():
+	if get_host_os == WIN:
+		return "C:/Program Files/Chaos Group/"
+	elif get_host_os == MAC:
+		return "/Applications/ChaosGroup/"
+	else:
+		return "/usr/ChaosGroup/"
+
+
 def get_host_architecture():
 	arch = 'x86' if platform.architecture()[0] == '32bit' else 'x86_64'
 
@@ -528,6 +537,9 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 			tmpl = tmpl.replace("${SHORTCUTS_SECTION}", open("%s/shortcuts.xml" % InstallerDir, 'r').read())
 		else:
 			tmpl = tmpl.replace("${SHORTCUTS_SECTION}", '')
+
+		# Default install dir
+		tmpl = tmpl.replace("${PROGRAMFILES}",   get_default_install_path())
 
 		tmpl = tmpl.replace("${APP_TITLE}",      "Blender (With V-Ray Additions)")
 		tmpl = tmpl.replace("${APP_TITLE_FULL}", "Blender ${VERSION_MAJOR}.${VERSION_MINOR} (With V-Ray Additions)")

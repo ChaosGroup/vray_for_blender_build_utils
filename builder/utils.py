@@ -577,7 +577,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	# Run installer generator
 	if get_host_os() == WIN:
 		packer = ["%s/windows/packer.exe" % InstallerDir]
-		# packer.append('-debug=1')
+		packer.append('-debug=1')
 		packer.append('-exe')
 		packer.append('-xml=%s' % unix_slashes(tmplFinal))
 		packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
@@ -594,7 +594,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	elif get_host_os() == LNX:
 		packer = ["%s/linux/packer.bin" % InstallerDir]
 		packer.append('-exe')
-		# packer.append('-debug=1')
+		packer.append('-debug=1')
 		packer.append('-xml=%s' % unix_slashes(tmplFinal))
 		packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
 		packer.append('-dest=%s' % "%s/console.bin" % tempfile.gettempdir())
@@ -618,7 +618,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 		cmd = ["%s/linux/packer.bin" % InstallerDir]
 
-		# cmd.append('-debug=1')
+		cmd.append('-debug=1')
 		cmd.append('-exe')
 		cmd.append('-xml=%s' % wrapper_xml)
 		cmd.append('-installer=%s' % "%s/linux/installer/launcher.bin" % InstallerDir)

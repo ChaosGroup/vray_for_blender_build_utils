@@ -487,15 +487,23 @@ class LinuxBuilder(Builder):
 		if not self.mode_test:
 			utils.path_create(release_path)
 
-		archive_name = utils.GetPackageName(self)
-		archive_path = utils.path_join(release_path, archive_name)
-
-		sys.stdout.write("Generating archive: %s\n" % (archive_name))
-		sys.stdout.write("  in: %s\n" % (release_path))
-
 		installer_name = utils.GetPackageName(self)
 		installer_path = utils.path_slashify(utils.path_join(release_path, installer_name))
 		installer_root = utils.path_join(self.dir_source, "vb25-patch", "installer")
 
+		sys.stdout.write("Generating installer: %s\n" % (installer_path))
 		utils.GenCGRInstaller(self, installer_path, InstallerDir=self.dir_cgr_installer)
+
+		cmd = "tar jcf %s %s" % (installer_path, installer_path.replace('.bin', '.tar.bz2'))
+
+		sys.stdout.write(cmd)
+		sys.stdout.flush()
+
+		if not self.mode_test:
+			res = subprocess.call(cmd, shell=True)
+			if res != 0:
+				sys.stderr.write('Failed to archive installer bin')
+				sys.stderr.flush()
+				sys.exit(1)
+
 		return subdir, installer_path

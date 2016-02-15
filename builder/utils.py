@@ -479,6 +479,10 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		rel_dirpath = os.path.normpath(dirpath).replace(os.path.normpath(self.dir_install_path), "")
 
 		for f in os.listdir(dirpath):
+			# skip weird cmake file
+			if f == 'a.out':
+				continue
+
 			f_path = os.path.join(dirpath, f)
 			if os.path.isdir(f_path):
 				continue

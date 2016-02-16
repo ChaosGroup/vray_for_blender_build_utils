@@ -539,10 +539,9 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 	print(" ".join(gen_tmpl))
 	if not self.mode_test:
-		if subprocess.call(gen_tmpl) != 0:
+		if subprocess.call(" ".join(gen_tmpl)) != 0:
 			print('replace_file failed')
 			sys.exit(1)
-
 
 	# Write installer template
 	tmpl = open(tmplFinal, 'r').read()

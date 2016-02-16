@@ -572,9 +572,6 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		# System stuff
 		tmpl = tmpl.replace("${PLATFORM}", "x86_64")
 
-		# Release or nighlty
-		tmpl = tmpl.replace("${IS_RELEASE_BUILD}", "%i" % (self.build_mode == 'release'))
-
 		f.write(tmpl)
 
 	packer = []

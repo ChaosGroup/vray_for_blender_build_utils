@@ -531,11 +531,21 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 		installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (cg_root, zmq_build_path))
 
-	# Write installer template
-	tmpl = open("%s/cgr_template.xml" % InstallerDir, 'r').read()
 	tmplFinal = "%s/installer.xml" % tempfile.gettempdir()
+	replace_file = '%s/%s/replace_file%s' % (InstallerDir, get_host_os(), '.exe' if get_host_os() == WIN else '')
 
-	with open(tmplFinal, 'w') as f:
+	gen_tmpl = [replace_file]
+	gen_tmpl.append('-inputfile="%s"' % ("%s/cgr_template.xml" % InstallerDir))
+	gen_tmpl.append('-outputfile="%s"' % tmplFinal)
+	gen_tmpl.append('-keyword="(%s$%s):true"' % ('\\' if get_host_os() != WIN else '', get_host_os().upper()))
+
+	print(" ".join(gen_tmpl))
+	if not self.mode_test:
+		subprocess.call(gen_tmpl)
+
+	# Write installer template
+	tmpl = open(tmplFinal, 'r').read()
+	with open(tmplFinal, 'w+') as f:
 		# shortcuts
 		if get_host_os() == WIN:
 			tmpl = tmpl.replace("${SHORTCUTS_SECTION}", open("%s/shortcuts.xml" % InstallerDir, 'r').read())

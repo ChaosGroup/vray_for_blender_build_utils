@@ -539,7 +539,10 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 	print(" ".join(gen_tmpl))
 	if not self.mode_test:
-		subprocess.call(gen_tmpl)
+		if subprocess.call(gen_tmpl) != 0:
+			print('replace_file failed')
+			sys.exit(1)
+
 
 	# Write installer template
 	tmpl = open(tmplFinal, 'r').read()
@@ -598,7 +601,9 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 		print(" ".join(packer))
 		if not self.mode_test:
-			subprocess.call(packer)
+			if subprocess.call(packer) != 0:
+				print('Failed with windows installer creation')
+				sys.exit(1)
 
 	elif get_host_os() == LNX:
 		packer = ["%s/linux/packer.bin" % InstallerDir]
@@ -614,7 +619,9 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 		print(" ".join(packer))
 		if not self.mode_test:
-			subprocess.call(packer)
+			if subprocess.call(packer) != 0:
+				print('Failed linux ibin creation')
+				sys.exit(1)
 
 		tmpl = open("%s/linux/launcher_wrapper.xml" % InstallerDir, 'r').read()
 		wrapper_xml = "%s/launcher_wrapper.xml" % tempfile.gettempdir()
@@ -639,5 +646,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 		print(" ".join(cmd))
 		if not self.mode_test:
-			subprocess.call(cmd)
+			if subprocess.call(cmd) != 0:
+				print('Failed linux installer creation')
+				sys.exit(1)
 

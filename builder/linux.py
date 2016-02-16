@@ -494,12 +494,13 @@ class LinuxBuilder(Builder):
 		sys.stdout.write("Generating installer: %s\n" % (installer_path))
 		utils.GenCGRInstaller(self, installer_path, InstallerDir=self.dir_cgr_installer)
 
-		cmd = "tar jcf %s %s" % (installer_path.replace('.bin', '.tar.bz2'), installer_path)
+		cmd = "tar jcf %s %s" % (installer_name.replace('.bin', '.tar.bz2'), installer_name)
 
 		sys.stdout.write(cmd)
 		sys.stdout.flush()
 
 		if not self.mode_test:
+			os.chdir(release_path)
 			res = subprocess.call(cmd, shell=True)
 			if res != 0:
 				sys.stderr.write('Failed to archive installer bin')

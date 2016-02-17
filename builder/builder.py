@@ -24,6 +24,7 @@
 
 
 import os
+import re
 import sys
 import shutil
 import tempfile
@@ -197,7 +198,8 @@ class Builder:
 	def update(self):
 		if self.teamcity:
 			self.revision = self.teamcity_branch_hash
-			self.brev = ""
+			self.brev = utils._get_cmd_output('git ls-remote git://github.com/bdancer/blender-for-vray master')
+			self.brev = re.split('\s+')[0][:7]
 			self.commits = ""
 		else:
 			self.revision, self.brev, self.commits = utils.get_svn_revision(self.dir_blender)

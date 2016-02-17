@@ -580,7 +580,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		tmpl = tmpl.replace("${VERSION_CHAR}",  self.versionArr[4])
 
 		tmpl = tmpl.replace("${VERSION_HASH}",       self.brev)
-		tmpl = tmpl.replace("${VERSION_PATCH_HASH}", self.revision)
+		tmpl = tmpl.replace("${VERSION_PATCH_HASH}", self.revision[:7])
 
 		# Installer stuff
 		tmpl = tmpl.replace("${INSTALLER_DATA_ROOT}", InstallerDir)

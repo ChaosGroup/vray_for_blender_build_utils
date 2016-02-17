@@ -171,6 +171,11 @@ if __name__ == '__main__':
         default = "dev/vray_for_blender/vb30",
     )
 
+    parser.add_argument('--teamcity_project_type',
+        choices=['vb30', 'vb35'],
+        default = 'vb30',
+    )
+
     parser.add_argument('--teamcity_zmq_server_hash',
         default = "",
     )

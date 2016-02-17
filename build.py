@@ -229,7 +229,7 @@ parser.add_argument('--build_mode',
 	help    = argparse.SUPPRESS # Option for CGR installer
 )
 parser.add_argument('--use_package_upload',
-	default = 'off', 
+	default = 'off',
 	choices = {'off', 'ftp', 'http'},
 	help    = argparse.SUPPRESS
 )
@@ -250,6 +250,10 @@ parser.add_argument('--teamcity_branch_hash',
 )
 parser.add_argument('--teamcity_zmq_server_hash',
 	default = "",
+	help    = argparse.SUPPRESS
+)
+parser.add_argument('--teamcity_project_type',
+	default = "vb30",
 	help    = argparse.SUPPRESS
 )
 

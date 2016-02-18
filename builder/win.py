@@ -115,7 +115,7 @@ class WindowsBuilder(Builder):
 			sys.stdout.write("  in: %s\n" % (self.dir_install))
 
 			if not self.mode_test:
-				os.chdir(self.dir_install)
+				os.chdir(release_path)
 				os.system(cmd)
 
 			return subdir, installer_path.replace('.exe', '.zip')

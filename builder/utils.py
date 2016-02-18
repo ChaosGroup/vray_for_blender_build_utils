@@ -520,7 +520,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 			installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (dest_path, source_path))
 
 	# add the zmq server if enabled
-	if self.teamcity_zmq_server_hash != '':
+	if self.teamcity_zmq_server_hash != '' and self.teamcity_project_type == 'vb35':
 		zmq_build_path = ''
 		if get_host_os() == WIN:
 			zmq_build_path = "H:/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer.exe" % self.teamcity_zmq_server_hash
@@ -571,7 +571,8 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		tmpl = tmpl.replace("${INSTALL_XML_PATH}", tmplFinal)
 
 		# Appsdk env var path
-		tmpl = tmpl.replace("${VRAY_APPSDK_PATH}", "%s/%s" % (appsdk_root, appsdkFile))
+		if self.teamcity_zmq_server_hash != '' and self.teamcity_project_type == 'vb35':
+			tmpl = tmpl.replace("${ZMQ_ENV_VARIABLE}", '<Replace VarName="VRAY_ZMQSERVER_APPSDK_PATH" IsPath="1">%s/%s</Replace>'  % (appsdk_root, appsdkFile))
 
 		# Versions
 		tmpl = tmpl.replace("${VERSION_MAJOR}", self.versionArr[1])

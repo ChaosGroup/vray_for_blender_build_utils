@@ -416,7 +416,7 @@ class LinuxBuilder(Builder):
 					cmake.append("-DOPENCOLORIO_INCLUDE_DIR=%s/ocio/include" % libs_prefix)
 					cmake.append("-DOPENCOLORIO_TINYXML_LIBRARY=%s/ocio/lib/libtinyxml.a" % libs_prefix)
 					cmake.append("-DOPENCOLORIO_YAML-CPP_LIBRARY=%s/ocio/lib/libyaml-cpp.a" % libs_prefix)
-				cmake.append("-D_opencolorio_LIBRARIES=%s/ocio/lib/libOpenColorIO.a" % libs_prefix)
+					cmake.append("-D_opencolorio_LIBRARIES=%s/ocio/lib/libOpenColorIO.a" % libs_prefix)
 
 				cmake.append("-DOPENIMAGEIO_INCLUDE_DIR=%s/oiio/include/" % libs_prefix)
 				cmake.append("-DOPENIMAGEIO_LIBRARY=%s/oiio/lib/libOpenImageIO.a" % libs_prefix)
@@ -457,12 +457,13 @@ class LinuxBuilder(Builder):
 				cmake.append("-DBoost_LOCALE_LIBRARY_RELEASE=%s/boost/lib/libboost_locale.a" % libs_prefix)
 				cmake.append("-DOPENEXR_ROOT_DIR=%s/openexr" % libs_prefix)
 				cmake.append("-DOPENEXR_ILMIMF_LIBRARY=%s/openexr/lib/libIlmImf.a" % libs_prefix)
-				cmake.append("-D_opencolorio_LIBRARIES=%s/ocio/lib/libOpenColorIO.a" % libs_prefix)
 
 				if self.teamcity_project_type == 'vb35':
+					cmake.append("-D_opencolorio_LIBRARIES=%s/ocio/lib/libOpenColorIO.a" % libs_prefix)
 					cmake.append("-DOPENCOLORIO_INCLUDE_DIR=%s/ocio/include" % libs_prefix)
 					cmake.append("-DOPENCOLORIO_TINYXML_LIBRARY=%s/ocio/lib/libtinyxml.a" % libs_prefix)
 					cmake.append("-DOPENCOLORIO_YAML-CPP_LIBRARY=%s/ocio/lib/libyaml-cpp.a" % libs_prefix)
+
 				cmake.append("-DOPENIMAGEIO_INCLUDE_DIR=%s/oiio/include/" % libs_prefix)
 				cmake.append("-DOPENIMAGEIO_LIBRARY=%s/oiio/lib/libOpenImageIO.a" % libs_prefix)
 

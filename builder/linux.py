@@ -84,12 +84,13 @@ def getDepsCompilationData(prefix, wd, jobs):
 			getDownloadCmd("https://www.python.org/ftp/python/%s/Python-%s.tgz" % (PYTHON_VERSION, PYTHON_VERSION), 'python.tgz'),
 			'tar -C . -xf python.tgz',
 			getChDirCmd(os.path.join(wd, 'Python-%s' % PYTHON_VERSION)),
-			'./configure --prefix=%s/python-%s --libdir=%s/python-%s/lib --enable-ipv6 --enable-loadable-sqlite-extensions --with-dbmliborder=bdb --with-computed-gotos --with-pymalloc'
+			'./configure --prefix=%s/python-%s --libdir=%s/python-%s/lib --enable-ipv6 --enable-loadable-sqlite-extensions --with-dbmliborder=bdb --with-computed-gotos --with-pymalloc --with-ensurepip=install'
 				% (prefix, PYTHON_VERSION, prefix, PYTHON_VERSION),
 			'make -j %s' % jobs,
 			'make install',
 			'ln -s %s/python-%s %s/python' % (prefix, PYTHON_VERSION, prefix),
 			'ln -s %s/python-%s %s/python-%s' % (prefix, PYTHON_VERSION, prefix, PYTHON_VERSION_BIG),
+			'%s/python/bin/pip%s install requests' % (prefix, PYTHON_VERSION_BIG),
 		)),
 		('numpy', '%s/numpy-%s' % (prefix, NUMPY_VERSION), (
 			getChDirCmd(wd),

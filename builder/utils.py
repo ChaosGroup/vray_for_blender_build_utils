@@ -510,17 +510,17 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 	appsdk_root = os.path.join(cg_root, 'appsdk')
 
-	# add the appsdk files
-	for dirpath, dirnames, filenames in os.walk(appsdk):
-		rel_path = os.path.relpath(dirpath, appsdk)
-		dest_path = os.path.join(appsdk_root, rel_path)
-		dest_path = dest_path if dest_path != '.' else ''
-		for file_name in filenames:
-			source_path = os.path.join(dirpath, file_name)
-			installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (dest_path, source_path))
-
 	# add the zmq server if enabled
 	if self.teamcity_zmq_server_hash != '' and self.teamcity_project_type == 'vb35':
+		# add the appsdk files
+		for dirpath, dirnames, filenames in os.walk(appsdk):
+			rel_path = os.path.relpath(dirpath, appsdk)
+			dest_path = os.path.join(appsdk_root, rel_path)
+			dest_path = dest_path if dest_path != '.' else ''
+			for file_name in filenames:
+				source_path = os.path.join(dirpath, file_name)
+				installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (dest_path, source_path))
+
 		zmq_build_path = ''
 		if get_host_os() == WIN:
 			zmq_build_path = "H:/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer.exe" % self.teamcity_zmq_server_hash

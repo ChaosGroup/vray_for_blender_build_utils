@@ -108,7 +108,17 @@ class WindowsBuilder(Builder):
 
 		if self.use_installer == 'CGR':
 			self.installer_cgr(installer_path)
-			return subdir, installer_path
+
+			cmd = "7z -tzip a %s %s" % (installer_name.replace('.exe', '.zip'), installer_name)
+
+			sys.stdout.write("Calling: %s\n" % (cmd))
+			sys.stdout.write("  in: %s\n" % (self.dir_install))
+
+			if not self.mode_test:
+				os.chdir(self.dir_install)
+				os.system(cmd)
+
+			return subdir, installer_path.replace('.exe', '.zip')
 
 		# Use NSIS log plugin
 		installer_log  = False

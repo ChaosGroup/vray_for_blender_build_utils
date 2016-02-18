@@ -110,6 +110,20 @@ def getDepsCompilationData(prefix, wd, jobs):
 				% (prefix, BOOST_VERSION),
 			'./b2 clean',
 			'ln -s %s/boost-%s %s/boost' % (prefix, BOOST_VERSION, prefix),
+			'sh -c "echo \"%s/boost/lib\" > /etc/ld.so.conf.d/boost.conf"' % prefix,
+			'/sbin/ldconfig'
+		)),
+		('tiff', '%s/tiff-%s' % (prefix, TIFF_VERSION), (
+			getChDirCmd(wd),
+			getDownloadCmd('http://download.osgeo.org/libtiff/tiff-%s.tar.gz' % TIFF_VERSION, 'tiff.tar.gz'),
+			'tar -C . -xf tiff.tar.gz',
+			getChDirCmd(os.path.join(wd, 'tiff-%s' % TIFF_VERSION)),
+			'./configure --prefix=/opt/tc-libs/tiff-%s --enable-static' % TIFF_VERSION,
+			'make -j %s' % jobs,
+			'make  install',
+			'ln -s %s/tiff-%s %s/tiff' % (prefix, TIFF_VERSION, prefix),
+			'sh -c "echo \"%s/tiff/lib\" > /etc/ld.so.conf.d/tiff.conf"' % prefix,
+			'/sbin/ldconfig'
 		)),
 		('ocio', '%s/ocio-%s' % (prefix, OCIO_VERSION), (
 			getChDirCmd(wd),
@@ -127,6 +141,8 @@ def getDepsCompilationData(prefix, wd, jobs):
 			'cp ext/dist/lib/libyaml-cpp.a %s/ocio-%s/lib' % (prefix, OCIO_VERSION),
 			'make clean',
 			'ln -s %s/ocio-%s %s/ocio' % (prefix, OCIO_VERSION, prefix),
+			'sh -c "echo \"%s/ocio/lib\" > /etc/ld.so.conf.d/ocio.conf"' % prefix,
+			'/sbin/ldconfig'
 		)),
 		('ilmbase', '%s/ilmbase-%s' % (prefix, ILMBASE_VERSION), (
 			getChDirCmd(wd),
@@ -157,6 +173,8 @@ def getDepsCompilationData(prefix, wd, jobs):
 			'make clean',
 			'cp -Lrn %s/ilmbase-%s/* %s/openexr-%s' % (prefix, ILMBASE_VERSION, prefix, OPENEXR_VERSION),
 			'ln -s %s/openexr-%s %s/openexr' % (prefix, OPENEXR_VERSION, prefix),
+			'sh -c "echo \"%s/openexr/lib\" > /etc/ld.so.conf.d/openexr.conf"' % prefix,
+			'/sbin/ldconfig'
 		)),
 		('oiio', '%s/oiio-%s' % (prefix, OIIO_VERSION), (
 			getChDirCmd(wd),
@@ -179,6 +197,8 @@ def getDepsCompilationData(prefix, wd, jobs):
 			'make install',
 			'make clean',
 			'ln -s %s/oiio-%s %s/oiio' % (prefix, OIIO_VERSION, prefix),
+			'sh -c "echo \"%s/oiio/lib\" > /etc/ld.so.conf.d/oiio.conf"' % prefix,
+			'/sbin/ldconfig'
 		)),
 		('clang', '%s/llvm-%s' % (prefix, LLVM_VERSION), (
 			getChDirCmd(wd),
@@ -199,16 +219,6 @@ def getDepsCompilationData(prefix, wd, jobs):
 			'make -j %s' % jobs,
 			'make install',
 			'make clean',
-		)),
-		('tiff', '%s/tiff-%s' % (prefix, TIFF_VERSION), (
-			getChDirCmd(wd),
-			getDownloadCmd('http://download.osgeo.org/libtiff/tiff-%s.tar.gz' % TIFF_VERSION, 'tiff.tar.gz'),
-			'tar -C . -xf tiff.tar.gz',
-			getChDirCmd(os.path.join(wd, 'tiff-%s' % TIFF_VERSION)),
-			'./configure --prefix=/opt/tc-libs/tiff-%s --enable-static' % TIFF_VERSION,
-			'make -j %s' % jobs,
-			'make  install',
-			'ln -s %s/tiff-%s %s/tiff' % (prefix, TIFF_VERSION, prefix)
 		)),
 	)
 

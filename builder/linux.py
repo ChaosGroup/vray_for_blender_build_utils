@@ -199,7 +199,7 @@ def getDepsCompilationData(prefix, wd, jobs):
 			'make install',
 			'make clean',
 		)),
-		('tiff', '', (
+		('tiff', '%s/tiff-%s' % (prefix, TIFF_VERSION), (
 			getChDirCmd(wd),
 			getDownloadCmd('http://download.osgeo.org/libtiff/tiff-%s.tar.gz' % TIFF_VERSION, 'tiff.tar.gz'),
 			'tar -C . -xf tiff.tar.gz',

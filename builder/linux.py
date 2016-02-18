@@ -90,6 +90,8 @@ def getDepsCompilationData(prefix, wd, jobs):
 			'make install',
 			'ln -s %s/python-%s %s/python' % (prefix, PYTHON_VERSION, prefix),
 			'ln -s %s/python-%s %s/python-%s' % (prefix, PYTHON_VERSION, prefix, PYTHON_VERSION_BIG),
+		)),
+		('requests', '/opt/lib/python/lib/python%s/site-packages/requests' % PYTHON_VERSION_BIG, (
 			'%s/python/bin/pip%s install requests' % (prefix, PYTHON_VERSION_BIG),
 		)),
 		('numpy', '%s/numpy-%s' % (prefix, NUMPY_VERSION), (

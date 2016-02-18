@@ -346,8 +346,9 @@ class LinuxBuilder(Builder):
 		cmake.append("-DWITH_SYSTEM_GLEW=OFF")
 		cmake.append("-DWITH_FFTW3=ON")
 
+		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
+
 		if self.teamcity_project_type == 'vb35':
-			cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 			cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
 			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
 

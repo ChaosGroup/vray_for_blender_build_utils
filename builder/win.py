@@ -112,7 +112,7 @@ class WindowsBuilder(Builder):
 			cmd = "7z -tzip a %s %s" % (installer_name.replace('.exe', '.zip'), installer_name)
 
 			sys.stdout.write("Calling: %s\n" % (cmd))
-			sys.stdout.write("  in: %s\n" % (self.dir_install))
+			sys.stdout.write("  in: %s\n" % (release_path))
 
 			if not self.mode_test:
 				os.chdir(release_path)

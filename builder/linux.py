@@ -524,4 +524,4 @@ class LinuxBuilder(Builder):
 				sys.stderr.flush()
 				sys.exit(1)
 
-		return subdir, installer_path
+		return subdir, installer_path.replace('.bin', '.tar.bz2')

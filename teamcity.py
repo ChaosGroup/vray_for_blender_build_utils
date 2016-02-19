@@ -129,14 +129,12 @@ def main(args):
     if sys.platform == 'win32':
         cmd.append('--dir_install=H:/install/vray_for_blender')
         cmd.append('--dir_release=H:/release/vray_for_blender')
-        cmd.append('--with_cycles')
     else:
         cmd.append('--dir_blender_libs=%s' % '/opt/tc-libs')
         cmd.append('--dir_install=%s' % os.path.expanduser("~/install/vray_for_blender"))
         cmd.append('--dir_release=%s' % os.path.expanduser("~/release/vray_for_blender"))
 
         # No Cycles on TeamCity, failed to build some dependencies
-        # cmd.append('--with_cycles')
         cmd.append('--gcc=gcc-4.9.3')
         cmd.append('--gxx=g++-4.9.3')
         cmd.append('--dev_static_libs')

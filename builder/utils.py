@@ -676,22 +676,25 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">__pycache__</Files>' % (relInstDir))
 			installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]%s">%s</FN>' % (relInstDir, absFilePath))
 
-	cg_root = os.path.join(get_default_install_path(), 'V-Ray', 'VRayZmqServer')
-	zmq_name = ''
-	appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], os.environ['CGR_APPSDK_VERSION'], get_host_os(), 'bin');
+	appsdk_root = ''
 	appsdkFile = ''
-
-	if get_host_os() == WIN:
-		zmq_name = "VRayZmqServer.exe"
-		appsdkFile = 'VRaySDKLibrary.dll'
-	elif get_host_os() == LNX:
-		zmq_name = "VRayZmqServer"
-		appsdkFile = 'libVRaySDKLibrary.so'
-
-	appsdk_root = os.path.join(cg_root, 'appsdk')
 
 	# add the zmq server if enabled
 	if self.teamcity_zmq_server_hash != '' and self.teamcity_project_type == 'vb35':
+		cg_root = os.path.join(get_default_install_path(), 'V-Ray', 'VRayZmqServer')
+		zmq_name = ''
+		appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], os.environ['CGR_APPSDK_VERSION'], get_host_os(), 'bin');
+		appsdkFile = ''
+
+		if get_host_os() == WIN:
+			zmq_name = "VRayZmqServer.exe"
+			appsdkFile = 'VRaySDKLibrary.dll'
+		elif get_host_os() == LNX:
+			zmq_name = "VRayZmqServer"
+			appsdkFile = 'libVRaySDKLibrary.so'
+
+		appsdk_root = os.path.join(cg_root, 'appsdk')
+
 		# add the appsdk files
 		for dirpath, dirnames, filenames in os.walk(appsdk):
 			rel_path = os.path.relpath(dirpath, appsdk)

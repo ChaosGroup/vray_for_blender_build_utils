@@ -468,6 +468,175 @@ def GetCmakeOnOff(val):
 	return "ON" if val else "OFF"
 
 
+def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_title, long_title):
+	packer = ["%s/linux/packer.bin" % InstallerDir]
+	packer.append('-exe')
+	packer.append('-debug=1')
+	packer.append('-xml=%s' % unix_slashes(tmplFinal))
+	packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
+	packer.append('-dest=%s' % "%s/console.bin" % tempfile.gettempdir())
+	packer.append('-installer=%s' % "%s/linux/installer/console/installer.bin" % InstallerDir)
+	packer.append('-outbin=%s' % "%s/lnx_intermediate.ibin" % tempfile.gettempdir())
+	packer.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
+	packer.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
+
+	print(" ".join(packer))
+	if not self.mode_test:
+		if subprocess.call(packer) != 0:
+			print('Failed linux ibin creation')
+			sys.exit(1)
+
+	tmpl = open("%s/linux/launcher_wrapper.xml" % InstallerDir, 'r').read()
+	wrapper_xml = "%s/launcher_wrapper.xml" % tempfile.gettempdir()
+
+	with open(wrapper_xml, "w+") as f:
+		tmpl = tmpl.replace("($IBIN_FILE)",        "%s/lnx_intermediate.ibin" % tempfile.gettempdir())
+		tmpl = tmpl.replace("($INSTALLER_BIN)",    "installer.bin")
+		tmpl = tmpl.replace("($UNINSTALLER_BIN)",  "uninstaller.bin")
+		f.write(tmpl)
+
+	cmd = ["%s/linux/packer.bin" % InstallerDir]
+
+	cmd.append('-debug=1')
+	cmd.append('-exe')
+	cmd.append('-xml=%s' % wrapper_xml)
+	cmd.append('-installer=%s' % "%s/linux/installer/launcher.bin" % InstallerDir)
+	cmd.append('-filesdir=%s' % "%s/linux/installer" % InstallerDir)
+	cmd.append('-outbin=%s' % "%s/packed.bin" % tempfile.gettempdir())
+	cmd.append('-dest=%s' % installer_path)
+	cmd.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
+	cmd.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
+
+	print(" ".join(cmd))
+	if not self.mode_test:
+		if subprocess.call(cmd) != 0:
+			print('Failed linux installer creation')
+			sys.exit(1)
+
+	root_tmp = tempfile.mkdtemp()
+	target_name = os.path.basename(installer_path)
+
+	app_dir = os.path.join(root_tmp, '%s.app' % target_name)
+	os.mkdir(app_dir)
+	os.mkdir(os.path.join(app_dir, 'Contents'))
+	os.mkdir(os.path.join(app_dir, 'Contents', 'MacOS'))
+	os.mkdir(os.path.join(app_dir, 'Contents', 'Resources'))
+
+	shutil.copyfile('%s/macos/osx_installer/PkgInfo' % InstallerDir, os.path.join(app_dir, 'Contents', 'PkgInfo'))
+	shutil.copyfile('%s/macos/osx_installer/mac.icns' % InstallerDir, os.path.join(app_dir, 'Contents', 'Resources', 'mac.icns'))
+	shutil.move(installer_path, os.path.join(app_dir, 'Contents', 'MacOS', target_name))
+
+	# shutil.copyfile('%s/macos/osx_installer/Info.plist.in' % InstallerDir, os.path.join(app_dir, 'Contents', 'Info.plist'))
+	plist_tmpl = open('%s/macos/osx_installer/Info.plist.in' % InstallerDir, 'r').read()
+	with open(os.path.join(app_dir, 'Contents', 'Info.plist'), 'w+') as f:
+		plist_tmpl = plist_tmpl.replace('${EXECUTABLENAME}', target_name)
+		plist_tmpl = plist_tmpl.replace('${PRODUCT_NAME}', long_title)
+
+		f.write(plist_tmpl)
+
+	dmg_file = '%s.dmg' % target_name
+	# Add some megabytes for the package additional files (icons, plist, etc)
+	dmg_target_size = str(os.path.getsize(installer_path) + 8 * 1024 * 1024)
+
+	# TODO: enable these
+
+	# # should be executed in the order listed, grouped in dict for convenience
+	# commands = {
+	# 	'create_dmg': ['hdiutil', 'create', '-size', dmg_target_size, '-layout', 'NONE'm dmg_file],
+	# 	'mount_dmg':  ['hdid', '-nomount', dmg_file],
+	# 	'fs_dmg':     ['newfs_hfs', '-v', '"%s"' % short_name, None], # None = mount_dmg drive
+	# 	'eject_dmg':  ['hdiutil', 'eject', None], # None = mount_dmg drive
+	# 	'path_dmg':   ['hdid', dmg_file],
+	# 	#["cp -r {$iname}.app \"{$vpath}\""]
+	# }
+
+	# if _get_cmd_output_ex(commands['create_dmg'])['code'] != 0:
+	# 	print('"%s" failed' % ' '.join(commands['create_dmg']))
+	# 	sys.exit(1)
+
+	# mount_res = _get_cmd_output_ex(commands['mount_dmg'])
+	# if mount_res['code'] != 0:
+	# 	print('"%s" failed' % ' '.join(commands['mount_dmg']))
+	# 	sys.exit(1)
+
+	# commands['fs_dmg'][-1] = mount_res['output']
+	# commands['eject_dmg'][-1] = mount_res['output']
+
+	# if _get_cmd_output_ex(commands['fs_dmg'])['code'] != 0:
+	# 	print('"%s" failed' % ' '.join(commands['fs_dmg']))
+	# 	sys.exit(1)
+
+	# path_dmg_res = _get_cmd_output_ex(commands['path_dmg'])
+	# if path_dmg_res['code'] != 0:
+	# 	print('"%s" failed' % ' '.join(commands['path_dmg']))
+	# 	sys.exit(1)
+
+
+def generateWindowsInstaller(self, InstallerDir, tmplFinal, installer_path):
+	packer = ["%s/windows/packer.exe" % InstallerDir]
+	packer.append('-debug=1')
+	packer.append('-exe')
+	packer.append('-xml=%s' % unix_slashes(tmplFinal))
+	packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
+	packer.append('-dest=%s' % installer_path)
+	packer.append('-installer=%s' % "%s/windows/installer/installer.exe" % InstallerDir)
+	packer.append('-outbin=%s' % "%s/out.bin" % tempfile.gettempdir())
+	packer.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
+	packer.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
+
+	print(" ".join(packer))
+	if not self.mode_test:
+		if subprocess.call(packer) != 0:
+			print('Failed with windows installer creation')
+			sys.exit(1)
+
+
+def generateLinuxInstaller(self, InstallerDir, tmplFinal, installer_path):
+	packer = ["%s/linux/packer.bin" % InstallerDir]
+	packer.append('-exe')
+	packer.append('-debug=1')
+	packer.append('-xml=%s' % unix_slashes(tmplFinal))
+	packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
+	packer.append('-dest=%s' % "%s/console.bin" % tempfile.gettempdir())
+	packer.append('-installer=%s' % "%s/linux/installer/console/installer.bin" % InstallerDir)
+	packer.append('-outbin=%s' % "%s/lnx_intermediate.ibin" % tempfile.gettempdir())
+	packer.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
+	packer.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
+
+	print(" ".join(packer))
+	if not self.mode_test:
+		if subprocess.call(packer) != 0:
+			print('Failed linux ibin creation')
+			sys.exit(1)
+
+	tmpl = open("%s/linux/launcher_wrapper.xml" % InstallerDir, 'r').read()
+	wrapper_xml = "%s/launcher_wrapper.xml" % tempfile.gettempdir()
+
+	with open(wrapper_xml, "w+") as f:
+		tmpl = tmpl.replace("($IBIN_FILE)",        "%s/lnx_intermediate.ibin" % tempfile.gettempdir())
+		tmpl = tmpl.replace("($INSTALLER_BIN)",    "installer.bin")
+		tmpl = tmpl.replace("($UNINSTALLER_BIN)",  "uninstaller.bin")
+		f.write(tmpl)
+
+	cmd = ["%s/linux/packer.bin" % InstallerDir]
+
+	cmd.append('-debug=1')
+	cmd.append('-exe')
+	cmd.append('-xml=%s' % wrapper_xml)
+	cmd.append('-installer=%s' % "%s/linux/installer/launcher.bin" % InstallerDir)
+	cmd.append('-filesdir=%s' % "%s/linux/installer" % InstallerDir)
+	cmd.append('-outbin=%s' % "%s/packed.bin" % tempfile.gettempdir())
+	cmd.append('-dest=%s' % installer_path)
+	cmd.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
+	cmd.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
+
+	print(" ".join(cmd))
+	if not self.mode_test:
+		if subprocess.call(cmd) != 0:
+			print('Failed linux installer creation')
+			sys.exit(1)
+
+
 def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr_installer"):
 	def unix_slashes(path):
 		p = os.path.normpath(path.replace("\\", "/"))
@@ -561,6 +730,9 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 			print('replace_file failed')
 			sys.exit(1)
 
+	short_title = "Blender (With V-Ray Additions)"
+	long_title = "Blender %s.%s (With V-Ray Additions)" % (self.versionArr[1], self.versionArr[2])
+
 	# Write installer template
 	tmpl = open(tmplFinal, 'r').read()
 	with open(tmplFinal, 'w+') as f:
@@ -573,8 +745,8 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		# Default install dir
 		tmpl = tmpl.replace("${PROGRAMFILES}",   get_default_install_path())
 
-		tmpl = tmpl.replace("${APP_TITLE}",      "Blender (With V-Ray Additions)")
-		tmpl = tmpl.replace("${APP_TITLE_FULL}", "Blender ${VERSION_MAJOR}.${VERSION_MINOR} (With V-Ray Additions)")
+		tmpl = tmpl.replace("${APP_TITLE}",      short_title)
+		tmpl = tmpl.replace("${APP_TITLE_FULL}", long_title)
 
 		# Files
 		tmpl = tmpl.replace("${FILE_LIST}", "\n".join(sorted(reversed(installerFiles))))
@@ -606,65 +778,9 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	packer = []
 	# Run installer generator
 	if get_host_os() == WIN:
-		packer = ["%s/windows/packer.exe" % InstallerDir]
-		packer.append('-debug=1')
-		packer.append('-exe')
-		packer.append('-xml=%s' % unix_slashes(tmplFinal))
-		packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
-		packer.append('-dest=%s' % installer_path)
-		packer.append('-installer=%s' % "%s/windows/installer/installer.exe" % InstallerDir)
-		packer.append('-outbin=%s' % "%s/out.bin" % tempfile.gettempdir())
-		packer.append('-wmstr="ad6347ff-db11-47a5-9324-3d7bca5a94ac"')
-		packer.append('-wmval="7d263cec-e754-456b-8d5c-1ffecdd796d7"')
-
-		print(" ".join(packer))
-		if not self.mode_test:
-			if subprocess.call(packer) != 0:
-				print('Failed with windows installer creation')
-				sys.exit(1)
-
+		generateWindowsInstaller(self, InstallerDir, tmplFinal, installer_path)
 	elif get_host_os() == LNX:
-		packer = ["%s/linux/packer.bin" % InstallerDir]
-		packer.append('-exe')
-		packer.append('-debug=1')
-		packer.append('-xml=%s' % unix_slashes(tmplFinal))
-		packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
-		packer.append('-dest=%s' % "%s/console.bin" % tempfile.gettempdir())
-		packer.append('-installer=%s' % "%s/linux/installer/console/installer.bin" % InstallerDir)
-		packer.append('-outbin=%s' % "%s/lnx_intermediate.ibin" % tempfile.gettempdir())
-		packer.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
-		packer.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
-
-		print(" ".join(packer))
-		if not self.mode_test:
-			if subprocess.call(packer) != 0:
-				print('Failed linux ibin creation')
-				sys.exit(1)
-
-		tmpl = open("%s/linux/launcher_wrapper.xml" % InstallerDir, 'r').read()
-		wrapper_xml = "%s/launcher_wrapper.xml" % tempfile.gettempdir()
-
-		with open(wrapper_xml, "w+") as f:
-			tmpl = tmpl.replace("($IBIN_FILE)",        "%s/lnx_intermediate.ibin" % tempfile.gettempdir())
-			tmpl = tmpl.replace("($INSTALLER_BIN)",    "installer.bin")
-			tmpl = tmpl.replace("($UNINSTALLER_BIN)",  "uninstaller.bin")
-			f.write(tmpl)
-
-		cmd = ["%s/linux/packer.bin" % InstallerDir]
-
-		cmd.append('-debug=1')
-		cmd.append('-exe')
-		cmd.append('-xml=%s' % wrapper_xml)
-		cmd.append('-installer=%s' % "%s/linux/installer/launcher.bin" % InstallerDir)
-		cmd.append('-filesdir=%s' % "%s/linux/installer" % InstallerDir)
-		cmd.append('-outbin=%s' % "%s/packed.bin" % tempfile.gettempdir())
-		cmd.append('-dest=%s' % installer_path)
-		cmd.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
-		cmd.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
-
-		print(" ".join(cmd))
-		if not self.mode_test:
-			if subprocess.call(cmd) != 0:
-				print('Failed linux installer creation')
-				sys.exit(1)
+		generateLinuxInstaller(self, InstallerDir, tmplFinal, installer_path)
+	elif get_host_os() == MAC:
+		generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_title, long_title)
 

@@ -473,40 +473,46 @@ def unix_slashes(path):
 
 
 def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_title, long_title):
-	packer = ["%s/linux/packer.bin" % InstallerDir]
-	packer.append('-exe')
-	packer.append('-debug=1')
-	packer.append('-xml=%s' % unix_slashes(tmplFinal))
-	packer.append('-filesdir=%s' % unix_slashes(InstallerDir))
-	packer.append('-dest=%s' % "%s/console.bin" % tempfile.gettempdir())
-	packer.append('-installer=%s' % "%s/linux/installer/console/installer.bin" % InstallerDir)
-	packer.append('-outbin=%s' % "%s/lnx_intermediate.ibin" % tempfile.gettempdir())
-	packer.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
-	packer.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
+	root_tmp = tempfile.mkdtemp()
+	target_name = os.path.basename(installer_path)
 
-	print(" ".join(packer))
-	if not self.mode_test:
-		if subprocess.call(packer) != 0:
-			print('Failed linux ibin creation')
-			sys.exit(1)
+	print('Macos installer tmp wd %s' % root_tmp)
 
-	tmpl = open("%s/linux/launcher_wrapper.xml" % InstallerDir, 'r').read()
-	wrapper_xml = "%s/launcher_wrapper.xml" % tempfile.gettempdir()
+	print('Step 1, create uninstaller/installer plist files')
+	os.mkdir(os.path.join(root_tmp, 'installer'))
+	os.mkdir(os.path.join(root_tmp, 'uninstaller'))
+	plist_install = os.path.join(root_tmp, 'installer', 'Info.plist')
+	plist_uninstall = os.path.join(root_tmp, 'uninstaller', 'Info.plist')
 
-	with open(wrapper_xml, "w+") as f:
-		tmpl = tmpl.replace("($IBIN_FILE)",        "%s/lnx_intermediate.ibin" % tempfile.gettempdir())
-		tmpl = tmpl.replace("($INSTALLER_BIN)",    "installer.bin")
-		tmpl = tmpl.replace("($UNINSTALLER_BIN)",  "uninstaller.bin")
-		f.write(tmpl)
+	plist_original = open('%s/macos/osx_installer/Info.plist.in' % InstallerDir, 'r').read()
+	plist_original = plist_original.replace('${PRODUCT_NAME}', long_title)
 
-	cmd = ["%s/linux/packer.bin" % InstallerDir]
+	installer_plist = plist_original
+	with open(plist_install, 'w+') as f:
+		installer_plist = installer_plist.replace('${EXECUTABLENAME}', 'installer.bin')
+		f.write(installer_plist)
 
+	uninstaller_plist = plist_original
+	with open(plist_uninstall, 'w+') as f:
+		uninstaller_plist = uninstaller_plist.replace('${EXECUTABLENAME}', 'uninstaller.bin')
+		f.write(uninstaller_plist)
+
+	print('Step 2, write mac specific vars in main template')
+	template = open(tmplFinal, 'r').read()
+
+	with open(tmplFinal, 'w+') as f:
+		template = template.replace('${MACOS_INSTALLER_PLIST}', plist_install)
+		template = template.replace('${MACOS_UNINSTALLER_PLIST}', plist_uninstall)
+		f.wite(template)
+
+	print('Step 3, create installer bin')
+	cmd = ["%s/macos/packer.bin" % InstallerDir]
 	cmd.append('-debug=1')
 	cmd.append('-exe')
 	cmd.append('-xml=%s' % wrapper_xml)
-	cmd.append('-installer=%s' % "%s/linux/installer/launcher.bin" % InstallerDir)
-	cmd.append('-filesdir=%s' % "%s/linux/installer" % InstallerDir)
-	cmd.append('-outbin=%s' % "%s/packed.bin" % tempfile.gettempdir())
+	cmd.append('-installer=%s' % "%s/macos/installer/installer.bin" % InstallerDir)
+	cmd.append('-filesdir=%s' % "%s/macos/installer" % InstallerDir)
+	cmd.append('-outbin=%s/packed.bin' % tempfile.gettempdir())
 	cmd.append('-dest=%s' % installer_path)
 	cmd.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
 	cmd.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
@@ -514,12 +520,10 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 	print(" ".join(cmd))
 	if not self.mode_test:
 		if subprocess.call(cmd) != 0:
-			print('Failed linux installer creation')
+			print('Failed macos installer creation')
 			sys.exit(1)
 
-	root_tmp = tempfile.mkdtemp()
-	target_name = os.path.basename(installer_path)
-
+	print('Step 4, create app folder structure')
 	app_dir = os.path.join(root_tmp, '%s.app' % target_name)
 	os.mkdir(app_dir)
 	os.mkdir(os.path.join(app_dir, 'Contents'))
@@ -531,11 +535,9 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 	shutil.move(installer_path, os.path.join(app_dir, 'Contents', 'MacOS', target_name))
 
 	# shutil.copyfile('%s/macos/osx_installer/Info.plist.in' % InstallerDir, os.path.join(app_dir, 'Contents', 'Info.plist'))
-	plist_tmpl = open('%s/macos/osx_installer/Info.plist.in' % InstallerDir, 'r').read()
+	plist_tmpl = plist_original
 	with open(os.path.join(app_dir, 'Contents', 'Info.plist'), 'w+') as f:
 		plist_tmpl = plist_tmpl.replace('${EXECUTABLENAME}', target_name)
-		plist_tmpl = plist_tmpl.replace('${PRODUCT_NAME}', long_title)
-
 		f.write(plist_tmpl)
 
 	dmg_file = '%s.dmg' % target_name
@@ -544,6 +546,7 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 
 	# TODO: enable these
 
+	# create dmg file
 	# # should be executed in the order listed, grouped in dict for convenience
 	# commands = {
 	# 	'create_dmg': ['hdiutil', 'create', '-size', dmg_target_size, '-layout', 'NONE'm dmg_file],

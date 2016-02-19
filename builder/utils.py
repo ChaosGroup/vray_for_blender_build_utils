@@ -269,22 +269,33 @@ def create_desktop_file(filepath = "/usr/share/applications/vrayblender.desktop"
 	ofile.close()
 
 
-def _get_cmd_output(cmd, workDir=None):
+def _get_cmd_output_ex(cmd, workDir):
 	pwd = os.getcwd()
 	if workDir:
 		os.chdir(workDir)
 
 	res = "None"
+	code = 0
 	if hasattr(subprocess, "check_output"):
-		res = subprocess.check_output(cmd)
+		try:
+			res = subprocess.check_output(cmd)
+		except subprocess.CalledProcessError as e:
+			code = e.retcode
+			res = e.output
 	else:
-		res = subprocess.Popen(cmd, stdout=subprocess.PIPE).communicate()[0]
+		proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+		res = proc.communicate()[0]
+		code = proc.returncode
 	res = res.decode().strip(" \n\r\t")
 
 	if workDir:
 		os.chdir(pwd)
 
-	return res
+	return {'code': code, 'output': res}
+
+
+def _get_cmd_output(cmd, workDir=None):
+	return _get_cmd_output_ex(cmd, workDir)['output']
 
 
 def get_svn_revision(svn_root):

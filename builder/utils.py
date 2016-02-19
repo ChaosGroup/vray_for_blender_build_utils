@@ -468,6 +468,10 @@ def GetCmakeOnOff(val):
 	return "ON" if val else "OFF"
 
 
+def unix_slashes(path):
+	return os.path.normpath(path.replace("\\", "/"))
+
+
 def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_title, long_title):
 	packer = ["%s/linux/packer.bin" % InstallerDir]
 	packer.append('-exe')
@@ -638,10 +642,6 @@ def generateLinuxInstaller(self, InstallerDir, tmplFinal, installer_path):
 
 
 def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr_installer"):
-	def unix_slashes(path):
-		p = os.path.normpath(path.replace("\\", "/"))
-		return p
-
 	sys.stdout.write("Generating CGR installer:\n")
 	sys.stdout.write("  %s\n" % installer_path)
 

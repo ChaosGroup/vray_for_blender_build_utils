@@ -503,15 +503,15 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 	with open(tmplFinal, 'w+') as f:
 		template = template.replace('${MACOS_INSTALLER_PLIST}', plist_install)
 		template = template.replace('${MACOS_UNINSTALLER_PLIST}', plist_uninstall)
-		f.wite(template)
+		f.write(template)
 
 	print('Step 3, create installer bin')
 	cmd = ["%s/macos/packer.bin" % InstallerDir]
 	cmd.append('-debug=1')
 	cmd.append('-exe')
-	cmd.append('-xml=%s' % wrapper_xml)
-	cmd.append('-installer=%s' % "%s/macos/installer/installer.bin" % InstallerDir)
-	cmd.append('-filesdir=%s' % "%s/macos/installer" % InstallerDir)
+	cmd.append('-xml=%s' % unix_slashes(tmplFinal))
+	cmd.append('-installer=%s' % "%s/macos/installer.bin" % InstallerDir)
+	cmd.append('-filesdir=%s' % unix_slashes(InstallerDir))
 	cmd.append('-outbin=%s/packed.bin' % tempfile.gettempdir())
 	cmd.append('-dest=%s' % installer_path)
 	cmd.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')

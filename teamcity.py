@@ -121,7 +121,8 @@ def main(args):
     cmd.append('--use_package')
     cmd.append('--use_installer=CGR')
     cmd.append('--dir_cgr_installer=%s' % os.path.join(os.getcwd(), 'blender-for-vray-libs', 'cgr_installer'))
-    cmd.append('--with_cycles=%s' % args.teamcity_with_cycles)
+    if args.teamcity_with_cycles:
+        cmd.append('--with_cycles=')
 
     if args.teamcity_zmq_server_hash != '':
         cmd.append('--github-exp-branch=dev/vb35')

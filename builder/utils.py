@@ -543,6 +543,9 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 	installer_path_app = os.path.join(app_dir, 'Contents', 'MacOS', '%s.bin' % target_name)
 	shutil.copyfile(bin_path, installer_path_app)
 
+	st = os.stat(installer_path_app)
+	os.chmod(installer_path_app, st.st_mode | stat.S_IEXEC)
+
 	plist_tmpl = plist_original
 	with open(os.path.join(app_dir, 'Contents', 'Info.plist'), 'w+') as f:
 		plist_tmpl = plist_tmpl.replace('${EXECUTABLENAME}', '%s.bin' % target_name)

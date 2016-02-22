@@ -476,7 +476,8 @@ def unix_slashes(path):
 
 def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_title, long_title):
 	root_tmp = tempfile.mkdtemp()
-	target_name = os.path.basename(installer_path).replace('.bin', '')
+	target_name = os.path.basename(installer_path).replace('.dmg', '')
+	bin_path = installer_path.replac('.dmg', '.bin')
 
 	print('Macos installer tmp wd %s' % root_tmp)
 
@@ -515,7 +516,7 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 	cmd.append('-installer=%s' % "%s/macos/installer.bin" % InstallerDir)
 	cmd.append('-filesdir=%s' % unix_slashes(InstallerDir))
 	cmd.append('-outbin=%s/packed.bin' % tempfile.gettempdir())
-	cmd.append('-dest=%s' % installer_path)
+	cmd.append('-dest=%s' % bin_path)
 	cmd.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
 	cmd.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
 
@@ -535,18 +536,18 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 	shutil.copyfile('%s/macos/osx_installer/PkgInfo' % InstallerDir, os.path.join(app_dir, 'Contents', 'PkgInfo'))
 	shutil.copyfile('%s/macos/osx_installer/mac.icns' % InstallerDir, os.path.join(app_dir, 'Contents', 'Resources', 'mac.icns'))
 
-	installer_path_app = os.path.join(app_dir, 'Contents', 'MacOS', target_name)
-	shutil.move(installer_path, installer_path_app)
+	installer_path_app = os.path.join(app_dir, 'Contents', 'MacOS', '%s.bin' % target_name)
+	shutil.move(bin_path, installer_path_app)
 
 	# shutil.copyfile('%s/macos/osx_installer/Info.plist.in' % InstallerDir, os.path.join(app_dir, 'Contents', 'Info.plist'))
 	plist_tmpl = plist_original
 	with open(os.path.join(app_dir, 'Contents', 'Info.plist'), 'w+') as f:
-		plist_tmpl = plist_tmpl.replace('${EXECUTABLENAME}', target_name)
+		plist_tmpl = plist_tmpl.replace('${EXECUTABLENAME}', '%s.bin' % target_name)
 		f.write(plist_tmpl)
 
 	print('Step 5, create dmg file in %s' % root_tmp)
 	os.chdir(root_tmp)
-	dmg_file = target_name
+	dmg_file = '%s.dmg' % target_name
 	# Add some megabytes for the package additional files (icons, plist, etc)
 	dmg_target_size = str(os.path.getsize(installer_path_app) + 8 * 1024 * 1024)
 

@@ -95,16 +95,17 @@ class MacBuilder(Builder):
 
 		utils.GenCGRInstaller(self, archive_path, InstallerDir=self.dir_cgr_installer)
 
-		sys.stdout.write("Generating archive: %s\n" % (archive_name.replace('.bin', 'tar.bz2')))
-		sys.stdout.write("  in: %s\n" % (release_path))
+		# sys.stdout.write("Generating archive: %s\n" % (archive_name.replace('.bin', 'tar.bz2')))
+		# sys.stdout.write("  in: %s\n" % (release_path))
 
-		cmd = "tar jcf %s %s" % (archive_name.replace('.bin', '.tar.bz2'), archive_name)
+		# cmd = "tar jcf %s %s" % (archive_name.replace('.bin', '.tar.bz2'), archive_name)
 
-		sys.stdout.write("Calling: %s\n" % (cmd))
-		sys.stdout.write("  in: %s\n" % (self.dir_install))
+		# sys.stdout.write("Calling: %s\n" % (cmd))
+		# sys.stdout.write("  in: %s\n" % (self.dir_install))
 
-		if not self.mode_test:
-			os.chdir(release_path)
-			os.system(cmd)
+		# if not self.mode_test:
+		# 	os.chdir(release_path)
+		# 	os.system(cmd)
 
-		return subdir, archive_path.replace('.bin', '.tar.bz2')
+		return subdir, archive_path
+		# return subdir, archive_path.replace('.bin', '.tar.bz2')

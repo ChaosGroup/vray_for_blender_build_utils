@@ -448,6 +448,8 @@ def GetPackageName(self, ext=None):
 	def _get_host_package_type():
 		if get_host_os() == WIN:
 			return "exe"
+		elif get_host_os() == MAC:
+			return 'dmg'
 		else:
 			return "bin"
 
@@ -474,7 +476,7 @@ def unix_slashes(path):
 
 def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_title, long_title):
 	root_tmp = tempfile.mkdtemp()
-	target_name = os.path.basename(installer_path)
+	target_name = os.path.basename(installer_path).replace('.bin', '')
 
 	print('Macos installer tmp wd %s' % root_tmp)
 
@@ -532,7 +534,9 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 
 	shutil.copyfile('%s/macos/osx_installer/PkgInfo' % InstallerDir, os.path.join(app_dir, 'Contents', 'PkgInfo'))
 	shutil.copyfile('%s/macos/osx_installer/mac.icns' % InstallerDir, os.path.join(app_dir, 'Contents', 'Resources', 'mac.icns'))
-	shutil.move(installer_path, os.path.join(app_dir, 'Contents', 'MacOS', target_name))
+
+	installer_path_app = os.path.join(app_dir, 'Contents', 'MacOS', target_name)
+	shutil.move(installer_path, installer_path_app)
 
 	# shutil.copyfile('%s/macos/osx_installer/Info.plist.in' % InstallerDir, os.path.join(app_dir, 'Contents', 'Info.plist'))
 	plist_tmpl = plist_original
@@ -540,43 +544,63 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 		plist_tmpl = plist_tmpl.replace('${EXECUTABLENAME}', target_name)
 		f.write(plist_tmpl)
 
+	print('Step 5, create dmg file')
+	os.chdir(root_tmp)
 	dmg_file = '%s.dmg' % target_name
 	# Add some megabytes for the package additional files (icons, plist, etc)
-	dmg_target_size = str(os.path.getsize(installer_path) + 8 * 1024 * 1024)
+	dmg_target_size = str(os.path.getsize(installer_path_app) + 8 * 1024 * 1024)
 
-	# TODO: enable these
+	# should be executed in the order listed, grouped in dict for convenience
+	commands = {
+		'create_dmg':  ['hdiutil', 'create', '-size', dmg_target_size, '-layout', 'NONE'm dmg_file],
+		'mount_dmg':   ['hdid', '-nomount', dmg_file],
+		'fs_dmg':      ['newfs_hfs', '-v', '"%s"' % short_name, None], # None = mount_dmg drive
+		'eject_dmg':   ['hdiutil', 'eject', None], # None = mount_dmg drive
+		'path_dmg':    ['hdid', dmg_file],
+		'copy_app':    ['cp', '-r', '%s.app' % target_name, None] # None = vpath
+		'eject_final': ['hdiutil', 'eject', None] # none = mout_dmg drie
+	}
 
-	# create dmg file
-	# # should be executed in the order listed, grouped in dict for convenience
-	# commands = {
-	# 	'create_dmg': ['hdiutil', 'create', '-size', dmg_target_size, '-layout', 'NONE'm dmg_file],
-	# 	'mount_dmg':  ['hdid', '-nomount', dmg_file],
-	# 	'fs_dmg':     ['newfs_hfs', '-v', '"%s"' % short_name, None], # None = mount_dmg drive
-	# 	'eject_dmg':  ['hdiutil', 'eject', None], # None = mount_dmg drive
-	# 	'path_dmg':   ['hdid', dmg_file],
-	# 	#["cp -r {$iname}.app \"{$vpath}\""]
-	# }
+	print(commands['create_dmg'])
+	if _get_cmd_output_ex(commands['create_dmg'])['code'] != 0:
+		print('"%s" failed' % ' '.join(commands['create_dmg']))
+		sys.exit(1)
 
-	# if _get_cmd_output_ex(commands['create_dmg'])['code'] != 0:
-	# 	print('"%s" failed' % ' '.join(commands['create_dmg']))
-	# 	sys.exit(1)
+	print(commands['mount_dmg'])
+	mount_res = _get_cmd_output_ex(commands['mount_dmg'])
+	if mount_res['code'] != 0:
+		print('"%s" failed' % ' '.join(commands['mount_dmg']))
+		sys.exit(1)
 
-	# mount_res = _get_cmd_output_ex(commands['mount_dmg'])
-	# if mount_res['code'] != 0:
-	# 	print('"%s" failed' % ' '.join(commands['mount_dmg']))
-	# 	sys.exit(1)
+	commands['fs_dmg'][-1] = mount_res['output']
+	commands['eject_dmg'][-1] = mount_res['output']
+	commands['eject_final'][-1] = mount_res['output']
 
-	# commands['fs_dmg'][-1] = mount_res['output']
-	# commands['eject_dmg'][-1] = mount_res['output']
+	print(commands['fs_dmg'])
+	if _get_cmd_output_ex(commands['fs_dmg'])['code'] != 0:
+		print('"%s" failed' % ' '.join(commands['fs_dmg']))
+		sys.exit(1)
 
-	# if _get_cmd_output_ex(commands['fs_dmg'])['code'] != 0:
-	# 	print('"%s" failed' % ' '.join(commands['fs_dmg']))
-	# 	sys.exit(1)
+	print(commands['path_dmg'])
+	path_dmg_res = _get_cmd_output_ex(commands['path_dmg'])
+	if path_dmg_res['code'] != 0:
+		print('"%s" failed' % ' '.join(commands['path_dmg']))
+		sys.exit(1)
 
-	# path_dmg_res = _get_cmd_output_ex(commands['path_dmg'])
-	# if path_dmg_res['code'] != 0:
-	# 	print('"%s" failed' % ' '.join(commands['path_dmg']))
-	# 	sys.exit(1)
+	disk, vpath = re.match(r'^([^\s]+)\s+(.+)$', path_dmg_res, re.I | re.S).groups()
+	command['copy_app'][-1] = vpath
+
+	print(commands['copy_app'])
+	if _get_cmd_output_ex(commands['copy_app'])['code'] != 0
+		print('"%s" failed' % ' '.join(commands['copy_app']))
+		sys.exit(1)
+
+	print(commands['eject_final'])
+	if _get_cmd_output_ex(commands['eject_final'])['code'] != 0
+		print('"%s" failed' % ' '.join(commands['eject_final']))
+		sys.exit(1)
+
+	shutil.move(os.path.join(root_tmp, dmg_file), installer_path)
 
 
 def generateWindowsInstaller(self, InstallerDir, tmplFinal, installer_path):

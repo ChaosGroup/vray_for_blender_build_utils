@@ -477,7 +477,7 @@ def unix_slashes(path):
 def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_title, long_title):
 	root_tmp = tempfile.mkdtemp()
 	target_name = os.path.basename(installer_path).replace('.dmg', '')
-	bin_path = installer_path.replac('.dmg', '.bin')
+	bin_path = installer_path.replace('.dmg', '.bin')
 
 	print('Macos installer tmp wd %s' % root_tmp)
 
@@ -539,7 +539,6 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 	installer_path_app = os.path.join(app_dir, 'Contents', 'MacOS', '%s.bin' % target_name)
 	shutil.move(bin_path, installer_path_app)
 
-	# shutil.copyfile('%s/macos/osx_installer/Info.plist.in' % InstallerDir, os.path.join(app_dir, 'Contents', 'Info.plist'))
 	plist_tmpl = plist_original
 	with open(os.path.join(app_dir, 'Contents', 'Info.plist'), 'w+') as f:
 		plist_tmpl = plist_tmpl.replace('${EXECUTABLENAME}', '%s.bin' % target_name)
@@ -606,6 +605,7 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 		print('"%s" failed' % ' '.join(commands['eject_final']))
 		sys.exit(1)
 
+	print('WD %s' % root_tmp)
 	shutil.move(os.path.join(root_tmp, dmg_file), installer_path)
 
 

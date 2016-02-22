@@ -102,6 +102,7 @@ def main(args):
     cmd = [python_exe]
     cmd.append("vb25-patch/build.py")
     cmd.append("--teamcity")
+    cmd.append("--teamcity_project_type=%s" % args.teamcity_project_type)
     cmd.append("--teamcity_branch_hash=%s" % args.teamcity_branch_hash)
     cmd.append('--github-src-branch=%s' % args.teamcity_branch)
     cmd.append('--teamcity_zmq_server_hash=%s' % args.teamcity_zmq_server_hash[:7])
@@ -124,7 +125,7 @@ def main(args):
     if args.teamcity_with_cycles:
         cmd.append('--with_cycles=')
 
-    if args.teamcity_zmq_server_hash != '':
+    if args.teamcity_zmq_server_hash != '' and args.teamcity_project_type == 'vb35':
         cmd.append('--github-exp-branch=dev/vb35')
 
     if sys.platform == 'win32':

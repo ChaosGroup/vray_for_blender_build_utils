@@ -28,6 +28,7 @@ import os
 import platform
 import re
 import socket
+import stat
 import sys
 import subprocess
 import shutil
@@ -525,6 +526,9 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 		if subprocess.call(cmd) != 0:
 			print('Failed macos installer creation')
 			sys.exit(1)
+
+	st = os.stat(bin_path)
+	os.chmod(bin_path, st.st_mode | stat.S_IEXEC)
 
 	print('Step 4, create app folder structure')
 	app_dir = os.path.join(root_tmp, '%s.app' % target_name)

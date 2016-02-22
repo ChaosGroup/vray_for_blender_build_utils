@@ -537,7 +537,7 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 	shutil.copyfile('%s/macos/osx_installer/mac.icns' % InstallerDir, os.path.join(app_dir, 'Contents', 'Resources', 'mac.icns'))
 
 	installer_path_app = os.path.join(app_dir, 'Contents', 'MacOS', '%s.bin' % target_name)
-	shutil.move(bin_path, installer_path_app)
+	shutil.copyfile(bin_path, installer_path_app)
 
 	plist_tmpl = plist_original
 	with open(os.path.join(app_dir, 'Contents', 'Info.plist'), 'w+') as f:

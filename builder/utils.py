@@ -280,7 +280,7 @@ def _get_cmd_output_ex(cmd, workDir=None):
 		try:
 			res = subprocess.check_output(cmd)
 		except subprocess.CalledProcessError as e:
-			code = e.retcode
+			code = e.returncode
 			res = e.output
 	else:
 		proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
@@ -576,14 +576,14 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 	commands['eject_dmg'][-1] = mount_res['output']
 	commands['eject_final'][-1] = mount_res['output']
 
-	print(commands['eject_dmg'])
-	if _get_cmd_output_ex(commands['eject_dmg'])['code'] != 0:
-		print('"%s" failed' % ' '.join(commands['eject_dmg']))
-		sys.exit(1)
-
 	print(commands['fs_dmg'])
 	if _get_cmd_output_ex(commands['fs_dmg'])['code'] != 0:
 		print('"%s" failed' % ' '.join(commands['fs_dmg']))
+		sys.exit(1)
+
+	print(commands['eject_dmg'])
+	if _get_cmd_output_ex(commands['eject_dmg'])['code'] != 0:
+		print('"%s" failed' % ' '.join(commands['eject_dmg']))
 		sys.exit(1)
 
 	print(commands['path_dmg'])

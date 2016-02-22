@@ -269,7 +269,7 @@ def create_desktop_file(filepath = "/usr/share/applications/vrayblender.desktop"
 	ofile.close()
 
 
-def _get_cmd_output_ex(cmd, workDir):
+def _get_cmd_output_ex(cmd, workDir=None):
 	pwd = os.getcwd()
 	if workDir:
 		os.chdir(workDir)
@@ -544,21 +544,21 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 		plist_tmpl = plist_tmpl.replace('${EXECUTABLENAME}', target_name)
 		f.write(plist_tmpl)
 
-	print('Step 5, create dmg file')
+	print('Step 5, create dmg file in %s' % root_tmp)
 	os.chdir(root_tmp)
-	dmg_file = '%s.dmg' % target_name
+	dmg_file = target_name
 	# Add some megabytes for the package additional files (icons, plist, etc)
 	dmg_target_size = str(os.path.getsize(installer_path_app) + 8 * 1024 * 1024)
 
 	# should be executed in the order listed, grouped in dict for convenience
 	commands = {
-		'create_dmg':  ['hdiutil', 'create', '-size', dmg_target_size, '-layout', 'NONE'm dmg_file],
+		'create_dmg':  ['hdiutil', 'create', '-size', dmg_target_size, '-layout', 'NONE', dmg_file],
 		'mount_dmg':   ['hdid', '-nomount', dmg_file],
 		'fs_dmg':      ['newfs_hfs', '-v', '"%s"' % short_name, None], # None = mount_dmg drive
 		'eject_dmg':   ['hdiutil', 'eject', None], # None = mount_dmg drive
 		'path_dmg':    ['hdid', dmg_file],
-		'copy_app':    ['cp', '-r', '%s.app' % target_name, None] # None = vpath
-		'eject_final': ['hdiutil', 'eject', None] # none = mout_dmg drie
+		'copy_app':    ['cp', '-r', '%s.app' % target_name, None], # None = vpath
+		'eject_final': ['hdiutil', 'eject', None], # none = mout_dmg drie
 	}
 
 	print(commands['create_dmg'])
@@ -576,6 +576,11 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 	commands['eject_dmg'][-1] = mount_res['output']
 	commands['eject_final'][-1] = mount_res['output']
 
+	print(commands['eject_dmg'])
+	if _get_cmd_output_ex(commands['eject_dmg'])['code'] != 0:
+		print('"%s" failed' % ' '.join(commands['eject_dmg']))
+		sys.exit(1)
+
 	print(commands['fs_dmg'])
 	if _get_cmd_output_ex(commands['fs_dmg'])['code'] != 0:
 		print('"%s" failed' % ' '.join(commands['fs_dmg']))
@@ -591,12 +596,12 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 	command['copy_app'][-1] = vpath
 
 	print(commands['copy_app'])
-	if _get_cmd_output_ex(commands['copy_app'])['code'] != 0
+	if _get_cmd_output_ex(commands['copy_app'])['code'] != 0:
 		print('"%s" failed' % ' '.join(commands['copy_app']))
 		sys.exit(1)
 
 	print(commands['eject_final'])
-	if _get_cmd_output_ex(commands['eject_final'])['code'] != 0
+	if _get_cmd_output_ex(commands['eject_final'])['code'] != 0:
 		print('"%s" failed' % ' '.join(commands['eject_final']))
 		sys.exit(1)
 

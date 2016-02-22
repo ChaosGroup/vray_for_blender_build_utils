@@ -593,8 +593,8 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 		print('"%s" failed' % ' '.join(commands['path_dmg']))
 		sys.exit(1)
 
-	disk, vpath = re.match(r'^([^\s]+)\s+(.+)$', path_dmg_res, re.I | re.S).groups()
-	command['copy_app'][-1] = vpath
+	disk, vpath = re.match(r'^([^\s]+)\s+(.+)$', path_dmg_res['output'], re.I | re.S).groups()
+	commands['copy_app'][-1] = vpath
 
 	print(commands['copy_app'])
 	if _get_cmd_output_ex(commands['copy_app'])['code'] != 0:

@@ -95,7 +95,7 @@ class MacBuilder(Builder):
 
 		utils.GenCGRInstaller(self, archive_path, InstallerDir=self.dir_cgr_installer)
 
-		sys.stdout.write("Generating archive: %s\n" % (archive_name.replace('.dmg', 'tar.bz2')))
+		sys.stdout.write("Generating archive: %s\n" % (archive_name.replace('.dmg', '.tar.bz2')))
 		sys.stdout.write("  in: %s\n" % (release_path))
 
 		cmd = "tar jcf %s %s" % (archive_name.replace('.dmg', '.tar.bz2'), archive_name)

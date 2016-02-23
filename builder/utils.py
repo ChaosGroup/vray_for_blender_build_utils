@@ -714,7 +714,12 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">*.pyc</Files>' % (relInstDir))
 			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">__pycache__</Files>' % (relInstDir))
-			installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]%s">%s</FN>' % (relInstDir, absFilePath))
+
+			st = os.stat(absFilePath)
+			if st.st_mode & stat.S_IEXEC:
+				installerFiles.append('\t\t\t<FN Executable="1" Dest="[INSTALL_ROOT]%s">%s</FN>' % (relInstDir, absFilePath))
+			else:
+				installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]%s">%s</FN>' % (relInstDir, absFilePath))
 
 	appsdk_root = ''
 	appsdkFile = ''

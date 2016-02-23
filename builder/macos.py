@@ -95,10 +95,10 @@ class MacBuilder(Builder):
 
 		utils.GenCGRInstaller(self, archive_path, InstallerDir=self.dir_cgr_installer)
 
-		sys.stdout.write("Generating archive: %s\n" % (archive_name.replace('.dmg', '.tar.bz2')))
+		sys.stdout.write("Generating archive: %s\n" % (archive_name.replace('.dmg', '.zip')))
 		sys.stdout.write("  in: %s\n" % (release_path))
 
-		cmd = "tar jcf %s %s" % (archive_name.replace('.dmg', '.tar.bz2'), archive_name)
+		cmd = "zip %s %s" % (archive_name.replace('.dmg', '.zip'), archive_name)
 
 		sys.stdout.write("Calling: %s\n" % (cmd))
 		sys.stdout.write("  in: %s\n" % (self.dir_install))
@@ -107,4 +107,4 @@ class MacBuilder(Builder):
 			os.chdir(release_path)
 			os.system(cmd)
 
-		return subdir, archive_path.replace('.dmg', '.tar.bz2')
+		return subdir, archive_path.replace('.dmg', '.zip')

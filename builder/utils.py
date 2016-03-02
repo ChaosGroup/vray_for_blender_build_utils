@@ -803,7 +803,14 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 		# Appsdk env var path
 		if self.teamcity_zmq_server_hash != '' and self.teamcity_project_type == 'vb35':
-			tmpl = tmpl.replace("${ZMQ_ENV_VARIABLE}", '<Replace VarName="VRAY_ZMQSERVER_APPSDK_PATH" IsPath="1">%s/%s</Replace>'  % (appsdk_root, appsdkFile))
+			if get_host_os() == WIN:
+				# set it as env var from installer
+				tmpl = tmpl.replace("${ZMQ_ENV_VARIABLE}", '<Replace VarName="VRAY_ZMQSERVER_APPSDK_PATH" IsPath="1">%s/%s</Replace>'  % (appsdk_root, appsdkFile))
+				tmpl = tmpl.replace("${VRAY_ZMQSERVER_APPSDK_PATH}", '')
+			else:
+				# set it as argument for postinstall.py
+				tmpl = tmpl.replace("${ZMQ_ENV_VARIABLE}", '')
+				tmpl = tmpl.replace("${VRAY_ZMQSERVER_APPSDK_PATH}", '%s/%s'  % (appsdk_root, appsdkFile))
 
 		# Versions
 		tmpl = tmpl.replace("${VERSION_MAJOR}", self.versionArr[1])

@@ -726,6 +726,9 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 	# add the zmq server if enabled
 	if self.teamcity_zmq_server_hash != '' and self.teamcity_project_type == 'vb35':
+		# bin file generated from postinstall.py
+		removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]" DeleteDirs="1">blender.bin</Files>')
+
 		cg_root = os.path.join(get_default_install_path(), 'V-Ray', 'VRayZmqServer')
 		zmq_name = ''
 		appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], os.environ['CGR_APPSDK_VERSION'], get_host_os(), 'bin');

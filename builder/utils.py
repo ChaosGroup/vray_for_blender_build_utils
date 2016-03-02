@@ -750,7 +750,13 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 			dest_path = dest_path if dest_path != '.' else ''
 			for file_name in filenames:
 				source_path = os.path.join(dirpath, file_name)
-				installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (dest_path, source_path))
+
+				st = os.stat(source_path)
+				if st.st_mode & stat.S_IEXEC:
+					installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (dest_path, source_path))
+				else:
+					installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (dest_path, source_path))
+
 
 		zmq_build_path = ''
 		if get_host_os() == WIN:

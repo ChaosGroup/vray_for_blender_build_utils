@@ -372,6 +372,9 @@ class LinuxBuilder(Builder):
 
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 
+		if distr_info['short_name'] == 'centos' and distr_info['version'] == '6.7':
+			cmake.append('-DWITH_STATIC_LIBC=ON')
+
 		if self.teamcity_project_type == 'vb35':
 			cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
 			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))

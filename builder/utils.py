@@ -55,9 +55,9 @@ def get_host_os():
 
 
 def get_default_install_path():
-	if get_host_os == WIN:
+	if get_host_os() == WIN:
 		return "C:/Program Files/Chaos Group/"
-	elif get_host_os == MAC:
+	elif get_host_os() == MAC:
 		return "/Applications/ChaosGroup/"
 	else:
 		return "/usr/ChaosGroup/"

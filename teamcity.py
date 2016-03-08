@@ -30,6 +30,9 @@ def main(args):
 
     python_exe = sys.executable
 
+    sys.stdout.write('temacity args:\n%s\n' % str(args))
+    sys.stdout.flush()
+
     if sys.platform == 'win32':
         # Setup Visual Studio 2013 variables for usage from command line
         # Assumes default installation path
@@ -144,6 +147,9 @@ def main(args):
     if args.upload:
         cmd.append('--use_package_upload=ftp')
         cmd.append('--use_proxy=http://10.0.0.1:1234')
+
+    sys.stdout.write('Calling builder:\n%s\n' % '\n\t'.join(cmd))
+    sys.stdout.flush()
 
     return subprocess.call(cmd, cwd=os.getcwd())
 

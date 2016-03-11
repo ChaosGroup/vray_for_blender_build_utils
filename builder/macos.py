@@ -90,15 +90,17 @@ class MacBuilder(Builder):
 			utils.path_create(release_path)
 
 		# Example: vrayblender-2.60-42181-macos-10.6-x86_64.tar.bz2
-		archive_name = utils.GetPackageName(self)
-		archive_path = utils.path_join(release_path, archive_name)
+		installer_name = utils.GetPackageName(self, ext='dmg')
+		archive_name = utils.GetPackageName(self, ext='zip')
+		bin_name = utils.GetPackageName(self, ext='bin')
+		archive_path = utils.path_join(release_path, installer_name)
 
 		utils.GenCGRInstaller(self, archive_path, InstallerDir=self.dir_cgr_installer)
 
-		sys.stdout.write("Generating archive: %s\n" % (archive_name.replace('.dmg', '.zip')))
+		sys.stdout.write("Generating archive: %s\n" % archive_name)
 		sys.stdout.write("  in: %s\n" % (release_path))
 
-		cmd = "zip %s %s" % (archive_name.replace('.dmg', '.zip'), archive_name)
+		cmd = "zip %s %s" % (archive_name, installer_name)
 
 		sys.stdout.write("Calling: %s\n" % (cmd))
 		sys.stdout.write("  in: %s\n" % (self.dir_install))
@@ -106,5 +108,14 @@ class MacBuilder(Builder):
 		if not self.mode_test:
 			os.chdir(release_path)
 			os.system(cmd)
+
+		artefacts = (
+			os.path.join(release_path, installer_name),
+			os.path.join(release_path, bin_name),
+			os.path.join(release_path, archive_name),
+		)
+
+		sys.stdout.write("##teamcity[setParameter name='env.ENV_ARTEFACT_FILES' value='%s']" % '|n'.join(artefacts))
+		sys.stdout.flush()
 
 		return subdir, archive_path.replace('.dmg', '.zip')

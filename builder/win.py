@@ -103,13 +103,14 @@ class WindowsBuilder(Builder):
 
 		# Example: vrayblender-2.60-42181-windows-x86_64.exe
 		installer_name = utils.GetPackageName(self)
+		zip_name = utils.GetPackageName(self, ext='zip')
 		installer_path = utils.path_slashify(utils.path_join(release_path, installer_name))
 		installer_root = utils.path_join(self.dir_source, "vb25-patch", "installer")
 
 		if self.use_installer == 'CGR':
 			self.installer_cgr(installer_path)
 
-			cmd = "7z -tzip a %s %s" % (installer_name.replace('.exe', '.zip'), installer_name)
+			cmd = "7z -tzip a %s %s" % (zip_name, installer_name)
 
 			sys.stdout.write("Calling: %s\n" % (cmd))
 			sys.stdout.write("  in: %s\n" % (release_path))
@@ -118,7 +119,15 @@ class WindowsBuilder(Builder):
 				os.chdir(release_path)
 				os.system(cmd)
 
-			return subdir, installer_path.replace('.exe', '.zip')
+			artefacts = (
+				os.path.join(release_path, installer_name),
+				os.path.join(release_path, zip_name),
+			)
+
+			sys.stdout.write("##teamcity[setParameter name='env.ENV_ARTEFACT_FILES' value='%s']" % '|n'.join(artefacts))
+			sys.stdout.flush()
+
+			return subdir, zip_name
 
 		# Use NSIS log plugin
 		installer_log  = False

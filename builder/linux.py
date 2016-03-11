@@ -521,13 +521,14 @@ class LinuxBuilder(Builder):
 			utils.path_create(release_path)
 
 		installer_name = utils.GetPackageName(self)
+		archive_name = utils.GetPackageName(self, ext='tar.bz2')
 		installer_path = utils.path_slashify(utils.path_join(release_path, installer_name))
 		installer_root = utils.path_join(self.dir_source, "vb25-patch", "installer")
 
 		sys.stdout.write("Generating installer: %s\n" % (installer_path))
 		utils.GenCGRInstaller(self, installer_path, InstallerDir=self.dir_cgr_installer)
 
-		cmd = "tar jcf %s %s" % (installer_name.replace('.bin', '.tar.bz2'), installer_name)
+		cmd = "tar jcf %s %s" % (archive_name, installer_name)
 
 		sys.stdout.write(cmd)
 		sys.stdout.flush()
@@ -540,4 +541,12 @@ class LinuxBuilder(Builder):
 				sys.stderr.flush()
 				sys.exit(1)
 
-		return subdir, installer_path.replace('.bin', '.tar.bz2')
+		artefacts = (
+			os.path.join(release_path, installer_name),
+			os.path.join(release_path, archive_name),
+		)
+
+		sys.stdout.write("##teamcity[setParameter name='env.ENV_ARTEFACT_FILES' value='%s']" % '|n'.join(artefacts))
+		sys.stdout.flush()
+
+		return subdir, archive_name

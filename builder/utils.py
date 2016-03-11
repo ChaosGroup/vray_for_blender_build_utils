@@ -561,7 +561,7 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 	commands = {
 		'create_dmg':  ['hdiutil', 'create', '-size', dmg_target_size, '-layout', 'NONE', dmg_file],
 		'mount_dmg':   ['hdid', '-nomount', dmg_file],
-		'fs_dmg':      ['newfs_hfs', '-v', '"%s"' % short_title, None], # None = mount_dmg drive
+		'fs_dmg':      ['newfs_hfs', '-v', '%s' % short_title, None], # None = mount_dmg drive
 		'eject_dmg':   ['hdiutil', 'eject', None], # None = mount_dmg drive
 		'path_dmg':    ['hdid', dmg_file],
 		'copy_app':    ['cp', '-r', '%s.app' % target_name, None], # None = vpath

@@ -384,6 +384,7 @@ class LinuxBuilder(Builder):
 		cmake.append("-DWITH_FFTW3=ON")
 
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
+		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity))
 
 		if distr_info['short_name'] == 'centos' and distr_info['version'] == '6.7':
 			cmake.append('-DWITH_STATIC_LIBC=ON')
@@ -403,6 +404,7 @@ class LinuxBuilder(Builder):
 
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")
 		cmake.append("-DWITH_OPENSUBDIV=ON")
+
 
 		libs_prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
 

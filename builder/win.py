@@ -52,6 +52,7 @@ class WindowsBuilder(Builder):
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
 
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
+		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity))
 
 		if self.teamcity_project_type == 'vb35':
 			cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")

@@ -54,6 +54,7 @@ class MacBuilder(Builder):
 		cmake.append("-DCMAKE_BUILD_TYPE=Release")
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
+		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity))
 
 		cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
 		cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))

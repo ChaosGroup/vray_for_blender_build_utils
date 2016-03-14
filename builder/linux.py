@@ -120,7 +120,7 @@ def getDepsCompilationData(prefix, wd, jobs):
 			getDownloadCmd('http://download.osgeo.org/libtiff/tiff-%s.tar.gz' % TIFF_VERSION, 'tiff.tar.gz'),
 			'tar -C . -xf tiff.tar.gz',
 			getChDirCmd(os.path.join(wd, 'tiff-%s' % TIFF_VERSION)),
-			'./configure --prefix=/opt/tc-libs/tiff-%s --enable-static' % TIFF_VERSION,
+			'./configure --prefix=%s/tiff-%s --enable-static' % (prefix, TIFF_VERSION),
 			'make -j %s' % jobs,
 			'make  install',
 			'ln -s %s/tiff-%s %s/tiff' % (prefix, TIFF_VERSION, prefix),

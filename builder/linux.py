@@ -42,6 +42,7 @@ ILMBASE_VERSION="2.2.0"
 OIIO_VERSION="1.6.9"
 LLVM_VERSION="3.4"
 TIFF_VERSION="3.9.7"
+FFTW_VERSION="3.9.7"
 
 
 def getDepsCompilationData(prefix, wd, jobs):
@@ -125,6 +126,18 @@ def getDepsCompilationData(prefix, wd, jobs):
 			'make  install',
 			'ln -s %s/tiff-%s %s/tiff' % (prefix, TIFF_VERSION, prefix),
 			'sh -c "echo \"%s/tiff/lib\" > /etc/ld.so.conf.d/tiff.conf"' % prefix,
+			'/sbin/ldconfig'
+		)),
+		('fftw', '%s/fftw-%s' % (prefix, FFTW_VERSION), (
+			getChDirCmd(wd),
+			getDownloadCmd('http://www.fftw.org/fftw-%s.tar.gz' % FFTW_VERSION, 'fftw.tar.gz'),
+			'tar -C . -xf fftw.tar.gz',
+			getChDirCmd(os.path.join(wd, 'fftw-%s' % FFTW_VERSION)),
+			'./configure --prefix=%s/fftw-%s --enable-static' % (prefix, FFTW_VERSION),
+			'make -j %s' % jobs,
+			'make  install',
+			'ln -s %s/fftw-%s %s/fftw' % (prefix, FFTW_VERSION, prefix),
+			'sh -c "echo \"%s/fftw/lib\" > /etc/ld.so.conf.d/fftw.conf"' % prefix,
 			'/sbin/ldconfig'
 		)),
 		('ocio', '%s/ocio-%s' % (prefix, OCIO_VERSION), (

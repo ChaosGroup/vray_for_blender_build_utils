@@ -397,6 +397,10 @@ class LinuxBuilder(Builder):
 		cmake.append("-DWITH_LIBMV=%s" % utils.GetCmakeOnOff(self.with_tracker))
 		cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.with_collada))
 		cmake.append("-DWITH_CYCLES=%s" % utils.GetCmakeOnOff(self.with_cycles))
+		if self.with_cycles:
+			cmake.append("-DWITH_CYCLES_CUDA=ON")
+			cmake.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
+
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")
 		cmake.append("-DWITH_OPENSUBDIV=ON")
 
@@ -514,6 +518,8 @@ class LinuxBuilder(Builder):
 			if not res == 0:
 				sys.stderr.write("There was an error during configuration!\n")
 				sys.exit(1)
+
+			self.write_buildinfo(cmake_build_dir)
 
 			make = ['ninja']
 			make.append('-j%s' % self.build_jobs)

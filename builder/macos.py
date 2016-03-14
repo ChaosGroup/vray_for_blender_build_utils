@@ -72,6 +72,8 @@ class MacBuilder(Builder):
 			sys.stderr.write("There was an error during configuration!\n")
 			sys.exit(1)
 
+		self.write_buildinfo(cmake_build_dir)
+
 		make = ['ninja']
 		make.append('-j%s' % self.build_jobs)
 		make.append('install')

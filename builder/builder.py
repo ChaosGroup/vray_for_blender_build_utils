@@ -473,7 +473,7 @@ class Builder:
 		import datetime
 		now = datetime.datetime.now()
 
-		buildinfoTxt = os.path.join(buildDir, "source", "creator", "buildinfo.h.txt")
+		buildinfoTxt = os.path.join(buildDir, "source", "creator", "buildinfo.h")
 		with open(buildinfoTxt, 'w') as buildinfo:
 			buildinfo.write('#define BUILD_COMMIT_TIMESTAMP 0\n')
 			buildinfo.write('#define BUILD_BRANCH "%s"\n' % (self.use_github_branch))

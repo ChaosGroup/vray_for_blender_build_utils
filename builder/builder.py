@@ -478,5 +478,5 @@ class Builder:
 			buildinfo.write('#define BUILD_BRANCH "%s"\n' % (self.use_github_branch))
 			buildinfo.write('#define BUILD_HASH "%s"\n' % (self.brev))
 			buildinfo.write('#define BUILD_DATE "%s"\n' % (date.strftime("%-d %b %Y")))
-			buildinfo.write('#define BUILD_TIME "%s"\n' % (date.strftime("%H:%M:%S"))
+			buildinfo.write('#define BUILD_TIME "%s"\n' % (date.strftime("%H:%M:%S")))
 			buildinfo.write('\n')

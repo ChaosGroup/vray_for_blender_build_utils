@@ -42,7 +42,7 @@ ILMBASE_VERSION="2.2.0"
 OIIO_VERSION="1.6.9"
 LLVM_VERSION="3.4"
 TIFF_VERSION="3.9.7"
-FFTW_VERSION="3.9.7"
+FFTW_VERSION="3.3.4"
 
 
 def getDepsCompilationData(prefix, wd, jobs):

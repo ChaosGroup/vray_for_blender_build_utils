@@ -731,7 +731,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		if host_os != WIN:
 			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]" DeleteDirs="1">blender.bin</Files>')
 
-		cg_root = os.path.join(get_default_install_path(), 'V-Ray', 'VRayZmqServer')
+		cg_root = os.path.normpath(os.path.join(get_default_install_path(), 'V-Ray', 'VRayZmqServer'))
 		zmq_name = ''
 		appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], os.environ['CGR_APPSDK_VERSION'], get_host_os(), 'bin');
 		appsdkFile = ''
@@ -746,7 +746,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 			zmq_name = "VRayZmqServer"
 			appsdkFile = "libVRaySDKLibrary.dylib"
 
-		appsdk_root = os.path.join(cg_root, 'appsdk')
+		appsdk_root = os.path.normpath(os.path.join(cg_root, 'appsdk'))
 
 		# add the appsdk files
 		for dirpath, dirnames, filenames in os.walk(appsdk):

@@ -123,8 +123,8 @@ class WindowsBuilder(Builder):
 				os.system(cmd)
 
 			artefacts = (
-				os.path.join(release_path, installer_name),
-				os.path.join(release_path, zip_name),
+				os.path.normpath(os.path.join(release_path, installer_name)),
+				os.path.normpath(os.path.join(release_path, zip_name)),
 			)
 
 			sys.stdout.write("##teamcity[setParameter name='env.ENV_ARTEFACT_FILES' value='%s']" % '|n'.join(artefacts))

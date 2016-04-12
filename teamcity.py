@@ -122,6 +122,7 @@ def main(args):
     cmd.append('--with_collada')
     cmd.append('--vc_2013')
     cmd.append('--build_mode=release')
+    cmd.append('--build_type=%s' % args.teamcity_build_type)
     cmd.append('--use_package')
     cmd.append('--use_installer=CGR')
     cmd.append('--dir_cgr_installer=%s' % os.path.join(os.getcwd(), 'blender-for-vray-libs', 'cgr_installer'))
@@ -189,6 +190,11 @@ if __name__ == '__main__':
 
     parser.add_argument('--teamcity_with_cycles',
         action = 'store_true',
+    )
+
+    parser.add_argument('--teamcity_build_type',
+        choices=['debug', 'release'],
+        default = 'release',
     )
 
     args = parser.parse_args()

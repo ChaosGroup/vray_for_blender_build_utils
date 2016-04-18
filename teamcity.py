@@ -126,7 +126,10 @@ def main(args):
     cmd.append('--use_package')
     cmd.append('--use_installer=CGR')
     cmd.append('--dir_cgr_installer=%s' % os.path.join(os.getcwd(), 'blender-for-vray-libs', 'cgr_installer'))
-    cmd.append('--teamcity_with_static_libc=%s' % args.teamcity_with_static_libc)
+
+    if args.teamcity_with_static_libc:
+        cmd.append('--teamcity_with_static_libc')
+
     if args.teamcity_with_cycles:
         cmd.append('--with_cycles=')
 

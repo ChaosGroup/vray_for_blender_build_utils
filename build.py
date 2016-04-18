@@ -257,6 +257,11 @@ parser.add_argument('--teamcity_project_type',
 	help    = argparse.SUPPRESS
 )
 
+parser.add_argument('--teamcity_with_static_libc',
+	action = 'store_false',
+	help    = argparse.SUPPRESS
+)
+
 args = parser.parse_args()
 
 

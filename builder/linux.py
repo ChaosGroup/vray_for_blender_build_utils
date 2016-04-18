@@ -385,9 +385,7 @@ class LinuxBuilder(Builder):
 
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity))
-
-		if distr_info['short_name'] == 'centos' and distr_info['version'] == '6.7':
-			cmake.append('-DWITH_STATIC_LIBC=ON')
+		cmake.append('-DWITH_STATIC_LIBC=%s' % utils.GetCmakeOnOff(self.teamcity_with_static_libc))
 
 		if self.teamcity_project_type == 'vb35':
 			cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")

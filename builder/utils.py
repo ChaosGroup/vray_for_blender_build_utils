@@ -312,7 +312,7 @@ def get_svn_revision(svn_root):
 
 
 def get_blender_version(root_dir):
-	BKE_blender_h_path = path_join(root_dir, "source", "blender", "blenkernel", "BKE_blender.h")
+	BKE_blender_h_path = path_join(root_dir, "source", "blender", "blenkernel", "BKE_blender_version.h")
 	if not os.path.exists(BKE_blender_h_path):
 		return VERSION
 

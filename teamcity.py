@@ -131,7 +131,7 @@ def main(args):
         cmd.append('--teamcity_with_static_libc')
 
     if args.teamcity_with_cycles:
-        cmd.append('--with_cycles=')
+        cmd.append('--with_cycles')
 
     if args.teamcity_zmq_server_hash != '' and args.teamcity_project_type == 'vb35':
         cmd.append('--github-exp-branch=dev/vb35')

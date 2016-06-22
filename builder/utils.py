@@ -771,7 +771,26 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		elif host_os == LNX:
 			zmq_build_path = "/home/teamcity/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer" % self.teamcity_zmq_server_hash
 		elif host_os == MAC:
+			# copy file, edit search path for appsdk lib and add to installation
 			zmq_build_path = "/Users/andreiizrantsev/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer" % self.teamcity_zmq_server_hash
+			zmq_temp = "%s/VRayZmqServer" % tempfile.gettempdir()
+			shutil.copyfile(zmq_build_path, zmq_temp)
+
+			rename_cmd = [
+				'install_name_tool',
+				'-change',
+				appsdkFile,
+				'@executable_path/appsdk/%s' % appsdkFile,
+				zmq_temp
+			]
+
+			print(" ".join(rename_cmd))
+			result = subprocess.call(rename_cmd)
+			if result != 0:
+				print('rename_cmd failed')
+				sys.exit(1)
+
+			zmq_build_path = zmq_temp
 
 		installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (cg_root, zmq_build_path))
 

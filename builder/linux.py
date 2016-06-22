@@ -510,7 +510,7 @@ class LinuxBuilder(Builder):
 
 		cmake.append("../blender")
 
-		sys.stdout.write("%s\n" % '\n'.join(cmake))
+		sys.stdout.write('cmake args:\n%s\n' % '\n\t'.join(cmake))
 		sys.stdout.flush()
 
 		if not self.mode_test:

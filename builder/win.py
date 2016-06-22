@@ -68,6 +68,9 @@ class WindowsBuilder(Builder):
 
 		cmake.append("../blender")
 
+		sys.stdout.write('cmake args:\n%s\n' % '\n\t'.join(cmake))
+		sys.stdout.flush()
+
 		res = subprocess.call(cmake)
 		if not res == 0:
 			sys.stderr.write("There was an error during configuration!\n")

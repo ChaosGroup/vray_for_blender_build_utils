@@ -474,7 +474,7 @@ def GetCmakeOnOff(val):
 def unix_slashes(path):
 	return os.path.normpath(path.replace("\\", "/"))
 
-def get_zmq_build_path(zmq_hash):
+def get_zmq_build_path(zmq_hash, appsdkFile):
 	host_os = get_host_os()
 
 	extension = '.exe' if host_os == WIN else ''
@@ -814,7 +814,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 					installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (dest_path, source_path))
 
 
-		zmq_build_path = get_zmq_build_path(self.teamcity_zmq_server_hash)
+		zmq_build_path = get_zmq_build_path(self.teamcity_zmq_server_hash, appsdkFile)
 
 		installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (cg_root, zmq_build_path))
 

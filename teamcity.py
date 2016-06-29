@@ -107,7 +107,14 @@ def main(args):
     cmd.append("--teamcity")
     cmd.append("--teamcity_project_type=%s" % args.teamcity_project_type)
     cmd.append("--teamcity_branch_hash=%s" % args.teamcity_branch_hash)
-    cmd.append('--github-src-branch=%s' % args.teamcity_branch)
+
+    branch = args.teamcity_branch
+    if branch == '':
+        branch = 'dev/vray_for_blender/%s' & args.teamcity_project_type
+        sys.stdout.write('No branch specified - using %s' % branch)
+        sys.stdout.flush()
+
+    cmd.append('--github-src-branch=%s' % branch)
     cmd.append('--teamcity_zmq_server_hash=%s' % args.teamcity_zmq_server_hash[:7])
 
     # Teamcity is cloning the sources for us
@@ -180,7 +187,7 @@ if __name__ == '__main__':
     )
 
     parser.add_argument('--teamcity_branch',
-        default = "dev/vray_for_blender/vb30",
+        default = "",
     )
 
     parser.add_argument('--teamcity_project_type',

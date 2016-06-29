@@ -488,13 +488,13 @@ def get_zmq_build_path(zmq_hash):
 		zmq_build_path = "/home/teamcity/%s" % sub_dir_template
 		# lets try in our home dir
 		if not os.path.exists(zmq_build_path):
-			zmq_build_path = os.path.expanduser("~/" % sub_dir_template)
+			zmq_build_path = os.path.expanduser("~/%s" % sub_dir_template)
 	elif host_os == MAC:
 		# copy file, edit search path for appsdk lib and add to installation
-		zmq_build_path = "/Users/andreiizrantsev/" % sub_dir_template
+		zmq_build_path = "/Users/andreiizrantsev/%s" % sub_dir_template
 		# lets try in our home dir
 		if not os.path.exists(zmq_build_path):
-			zmq_build_path = os.path.expanduser("~/" % sub_dir_template)
+			zmq_build_path = os.path.expanduser("~/%s" % sub_dir_template)
 
 	if not os.path.exists(zmq_build_path):
 		sys.stderr.write("Could not find VRayZmqServer in [%s]\n" % zmq_build_path)

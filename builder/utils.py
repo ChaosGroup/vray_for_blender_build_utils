@@ -474,6 +474,55 @@ def GetCmakeOnOff(val):
 def unix_slashes(path):
 	return os.path.normpath(path.replace("\\", "/"))
 
+def get_zmq_build_path(zmq_hash):
+	host_os = get_host_os()
+
+	extension = '.exe' if host_os == WIN else ''
+	sub_dir_template = "install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer%s" % (zmq_hash, extension)
+
+	zmq_build_path = ''
+
+	if host_os == WIN:
+		zmq_build_path = "H:/%s" % sub_dir_template
+	elif host_os == LNX:
+		zmq_build_path = "/home/teamcity/%s" % sub_dir_template
+		# lets try in our home dir
+		if not os.path.exists(zmq_build_path):
+			zmq_build_path = os.path.expanduser("~/" % sub_dir_template)
+	elif host_os == MAC:
+		# copy file, edit search path for appsdk lib and add to installation
+		zmq_build_path = "/Users/andreiizrantsev/" % sub_dir_template
+		# lets try in our home dir
+		if not os.path.exists(zmq_build_path):
+			zmq_build_path = os.path.expanduser("~/" % sub_dir_template)
+
+	if not os.path.exists(zmq_build_path):
+		sys.stderr.write("Could not find VRayZmqServer in [%s]\n" % zmq_build_path)
+		sys.stderr.flush()
+		sys.exit(1)
+
+	if host_os == MAC
+		zmq_temp = "%s/VRayZmqServer" % tempfile.gettempdir()
+		shutil.copyfile(zmq_build_path, zmq_temp)
+
+		rename_cmd = [
+			'install_name_tool',
+			'-change',
+			appsdkFile,
+			'@executable_path/appsdk/%s' % appsdkFile,
+			zmq_temp
+		]
+
+		print(" ".join(rename_cmd))
+		result = subprocess.call(rename_cmd)
+		if result != 0:
+			print('rename_cmd failed')
+			sys.exit(1)
+
+		zmq_build_path = zmq_temp
+
+	return zmq_build_path
+
 
 def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_title, long_title):
 	root_tmp = tempfile.mkdtemp()
@@ -765,32 +814,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 					installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (dest_path, source_path))
 
 
-		zmq_build_path = ''
-		if host_os == WIN:
-			zmq_build_path = "H:/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer.exe" % self.teamcity_zmq_server_hash
-		elif host_os == LNX:
-			zmq_build_path = "/home/teamcity/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer" % self.teamcity_zmq_server_hash
-		elif host_os == MAC:
-			# copy file, edit search path for appsdk lib and add to installation
-			zmq_build_path = "/Users/andreiizrantsev/install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer" % self.teamcity_zmq_server_hash
-			zmq_temp = "%s/VRayZmqServer" % tempfile.gettempdir()
-			shutil.copyfile(zmq_build_path, zmq_temp)
-
-			rename_cmd = [
-				'install_name_tool',
-				'-change',
-				appsdkFile,
-				'@executable_path/appsdk/%s' % appsdkFile,
-				zmq_temp
-			]
-
-			print(" ".join(rename_cmd))
-			result = subprocess.call(rename_cmd)
-			if result != 0:
-				print('rename_cmd failed')
-				sys.exit(1)
-
-			zmq_build_path = zmq_temp
+		zmq_build_path = get_zmq_build_path(self.teamcity_zmq_server_hash)
 
 		installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (cg_root, zmq_build_path))
 

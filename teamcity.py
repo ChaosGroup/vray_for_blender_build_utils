@@ -110,7 +110,7 @@ def main(args):
 
     branch = args.teamcity_branch
     if branch == '':
-        branch = 'dev/vray_for_blender/%s' & args.teamcity_project_type
+        branch = 'dev/vray_for_blender/%s' % args.teamcity_project_type
         sys.stdout.write('No branch specified - using %s' % branch)
         sys.stdout.flush()
 

@@ -501,7 +501,7 @@ def get_zmq_build_path(zmq_hash):
 		sys.stderr.flush()
 		sys.exit(1)
 
-	if host_os == MAC
+	if host_os == MAC:
 		zmq_temp = "%s/VRayZmqServer" % tempfile.gettempdir()
 		shutil.copyfile(zmq_build_path, zmq_temp)
 

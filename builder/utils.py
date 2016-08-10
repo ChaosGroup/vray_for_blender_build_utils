@@ -474,21 +474,38 @@ def GetCmakeOnOff(val):
 def unix_slashes(path):
 	return os.path.normpath(path.replace("\\", "/"))
 
-def get_zmq_build_path(zmq_hash, appsdkFile):
+
+def mac_rewrite_link_file(executable, source, dest):
+	"""For MAC OS only!
+	Will change the default search path source @source to @dest for the given executable
+	Will do the changes in temp file, and overwrite the existing then
+	"""
+	rename_cmd = ['install_name_tool', '-change', source, dest, executable]
+
+	print(" ".join(rename_cmd))
+	result = subprocess.call(rename_cmd)
+	if result != 0:
+		print('rename_cmd failed')
+		sys.exit(1)
+
+
+def get_zmq_build_items(zmq_hash, appsdkFile):
 	host_os = get_host_os()
 
 	extension = '.exe' if host_os == WIN else ''
 	sub_dir_template = "install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer%s" % (zmq_hash, extension)
 
-	zmq_build_path = ''
+	items = []
 
 	if host_os == WIN:
 		zmq_build_path = "H:/%s" % sub_dir_template
+		items = [zmq_build_path]
 	elif host_os == LNX:
 		zmq_build_path = "/home/teamcity/%s" % sub_dir_template
 		# lets try in our home dir
 		if not os.path.exists(zmq_build_path):
 			zmq_build_path = os.path.expanduser("~/%s" % sub_dir_template)
+		items = [zmq_build_path]
 	elif host_os == MAC:
 		# copy file, edit search path for appsdk lib and add to installation
 		zmq_build_path = "/Users/andreiizrantsev/%s" % sub_dir_template
@@ -496,32 +513,38 @@ def get_zmq_build_path(zmq_hash, appsdkFile):
 		if not os.path.exists(zmq_build_path):
 			zmq_build_path = os.path.expanduser("~/%s" % sub_dir_template)
 
-	if not os.path.exists(zmq_build_path):
-		sys.stderr.write("Could not find VRayZmqServer in [%s]\n" % zmq_build_path)
-		sys.stderr.flush()
-		sys.exit(1)
-
-	if host_os == MAC:
+		# we will rename appsdk and Qt to point to appsdk folder
 		zmq_temp = "%s/VRayZmqServer" % tempfile.gettempdir()
 		shutil.copyfile(zmq_build_path, zmq_temp)
 
-		rename_cmd = [
-			'install_name_tool',
-			'-change',
-			appsdkFile,
-			'@executable_path/appsdk/%s' % appsdkFile,
-			zmq_temp
-		]
+		qt_find = ['otool', '-L', zmq_temp]
 
-		print(" ".join(rename_cmd))
-		result = subprocess.call(rename_cmd)
-		if result != 0:
-			print('rename_cmd failed')
+		print(qt_find)
+		res = _get_cmd_output_ex(qt_find)
+		if res['code'] != 0:
+			print('"%s" failed' % ' '.join(qt_find))
 			sys.exit(1)
 
-		zmq_build_path = zmq_temp
+		qt_libs = res['output'].split('\n')[2:4]
+		print("QT STUFF [%s]" % ']['.join(qt_libs))
 
-	return zmq_build_path
+		for q_lib in qt_libs:
+			q_path = re.split('\s+', q_lib)[1]
+			q_name = os.path.basename(q_path)
+			items.append(q_path)
+			print("QT LIB: %s -> %s" % (q_path, q_name))
+			mac_rewrite_link_file(zmq_temp, q_path, '@executable_path/%s' % q_name)
+
+		mac_rewrite_link_file(zmq_temp, appsdkFile, '@executable_path/appsdk/%s' % appsdkFile)
+		items.append(zmq_temp)
+
+	for item in items:
+		if not os.path.exists(item):
+			sys.stderr.write("Could not find VRayZmqServer in [%s]\n" % item)
+			sys.stderr.flush()
+			sys.exit(1)
+
+	return items
 
 
 def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_title, long_title):
@@ -781,20 +804,16 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]" DeleteDirs="1">blender.bin</Files>')
 
 		cg_root = os.path.normpath(os.path.join(get_default_install_path(), 'V-Ray', 'VRayZmqServer'))
-		zmq_name = ''
 		os_type = get_host_os()
 		os_dir = "darwin" if os_type == MAC else os_type
 		appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], os.environ['CGR_APPSDK_VERSION'], os_dir, 'bin');
 		appsdkFile = ''
 
 		if host_os == WIN:
-			zmq_name = "VRayZmqServer.exe"
 			appsdkFile = 'VRaySDKLibrary.dll'
 		elif host_os == LNX:
-			zmq_name = "VRayZmqServer"
 			appsdkFile = 'libVRaySDKLibrary.so'
 		else:
-			zmq_name = "VRayZmqServer"
 			appsdkFile = "libVRaySDKLibrary.dylib"
 
 		appsdk_root = os.path.normpath(os.path.join(cg_root, 'appsdk'))
@@ -814,9 +833,9 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 					installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (dest_path, source_path))
 
 
-		zmq_build_path = get_zmq_build_path(self.teamcity_zmq_server_hash, appsdkFile)
-
-		installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (cg_root, zmq_build_path))
+		zmq_items = get_zmq_build_items(self.teamcity_zmq_server_hash, appsdkFile)
+		for item in zmq_items:
+			installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (cg_root, item))
 
 	tmplFinal = "%s/installer.xml" % tempfile.gettempdir()
 	replace_file = '%s/%s/replace_file%s' % (InstallerDir, get_host_os(), '.exe' if get_host_os() == WIN else '')

@@ -526,21 +526,21 @@ def get_zmq_build_items(zmq_hash, appsdkFile):
 			sys.exit(1)
 
 		qt_libs = res['output'].split('\n')[2:4]
-		print("QT STUFF [%s]" % ']['.join(qt_libs))
 
 		for q_lib in qt_libs:
 			q_path = re.split('\s+', q_lib)[1]
 			q_name = os.path.basename(q_path)
 			items.append(q_path)
-			print("QT LIB: %s -> %s" % (q_path, q_name))
-			mac_rewrite_link_file(zmq_temp, q_path, '@executable_path/%s' % q_name)
+			rename_path = '@executable_path/%s' % q_name
+			print("Renaming qt lib : %s -> %s" % (q_path, rename_path))
+			mac_rewrite_link_file(zmq_temp, q_path, rename_path)
 
 		mac_rewrite_link_file(zmq_temp, appsdkFile, '@executable_path/appsdk/%s' % appsdkFile)
 		items.append(zmq_temp)
 
 	for item in items:
 		if not os.path.exists(item):
-			sys.stderr.write("Could not find VRayZmqServer in [%s]\n" % item)
+			sys.stderr.write("Could not find [%s]\n" % item)
 			sys.stderr.flush()
 			sys.exit(1)
 

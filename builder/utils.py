@@ -489,6 +489,37 @@ def mac_rewrite_link_file(executable, source, dest):
 		sys.exit(1)
 
 
+def mac_rewrite_qt_links(binfile):
+	"""For MAC OS only!
+	Rewrites all links for QtGui and QtCore to @executable_path
+	Returns paths to rewrote links
+	"""
+	items = []
+	qt_find = ['otool', '-L', binfile]
+
+	print(qt_find)
+	res = _get_cmd_output_ex(qt_find)
+	if res['code'] != 0:
+		print('"%s" failed' % ' '.join(qt_find))
+		sys.exit(1)
+
+	links = res['output'].split('\n')
+
+	for line in links:
+		if re.match(r'.*?\/Qt(Core|Gui)\s.*?', line) == None:
+			continue
+
+		q_path = re.split('\s+', line)[1]
+		q_name = os.path.basename(q_path)
+
+		items.append(q_path)
+		rename_path = '@executable_path/%s' % q_name
+		print("Renaming qt lib : %s -> %s" % (q_path, rename_path))
+		mac_rewrite_link_file(binfile, q_path, rename_path)
+
+	return items
+
+
 def get_zmq_build_items(zmq_hash, appsdkFile):
 	host_os = get_host_os()
 
@@ -517,24 +548,8 @@ def get_zmq_build_items(zmq_hash, appsdkFile):
 		zmq_temp = "%s/VRayZmqServer" % tempfile.gettempdir()
 		shutil.copyfile(zmq_build_path, zmq_temp)
 
-		qt_find = ['otool', '-L', zmq_temp]
-
-		print(qt_find)
-		res = _get_cmd_output_ex(qt_find)
-		if res['code'] != 0:
-			print('"%s" failed' % ' '.join(qt_find))
-			sys.exit(1)
-
-		qt_libs = res['output'].split('\n')[2:4]
-
-		for q_lib in qt_libs:
-			q_path = re.split('\s+', q_lib)[1]
-			q_name = os.path.basename(q_path)
-			items.append(q_path)
-			rename_path = '@executable_path/%s' % q_name
-			print("Renaming qt lib : %s -> %s" % (q_path, rename_path))
-			mac_rewrite_link_file(zmq_temp, q_path, rename_path)
-
+		# rewrite Qt links
+		items = items + mac_rewrite_qt_links(zmq_temp)
 		mac_rewrite_link_file(zmq_temp, appsdkFile, '@executable_path/appsdk/%s' % appsdkFile)
 		items.append(zmq_temp)
 
@@ -816,15 +831,23 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		else:
 			appsdkFile = "libVRaySDKLibrary.dylib"
 
+		temp_appsdk = appsdk
+		# on mac, copy appsdk, so we can rewrite Qt libs links
+		if host_os == MAC:
+			temp_appsdk = os.path.join(tempfile.gettempdir(), 'appsdk')
+			shutil.copytree(appsdk, temp_appsdk)
+
 		appsdk_root = os.path.normpath(os.path.join(cg_root, 'appsdk'))
 
 		# add the appsdk files
-		for dirpath, dirnames, filenames in os.walk(appsdk):
-			rel_path = os.path.relpath(dirpath, appsdk)
+		for dirpath, dirnames, filenames in os.walk(temp_appsdk):
+			rel_path = os.path.relpath(dirpath, temp_appsdk)
 			dest_path = os.path.join(appsdk_root, rel_path)
 			dest_path = dest_path if dest_path != '.' else ''
 			for file_name in filenames:
 				source_path = os.path.join(dirpath, file_name)
+				if host_os == MAC:
+					mac_rewrite_qt_links(source_path)
 
 				st = os.stat(source_path)
 				if st.st_mode & stat.S_IEXEC:

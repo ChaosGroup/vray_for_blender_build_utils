@@ -382,6 +382,7 @@ class LinuxBuilder(Builder):
 
 		cmake.append("-DWITH_SYSTEM_GLEW=OFF")
 		cmake.append("-DWITH_FFTW3=ON")
+		cmake.append("-DWITH_CXX11=ON")
 
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity))

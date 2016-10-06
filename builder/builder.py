@@ -269,7 +269,7 @@ class Builder:
 		self.dir_source       = utils.path_slashify(self.dir_source)
 		self.dir_install_path = utils.path_slashify(self.dir_install_path)
 
-		self.dir_blender      = utils.path_join(self.dir_source, "blender_for_vray")
+		self.dir_blender      = utils.path_join(self.dir_source, "blender")
 		self.dir_blender_svn  = utils.path_join(self.dir_source, "blender-git")
 
 		if self.build_clean:

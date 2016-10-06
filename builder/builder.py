@@ -269,7 +269,7 @@ class Builder:
 		self.dir_source       = utils.path_slashify(self.dir_source)
 		self.dir_install_path = utils.path_slashify(self.dir_install_path)
 
-		self.dir_blender      = utils.path_join(self.dir_source, "blender")
+		self.dir_blender      = utils.path_join(self.dir_source, "blender_for_vray")
 		self.dir_blender_svn  = utils.path_join(self.dir_source, "blender-git")
 
 		if self.build_clean:
@@ -340,6 +340,21 @@ class Builder:
 		"""
 		sys.stderr.write("Base class method called: package() This souldn't happen.\n")
 
+	def build_zmq(self):
+		command = [sys.executable]
+		command.append(os.path.join(self.dir_source, 'vrayserverzmq', 'build', 'teamcity.py'))
+		command.append('--teamcity_branch_hash=%s' % self.teamcity_zmq_server_hash)
+		command.append('--teamcity_install_path=%s' % os.path.join(self.dir_install, '..', 'vrayserverzmq'))
+		command.append('--teamcity_release_path=%s' % os.path.join(self.dir_release, '..', 'vrayserverzmq'))
+
+		sys.stdout.write('Calling builder:\n%s\n' % '\n\t'.join(command))
+		sys.stdout.flush()
+
+		res = subprocess.call(command, cwd=self.dir_source)
+		if res != 0:
+			sys.stderr.write('Failed compilation of vrayserverzmq\n')
+			sys.stderr.flush()
+			sys.exit(-1)
 
 	def build(self):
 		self.init_paths()
@@ -351,6 +366,9 @@ class Builder:
 		self.info()
 
 		self.patch()
+
+		if self.teamcity_project_type == 'vb35' and self.jenkins:
+			self.build_zmq()
 
 		if not self.export_only:
 			self.compile()

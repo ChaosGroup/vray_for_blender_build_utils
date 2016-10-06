@@ -63,6 +63,37 @@ def get_default_install_path():
 		return "/usr/ChaosGroup/"
 
 
+def get_repo(repo_url, branch='master', target_dir=None, submodules=[]):
+	"""
+	This will clone the repo in CWD. If target_dir != None it will copy 
+	the sources to target_dir"""
+
+	repo_name = os.path.basename(repo_url)
+	cwd = os.getcwd()
+	clone_dir = os.path.join(cwd, repo_name)
+
+	if not os.path.exists(clone_dir):
+		os.system("git clone %s" % repo_url)
+		os.system("git pull origin %s" % branch)
+
+	os.chdir(clone_dir)
+	os.system("git checkout %s" % branch)
+
+	for module in submodules:
+		os.system("git submodule update --init --remote --recursive %s" % module)
+
+	if target_dir:
+		to_dir = os.path.join(target_dir, repo_name)
+		sys.stdout.write("Exporting sources %s -> %s" % (clone_dir, to_dir))
+
+		if os.path.exists(to_dir):
+			utils.remove_directory(to_dir)
+
+		shutil.copytree(clone_dir, to_dir)
+
+	os.chdir(cwd)
+
+
 def get_host_architecture():
 	arch = 'x86' if platform.architecture()[0] == '32bit' else 'x86_64'
 
@@ -299,12 +330,16 @@ def _get_cmd_output(cmd, workDir=None):
 	return _get_cmd_output_ex(cmd, workDir)['output']
 
 
-def get_svn_revision(svn_root):
+def get_git_head_hash(root):
 	git_rev = ['git', 'rev-parse', '--short', 'HEAD']
+	return _get_cmd_output(git_rev, root)
+
+
+def get_svn_revision(svn_root):
 	b_rev   = ['git', 'rev-parse', '--short', 'github/master']
 	git_cnt = ['git', 'rev-list',  '--count', 'HEAD']
 
-	rev = _get_cmd_output(git_rev, svn_root)
+	rev = get_git_head_hash(svn_root)
 	brev = _get_cmd_output(b_rev, svn_root)
 	cnt = _get_cmd_output(git_cnt, svn_root)
 

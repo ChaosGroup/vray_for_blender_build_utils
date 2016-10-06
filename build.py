@@ -239,7 +239,6 @@ parser.add_argument('--use_proxy',
 )
 
 # Teamcity
-#
 parser.add_argument('--teamcity',
 	action  = 'store_true',
 	help    = argparse.SUPPRESS
@@ -256,9 +255,22 @@ parser.add_argument('--teamcity_project_type',
 	default = "vb30",
 	help    = argparse.SUPPRESS
 )
-
 parser.add_argument('--teamcity_with_static_libc',
 	action = 'store_true',
+	help    = argparse.SUPPRESS
+)
+
+# Jenkins
+parser.add_argument('--jenkins',
+	action  = 'store_true',
+	help    = argparse.SUPPRESS
+)
+parser.add_argument('--jenkins_output',
+	default = "",
+	help    = argparse.SUPPRESS
+)
+parser.add_argument('--jenkins_win_sdk_path',
+	default = "",
 	help    = argparse.SUPPRESS
 )
 

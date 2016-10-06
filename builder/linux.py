@@ -509,7 +509,7 @@ class LinuxBuilder(Builder):
 				cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
 				cmake.append("-DPYTHON_NUMPY_PATH=%s/python-%s/lib/python%s/site-packages" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
 
-		cmake.append("../blender")
+		cmake.append(self.dir_blender)
 
 		sys.stdout.write('cmake args:\n%s\n' % '\n\t'.join(cmake))
 		sys.stdout.flush()

@@ -83,7 +83,7 @@ class MacBuilder(Builder):
 			cmake.append("-DWITH_FFTW3=ON")
 
 
-		cmake.append("../blender")
+		cmake.append(self.dir_blender)
 
 		sys.stdout.write('cmake args:\n%s\n' % '\n\t'.join(cmake))
 		sys.stdout.flush()

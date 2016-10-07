@@ -73,9 +73,7 @@ def main(args):
     appsdk_path = os.path.join(working_dir, 'vray-appsdk')
 
     appsdk_check = os.path.join(appsdk_path, args.jenkins_appsdk_version, 'windows')
-
-    download_appsdk = args.jenkins_project_type == 'vb35' and(not os.path.exists(appsdk_check)\
-        or not os.path.exists(os.path.join(appsdk_check, 'bin', 'vray.exe')))
+    download_appsdk = not os.path.exists(appsdk_check) or not os.path.exists(os.path.join(appsdk_check, 'bin', 'vray.exe'))
 
     if args.jenkins_project_type == 'vb35' and download_appsdk:
         sys.stdout.write('Downloading appsdk:\n')

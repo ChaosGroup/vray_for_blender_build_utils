@@ -67,11 +67,12 @@ def main(args):
         os.makedirs(working_dir)
 
     branch = 'dev/vray_for_blender/%s' % args.jenkins_project_type
+
+    ### DOWNLOAD APPSDK
     # just for test
     args.jenkins_appsdk_version = '20160510'
 
     appsdk_path = os.path.join(working_dir, 'vray-appsdk')
-
     appsdk_check = os.path.join(appsdk_path, args.jenkins_appsdk_version, 'windows')
     download_appsdk = not os.path.exists(appsdk_check) or not os.path.exists(os.path.join(appsdk_check, 'bin', 'vray.exe'))
 
@@ -96,39 +97,40 @@ def main(args):
         os.system('7z x appsdk.7z')
         os.chdir(working_dir)
 
+    ### ADD APPSDK TO PATH
     if args.jenkins_project_type == 'vb35':
         sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, args.jenkins_appsdk_version))
         os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
         os.environ['CGR_APPSDK_PATH'] = appsdk_path
         os.environ['CGR_APPSDK_VERSION'] = args.jenkins_appsdk_version
 
+    ### ADD NINJA TO PATH
     if sys.platform == 'win32':
         ninja_path = os.path.join(args.jenkins_win_sdk_path, '..', '..', 'build_scripts', 'cmake', 'tools', 'bin')
         sys.stdout.write('Ninja path [%s]\n' % ninja_path)
         sys.stdout.flush()
         os.environ['PATH'] = ninja_path + ';' + os.environ['PATH']
 
-    if args.jenkins_project_type:
-        blender_modules = [
-            "release/scripts/addons_contrib",
-            "source/tools",
-            "release/scripts/addons",
-        ]
+    ### CLONE REPOS
+    blender_modules = [
+        "release/scripts/addons_contrib",
+        "source/tools",
+        "release/scripts/addons",
+    ]
 
-        if args.jenkins_project_type == 'vb35':
-            blender_modules.append('intern/vray_for_blender_rt/extern/vray-zmq-wrapper')
+    if args.jenkins_project_type == 'vb35':
+        blender_modules.append('intern/vray_for_blender_rt/extern/vray-zmq-wrapper')
 
-        pwd = os.getcwd()
-        os.chdir(working_dir)
+    pwd = os.getcwd()
+    os.chdir(working_dir)
 
-        utils.get_repo('https://github.com/bdancer/blender-for-vray', branch=branch, submodules=blender_modules, target_dir=pwd, target_name='blender')
-        utils.get_repo('https://github.com/ChaosGroup/blender-for-vray-libs', target_dir=pwd)
+    utils.get_repo('https://github.com/bdancer/blender-for-vray', branch=branch, submodules=blender_modules, target_dir=pwd, target_name='blender')
+    utils.get_repo('https://github.com/ChaosGroup/blender-for-vray-libs', target_dir=pwd)
 
-        if args.jenkins_project_type == 'vb35':
-            utils.get_repo('https://github.com/bdancer/vrayserverzmq', target_dir=pwd, submodules=['extern/vray-zmq-wrapper'])
-
-        os.chdir(pwd)
-
+    if args.jenkins_project_type == 'vb35':
+        utils.get_repo('https://github.com/bdancer/vrayserverzmq', target_dir=pwd, submodules=['extern/vray-zmq-wrapper'])
+    os.chdir(pwd)
+    ### CLONE REPOS
 
     python_exe = sys.executable
 

@@ -108,6 +108,9 @@ def main(args):
     cmd.append("--teamcity_project_type=%s" % args.teamcity_project_type)
     cmd.append("--teamcity_branch_hash=%s" % args.teamcity_branch_hash)
 
+    cmd.append("--dir_build=%s" % os.getcwd())
+    cmd.append("--dir_source=%s" % os.getcwd())
+
     branch = args.teamcity_branch
     if branch == '':
         branch = 'dev/vray_for_blender/%s' % args.teamcity_project_type

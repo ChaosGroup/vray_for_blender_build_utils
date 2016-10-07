@@ -33,7 +33,7 @@ from .builder import Builder
 
 class WindowsBuilder(Builder):
 	def compile(self):
-		cmake_build_dir = os.path.join(self.dir_source, "blender-cmake-build")
+		cmake_build_dir = os.path.join(self.dir_build, "blender-cmake-build")
 		if self.build_clean and os.path.exists(cmake_build_dir):
 			utils.remove_directory(cmake_build_dir)
 		if not os.path.exists(cmake_build_dir):
@@ -78,7 +78,7 @@ class WindowsBuilder(Builder):
 
 		self.write_buildinfo(cmake_build_dir)
 
-		ninja = utils.path_join(self.dir_source, "vb25-patch", "tools", "ninja.exe")
+		ninja = utils.path_join(self.patch_dir, "tools", "ninja.exe")
 
 		make = [ninja]
 		make.append('-j%s' % self.build_jobs)

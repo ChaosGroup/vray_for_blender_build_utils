@@ -358,7 +358,7 @@ class LinuxBuilder(Builder):
 			DepsBuild(self)
 
 	def compile(self):
-		cmake_build_dir = os.path.join(self.dir_source, "blender-cmake-build")
+		cmake_build_dir = os.path.join(self.dir_build, "blender-cmake-build")
 		if self.build_clean and os.path.exists(cmake_build_dir):
 			utils.remove_directory(cmake_build_dir)
 		if not os.path.exists(cmake_build_dir):

@@ -68,16 +68,26 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 	This will clone the repo in CWD. If target_dir != None it will copy 
 	the sources to target_dir"""
 
-	repo_name = os.path.basename(repo_url)
+	sys.stdout.write("Repo [%s]\n" % repo_url)
+	sys.stdout.flush()
+
+	repo_name = target_name if target_name else os.path.basename(repo_url)
 	cwd = os.getcwd()
 	clone_dir = os.path.join(cwd, repo_name)
 
 	if not os.path.exists(clone_dir):
-		os.system("git clone %s" % repo_url)
+		if target_name and not target_dir:
+			# just rename clone
+			os.system("git clone %s %s" % (repo_url, target_name))
+		else:
+			os.system("git clone %s" % repo_url)
 		os.system("git pull origin %s" % branch)
-
-	os.chdir(clone_dir)
-	os.system("git checkout %s" % branch)
+		os.chdir(clone_dir)
+		os.system("git checkout %s" % branch)
+	else:
+		os.chdir(clone_dir)
+		os.system("git checkout -- .")
+		os.system("git pull origin %s" % branch)
 
 	for module in submodules:
 		os.system("git submodule update --init --remote --recursive %s" % module)

@@ -59,6 +59,7 @@ def setup_msvc_2013(cgrepo):
 
 
 def main(args):
+    build_root = os.getcwd()
     os.environ['http_proxy'] = '10.0.0.1:1234'
     os.environ['https_proxy'] = '10.0.0.1:1234'
     os.environ['ftp_proxy'] = '10.0.0.1:1234'
@@ -67,8 +68,11 @@ def main(args):
     os.environ['http_proxy'] = 'http://10.0.0.1:1234/'
     os.environ['https_proxy'] = 'https://10.0.0.1:1234/'
 
+    cgrepo = os.environ['VRAY_CGREPO_PATH']
+    kdrive = os.path.join(cgrepo, 'sdk', 'win')
+
     if sys.platform == 'win32':
-        setup_msvc_2013(args.jenkins_win_sdk_path)
+        setup_msvc_2013(kdrive)
 
     working_dir = os.path.join(args.jenkins_perm_path, 'blender-dependencies')
     if not os.path.exists(working_dir):
@@ -114,7 +118,7 @@ def main(args):
 
     ### ADD NINJA TO PATH
     if sys.platform == 'win32':
-        ninja_path = os.path.join(args.jenkins_win_sdk_path, '..', '..', 'build_scripts', 'cmake', 'tools', 'bin')
+        ninja_path = os.path.join(cgrepo, 'build_scripts', 'cmake', 'tools', 'bin')
         sys.stdout.write('Ninja path [%s]\n' % ninja_path)
         sys.stdout.flush()
         os.environ['PATH'] = ninja_path + ';' + os.environ['PATH']
@@ -132,11 +136,11 @@ def main(args):
     pwd = os.getcwd()
     os.chdir(working_dir)
 
-    utils.get_repo('https://github.com/bdancer/blender-for-vray', branch=branch, submodules=blender_modules, target_dir=pwd, target_name='blender')
-    utils.get_repo('https://github.com/ChaosGroup/blender-for-vray-libs', target_dir=pwd)
+    utils.get_repo('https://github.com/bdancer/blender-for-vray', branch=branch, submodules=blender_modules, target_name='blender')
+    utils.get_repo('https://github.com/ChaosGroup/blender-for-vray-libs')
 
     if args.jenkins_project_type == 'vb35':
-        utils.get_repo('https://github.com/bdancer/vrayserverzmq', target_dir=pwd, submodules=['extern/vray-zmq-wrapper'])
+        utils.get_repo('https://github.com/bdancer/vrayserverzmq', submodules=['extern/vray-zmq-wrapper'])
     os.chdir(pwd)
     ### CLONE REPOS
 
@@ -148,13 +152,15 @@ def main(args):
     cmd = [python_exe]
     cmd.append("vb25-patch/build.py")
     cmd.append("--jenkins")
+    cmd.append('--dir_source=%s' % working_dir)
+    cmd.append('--dir_build=%s' % build_root)
     cmd.append("--teamcity_project_type=%s" % args.jenkins_project_type)
 
     cmd.append('--github-src-branch=%s' % branch)
-    cmd.append('--teamcity_zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(os.getcwd(), 'vrayserverzmq')))
+    cmd.append('--teamcity_zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(working_dir, 'vrayserverzmq')))
 
-    cmd.append('--jenkins_win_sdk_path=%s' % args.jenkins_win_sdk_path)
-    os.environ['JENKINS_WIN_SDK_PATH'] = args.jenkins_win_sdk_path
+    cmd.append('--jenkins_win_sdk_path=%s' % kdrive)
+    os.environ['JENKINS_WIN_SDK_PATH'] = kdrive
     cmd.append('--jenkins_output=%s' % args.jenkins_output)
 
     if args.clean:
@@ -207,10 +213,6 @@ if __name__ == '__main__':
     )
 
     parser.add_argument('--jenkins_output',
-        default = ""
-    )
-
-    parser.add_argument('--jenkins_win_sdk_path',
         default = ""
     )
 

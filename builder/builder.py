@@ -52,7 +52,7 @@ class Builder:
 
 		# Always building vb30
 		self.project        = "vrayblender3"
-		if self.use_github_branch in {'dev/vray_for_blender/vb35'}:
+		if self.teamcity_project_type == 'vb35':
 			self.project = "vrayblender35"
 
 		self.version        = utils.VERSION
@@ -70,6 +70,8 @@ class Builder:
 		self.host_name      = utils.get_hostname()
 		self.host_username  = utils.get_username()
 		self.host_linux     = utils.get_linux_distribution()
+
+		self.patch_dir = utils.path_join(os.path.dirname(os.path.realpath(__file__)), '..')
 
 		# Build architecture
 		self.build_arch     = self.host_arch
@@ -213,7 +215,7 @@ class Builder:
 
 
 	def patch(self):
-		patch_dir = utils.path_join(self.dir_source, "vb25-patch")
+		patch_dir = self.patch_dir
 
 		if self.use_blender_hash:
 			patchBin      = utils.find_patch()
@@ -347,6 +349,7 @@ class Builder:
 		command.append('--teamcity_branch_hash=%s' % self.teamcity_zmq_server_hash)
 		command.append('--teamcity_install_path=%s' % os.path.join(self.dir_install, '..', 'vrayserverzmq'))
 		command.append('--teamcity_release_path=%s' % os.path.join(self.dir_release, '..', 'vrayserverzmq'))
+		command.append('--teamcity_build_path=%s' % self.dir_build)
 
 		sys.stdout.write('Calling builder:\n%s\n' % '\n\t'.join(command))
 		sys.stdout.flush()

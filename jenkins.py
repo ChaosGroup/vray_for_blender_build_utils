@@ -59,6 +59,14 @@ def setup_msvc_2013(cgrepo):
 
 
 def main(args):
+    os.environ['http_proxy'] = '10.0.0.1:1234'
+    os.environ['https_proxy'] = '10.0.0.1:1234'
+    os.environ['ftp_proxy'] = '10.0.0.1:1234'
+    os.environ['socks_proxy'] = '10.0.0.1:1080'
+
+    os.environ['http_proxy'] = 'http://10.0.0.1:1234/'
+    os.environ['https_proxy'] = 'https://10.0.0.1:1234/'
+
     if sys.platform == 'win32':
         setup_msvc_2013(args.jenkins_win_sdk_path)
 
@@ -136,14 +144,6 @@ def main(args):
 
     sys.stdout.write('jenkins args:\n%s\n' % str(args))
     sys.stdout.flush()
-
-    os.environ['http_proxy'] = '10.0.0.1:1234'
-    os.environ['https_proxy'] = '10.0.0.1:1234'
-    os.environ['ftp_proxy'] = '10.0.0.1:1234'
-    os.environ['socks_proxy'] = '10.0.0.1:1080'
-
-    os.environ['http_proxy'] = 'http://10.0.0.1:1234/'
-    os.environ['https_proxy'] = 'https://10.0.0.1:1234/'
 
     cmd = [python_exe]
     cmd.append("vb25-patch/build.py")

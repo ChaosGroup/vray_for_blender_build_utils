@@ -71,37 +71,44 @@ def main(args):
     args.jenkins_appsdk_version = '20160510'
 
     appsdk_path = os.path.join(working_dir, 'vray-appsdk')
-    appsdk_check = os.path.join(appsdk_path, args.jenkins_appsdk_version, 'windows')
-    if args.jenkins_project_type == 'vb35' and not os.path.exists(appsdk_check):
-        os.makedirs(appsdk_check)
-        ftpScriptFilepath = os.path.join(working_dir, "appsdk-download.txt")
-        sys.stdout.write("Writing ftp command in %s" % ftpScriptFilepath)
-        with open(ftpScriptFilepath, 'w') as f:
-            f.write('option batch abort\n')
-            f.write('option confirm off\n')
-            f.write('open ftp://%s:%s@nightlies.chaosgroup.com -rawsettings ProxyMethod=2 ProxyHost=10.0.0.1 ProxyPort=1080\n' % (
-                os.environ['JENKINS_USER'],
-                os.environ['JENKINS_PASS'],
-            ))
-            f.write('option transfer binary\n')
-            f.write('get /vrayappsdk/20160510/appsdk-win-qt-nightly-1.09.00-vray33501-20160510.7z %s/appsdk.7z\n' % appsdk_path)
-            f.write('exit\n')
-            f.write('\n')
 
-        cmd = ['winscp']
-        cmd.append('/passive')
-        cmd.append('/script="%s"' % ftpScriptFilepath)
-        os.system(' '.join(cmd))
+    appsdk_check = os.path.join(appsdk_path, args.jenkins_appsdk_version, 'windows')
+
+    download_appsdk = args.jenkins_project_type == 'vb35' and(not os.path.exists(appsdk_check)\
+        or not os.path.exists(os.path.join(appsdk_check, 'bin', 'vray.exe')))
+
+    if args.jenkins_project_type == 'vb35' and download_appsdk:
+        sys.stdout.write('Downloading appsdk:\n')
+        sys.stdout.flush()
+
+        try:
+            os.makedirs(appsdk_check)
+        except:
+            pass
+
+        curl = 'curl -O appsdk.7z ftp://%s:%s@nightlies.chaosgroup.com/vrayappsdk/20160510/appsdk-win-qt-nightly-1.09.00-vray33501-20160510.7z' % (
+            os.environ['NIGHTLIES_USER'],
+            os.environ['NIGHTLIES_PASS'],
+        )
+
+        sys.stdout.write('CURL [%s]\n' % curl)
+        sys.stdout.flush()
         os.chdir(appsdk_check)
+        os.system(curl)
         os.system('7z x appsdk.7z')
+        os.chdir(working_dir)
 
     if args.jenkins_project_type == 'vb35':
-        # add qt to path
-        os.environ['PATH'] = os.path.join(args.jenkins_win_sdk_path, 'qt', '4.8.4') + ';' + os.environ['PATH'];
-        sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]' % (appsdk_path, args.jenkins_appsdk_version))
+        sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, args.jenkins_appsdk_version))
         os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
         os.environ['CGR_APPSDK_PATH'] = appsdk_path
         os.environ['CGR_APPSDK_VERSION'] = args.jenkins_appsdk_version
+
+    if sys.platform == 'win32':
+        ninja_path = os.path.join(args.jenkins_win_sdk_path, '..', '..', 'build_scripts', 'cmake', 'tools', 'bin')
+        sys.stdout.write('Ninja path [%s]\n' % ninja_path)
+        sys.stdout.flush()
+        os.environ['PATH'] = ninja_path + ';' + os.environ['PATH']
 
     if args.jenkins_project_type:
         blender_modules = [

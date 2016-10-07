@@ -25,6 +25,7 @@
 import os
 import sys
 import subprocess
+
 from builder import utils
 
 def setup_msvc_2013(cgrepo):
@@ -66,6 +67,33 @@ def main(args):
         os.makedirs(working_dir)
 
     branch = 'dev/vray_for_blender/%s' % args.jenkins_project_type
+    # just for test
+    args.jenskins_appsdk_version = '20160510'
+
+    appsdk_path = os.path.join(working_dir, 'vray-appsdk')
+    appsdk_check = os.path.join(appsdk_path, 'windows', args.jenkins_appsdk_version)
+    if args.jenkins_project_type == 'vb35' and not os.path.exists(appsdk_check):
+        os.makedirs(appsdk_check)
+        ftpScriptFilepath = os.path.join(working_dir, "appsdk-download.txt")
+        sys.stdout.write("Writing ftp command in %s" % ftpScriptFilepath)
+        with open(ftpScriptFilepath, 'w') as f:
+            f.write('option batch abort\n')
+            f.write('option confirm off\n')
+            f.write('open ftp://%s:%s@nightlies.chaosgroup.com -rawsettings ProxyMethod=2 ProxyHost=10.0.0.1 ProxyPort=1080\n' % (
+                os.environ['JENKINS_USER'],
+                os.environ['JENKINS_PASS'],
+            ))
+            f.write('option transfer binary\n')
+            f.write('get /vrayappsdk/20160510/appsdk-win-qt-nightly-1.09.00-vray33501-20160510.7z %s/appsdk.7z\n' % appsdk_path)
+            f.write('exit\n')
+            f.write('\n')
+
+        cmd = ['winscp']
+        cmd.append('/passive')
+        cmd.append('/script="%s"' % ftpScriptFilepath)
+        os.system(' '.join(cmd))
+        os.chdir(appsdk_check)
+        os.system('7z x appsdk.7z')
 
     if args.jenkins_project_type:
         blender_modules = [
@@ -92,7 +120,7 @@ def main(args):
         # add qt to path
         os.environ['PATH'] = os.path.join(args.jenkins_win_sdk_path, 'qt', '4.8.4') + ';' + os.environ['PATH'];
         os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
-        os.environ['CGR_APPSDK_PATH'] = args.jenkins_appsdk_path
+        os.environ['CGR_APPSDK_PATH'] = appsdk_path
         os.environ['CGR_APPSDK_VERSION'] = args.jenkins_appsdk_version
 
     python_exe = sys.executable
@@ -174,10 +202,6 @@ if __name__ == '__main__':
     )
 
     parser.add_argument('--jenkins_win_sdk_path',
-        default = ""
-    )
-
-    parser.add_argument('--jenkins_appsdk_path',
         default = ""
     )
 

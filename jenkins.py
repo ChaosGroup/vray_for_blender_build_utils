@@ -93,7 +93,7 @@ def main(args):
         except:
             pass
 
-        curl = 'curl -O appsdk.7z ftp://%s:%s@nightlies.chaosgroup.com/vrayappsdk/20160510/appsdk-win-qt-nightly-1.09.00-vray33501-20160510.7z' % (
+        curl = 'curl -o appsdk.7z ftp://%s:%s@nightlies.chaosgroup.com/vrayappsdk/20160510/appsdk-win-qt-nightly-1.09.00-vray33501-20160510.7z' % (
             os.environ['NIGHTLIES_USER'],
             os.environ['NIGHTLIES_PASS'],
         )

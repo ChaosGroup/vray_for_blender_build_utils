@@ -56,12 +56,14 @@ def setup_msvc_2013(cgrepo):
     for var in env:
         os.environ[var] = ";".join(env[var]).format(CGR_SDK=cgrepo)
 
-def init_repo(url='', branch=None, modules=[]):
-    utils.get_repo(url, branch=branch if branch else 'master', submodules=modules)
 
 def main(args):
     if sys.platform == 'win32':
         setup_msvc_2013(args.jenkins_win_sdk_path)
+
+    working_dir = os.path.join(args.jenkins_perm_path, 'blender-dependencies')
+    if not os.path.exists(working_dir):
+        os.makedirs(working_dir)
 
     branch = 'dev/vray_for_blender/%s' % args.jenkins_project_type
 
@@ -75,17 +77,20 @@ def main(args):
         if args.jenkins_project_type == 'vb35':
             blender_modules.append('intern/vray_for_blender_rt/extern/vray-zmq-wrapper')
 
-        repos = [
-            ['https://github.com/bdancer/blender-for-vray', branch, blender_modules],
-            ['https://github.com/ChaosGroup/blender-for-vray-libs'],
-            ['https://github.com/bdancer/vb30', 'master', ['plugins_desc', 'vray_tools']],
-            ['https://github.com/bdancer/vrayserverzmq', 'master', ['extern/vray-zmq-wrapper']]
-        ]
+        pwd = os.getcwd()
+        os.chdir(working_dir)
 
-        for repo in repos:
-            init_repo(*repo)
+        utils.get_repo('https://github.com/bdancer/blender-for-vray', branch=branch, submodules=blender_modules, target_dir=pwd, target_name='blender')
+        utils.get_repo('https://github.com/ChaosGroup/blender-for-vray-libs', target_dir=pwd)
+
+        if args.jenkins_project_type == 'vb35':
+            utils.get_repo('https://github.com/bdancer/vrayserverzmq', target_dir=pwd, submodules=['extern/vray-zmq-wrapper'])
+
+        os.chdir(pwd)
 
     if args.jenkins_project_type == 'vb35':
+        # add qt to path
+        os.environ['PATH'] = os.path.join(args.jenkins_win_sdk_path, 'qt', '4.8.4') + ';' + os.environ['PATH'];
         os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
         os.environ['CGR_APPSDK_PATH'] = args.jenkins_appsdk_path
         os.environ['CGR_APPSDK_VERSION'] = args.jenkins_appsdk_version
@@ -112,6 +117,7 @@ def main(args):
     cmd.append('--teamcity_zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(os.getcwd(), 'vrayserverzmq')))
 
     cmd.append('--jenkins_win_sdk_path=%s' % args.jenkins_win_sdk_path)
+    os.environ['JENKINS_WIN_SDK_PATH'] = args.jenkins_win_sdk_path
     cmd.append('--jenkins_output=%s' % args.jenkins_output)
 
     if args.clean:
@@ -176,6 +182,10 @@ if __name__ == '__main__':
     )
 
     parser.add_argument('--jenkins_appsdk_version',
+        default = ""
+    )
+
+    parser.add_argument('--jenkins_perm_path',
         default = ""
     )
 

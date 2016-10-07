@@ -150,7 +150,8 @@ class Builder:
 
 			exportSources()
 
-			# Update Blender libs
+		# Update Blender libs
+		if self.upblender or self.jenkins:
 			lib_dir = None
 			svn_cmd = None
 			if self.host_os != utils.LNX:

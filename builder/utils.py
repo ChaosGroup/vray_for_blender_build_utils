@@ -63,7 +63,7 @@ def get_default_install_path():
 		return "/usr/ChaosGroup/"
 
 
-def get_repo(repo_url, branch='master', target_dir=None, submodules=[]):
+def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submodules=[]):
 	"""
 	This will clone the repo in CWD. If target_dir != None it will copy 
 	the sources to target_dir"""
@@ -84,10 +84,14 @@ def get_repo(repo_url, branch='master', target_dir=None, submodules=[]):
 
 	if target_dir:
 		to_dir = os.path.join(target_dir, repo_name)
-		sys.stdout.write("Exporting sources %s -> %s" % (clone_dir, to_dir))
+		if target_name:
+			to_dir = os.path.join(target_dir, target_name)
+
+		sys.stdout.write("Exporting sources %s -> %s\n" % (clone_dir, to_dir))
+		sys.stdout.flush()
 
 		if os.path.exists(to_dir):
-			utils.remove_directory(to_dir)
+			remove_directory(to_dir)
 
 		shutil.copytree(clone_dir, to_dir)
 

@@ -68,7 +68,7 @@ def main(args):
 
     branch = 'dev/vray_for_blender/%s' % args.jenkins_project_type
     # just for test
-    args.jenskins_appsdk_version = '20160510'
+    args.jenkins_appsdk_version = '20160510'
 
     appsdk_path = os.path.join(working_dir, 'vray-appsdk')
     appsdk_check = os.path.join(appsdk_path, 'windows', args.jenkins_appsdk_version)
@@ -95,6 +95,14 @@ def main(args):
         os.chdir(appsdk_check)
         os.system('7z x appsdk.7z')
 
+    if args.jenkins_project_type == 'vb35':
+        # add qt to path
+        os.environ['PATH'] = os.path.join(args.jenkins_win_sdk_path, 'qt', '4.8.4') + ';' + os.environ['PATH'];
+        sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]' % (appsdk_path, args.jenkins_appsdk_version))
+        os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
+        os.environ['CGR_APPSDK_PATH'] = appsdk_path
+        os.environ['CGR_APPSDK_VERSION'] = args.jenkins_appsdk_version
+
     if args.jenkins_project_type:
         blender_modules = [
             "release/scripts/addons_contrib",
@@ -116,12 +124,6 @@ def main(args):
 
         os.chdir(pwd)
 
-    if args.jenkins_project_type == 'vb35':
-        # add qt to path
-        os.environ['PATH'] = os.path.join(args.jenkins_win_sdk_path, 'qt', '4.8.4') + ';' + os.environ['PATH'];
-        os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
-        os.environ['CGR_APPSDK_PATH'] = appsdk_path
-        os.environ['CGR_APPSDK_VERSION'] = args.jenkins_appsdk_version
 
     python_exe = sys.executable
 

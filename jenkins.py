@@ -71,7 +71,7 @@ def main(args):
     args.jenkins_appsdk_version = '20160510'
 
     appsdk_path = os.path.join(working_dir, 'vray-appsdk')
-    appsdk_check = os.path.join(appsdk_path, 'windows', args.jenkins_appsdk_version)
+    appsdk_check = os.path.join(appsdk_path, args.jenkins_appsdk_version, 'windows')
     if args.jenkins_project_type == 'vb35' and not os.path.exists(appsdk_check):
         os.makedirs(appsdk_check)
         ftpScriptFilepath = os.path.join(working_dir, "appsdk-download.txt")

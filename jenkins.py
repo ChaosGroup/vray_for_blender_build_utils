@@ -59,7 +59,7 @@ def setup_msvc_2013(cgrepo):
 
 
 def main(args):
-    build_root = os.getcwd()
+    dir_build = os.getcwd()
     os.environ['http_proxy'] = '10.0.0.1:1234'
     os.environ['https_proxy'] = '10.0.0.1:1234'
     os.environ['ftp_proxy'] = '10.0.0.1:1234'
@@ -74,9 +74,9 @@ def main(args):
     if sys.platform == 'win32':
         setup_msvc_2013(kdrive)
 
-    working_dir = os.path.join(args.jenkins_perm_path, 'blender-dependencies')
-    if not os.path.exists(working_dir):
-        os.makedirs(working_dir)
+    dir_source = os.path.join(args.jenkins_perm_path, 'blender-dependencies')
+    if not os.path.exists(dir_source):
+        os.makedirs(dir_source)
 
     branch = 'dev/vray_for_blender/%s' % args.jenkins_project_type
 
@@ -84,7 +84,7 @@ def main(args):
     # just for test
     args.jenkins_appsdk_version = '20160510'
 
-    appsdk_path = os.path.join(working_dir, 'vray-appsdk')
+    appsdk_path = os.path.join(dir_source, 'vray-appsdk')
     appsdk_check = os.path.join(appsdk_path, args.jenkins_appsdk_version, 'windows')
     download_appsdk = not os.path.exists(appsdk_check) or not os.path.exists(os.path.join(appsdk_check, 'bin', 'vray.exe'))
 
@@ -107,7 +107,7 @@ def main(args):
         os.chdir(appsdk_check)
         os.system(curl)
         os.system('7z x appsdk.7z')
-        os.chdir(working_dir)
+        os.chdir(dir_source)
 
     ### ADD APPSDK TO PATH
     if args.jenkins_project_type == 'vb35':
@@ -133,15 +133,14 @@ def main(args):
     if args.jenkins_project_type == 'vb35':
         blender_modules.append('intern/vray_for_blender_rt/extern/vray-zmq-wrapper')
 
-    pwd = os.getcwd()
-    os.chdir(working_dir)
-
+    os.chdir(dir_source)
     utils.get_repo('https://github.com/bdancer/blender-for-vray', branch=branch, submodules=blender_modules, target_name='blender')
     utils.get_repo('https://github.com/ChaosGroup/blender-for-vray-libs')
 
     if args.jenkins_project_type == 'vb35':
         utils.get_repo('https://github.com/bdancer/vrayserverzmq', submodules=['extern/vray-zmq-wrapper'])
-    os.chdir(pwd)
+
+    os.chdir(dir_build)
     ### CLONE REPOS
 
     python_exe = sys.executable
@@ -152,12 +151,12 @@ def main(args):
     cmd = [python_exe]
     cmd.append("vb25-patch/build.py")
     cmd.append("--jenkins")
-    cmd.append('--dir_source=%s' % working_dir)
-    cmd.append('--dir_build=%s' % build_root)
+    cmd.append('--dir_source=%s' % dir_source)
+    cmd.append('--dir_build=%s' % dir_build)
     cmd.append("--teamcity_project_type=%s" % args.jenkins_project_type)
 
     cmd.append('--github-src-branch=%s' % branch)
-    cmd.append('--teamcity_zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(working_dir, 'vrayserverzmq')))
+    cmd.append('--teamcity_zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(dir_source, 'vrayserverzmq')))
 
     cmd.append('--jenkins_win_sdk_path=%s' % kdrive)
     os.environ['JENKINS_WIN_SDK_PATH'] = kdrive

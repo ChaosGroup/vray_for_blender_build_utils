@@ -184,12 +184,11 @@ class Builder:
 
 		# Update V-Ray/Blender patchset
 		if self.uppatch == "on" and not self.mode_developer:
-			vb25_patch = utils.path_join(self.dir_source, "vb25-patch")
 
-			if os.path.exists(vb25_patch):
+			if os.path.exists(self.patch_dir):
 				sys.stdout.write("Updating V-Ray/Blender patches...\n")
 				if not self.mode_test:
-					os.chdir(vb25_patch)
+					os.chdir(self.patch_dir)
 					os.system("git pull")
 			else:
 				sys.stdout.write("Getting V-Ray/Blender patches...\n")
@@ -289,7 +288,7 @@ class Builder:
 
 	def compile_post(self):
 		if self.host_os == utils.WIN:
-			runtimeDir = utils.path_join(self.dir_source, "vb25-patch", "non-gpl", self.build_arch)
+			runtimeDir = utils.path_join(self.patch_dir, "non-gpl", self.build_arch)
 			files = []
 			if self.vc2013:
 				files.extend([

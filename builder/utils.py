@@ -200,7 +200,7 @@ def pathExpand(path):
 	return path
 
 
-def which(program):
+def which(program, add_ext=False):
 	"""
 	  Returns full path of "program" or None
 	"""
@@ -215,8 +215,12 @@ def which(program):
 	else:
 		for path in os.environ["PATH"].split(os.pathsep):
 			exe_file = path_join(path, program)
+			sys.stdout.write('EL %s\n' % exe_file)
 			if is_exe(exe_file):
 				return exe_file
+
+		if get_host_os() == WIN and not add_ext:
+			return which('%s.exe' % program, True)
 
 	return None
 

@@ -171,13 +171,17 @@ class Builder:
 					lib_dir = utils.path_join(self.dir_source, "lib", "darwin-9.x.universal")
 					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal"
 
+				sys.stdout.write('Lib dir: [%s]\n' % lib_dir)
+				sys.stdout.flush()
 				if not os.path.exists(lib_dir):
-					sys.stdout.write("Getting \"lib\" data...\n")
+					sys.stdout.write("Getting \"lib\" data... [%s]\n" % svn_cmd)
+					sys.stdout.flush()
 					if not self.mode_test:
 						os.chdir(self.dir_source)
 						os.system(svn_cmd)
 				else:
-					sys.stdout.write("Updating \"lib\" data...\n")
+					sys.stdout.write("Updating \"lib\" data... [svn update]\n")
+					sys.stdout.flush()
 					if not self.mode_test:
 						os.chdir(lib_dir)
 						os.system("svn update")

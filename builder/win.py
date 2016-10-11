@@ -49,8 +49,8 @@ class WindowsBuilder(Builder):
 		cmake.append("Ninja")
 
 		if self.jenkins:
-			cmake.append("-DCMAKE_CXX_COMPILER=%s" % os.path.join(os.environ['JENKINS_WIN_SDK_PATH'], 'msvs2013', 'bin', 'cl.exe'))
-			cmake.append("-DCMAKE_C_COMPILER=%s" % os.path.join(os.environ['JENKINS_WIN_SDK_PATH'], 'msvs2013', 'bin', 'cl.exe'))
+			cmake.append("-DCMAKE_CXX_COMPILER=%s" % utils.path_join(os.environ['JENKINS_WIN_SDK_PATH'], 'msvs2013', 'bin', 'cl.exe'))
+			cmake.append("-DCMAKE_C_COMPILER=%s" % utils.path_join(os.environ['JENKINS_WIN_SDK_PATH'], 'msvs2013', 'bin', 'cl.exe'))
 
 		cmake.append("-DCMAKE_BUILD_TYPE=Release")
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)

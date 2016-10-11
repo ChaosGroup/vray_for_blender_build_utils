@@ -80,13 +80,9 @@ class WindowsBuilder(Builder):
 
 		old_path = ''
 		if self.jenkins:
-			for path in os.environ['PATH'].split(';'):
-				if path.endswith('cmake.exe'):
-					cmake[0] = path
-					break
-
+			cmake[0] = utils._get_cmd_output('where cmake')
 			old_path = os.environ['PATH']
-			os.environ['PATH'] = ''
+			os.environ['PATH'] = utils.path_join(self.patch_dir, "tools")
 			self.setup_msvc_2013(os.environ['JENKINS_WIN_SDK_PATH'])
 
 		cmake.append("-DCMAKE_BUILD_TYPE=Release")

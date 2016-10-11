@@ -48,6 +48,10 @@ class WindowsBuilder(Builder):
 		cmake.append("-G")
 		cmake.append("Ninja")
 
+		if self.jenkins:
+			cmake.append("-DCMAKE_CXX_COMPILER=cl")
+			cmake.append("-DCMAKE_C_COMPILER=cl")
+
 		cmake.append("-DCMAKE_BUILD_TYPE=Release")
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
 

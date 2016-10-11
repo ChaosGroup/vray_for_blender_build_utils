@@ -32,6 +32,36 @@ from .builder import Builder
 
 
 class WindowsBuilder(Builder):
+	def setup_msvc_2013(self, cgrepo):
+		env = {
+			'INCLUDE' : [
+				"{CGR_SDK}/msvs2013/PlatformSDK/Include/shared",
+				"{CGR_SDK}/msvs2013/PlatformSDK/Include/um",
+				"{CGR_SDK}/msvs2013/PlatformSDK/Include/winrt",
+				"{CGR_SDK}/msvs2013/PlatformSDK/Include/ucrt",
+				"{CGR_SDK}/msvs2013/include",
+				"{CGR_SDK}/msvs2013/atlmfc/include",
+			],
+
+			'LIB' : [
+				"{CGR_SDK}/msvs2013/PlatformSDK/Lib/winv6.3/um/x64",
+				"{CGR_SDK}/msvs2013/PlatformSDK/Lib/ucrt/x64",
+				"{CGR_SDK}/msvs2013/atlmfc/lib/amd64",
+				"{CGR_SDK}/msvs2013/lib/amd64",
+			],
+
+			'PATH' : [
+					"{CGR_SDK}/msvs2013/bin/amd64",
+					"{CGR_SDK}/msvs2013/bin",
+					"{CGR_SDK}/msvs2013/PlatformSDK/bin/x64",
+				] + os.environ['PATH'].split(';')
+			,
+		}
+		os.environ['__MS_VC_INSTALL_PATH'] = "{CGR_SDK}/msvs2013"
+		for var in env:
+			os.environ[var] = ";".join(env[var]).format(CGR_SDK=cgrepo)
+
+
 	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_build, "blender-cmake-build")
 		if self.build_clean and os.path.exists(cmake_build_dir):
@@ -48,9 +78,16 @@ class WindowsBuilder(Builder):
 		cmake.append("-G")
 		cmake.append("Ninja")
 
+		old_path = ''
 		if self.jenkins:
-			cmake.append("-DCMAKE_CXX_COMPILER=%s" % utils.path_join(os.environ['JENKINS_WIN_SDK_PATH'], 'msvs2013', 'bin', 'cl.exe'))
-			cmake.append("-DCMAKE_C_COMPILER=%s" % utils.path_join(os.environ['JENKINS_WIN_SDK_PATH'], 'msvs2013', 'bin', 'cl.exe'))
+			for path in os.environ['PATH'].split(';'):
+				if path.endswith('cmake.exe'):
+					cmake[0] = path
+					break
+
+			old_path = os.environ['PATH']
+			os.environ['PATH'] = ''
+			self.setup_msvc_2013(os.environ['JENKINS_WIN_SDK_PATH'])
 
 		cmake.append("-DCMAKE_BUILD_TYPE=Release")
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
@@ -72,6 +109,7 @@ class WindowsBuilder(Builder):
 
 		cmake.append(self.dir_blender)
 
+		sys.stdout.write('PATH:\n\t%s\n' % '\n\t'.join(os.environ['PATH'].split(';')))
 		sys.stdout.write('cmake args:\n%s\n' % '\n\t'.join(cmake))
 		sys.stdout.flush()
 
@@ -92,6 +130,9 @@ class WindowsBuilder(Builder):
 		if not res == 0:
 			sys.stderr.write("There was an error during the compilation!\n")
 			sys.exit(1)
+
+		if self.jenkins:
+			os.environ['PATH'] = old_path
 
 
 	def config(self):

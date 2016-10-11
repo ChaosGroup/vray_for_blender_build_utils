@@ -114,6 +114,13 @@ def get_host_architecture():
 	if get_host_os() == "macos":
 		arch = 'x86' if subprocess.check_output(['uname', '-p']) == 'i386' else 'x86_64'
 
+	if get_host_os() == WIN:
+		if (arch == 'x86_64') != platform.machine().endswith('64'):
+			sys.stderr.write('Missmatch in platform.architecture() and platform.machine().\n')
+			sys.stderr.write('This is probably 32 bit python on 64 bit os.\n')
+			sys.stderr.flush()
+			arch = 'x86_64' if platform.machine().endswith('64') else 'x86'
+
 	return arch
 
 

@@ -580,26 +580,34 @@ def mac_rewrite_qt_links(binfile):
 	return items
 
 
-def get_zmq_build_items(zmq_hash, appsdkFile):
+def get_zmq_build_items(self, appsdkFile):
 	host_os = get_host_os()
+	zmq_hash = self.teamcity_zmq_server_hash
 
 	extension = '.exe' if host_os == WIN else ''
 	sub_dir_template = "install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer%s" % (zmq_hash, extension)
 
 	items = []
 
+	zmq_build_path = ''
+	if self.jenkins:
+		zmq_build_path = os.path.join(self.dir_install, '..', 'vrayserverzmq', zmq_hash, 'V-Ray', 'VRayZmqServer', 'VRayZmqServer%s' % extension)
+
 	if host_os == WIN:
-		zmq_build_path = "H:/%s" % sub_dir_template
+		if not os.path.exists(zmq_build_path):
+			zmq_build_path = "H:/%s" % sub_dir_template
 		items = [zmq_build_path]
 	elif host_os == LNX:
-		zmq_build_path = "/home/teamcity/%s" % sub_dir_template
+		if not os.path.exists(zmq_build_path):
+			zmq_build_path = "/home/teamcity/%s" % sub_dir_template
 		# lets try in our home dir
 		if not os.path.exists(zmq_build_path):
 			zmq_build_path = os.path.expanduser("~/%s" % sub_dir_template)
 		items = [zmq_build_path]
 	elif host_os == MAC:
 		# copy file, edit search path for appsdk lib and add to installation
-		zmq_build_path = "/Users/andreiizrantsev/%s" % sub_dir_template
+		if not os.path.exists(zmq_build_path):
+			zmq_build_path = "/Users/andreiizrantsev/%s" % sub_dir_template
 		# lets try in our home dir
 		if not os.path.exists(zmq_build_path):
 			zmq_build_path = os.path.expanduser("~/%s" % sub_dir_template)
@@ -916,7 +924,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 					installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (dest_path, source_path))
 
 
-		zmq_items = get_zmq_build_items(self.teamcity_zmq_server_hash, appsdkFile)
+		zmq_items = get_zmq_build_items(self, appsdkFile)
 		for item in zmq_items:
 			installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (cg_root, item))
 

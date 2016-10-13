@@ -355,7 +355,7 @@ def DepsBuild(self):
 				else:
 					sys.stdout.write('Command step: \n\t%s\n' % step)
 					res = subprocess.call(step, shell=True)
-					if res !s 0:
+					if res != 0:
 						sys.stderr.write('Failed! Removing [%s] and stopping...\n' % item[1])
 						sys.stderr.flush()
 						shutil.rmtree(item[1])

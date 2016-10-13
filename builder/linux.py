@@ -336,7 +336,8 @@ def DepsBuild(self):
 					sys.exit(1)
 				sys.stdout.write('\n')
 			else:
-				if self.jenkins and step.endswith('ldconfig'):
+				if self.jenkins and (step.endswith('ldconfig') or '/etc/ld.so.conf.d' in step):
+					# lets skip system wide changes for jenkins
 					sys.stdout.write('Skipping [%s] step because of jenkins flag!\n' % step)
 				else:
 					sys.stdout.write('Command step: \n\t%s\n' % step)

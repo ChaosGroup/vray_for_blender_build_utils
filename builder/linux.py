@@ -300,14 +300,6 @@ def DepsInstall(self):
 
 
 def DepsBuild(self):
-	# if not self.with_osl:
-	# 	cmd += " --skip-llvm"
-	# 	cmd += " --skip-osl"
-
-	# if self.with_collada:
-	# 	cmd += " --with-opencollada"
-	# else:
-	# 	cmd += " --skip-opencollada"
 	wd = os.path.expanduser('~/blender-libs-builds')
 	if not os.path.isdir(wd):
 		os.makedirs(wd)
@@ -336,6 +328,7 @@ def DepsBuild(self):
 
 		for step in item[2]:
 			sys.stdout.write("CWD %s\n" % os.getcwd())
+			sys.stdout.flush()
 			if callable(step):
 				sys.stdout.write('Callable step: \n\t%s\n' % inspect.getsource(step).strip())
 				if not step():
@@ -343,11 +336,15 @@ def DepsBuild(self):
 					sys.exit(1)
 				sys.stdout.write('\n')
 			else:
-				sys.stdout.write('Command step: \n\t%s\n' % step)
-				res = subprocess.call(step, shell=True)
-				if res != 0:
-					sys.stdout.write('Failed! Stopping...\n')
-					sys.exit(1)
+				if self.jenkins and step.endswith('ldconfig'):
+					sys.stdout.write('Skipping [%s] step because of jenkins flag!\n' % step)
+				else:
+					sys.stdout.write('Command step: \n\t%s\n' % step)
+					res = subprocess.call(step, shell=True)
+					if res != 0:
+						sys.stderr.write('Failed! Stopping...\n')
+						sys.stderr.flush()
+						sys.exit(1)
 			sys.stdout.flush()
 
 

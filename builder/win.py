@@ -83,7 +83,7 @@ class WindowsBuilder(Builder):
 			cmake[0] = utils.which('cmake')
 			old_path = os.environ['PATH']
 			os.environ['PATH'] = utils.path_join(self.patch_dir, "tools")
-			self.setup_msvc_2013(os.environ['JENKINS_WIN_SDK_PATH'])
+			self.setup_msvc_2013(os.environ['jenkins_kdrive_path'])
 
 		cmake.append("-DCMAKE_BUILD_TYPE=Release")
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)

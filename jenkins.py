@@ -165,8 +165,8 @@ def main(args):
     cmd.append('--github-src-branch=%s' % branch)
     cmd.append('--teamcity_zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(dir_source, 'vrayserverzmq')))
 
-    cmd.append('--jenkins_win_sdk_path=%s' % kdrive)
-    os.environ['JENKINS_WIN_SDK_PATH'] = kdrive
+    cmd.append('--jenkins_kdrive_path=%s' % kdrive)
+    os.environ['jenkins_kdrive_path'] = kdrive
     cmd.append('--jenkins_output=%s' % args.jenkins_output)
 
     if utils.get_host_os() == utils.LNX:

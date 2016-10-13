@@ -45,7 +45,26 @@ TIFF_VERSION="3.9.7"
 FFTW_VERSION="3.3.4"
 
 
-def getDepsCompilationData(prefix, wd, jobs):
+def getDepsCompilationData(self, prefix, wd, jobs):
+	oiio_cmake_flags = [
+		"-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s" % prefix,
+		"-D CMAKE_INSTALL_PREFIX=%s/oiio-%s" % (prefix, OIIO_VERSION),
+		"-D STOP_ON_WARNING=OFF", "-D BUILDSTATIC=ON", "-D LINKSTATIC=ON", "-D USE_QT=OFF", "-D USE_PYTHON=OFF",
+		"-D BUILD_TESTING=OFF", "-D OIIO_BUILD_TESTS=OFF", "-D OIIO_BUILD_TOOLS=OFF",
+		"-D ILMBASE_VERSION=%s" % ILMBASE_VERSION ,"-D OPENEXR_VERSION=%s" % OPENEXR_VERSION,
+		"-D ILMBASE_HOME=%s/openexr" % prefix, "-D OPENEXR_HOME=%s/openexr" % prefix,
+		"-D BOOST_ROOT=%s/boost" % prefix, "-D Boost_NO_SYSTEM_PATHS=ON", "-D USE_OCIO=OFF",
+		"-D CMAKE_CXX_FLAGS=\"-fPIC\"", "-D CMAKE_EXE_LINKER_FLAGS=\"-lgcc_s -lgcc\"", ".."
+	]
+
+	if self.jenkins:
+		oiio_cmake_flags = [
+			"-D JPEG_LIBRARY=%s" % os.path.join(self.dir_source, 'blender-for-vray-libs', 'Linux', 'jpeg-turbo', 'lib', 'Release', 'libjpeg-turbo.a'),
+			"-D JPEG_INCLUDE_DIR=%s" % os.path.join(self.dir_source, 'blender-for-vray-libs', 'Linux', 'jpeg-turbo', 'include'),
+		] + oiio_cmake_flags
+
+	oiio_cmake_flags = ['cmake'] + oiio_cmake_flags
+
 	def dbg(x):
 		sys.stdout.write('%s\n' % x)
 		return True
@@ -199,15 +218,7 @@ def getDepsCompilationData(prefix, wd, jobs):
 				% (OIIO_VERSION, OIIO_VERSION),
 			'mkdir -p OpenImageIO-%s/build' % OIIO_VERSION,
 			getChDirCmd(os.path.join(wd, 'OpenImageIO-%s' % OIIO_VERSION, 'build')),
-			' '.join(
-				["cmake", "-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s" % prefix,
-				 "-D CMAKE_INSTALL_PREFIX=%s/oiio-%s" % (prefix, OIIO_VERSION),
-				 "-D STOP_ON_WARNING=OFF", "-D BUILDSTATIC=ON", "-D LINKSTATIC=ON", "-D USE_QT=OFF", "-D USE_PYTHON=OFF",
-				 "-D BUILD_TESTING=OFF", "-D OIIO_BUILD_TESTS=OFF", "-D OIIO_BUILD_TOOLS=OFF",
-				 "-D ILMBASE_VERSION=%s" % ILMBASE_VERSION ,"-D OPENEXR_VERSION=%s" % OPENEXR_VERSION,
-				 "-D ILMBASE_HOME=%s/openexr" % prefix, "-D OPENEXR_HOME=%s/openexr" % prefix,
-				 "-D BOOST_ROOT=%s/boost" % prefix, "-D Boost_NO_SYSTEM_PATHS=ON", "-D USE_OCIO=OFF",
-				 "-D CMAKE_CXX_FLAGS=\"-fPIC\"", "-D CMAKE_EXE_LINKER_FLAGS=\"-lgcc_s -lgcc\"", ".."]),
+			' '.join(oiio_cmake_flags),
 			'make -j %s' % jobs,
 			'make install',
 			'make clean',
@@ -310,7 +321,7 @@ def DepsBuild(self):
 
 	self._blender_libs_location = prefix
 
-	data = getDepsCompilationData(prefix, wd, self.build_jobs)
+	data = getDepsCompilationData(self, prefix, wd, self.build_jobs)
 
 	if self.mode_test:
 		# TODO: print out commands
@@ -332,7 +343,9 @@ def DepsBuild(self):
 			if callable(step):
 				sys.stdout.write('Callable step: \n\t%s\n' % inspect.getsource(step).strip())
 				if not step():
-					sys.stdout.write('Failed! Stopping...\n')
+					sys.stderr.write('Failed! Removing [%s] and stopping...\n' % item[1])
+					sys.stderr.flush()
+					shutil.rmtree(item[1])
 					sys.exit(1)
 				sys.stdout.write('\n')
 			else:
@@ -342,9 +355,10 @@ def DepsBuild(self):
 				else:
 					sys.stdout.write('Command step: \n\t%s\n' % step)
 					res = subprocess.call(step, shell=True)
-					if res != 0:
-						sys.stderr.write('Failed! Stopping...\n')
+					if res !s 0:
+						sys.stderr.write('Failed! Removing [%s] and stopping...\n' % item[1])
 						sys.stderr.flush()
+						shutil.rmtree(item[1])
 						sys.exit(1)
 			sys.stdout.flush()
 

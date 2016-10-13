@@ -269,7 +269,7 @@ parser.add_argument('--jenkins_output',
 	default = "",
 	help    = argparse.SUPPRESS
 )
-parser.add_argument('--jenkins_win_sdk_path',
+parser.add_argument('--jenkins_kdrive_path',
 	default = "",
 	help    = argparse.SUPPRESS
 )

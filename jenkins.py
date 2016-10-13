@@ -80,6 +80,12 @@ def main(args):
 
     branch = 'dev/vray_for_blender/%s' % args.jenkins_project_type
 
+    appsdk_name = {
+        utils.WIN: 'appsdk-win-qt-nightly-1.09.00-vray33501-20160510.7z',
+        utils.LNX: 'appsdk-linux-qt-nightly-1.09.00-vray33501-20160510.tar.xz',
+        utils.MAC: 'appsdk-mac-qt-nightly-1.09.00-vray33501-20160510.tar.xz',
+    }[utils.get_host_os()]
+
     ### DOWNLOAD APPSDK
     # just for test
     args.jenkins_appsdk_version = '20160510'
@@ -97,9 +103,10 @@ def main(args):
         except:
             pass
 
-        curl = 'curl -o appsdk.7z ftp://%s:%s@nightlies.chaosgroup.com/vrayappsdk/20160510/appsdk-win-qt-nightly-1.09.00-vray33501-20160510.7z' % (
+        curl = 'curl -o appsdk.7z ftp://%s:%s@nightlies.chaosgroup.com/vrayappsdk/20160510/%s' % (
             os.environ['NIGHTLIES_USER'],
             os.environ['NIGHTLIES_PASS'],
+            appsdk_name,
         )
 
         sys.stdout.write('CURL [%s]\n' % curl)

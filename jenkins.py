@@ -172,7 +172,7 @@ def main(args):
     if utils.get_host_os() == utils.LNX:
         dir_blender_libs = os.path.join(dir_source, 'prebuilt-libs')
         if not os.path.exists(dir_blender_libs):
-            sys.stdout.write('Missing prebuilt-libs path [], trying to create\n' % dir_blender_libs)
+            sys.stdout.write('Missing prebuilt-libs path [%s], trying to create\n' % dir_blender_libs)
             sys.stdout.flush()
             os.makedirs(dir_blender_libs)
         cmd.append('--dir_blender_libs=%s' % dir_blender_libs)

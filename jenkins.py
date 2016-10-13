@@ -141,11 +141,11 @@ def main(args):
         blender_modules.append('intern/vray_for_blender_rt/extern/vray-zmq-wrapper')
 
     os.chdir(dir_source)
-    utils.get_repo('ssh@github.com:bdancer/blender-for-vray', branch=branch, submodules=blender_modules, target_name='blender')
-    utils.get_repo('ssh@github.com:ChaosGroup/blender-for-vray-libs')
+    utils.get_repo('git@github.com:bdancer/blender-for-vray', branch=branch, submodules=blender_modules, target_name='blender')
+    utils.get_repo('git@github.com:ChaosGroup/blender-for-vray-libs')
 
     if args.jenkins_project_type == 'vb35':
-        utils.get_repo('ssh@github.com:bdancer/vrayserverzmq', submodules=['extern/vray-zmq-wrapper'])
+        utils.get_repo('git@github.com:bdancer/vrayserverzmq', submodules=['extern/vray-zmq-wrapper'])
 
     os.chdir(dir_build)
     ### CLONE REPOS

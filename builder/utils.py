@@ -215,7 +215,6 @@ def which(program, add_ext=False):
 	else:
 		for path in os.environ["PATH"].split(os.pathsep):
 			exe_file = path_join(path, program)
-			sys.stdout.write('EL %s\n' % exe_file)
 			if is_exe(exe_file):
 				return exe_file
 

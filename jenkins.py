@@ -173,7 +173,7 @@ def main(args):
     cmd.append('--build_type=%s' % args.jenkins_build_type)
     cmd.append('--use_package')
     cmd.append('--use_installer=CGR')
-    cmd.append('--dir_cgr_installer=%s' % os.path.join(os.getcwd(), 'blender-for-vray-libs', 'cgr_installer'))
+    cmd.append('--dir_cgr_installer=%s' % os.path.join(dir_source, 'blender-for-vray-libs', 'cgr_installer'))
 
     if args.jenkins_with_static_libc:
         cmd.append('--jenkins_with_static_libc')
@@ -192,7 +192,7 @@ def main(args):
     sys.stdout.write('Calling builder:\n%s\n' % '\n\t'.join(cmd))
     sys.stdout.flush()
 
-    return subprocess.call(cmd, cwd=os.getcwd())
+    return subprocess.call(cmd, cwd=dir_build)
 
 
 if __name__ == '__main__':

@@ -50,7 +50,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 	"-D JPEG_LIBRARY=%s" % os.path.join(self.dir_source, 'blender-for-vray-libs', 'Linux', 'jpeg-turbo', 'lib', 'Release', 'libjpeg-turbo.a'),
 	"-D JPEG_INCLUDE_DIR=%s" % os.path.join(self.dir_source, 'blender-for-vray-libs', 'Linux', 'jpeg-turbo', 'include'),
 	"-D TIFF_LIBRARY=%s" % os.path.join(prefix, 'tiff-%s' % TIFF_VERSION, 'lib' 'libtiff.a'),
-	"-D TIFF_INCLUDE_DIR=%d" % os.path.join(prefix, 'tiff-%s' % TIFF_VERSION, 'include'),
+	"-D TIFF_INCLUDE_DIR=%s" % os.path.join(prefix, 'tiff-%s' % TIFF_VERSION, 'include'),
 	]
 
 	def getCmakeCommandStr(*additionalArgs):
@@ -317,6 +317,8 @@ def DepsBuild(self):
 
 	wd = os.path.expanduser('~/blender-libs-builds')
 	if self.jenkins:
+		if os.path.exists(wd):
+			shutil.rmtree(wd)
 		wd = os.path.join(prefix, 'builds')
 
 	sys.stdout.write('Blender libs build dir [%s]\n' % wd)

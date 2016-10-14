@@ -86,13 +86,21 @@ def main(args):
         utils.MAC: 'appsdk-mac-qt-nightly-1.09.00-vray33501-20160510.tar.xz',
     }[utils.get_host_os()]
 
+    appsdk_os_dir_name = {
+        utils.WIN: 'windows',
+        utils.LNX: 'linux',
+        utils.MAC: 'darwin',
+    }[utils.get_host_os()]
+
+    vray_ext = 'exe' if utils.get_host_os() == utils.WIN else 'bin'
+
     ### DOWNLOAD APPSDK
     # just for test
     args.jenkins_appsdk_version = '20160510'
 
     appsdk_path = os.path.join(dir_source, 'vray-appsdk')
-    appsdk_check = os.path.join(appsdk_path, args.jenkins_appsdk_version, 'windows')
-    download_appsdk = not os.path.exists(appsdk_check) or not os.path.exists(os.path.join(appsdk_check, 'bin', 'vray.exe'))
+    appsdk_check = os.path.join(appsdk_path, args.jenkins_appsdk_version, appsdk_os_dir_name)
+    download_appsdk = not os.path.exists(appsdk_check) or not os.path.exists(os.path.join(appsdk_check, 'bin', 'vray.%s' % vray_ext))
 
     if args.jenkins_project_type == 'vb35' and download_appsdk:
         sys.stdout.write('Downloading appsdk:\n')

@@ -225,7 +225,7 @@ def which(program, add_ext=False):
 
 
 def find_cmd_from_git(cmd):
-	env_paths = os.getenv('PATH').split(';')
+	env_paths = os.getenv('PATH').split(ENV_PATH_SEP)
 
 	for path in env_paths:
 		if path.find('Git') == -1 and path.find('cmd') == -1:
@@ -888,7 +888,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		cg_root = os.path.normpath(os.path.join(get_default_install_path(), 'V-Ray', 'VRayZmqServer'))
 		os_type = get_host_os()
 		os_dir = "darwin" if os_type == MAC else os_type
-		appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], os.environ['CGR_APPSDK_VERSION'], os_dir, 'bin');
+		appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], os.environ['CGR_APPSDK_VERSION'], os_dir, 'bin')
 		appsdkFile = ''
 
 		if host_os == WIN:

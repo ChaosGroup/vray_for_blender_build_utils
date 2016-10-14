@@ -50,7 +50,7 @@ def setup_msvc_2013(cgrepo):
                 "{CGR_SDK}/msvs2013/bin/amd64",
                 "{CGR_SDK}/msvs2013/bin",
                 "{CGR_SDK}/msvs2013/PlatformSDK/bin/x64",
-            ] + os.environ['PATH'].split(';')
+            ] + os.environ['PATH'].split(os.pathsep)
         ,
     }
     os.environ['__MS_VC_INSTALL_PATH'] = "{CGR_SDK}/msvs2013"
@@ -153,7 +153,7 @@ def main(args):
         ninja_path = os.path.join(os.environ['CI_ROOT'], 'ninja', 'ninja')
     sys.stdout.write('Ninja path [%s]\n' % ninja_path)
     sys.stdout.flush()
-    os.environ['PATH'] = ninja_path + ';' + os.environ['PATH']
+    os.environ['PATH'] = ninja_path + os.pathsep + os.environ['PATH']
 
     ### CLONE REPOS
     blender_modules = [

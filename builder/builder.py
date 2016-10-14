@@ -353,6 +353,7 @@ class Builder:
 		command.append('--teamcity_install_path=%s' % os.path.join(self.dir_install, '..', 'vrayserverzmq'))
 		command.append('--teamcity_release_path=%s' % os.path.join(self.dir_release, '..', 'vrayserverzmq'))
 		command.append('--teamcity_build_path=%s' % os.path.join(self.dir_build, 'vrayserverzmq-cmake-build'))
+		command.append('--jenkins')
 
 		sys.stdout.write('Calling builder:\n%s\n' % '\n\t'.join(command))
 		sys.stdout.flush()

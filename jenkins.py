@@ -100,7 +100,7 @@ def main(args):
 
     appsdk_path = os.path.join(dir_source, 'vray-appsdk')
     this_appsdk_path = os.path.join(appsdk_path, args.jenkins_appsdk_version, appsdk_os_dir_name)
-    appsdk_check = os.path.join(this_appsdk_path 'bin', 'vray.%s' % vray_ext)
+    appsdk_check = os.path.join(this_appsdk_path, 'bin', 'vray.%s' % vray_ext)
     download_appsdk = not os.path.exists(appsdk_check)
 
     if args.jenkins_project_type == 'vb35' and download_appsdk:

@@ -69,7 +69,12 @@ def main(args):
     os.environ['https_proxy'] = 'https://10.0.0.1:1234/'
 
     cgrepo = os.environ['VRAY_CGREPO_PATH']
-    kdrive = os.path.join(cgrepo, 'sdk', 'win')
+    kdrive_os_dir_name = {
+        utils.WIN: 'win',
+        utils.LNX: 'linux',
+        utils.MAC: 'mac',
+    }[utils.get_host_os()]
+    kdrive = os.path.join(cgrepo, 'sdk', kdrive_os_dir_name)
 
     if sys.platform == 'win32':
         setup_msvc_2013(kdrive)

@@ -173,7 +173,7 @@ def main(args):
     if args.jenkins_project_type == 'vb35':
         utils.get_repo('git@github.com:bdancer/vrayserverzmq', submodules=['extern/vray-zmq-wrapper'])
         os.chdir(os.path.join(dir_source, 'vrayserverzmq'))
-        utils._get_cmd_output('find .')
+        utils._get_cmd_output(['find', '.'])
 
     os.chdir(dir_build)
     ### CLONE REPOS

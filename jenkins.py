@@ -146,11 +146,14 @@ def main(args):
         os.environ['CGR_APPSDK_VERSION'] = args.jenkins_appsdk_version
 
     ### ADD NINJA TO PATH
+    ninja_path = 'None'
     if sys.platform == 'win32':
         ninja_path = os.path.join(cgrepo, 'build_scripts', 'cmake', 'tools', 'bin')
-        sys.stdout.write('Ninja path [%s]\n' % ninja_path)
-        sys.stdout.flush()
-        os.environ['PATH'] = ninja_path + ';' + os.environ['PATH']
+    else:
+        ninja_path = os.path.join(os.environ['CI_ROOT'], 'ninja', 'ninja')
+    sys.stdout.write('Ninja path [%s]\n' % ninja_path)
+    sys.stdout.flush()
+    os.environ['PATH'] = ninja_path + ';' + os.environ['PATH']
 
     ### CLONE REPOS
     blender_modules = [

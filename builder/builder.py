@@ -350,8 +350,8 @@ class Builder:
 		command = [sys.executable]
 		command.append(os.path.join(self.dir_source, 'vrayserverzmq', 'build', 'teamcity.py'))
 		command.append('--teamcity_branch_hash=%s' % self.teamcity_zmq_server_hash)
-		command.append('--teamcity_install_path=%s' % os.path.join(self.dir_install, '..', 'vrayserverzmq'))
-		command.append('--teamcity_release_path=%s' % os.path.join(self.dir_release, '..', 'vrayserverzmq'))
+		command.append('--teamcity_install_path=%s' % os.normpath(os.path.join(self.dir_install, '..', 'vrayserverzmq')))
+		command.append('--teamcity_release_path=%s' % os.normpath(os.path.join(self.dir_release, '..', 'vrayserverzmq')))
 		command.append('--teamcity_build_path=%s' % os.path.join(self.dir_build, 'vrayserverzmq-cmake-build'))
 		command.append('--jenkins')
 

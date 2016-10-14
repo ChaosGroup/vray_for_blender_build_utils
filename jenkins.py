@@ -133,7 +133,7 @@ def main(args):
         }[utils.get_host_os()]
 
         for cmd in extract_cmds:
-            sys.stdout.write('Extract CMD [%s]\n', cmd)
+            sys.stdout.write('Extract CMD [%s]\n' % cmd)
             sys.stdout.flush()
             os.system(cmd)
 

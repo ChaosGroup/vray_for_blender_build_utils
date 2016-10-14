@@ -99,29 +99,37 @@ def main(args):
     args.jenkins_appsdk_version = '20160510'
 
     appsdk_path = os.path.join(dir_source, 'vray-appsdk')
-    appsdk_check = os.path.join(appsdk_path, args.jenkins_appsdk_version, appsdk_os_dir_name)
-    download_appsdk = not os.path.exists(appsdk_check) or not os.path.exists(os.path.join(appsdk_check, 'bin', 'vray.%s' % vray_ext))
+    this_appsdk_path = os.path.join(appsdk_path, args.jenkins_appsdk_version, appsdk_os_dir_name)
+    appsdk_check = os.path.join(this_appsdk_path 'bin', 'vray.%s' % vray_ext)
+    download_appsdk = not os.path.exists(appsdk_check)
 
     if args.jenkins_project_type == 'vb35' and download_appsdk:
-        sys.stdout.write('Downloading appsdk:\n')
-        sys.stdout.flush()
+        sys.stdout.write('Missing vray [%s]\n' % appsdk_check)
+        sys.stdout.write('Creating dir [%s]\n' % this_appsdk_path)
+        sys.stderr.flush()
 
         try:
-            os.makedirs(appsdk_check)
+            os.makedirs(this_appsdk_path)
         except:
             pass
 
-        curl = 'curl -o appsdk.7z ftp://%s:%s@nightlies.chaosgroup.com/vrayappsdk/20160510/%s' % (
+        appsdk_name = 'appsdk.%s' % ('7z' if utils.get_host_os() == utils.WIN else 'tar.xz')
+        curl = 'curl -o %s ftp://%s:%s@nightlies.chaosgroup.com/vrayappsdk/20160510/%s' % (
+            appsdk_name,
             os.environ['NIGHTLIES_USER'],
             os.environ['NIGHTLIES_PASS'],
             appsdk_name,
         )
 
+        sys.stdout.write('Downloading appsdk:\n')
         sys.stdout.write('CURL [%s]\n' % curl)
         sys.stdout.flush()
-        os.chdir(appsdk_check)
+        os.chdir(this_appsdk_path)
         os.system(curl)
-        os.system('7z x appsdk.7z')
+        if utils.get_host_os() == utils.WIN:
+            os.system('7z x %s' % appsdk_name)
+        else:
+            os.system('tar xf %s' % appsdk_name)
         os.chdir(dir_source)
 
     ### ADD APPSDK TO PATH

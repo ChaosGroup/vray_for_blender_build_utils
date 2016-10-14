@@ -54,7 +54,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 	]
 
 	def getCmakeCommandStr(*additionalArgs):
-		return ' '.join(['cmake'] + common_cmake_args + additionalArgs)
+		return ' '.join(['cmake'] + common_cmake_args + list(additionalArgs))
 
 	def dbg(x):
 		sys.stdout.write('%s\n' % x)

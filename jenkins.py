@@ -126,16 +126,10 @@ def main(args):
         sys.stdout.flush()
         os.chdir(this_appsdk_path)
         os.system(curl)
-        if utils.get_host_os() == utils.WIN:
-            appsdk_extract_cmd = ('7z x %s' % appsdk_name)
-            sys.stdout.write('Extracting appsdk [%s]\n' % appsdk_extract_cmd)
-            sys.stdout.flush()
-            os.system(appsdk_extract_cmd)
-        else:
-            appsdk_extract_cmd = ('tar xf %s' % appsdk_name)
-            sys.stdout.write('Extracting appsdk [%s]\n' % appsdk_extract_cmd)
-            sys.stdout.flush()
-            os.system(appsdk_extract_cmd)
+        appsdk_extract_cmd = ('7z x %s' % appsdk_name)
+        sys.stdout.write('Extracting appsdk [%s]\n' % appsdk_extract_cmd)
+        sys.stdout.flush()
+        os.system(appsdk_extract_cmd)
         os.chdir(dir_source)
 
     ### ADD APPSDK TO PATH

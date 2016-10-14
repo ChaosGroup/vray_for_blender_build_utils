@@ -147,7 +147,7 @@ def main(args):
     ### ADD APPSDK TO PATH
     if args.jenkins_project_type == 'vb35':
         sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, args.jenkins_appsdk_version))
-        os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
+        os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type.title()
         os.environ['CGR_APPSDK_PATH'] = appsdk_path
         os.environ['CGR_APPSDK_VERSION'] = args.jenkins_appsdk_version
 

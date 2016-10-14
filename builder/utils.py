@@ -215,8 +215,13 @@ def which(program, add_ext=False):
 	else:
 		for path in os.environ["PATH"].split(os.pathsep):
 			exe_file = path_join(path, program)
+			sys.stdout.write('Checking if path [%s] is path for [%s] ... ' % (exe_file, fname))
 			if is_exe(exe_file):
+				sys.stdout.write('yes!\n')
+				sys.stdout.flush()
 				return exe_file
+			sys.stdout.write('no!\n')
+			sys.stdout.flush()
 
 		if get_host_os() == WIN and not add_ext:
 			return which('%s.exe' % program, True)

@@ -128,7 +128,7 @@ def main(args):
         os.system(curl)
 
         extract_cmds = {
-            utils.WIN: ['7z x %s' % appsdk_name]
+            utils.WIN: ['7z x %s' % appsdk_name],
             utils.LNX: ['7z x %s' % appsdk_name, 'mv *.tar appsdk.tar', '7z x appsdk.tar'],
         }[utils.get_host_os()]
 

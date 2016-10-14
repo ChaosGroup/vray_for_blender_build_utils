@@ -46,24 +46,15 @@ FFTW_VERSION="3.3.4"
 
 
 def getDepsCompilationData(self, prefix, wd, jobs):
-	oiio_cmake_flags = [
-		"-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s" % prefix,
-		"-D CMAKE_INSTALL_PREFIX=%s/oiio-%s" % (prefix, OIIO_VERSION),
-		"-D STOP_ON_WARNING=OFF", "-D BUILDSTATIC=ON", "-D LINKSTATIC=ON", "-D USE_QT=OFF", "-D USE_PYTHON=OFF",
-		"-D BUILD_TESTING=OFF", "-D OIIO_BUILD_TESTS=OFF", "-D OIIO_BUILD_TOOLS=OFF",
-		"-D ILMBASE_VERSION=%s" % ILMBASE_VERSION ,"-D OPENEXR_VERSION=%s" % OPENEXR_VERSION,
-		"-D ILMBASE_HOME=%s/openexr" % prefix, "-D OPENEXR_HOME=%s/openexr" % prefix,
-		"-D BOOST_ROOT=%s/boost" % prefix, "-D Boost_NO_SYSTEM_PATHS=ON", "-D USE_OCIO=OFF",
-		"-D CMAKE_CXX_FLAGS=\"-fPIC\"", "-D CMAKE_EXE_LINKER_FLAGS=\"-lgcc_s -lgcc\"", ".."
+	common_cmake_args = [
+	"-D JPEG_LIBRARY=%s" % os.path.join(self.dir_source, 'blender-for-vray-libs', 'Linux', 'jpeg-turbo', 'lib', 'Release', 'libjpeg-turbo.a'),
+	"-D JPEG_INCLUDE_DIR=%s" % os.path.join(self.dir_source, 'blender-for-vray-libs', 'Linux', 'jpeg-turbo', 'include'),
+	"-D TIFF_LIBRARY=%s" % os.path.join(prefix, 'tiff-%s' % TIFF_VERSION, 'lib' 'libtiff.a'),
+	"-D TIFF_INCLUDE_DIR=%d" os.path.join(prefix, 'tiff-%s' % TIFF_VERSION, 'include'),
 	]
 
-	if self.jenkins:
-		oiio_cmake_flags = [
-			"-D JPEG_LIBRARY=%s" % os.path.join(self.dir_source, 'blender-for-vray-libs', 'Linux', 'jpeg-turbo', 'lib', 'Release', 'libjpeg-turbo.a'),
-			"-D JPEG_INCLUDE_DIR=%s" % os.path.join(self.dir_source, 'blender-for-vray-libs', 'Linux', 'jpeg-turbo', 'include'),
-		] + oiio_cmake_flags
-
-	oiio_cmake_flags = ['cmake'] + oiio_cmake_flags
+	def getCmakeCommandStr(*additionalArgs):
+		return ' '.join(['cmake'] + common_cmake_args + additionalArgs)
 
 	def dbg(x):
 		sys.stdout.write('%s\n' % x)
@@ -218,7 +209,16 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 				% (OIIO_VERSION, OIIO_VERSION),
 			'mkdir -p OpenImageIO-%s/build' % OIIO_VERSION,
 			getChDirCmd(os.path.join(wd, 'OpenImageIO-%s' % OIIO_VERSION, 'build')),
-			' '.join(oiio_cmake_flags),
+			getCmakeCommandStr(
+				"-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s" % prefix,
+				"-D CMAKE_INSTALL_PREFIX=%s/oiio-%s" % (prefix, OIIO_VERSION),
+				"-D STOP_ON_WARNING=OFF", "-D BUILDSTATIC=ON", "-D LINKSTATIC=ON", "-D USE_QT=OFF", "-D USE_PYTHON=OFF",
+				"-D BUILD_TESTING=OFF", "-D OIIO_BUILD_TESTS=OFF", "-D OIIO_BUILD_TOOLS=OFF",
+				"-D ILMBASE_VERSION=%s" % ILMBASE_VERSION ,"-D OPENEXR_VERSION=%s" % OPENEXR_VERSION,
+				"-D ILMBASE_HOME=%s/openexr" % prefix, "-D OPENEXR_HOME=%s/openexr" % prefix,
+				"-D BOOST_ROOT=%s/boost" % prefix, "-D Boost_NO_SYSTEM_PATHS=ON", "-D USE_OCIO=OFF",
+				"-D CMAKE_CXX_FLAGS=\"-fPIC\"", "-D CMAKE_EXE_LINKER_FLAGS=\"-lgcc_s -lgcc\"", ".."
+			),
 			'make -j %s' % jobs,
 			'make install',
 			'make clean',
@@ -311,13 +311,21 @@ def DepsInstall(self):
 
 
 def DepsBuild(self):
-	wd = os.path.expanduser('~/blender-libs-builds')
-	if not os.path.isdir(wd):
-		os.makedirs(wd)
-
 	prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
 	if self.dir_blender_libs != '':
 		prefix = self.dir_blender_libs
+
+	wd = os.path.expanduser('~/blender-libs-builds')
+	if self.jenkins:
+		wd = os.path.join(prefix, 'builds')
+
+	sys.stdout.write('Blender libs build dir [%s]\n' % wd)
+	sys.stdout.write('Blender libs install dir [%s]\n' % prefix)
+	sys.stdout.flush()
+
+	if not os.path.isdir(wd):
+		os.makedirs(wd)
+
 
 	self._blender_libs_location = prefix
 
@@ -337,6 +345,7 @@ def DepsBuild(self):
 			# we already have this lib
 			continue
 
+		fail = False
 		for step in item[2]:
 			sys.stdout.write("CWD %s\n" % os.getcwd())
 			sys.stdout.flush()
@@ -345,8 +354,8 @@ def DepsBuild(self):
 				if not step():
 					sys.stderr.write('Failed! Removing [%s] and stopping...\n' % item[1])
 					sys.stderr.flush()
-					shutil.rmtree(item[1])
-					sys.exit(1)
+					fail = True
+					break
 				sys.stdout.write('\n')
 			else:
 				if self.jenkins and (step.endswith('ldconfig') or '/etc/ld.so.conf.d' in step):
@@ -358,9 +367,14 @@ def DepsBuild(self):
 					if res != 0:
 						sys.stderr.write('Failed! Removing [%s] and stopping...\n' % item[1])
 						sys.stderr.flush()
-						shutil.rmtree(item[1])
-						sys.exit(1)
+						fail = True
+						break
 			sys.stdout.flush()
+		if fail:
+			if os.path.exists(item[1]):
+				shutil.rmtree(item[1])
+
+
 
 
 

@@ -59,6 +59,7 @@ class MacBuilder(Builder):
 
 		if self.teamcity_project_type == 'vb35':
 			cmake.append("-DWITH_CXX11=ON")
+			cmake.append("-LIBDIR=%s" % utils.path_join(self.dir_source, 'lib', 'darwin-9.x.universal'))
 			cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
 			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
 			cmake.append("-DWITH_GAMEENGINE=OFF")

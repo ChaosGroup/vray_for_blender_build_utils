@@ -226,7 +226,7 @@ def main(args):
 
     cmd.append('--dev_static_libs')
 
-    cmd.append('--with_cycles')
+    # md.append('--with_cycles')
     cmd.append('--uppatch=off')
     cmd.append('--upblender=off')
 

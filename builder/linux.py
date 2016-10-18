@@ -439,7 +439,7 @@ class LinuxBuilder(Builder):
 			libs_prefix = self._blender_libs_location
 
 		if self.dev_static_libs:
-			if distr_info['short_name'] == 'centos':
+			if distr_info['short_name'] == 'centos' or self.jenkins:
 
 				# NOTES:
 				#   OpenJPEG is disabled in OpenImageIO

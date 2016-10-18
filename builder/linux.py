@@ -58,6 +58,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 
 	def dbg(x):
 		sys.stdout.write('%s\n' % x)
+		sys.stdout.flush()
 		return True
 
 	def getChDirCmd(newDir):

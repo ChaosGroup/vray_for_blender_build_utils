@@ -119,8 +119,8 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'tar -C . --transform "s,(.*/?)boost_1_[^/]+(.*),\\1boost-%s\\2,x" -xf boost.tar.bz2' % BOOST_VERSION,
 			getChDirCmd(os.path.join(wd, 'boost-%s' % BOOST_VERSION)),
 			'./bootstrap.sh',
-			'./b2 -j 4 -a --with-system --with-filesystem --with-thread --with-regex --with-locale --with-date_time --with-wave --prefix=%s/boost-%s --disable-icu boost.locale.icu=off install'
-				% (prefix, BOOST_VERSION),
+			'./b2 -j %s -a --with-system --with-filesystem --with-thread --with-regex --with-locale --with-date_time --with-wave --prefix=%s/boost-%s --disable-icu boost.locale.icu=off install'
+				% (jobs, prefix, BOOST_VERSION),
 			'./b2 clean',
 			'ln -s %s/boost-%s %s/boost' % (prefix, BOOST_VERSION, prefix),
 			'sh -c "echo \"%s/boost/lib\" > /etc/ld.so.conf.d/boost.conf"' % prefix,

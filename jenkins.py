@@ -224,6 +224,8 @@ def main(args):
     if args.jenkins_with_static_libc:
         cmd.append('--jenkins_with_static_libc')
 
+    cmd.append('--dev_static_libs')
+
     cmd.append('--with_cycles')
     cmd.append('--uppatch=off')
     cmd.append('--upblender=off')

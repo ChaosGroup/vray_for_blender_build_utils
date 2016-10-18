@@ -353,6 +353,7 @@ def DepsBuild(self):
 			sys.stdout.flush()
 			if callable(step):
 				sys.stdout.write('Callable step: \n\t%s\n' % inspect.getsource(step).strip())
+				sys.stdout.flush()
 				if not step():
 					sys.stderr.write('Failed! Removing [%s] and stopping...\n' % item[1])
 					sys.stderr.flush()
@@ -365,13 +366,14 @@ def DepsBuild(self):
 					sys.stdout.write('Skipping [%s] step because of jenkins flag!\n' % step)
 				else:
 					sys.stdout.write('Command step: \n\t%s\n' % step)
+					sys.stdout.flush()
 					res = subprocess.call(step, shell=True)
+					sys.stderr.flush()
 					if res != 0:
 						sys.stderr.write('Failed! Removing [%s] and stopping...\n' % item[1])
 						sys.stderr.flush()
 						fail = True
 						break
-			sys.stdout.flush()
 		if fail:
 			if os.path.exists(item[1]):
 				shutil.rmtree(item[1])

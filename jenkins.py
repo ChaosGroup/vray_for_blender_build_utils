@@ -230,8 +230,8 @@ def main(args):
     cmd.append('--uppatch=off')
     cmd.append('--upblender=off')
 
-    cmd.append('--gcc=gcc482')
-    cmd.append('--gxx=g++482')
+    cmd.append('--gcc=gcc')
+    cmd.append('--gxx=g++')
 
     cmd.append('--dir_install=%s' % os.path.join(args.jenkins_output, 'install', 'vray_for_blender'))
     cmd.append('--dir_release=%s' % os.path.join(args.jenkins_output, 'release', 'vray_for_blender'))

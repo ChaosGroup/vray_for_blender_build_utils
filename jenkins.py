@@ -91,6 +91,11 @@ def main(args):
         utils.MAC: 'appsdk-mac-qt-nightly-1.09.00-vray33501-20160510.tar.xz',
     }[utils.get_host_os()]
 
+    if args.jenkins_appsdk_remote_name != '':
+        appsdk_remote_name = args.jenkins_appsdk_remote_name
+
+    appsdk_version = re.match(r'.*?vray\d{5}-(\d{8})\.(?:tar\.xz|7z)*?', appsdk_remote_name).groups()[0]
+
     appsdk_os_dir_name = {
         utils.WIN: 'windows',
         utils.LNX: 'linux',
@@ -101,10 +106,10 @@ def main(args):
 
     ### DOWNLOAD APPSDK
     # just for test
-    args.jenkins_appsdk_version = '20160510'
+
 
     appsdk_path = os.path.join(dir_source, 'vray-appsdk')
-    this_appsdk_path = os.path.join(appsdk_path, args.jenkins_appsdk_version, appsdk_os_dir_name)
+    this_appsdk_path = os.path.join(appsdk_path, appsdk_version, appsdk_os_dir_name)
     appsdk_check = os.path.join(this_appsdk_path, 'bin', 'vray.%s' % vray_ext)
     download_appsdk = not os.path.exists(appsdk_check)
 
@@ -146,10 +151,10 @@ def main(args):
 
     ### ADD APPSDK TO PATH
     if args.jenkins_project_type == 'vb35':
-        sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, args.jenkins_appsdk_version))
+        sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, appsdk_version))
         os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type.title()
         os.environ['CGR_APPSDK_PATH'] = appsdk_path
-        os.environ['CGR_APPSDK_VERSION'] = args.jenkins_appsdk_version
+        os.environ['CGR_APPSDK_VERSION'] = appsdk_version
 
     ### ADD NINJA TO PATH
     ninja_path = 'None'
@@ -208,13 +213,13 @@ def main(args):
             os.makedirs(dir_blender_libs)
         cmd.append('--dir_blender_libs=%s' % dir_blender_libs)
 
-    if args.clean:
-        cmd.append('--build_clean')
-
+    cmd.append('--build_clean')
     cmd.append('--with_ge')
     cmd.append('--with_player')
     cmd.append('--with_collada')
-    cmd.append('--vc_2013')
+    if utils.get_host_os() == utils.WIN:
+        cmd.append('--vc_2013')
+
     cmd.append('--build_mode=release')
     cmd.append('--build_type=%s' % args.jenkins_build_type)
     cmd.append('--use_package')
@@ -236,10 +241,6 @@ def main(args):
     cmd.append('--dir_install=%s' % os.path.join(args.jenkins_output, 'install', 'vray_for_blender'))
     cmd.append('--dir_release=%s' % os.path.join(args.jenkins_output, 'release', 'vray_for_blender'))
 
-    if args.upload:
-        cmd.append('--use_package_upload=ftp')
-        cmd.append('--use_proxy=http://10.0.0.1:1234')
-
     sys.stdout.write('Calling builder:\n%s\n' % '\n\t'.join(cmd))
     sys.stdout.flush()
 
@@ -250,33 +251,28 @@ if __name__ == '__main__':
     import argparse
     import sys
 
-    parser = argparse.ArgumentParser(usage="python3 build.py [options]")
+    parser = argparse.ArgumentParser(usage="python3 jenkins.py [options]")
 
-    parser.add_argument('--upload',
-        default=False,
-        help="Upload build"
-    )
-
-    parser.add_argument('--clean',
-        default=False,
-        help="Clean build directory"
-    )
 
     parser.add_argument('--jenkins_output',
-        default = ""
+        default = "",
+        required=True,
     )
 
-    parser.add_argument('--jenkins_appsdk_version',
-        default = ""
+    parser.add_argument('--jenkins_appsdk_remote_name',
+        default = "",
+        help='Remote name of the appsdk archive, examples: "appsdk-win-qt-nightly-1.09.00-vray33501-20160510.7z" OR "appsdk-linux-qt-nightly-1.09.00-vray33501-20160510.tar.xz" OR "appsdk-mac-qt-nightly-1.09.00-vray33501-20160510.tar.xz"',
     )
 
     parser.add_argument('--jenkins_perm_path',
-        default = ""
+        default = "",
+        required=True,
     )
 
     parser.add_argument('--jenkins_project_type',
         choices=['vb30', 'vb35'],
         default = 'vb30',
+        required=True,
     )
 
     parser.add_argument('--jenkins_with_static_libc',
@@ -286,10 +282,7 @@ if __name__ == '__main__':
     parser.add_argument('--jenkins_build_type',
         choices=['debug', 'release'],
         default = 'release',
-    )
-
-    parser.add_argument('--jenkins_init_repos',
-        action = 'store_true',
+        required=True,
     )
 
     args = parser.parse_args()

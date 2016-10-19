@@ -281,7 +281,7 @@ if __name__ == '__main__':
     )
 
     parser.add_argument('--jenkins_build_type',
-        choices=['Debug', 'Release'],
+        choices=['debug', 'release'],
         default = 'Release',
         required=True,
     )

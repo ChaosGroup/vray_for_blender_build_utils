@@ -318,8 +318,6 @@ def DepsBuild(self):
 
 	wd = os.path.expanduser('~/blender-libs-builds')
 	if self.jenkins:
-		if os.path.exists(wd):
-			shutil.rmtree(wd)
 		wd = os.path.join(prefix, 'builds')
 
 	sys.stdout.write('Blender libs build dir [%s]\n' % wd)
@@ -328,7 +326,6 @@ def DepsBuild(self):
 
 	if not os.path.isdir(wd):
 		os.makedirs(wd)
-
 
 	self._blender_libs_location = prefix
 
@@ -356,8 +353,6 @@ def DepsBuild(self):
 				sys.stdout.write('Callable step: \n\t%s\n' % inspect.getsource(step).strip())
 				sys.stdout.flush()
 				if not step():
-					sys.stderr.write('Failed! Removing [%s] and stopping...\n' % item[1])
-					sys.stderr.flush()
 					fail = True
 					break
 				sys.stdout.write('\n')
@@ -371,15 +366,13 @@ def DepsBuild(self):
 					res = subprocess.call(step, shell=True)
 					sys.stderr.flush()
 					if res != 0:
-						sys.stderr.write('Failed! Removing [%s] and stopping...\n' % item[1])
-						sys.stderr.flush()
 						fail = True
 						break
 		if fail:
+			sys.stderr.write('Failed! Removing [%s] if it exists and stopping...\n' % item[1])
+			sys.stderr.flush()
 			if os.path.exists(item[1]):
-				shutil.rmtree(item[1])
-
-
+				utils.remove_directory(item[1])
 
 
 

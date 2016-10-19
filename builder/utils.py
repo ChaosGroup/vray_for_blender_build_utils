@@ -457,6 +457,8 @@ def remove_directory(path):
 	# Don't know why, but when deleting from python
 	# on Windows it fails to delete '.git' direcotry,
 	# so using shell command
+	sys.stdout.write('Called utils.remove_directory(%s)\n' % path)
+	sys.stdout.flush()
 	if get_host_os() == WIN:
 		os.system("rmdir /Q /S %s" % path)
 		# Well yes, on Windows one remove is not enough...

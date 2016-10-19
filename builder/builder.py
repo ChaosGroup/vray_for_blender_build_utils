@@ -278,10 +278,6 @@ class Builder:
 		self.dir_blender      = utils.path_join(self.dir_source, "blender")
 		self.dir_blender_svn  = utils.path_join(self.dir_source, "blender-git")
 
-		if self.build_clean:
-			if os.path.exists(self.dir_build):
-				shutil.rmtree(self.dir_build)
-
 
 	def compile(self):
 		"""

@@ -153,7 +153,7 @@ class Builder:
 			exportSources()
 
 		# Update Blender libs
-		if self.upblender or self.jenkins:
+		if self.upblender or (self.jenkins and utils.get_host_os() != utils.MAC):
 			lib_dir = None
 			svn_cmd = None
 			if self.host_os != utils.LNX:

@@ -185,6 +185,28 @@ def main(args):
     if args.jenkins_project_type == 'vb35':
         utils.get_repo('git@github.com:bdancer/vrayserverzmq', submodules=['extern/vray-zmq-wrapper'])
 
+    if utils.get_host_os() == utils.MAC:
+        boost_src = os.path.join(kdrive, 'boost', 'boost_1_61')
+        python_patch = os.path.join(dir_source, 'blender-for-vray-libs', 'Darwin', 'pyport.h')
+        patch_steps = [
+            "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal",
+            "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12",
+            "cp -Rf lib/win64_vc12/opensubdiv/include/opensubdiv/* lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/",
+            "cp lib/darwin-9.x.universal/png/lib/libpng12.a lib/darwin-9.x.universal/png/lib/libpng.a",
+            "cp lib/darwin-9.x.universal/png/lib/libpng12.la lib/darwin-9.x.universal/png/lib/libpng.la",
+            "mkdir -p lib/darwin-9.x.universal/release/site-packages",
+            "rm -rf lib/darwin-9.x.universal/boost_1_60",
+            "mv lib/darwin-9.x.universal/boost lib/darwin-9.x.universal/boost_1_60",
+            "cp -r %s lib/darwin-9.x.universal/boost" % boost_src,
+            "cp -f %s lib/darwin-9.x.universal/python/include/python3.5m/pyport.h" % python_patch,
+        ]
+        os.chdir(dir_source)
+
+        for step in patch_steps:
+            sys.stdout.write('MAC patch step [%s]\n' % step)
+            sys.stdout.flush()
+            os.system(step)
+
     os.chdir(dir_build)
     ### CLONE REPOS
 

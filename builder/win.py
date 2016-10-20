@@ -102,6 +102,7 @@ class WindowsBuilder(Builder):
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")
 		cmake.append("-DWITH_OPENSUBDIV=ON")
 		cmake.append("-DWITH_FFTW3=ON")
+		cmake.append("-DWITH_ALEMBIC=ON")
 
 		cmake.append(self.dir_blender)
 

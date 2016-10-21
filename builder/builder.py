@@ -96,6 +96,51 @@ class Builder:
 		sys.stdout.write("\n")
 
 
+	def get_svn_libs(self):
+		if utils.get_host_os() == utils.LNX:
+			sys.stdout.write('Skipping svn libs for linux.\n')
+			sys.stdout.flush()
+			return
+
+		if self.jenkins and utils.get_host_os(() == utils.MAC):
+			sys.stdout.write('Skipping svn libs for jenkins mac.\n')
+			sys.stdout.flush()
+			return
+
+		# Update Blender libs
+		if self.upblender == 'on' or self.jenkins:
+			lib_dir = None
+			svn_cmd = None
+			if self.host_os != utils.LNX:
+				if self.host_os == utils.WIN:
+					lib_dir = utils.path_join(self.dir_source, "lib", "windows")
+					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/windows lib/windows"
+					if self.host_arch == "x86_64":
+						if self.vc2013:
+							lib_dir = utils.path_join(self.dir_source, "lib", "win64_vc12")
+							svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12"
+						else:
+							lib_dir = utils.path_join(self.dir_source, "lib", "win64")
+							svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64 lib/win64"
+				elif self.host_os == utils.MAC:
+					lib_dir = utils.path_join(self.dir_source, "lib", "darwin-9.x.universal")
+					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal"
+
+				sys.stdout.write('Lib dir: [%s]\n' % lib_dir)
+				sys.stdout.flush()
+				if not os.path.exists(lib_dir):
+					sys.stdout.write("Getting \"lib\" data... [%s]\n" % svn_cmd)
+					sys.stdout.flush()
+					if not self.mode_test:
+						os.chdir(self.dir_source)
+						os.system(svn_cmd)
+				else:
+					sys.stdout.write("Updating \"lib\" data... [svn update]\n")
+					sys.stdout.flush()
+					if not self.mode_test:
+						os.chdir(lib_dir)
+						os.system("svn update")
+
 	def update_sources(self):
 		"""
 		  Getting/updating sources
@@ -152,40 +197,7 @@ class Builder:
 
 			exportSources()
 
-		# Update Blender libs
-		if self.upblender or (self.jenkins and utils.get_host_os() != utils.MAC):
-			lib_dir = None
-			svn_cmd = None
-			if self.host_os != utils.LNX:
-				if self.host_os == utils.WIN:
-					lib_dir = utils.path_join(self.dir_source, "lib", "windows")
-					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/windows lib/windows"
-					if self.host_arch == "x86_64":
-						if self.vc2013:
-							lib_dir = utils.path_join(self.dir_source, "lib", "win64_vc12")
-							svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12"
-						else:
-							lib_dir = utils.path_join(self.dir_source, "lib", "win64")
-							svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64 lib/win64"
-				elif self.host_os == utils.MAC:
-					lib_dir = utils.path_join(self.dir_source, "lib", "darwin-9.x.universal")
-					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal"
-
-				sys.stdout.write('Lib dir: [%s]\n' % lib_dir)
-				sys.stdout.flush()
-				if not os.path.exists(lib_dir):
-					sys.stdout.write("Getting \"lib\" data... [%s]\n" % svn_cmd)
-					sys.stdout.flush()
-					if not self.mode_test:
-						os.chdir(self.dir_source)
-						os.system(svn_cmd)
-				else:
-					sys.stdout.write("Updating \"lib\" data... [svn update]\n")
-					sys.stdout.flush()
-					if not self.mode_test:
-						os.chdir(lib_dir)
-						os.system("svn update")
-
+		self.get_svn_libs()
 		# Update V-Ray/Blender patchset
 		if self.uppatch == "on" and not self.mode_developer:
 

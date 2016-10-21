@@ -258,6 +258,9 @@ def main(args):
 
     cmd.append('--dev_static_libs')
 
+    cmd.append('--upblender=off')
+    cmd.append('--uppatch=off')
+
     cmd.append('--gcc=gcc')
     cmd.append('--gxx=g++')
 

@@ -75,22 +75,34 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 	cwd = os.getcwd()
 	clone_dir = os.path.join(cwd, repo_name)
 
+	git_cmds = []
+
 	if not os.path.exists(clone_dir):
+		get_cmd = ""
 		if target_name and not target_dir:
 			# just rename clone
-			os.system("git clone %s %s" % (repo_url, target_name))
+			get_cmd = "git clone %s %s" % (repo_url, target_name)
 		else:
-			os.system("git clone %s" % repo_url)
-		os.system("git pull origin %s" % branch)
-		os.chdir(clone_dir)
-		os.system("git checkout %s" % branch)
-	else:
-		os.chdir(clone_dir)
-		os.system("git checkout -- .")
-		os.system("git pull origin %s" % branch)
+			get_cmd = "git clone %s" % repo_url
+		sys.stdout.write('GIT: [%s]\n' % get_cmd)
+		sys.stdout.flush()
+		os.system(get_cmd)
+
+	os.chdir(clone_dir)
+	git_cmds = git_cmds + [
+		"git checkout -- .",
+		"git reset --hard origin/%s" % branch,
+		"git checkout %s" % branch,
+		"git pull origin %s" % branch,
+	]
 
 	for module in submodules:
-		os.system("git submodule update --init --remote --recursive %s" % module)
+		git_cmds.append("git submodule update --init --remote --recursive %s" % module)
+
+	for cmd in git_cmds:
+		sys.stdout.write('GIT: [%s]\n' % cmd)
+		sys.stdout.flush()
+		os.system(cmd)
 
 	if target_dir:
 		to_dir = os.path.join(target_dir, repo_name)

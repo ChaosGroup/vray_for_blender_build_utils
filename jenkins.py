@@ -60,6 +60,9 @@ def setup_msvc_2013(cgrepo):
 
 
 def main(args):
+    sys.stdout.write('jenkins args:\n%s\n' % str(args))
+    sys.stdout.flush()
+
     dir_build = os.getcwd()
     os.environ['http_proxy'] = '10.0.0.1:1234'
     os.environ['https_proxy'] = '10.0.0.1:1234'

@@ -103,10 +103,10 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'ln -s %s/python-%s %s/python' % (prefix, PYTHON_VERSION, prefix),
 			'ln -s %s/python-%s %s/python-%s' % (prefix, PYTHON_VERSION, prefix, PYTHON_VERSION_BIG),
 		)),
-		('requests', '%s/python/lib/python%s/site-packages/requests' % (prefix, PYTHON_VERSION_BIG), (
+		('requests', '%s/python/lib/python%s/site-packages/requests/api.py' % (prefix, PYTHON_VERSION_BIG), (
 			'%s/python/bin/pip%s install requests' % (prefix, PYTHON_VERSION_BIG),
 		)),
-		('numpy', '%s/numpy-%s' % (prefix, NUMPY_VERSION), (
+		('numpy', '%s/python/lib/python%s/site-packages/numpy' % (prefix, PYTHON_VERSION_BIG), (
 			getChDirCmd(wd),
 			getDownloadCmd("http://sourceforge.net/projects/numpy/files/NumPy/%s/numpy-%s.tar.gz" % (NUMPY_VERSION, NUMPY_VERSION), 'numpy.tar.gz'),
 			'tar -C . -xf numpy.tar.gz',
@@ -336,14 +336,23 @@ def DepsBuild(self):
 		return
 
 	sys.stdout.write('Building dependencies...\n')
+	installed_python = False
+
 
 	for item in data:
 		sys.stdout.write('Installing %s...\n' % item[0])
 		shouldStop = False
-		if os.path.isdir(item[1]):
-			sys.stdout.write('%s already installed, skipping ...\n' % item[1])
-			# we already have this lib
-			continue
+		if os.path.exists(item[1]):
+			if item[0] in ('numpy', 'requests'):
+				sys.stdout.write('We reinstalled python, removing %s so we can reinstall it also\n' % item[0])
+				sys.stdout.flush()
+				utils.remove_directory(item[1])
+			else:
+				sys.stdout.write('%s already installed, skipping ...\n' % item[1])
+				continue
+
+		if item[0] == 'python':
+			installed_python = True
 
 		fail = False
 		for step in item[2]:

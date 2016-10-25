@@ -102,7 +102,7 @@ class Builder:
 			sys.stdout.flush()
 			return
 
-		if self.jenkins and utils.get_host_os(() == utils.MAC):
+		if self.jenkins and utils.get_host_os() == utils.MAC:
 			sys.stdout.write('Skipping svn libs for jenkins mac.\n')
 			sys.stdout.flush()
 			return

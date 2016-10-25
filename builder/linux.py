@@ -389,6 +389,7 @@ def DepsBuild(self):
 			sys.stderr.flush()
 			if os.path.exists(item[1]):
 				utils.remove_directory(item[1])
+			sys.exit(-1)
 
 
 

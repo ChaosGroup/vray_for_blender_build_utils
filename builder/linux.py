@@ -313,6 +313,12 @@ def DepsInstall(self):
 
 def DepsBuild(self):
 	prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
+
+	if self.jenkins and self.dir_blender_libs == '':
+		sys.stderr.write('Running on jenkins and dir_blender_libs is missing!\n')
+		sys.stderr.flush()
+		sys.exit(-1)
+
 	if self.dir_blender_libs != '':
 		prefix = self.dir_blender_libs
 
@@ -344,9 +350,10 @@ def DepsBuild(self):
 		shouldStop = False
 		if os.path.exists(item[1]):
 			if item[0] in ('numpy', 'requests'):
-				sys.stdout.write('We reinstalled python, removing %s so we can reinstall it also\n' % item[0])
+				rm_cmd = 'rm -r %s/%s*' % (prefix, item[0])
+				sys.stdout.write('We reinstalled python, removing %s with [%s] so we can reinstall it also\n' % (item[0], rm_cmd))
 				sys.stdout.flush()
-				utils.remove_directory(item[1])
+				os.system(rm_cmd)
 			else:
 				sys.stdout.write('%s already installed, skipping ...\n' % item[1])
 				continue

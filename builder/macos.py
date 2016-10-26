@@ -56,7 +56,7 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity))
 		cmake.append("-DPNG_LIBRARIES=png12")
-		cmake.append("-DWITH_ALEMBIC=ON")
+
 
 		if self.teamcity_project_type == 'vb35':
 			cmake.append("-DWITH_CXX11=ON")
@@ -84,6 +84,7 @@ class MacBuilder(Builder):
 			cmake.append("-DWITH_MOD_OCEANSIM=ON")
 			# TODO: cmake.append("-DWITH_OPENSUBDIV=ON")
 			cmake.append("-DWITH_FFTW3=ON")
+			cmake.append("-DWITH_ALEMBIC=ON")
 
 
 		cmake.append(self.dir_blender)

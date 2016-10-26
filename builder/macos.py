@@ -74,6 +74,7 @@ class MacBuilder(Builder):
 			cmake.append("-DWITH_IMAGE_OPENEXR=OFF")
 			cmake.append("-DWITH_IMAGE_OPENJPEG=OFF")
 			cmake.append("-DWITH_FFTW3=OFF")
+			cmake.append("-DWITH_CODEC_FFMPEG=OFF")
 			cmake.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=")
 		else:
 			cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))

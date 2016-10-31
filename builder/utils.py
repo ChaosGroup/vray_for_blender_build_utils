@@ -214,11 +214,16 @@ def pathExpand(path):
 
 def which(program, add_ext=False):
 	"""
-	  Returns full path of "program" or None
+	  Returns full path of "program" or None, if it fails will print where it tried
 	"""
 
 	def is_exe(fpath):
 		return os.path.exists(fpath) and os.access(fpath, os.X_OK)
+
+	# log what we tried if we fail
+	log = []
+
+	result = None
 
 	fpath, fname = os.path.split(program)
 	if fpath:
@@ -227,18 +232,22 @@ def which(program, add_ext=False):
 	else:
 		for path in os.environ["PATH"].split(os.pathsep):
 			exe_file = path_join(path, program)
-			sys.stdout.write('Checking if path [%s] is path for [%s] ... ' % (exe_file, fname))
+			log.append('Checking if path [%s] is path for [%s] ... ' % (exe_file, fname))
 			if is_exe(exe_file):
-				sys.stdout.write('yes!\n')
-				sys.stdout.flush()
-				return exe_file
-			sys.stdout.write('no!\n')
-			sys.stdout.flush()
+				log[-1] = log[-1] + 'yes!\n';
+				result = exe_file
+				break
+			log[-1] = log[-1] + 'no!\n'
 
 		if get_host_os() == WIN and not add_ext:
-			return which('%s.exe' % program, True)
+			result = which('%s.exe' % program, True)
 
-	return None
+	if not result:
+		for l in log:
+			sys.stderr.write('%s\n' % l)
+		sys.stderr.flush()
+
+	return result
 
 
 def find_cmd_from_git(cmd):
@@ -513,27 +522,31 @@ def GetInstallDirName(self):
 			'hash'    : "",
 		})
 
-	if self.teamcity:
+	if self.teamcity or self.jenkins:
 		params.update({
 			'bhash' : "",
 			'nCommits' : "",
 			'hash'     : "-%s" % self.revision[:7],
 		})
 
+	sys.stdout.write('GetInstallDirName params: \n%s\n' % str(params))
+	sys.stdout.flush()
+
 	return "{project}{version}{nCommits}{bhash}{hash}{arch}{branch}".format(**params)
 
 
 def GetPackageName(self, ext=None):
+	os = get_host_os()
+
 	def _get_host_package_type():
-		if get_host_os() == WIN:
+		if os == WIN:
 			return "exe"
-		elif get_host_os() == MAC:
+		elif os == MAC:
 			return 'dmg'
 		else:
 			return "bin"
 
-	os = get_host_os()
-	if os == 'linux':
+	if os == LNX:
 		os = "%s%s" % (get_linux_distribution()['short_name'], get_linux_distribution()['version'])
 
 	params = {

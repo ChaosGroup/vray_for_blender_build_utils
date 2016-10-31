@@ -141,42 +141,7 @@ class WindowsBuilder(Builder):
 		utils.GenCGRInstaller(self, installer_path, InstallerDir=self.dir_cgr_installer)
 
 
-	def package(self):
-		subdir = "windows" + "/" + self.build_arch
-
-		release_path = os.path.join(self.dir_release, subdir)
-
-		if not self.mode_test:
-			utils.path_create(release_path)
-
-		# Example: vrayblender-2.60-42181-windows-x86_64.exe
-		installer_name = utils.GetPackageName(self)
-		zip_name = utils.GetPackageName(self, ext='zip')
-		installer_path = utils.path_slashify(utils.path_join(release_path, installer_name))
-		installer_root = utils.path_join(self.dir_source, "vb25-patch", "installer")
-
-		if self.use_installer == 'CGR':
-			self.installer_cgr(installer_path)
-
-			cmd = "7z -tzip a %s %s" % (zip_name, installer_name)
-
-			sys.stdout.write("Calling: %s\n" % (cmd))
-			sys.stdout.write("  in: %s\n" % (release_path))
-
-			if not self.mode_test:
-				os.chdir(release_path)
-				os.system(cmd)
-
-			artefacts = (
-				os.path.normpath(os.path.join(release_path, installer_name)),
-				os.path.normpath(os.path.join(release_path, zip_name)),
-			)
-
-			sys.stdout.write("##teamcity[setParameter name='env.ENV_ARTEFACT_FILES' value='%s']" % '|n'.join(artefacts))
-			sys.stdout.flush()
-
-			return subdir, zip_name
-
+	def installer_nsis(self, installer_name, installer_path, installer_root):
 		# Use NSIS log plugin
 		installer_log  = False
 
@@ -257,6 +222,44 @@ class WindowsBuilder(Builder):
 			proc = subprocess.call(cmd)
 
 		return subdir, installer_path
+
+	def package(self):
+		subdir = "windows" + "/" + self.build_arch
+
+		release_path = os.path.join(self.dir_release, subdir)
+
+		if not self.mode_test:
+			utils.path_create(release_path)
+
+		# Example: vrayblender-2.60-42181-windows-x86_64.exe
+		installer_name = utils.GetPackageName(self)
+		zip_name = utils.GetPackageName(self, ext='zip')
+		installer_path = utils.path_slashify(utils.path_join(release_path, installer_name))
+		installer_root = utils.path_join(self.dir_source, "vb25-patch", "installer")
+
+		if self.use_installer == 'CGR':
+			self.installer_cgr(installer_path)
+
+			cmd = "7z -tzip a %s %s" % (zip_name, installer_name)
+
+			sys.stdout.write("Calling: %s\n" % (cmd))
+			sys.stdout.write("  in: %s\n" % (release_path))
+
+			if not self.mode_test:
+				os.chdir(release_path)
+				os.system(cmd)
+
+			artefacts = (
+				os.path.normpath(os.path.join(release_path, installer_name)),
+				os.path.normpath(os.path.join(release_path, zip_name)),
+			)
+
+			sys.stdout.write("##teamcity[setParameter name='env.ENV_ARTEFACT_FILES' value='%s']" % '|n'.join(artefacts))
+			sys.stdout.flush()
+
+			return subdir, zip_name
+		else:
+			return self.installer_nsis(installer_name, installer_path, installer_root)
 
 	def package_archive(self):
 		subdir = "windows" + "/" + self.build_arch

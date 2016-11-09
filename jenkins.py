@@ -226,7 +226,8 @@ def main(args):
     cmd.append("--teamcity_project_type=%s" % args.jenkins_project_type)
 
     cmd.append('--github-src-branch=%s' % branch)
-    cmd.append('--teamcity_zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(dir_source, 'vrayserverzmq')))
+    if args.jenkins_project_type == 'vb35':
+        cmd.append('--teamcity_zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(dir_source, 'vrayserverzmq')))
 
     cmd.append('--jenkins_kdrive_path=%s' % kdrive)
     os.environ['jenkins_kdrive_path'] = kdrive

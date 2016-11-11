@@ -90,9 +90,9 @@ def main(args):
     branch = 'dev/vray_for_blender/%s' % args.jenkins_project_type
 
     appsdk_remote_name = {
-        utils.WIN: 'appsdk-win-qt-nightly-1.09.00-vray33501-20160510.7z',
-        utils.LNX: 'appsdk-linux-qt-nightly-1.09.00-vray33501-20160510.tar.xz',
-        utils.MAC: 'appsdk-mac-qt-nightly-1.09.00-vray33501-20160510.tar.xz',
+        utils.WIN: 'appsdk-win-qt-nightly-1.11.00-vray34501-20161110.7z',
+        utils.LNX: 'appsdk-linux-qt-nightly-1.11.00-vray34501-20161110.tar.xz',
+        utils.MAC: 'appsdk-mac-qt-nightly-1.11.00-vray34501-20161110.tar.xz',
     }[utils.get_host_os()]
 
     if args.jenkins_appsdk_remote_name != '':

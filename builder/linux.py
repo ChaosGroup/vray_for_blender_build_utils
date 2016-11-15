@@ -25,6 +25,7 @@
 
 import os
 import sys
+import glob
 import shutil
 import subprocess
 import inspect
@@ -90,6 +91,16 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 	def getOrCmd(a, b):
 		return lambda: a() or b()
 
+	def removeSoFile(path):
+		if and os.path.isfile(path):
+			dbg('Removing so file [%s]' % path)
+			os.remove(path)
+			return True
+		return False
+
+	def getRemoveSoFiles(dir):
+		return lambda: all([removeSoFile(path) for path in glob.glob('%s/*.so*')])
+
 	steps = (
 		('python', '%s/python-%s' % (prefix, PYTHON_VERSION), (
 			getChDirCmd(wd),
@@ -125,7 +136,8 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'./b2 clean',
 			'ln -s %s/boost-%s %s/boost' % (prefix, BOOST_VERSION, prefix),
 			'sh -c "echo \"%s/boost/lib\" > /etc/ld.so.conf.d/boost.conf"' % prefix,
-			'/sbin/ldconfig'
+			'/sbin/ldconfig',
+			getRemoveSoFiles('%s/boost/lib' % prefix)
 		)),
 		('tiff', '%s/tiff-%s' % (prefix, TIFF_VERSION), (
 			getChDirCmd(wd),
@@ -344,7 +356,6 @@ def DepsBuild(self):
 	sys.stdout.write('Building dependencies...\n')
 	installed_python = False
 
-
 	for item in data:
 		sys.stdout.write('Installing %s...\n' % item[0])
 		shouldStop = False
@@ -390,7 +401,6 @@ def DepsBuild(self):
 			if os.path.exists(item[1]):
 				utils.remove_directory(item[1])
 			sys.exit(-1)
-
 
 
 class LinuxBuilder(Builder):

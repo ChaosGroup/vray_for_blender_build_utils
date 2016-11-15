@@ -92,7 +92,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		return lambda: a() or b()
 
 	def removeSoFile(path):
-		if and os.path.isfile(path):
+		if os.path.isfile(path):
 			dbg('Removing so file [%s]' % path)
 			os.remove(path)
 			return True

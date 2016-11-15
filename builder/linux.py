@@ -462,6 +462,14 @@ class LinuxBuilder(Builder):
 		if hasattr(self, '_blender_libs_location'):
 			libs_prefix = self._blender_libs_location
 
+		if self.jenkins:
+			sys.stdout.write('Removing boost so files ...\n')
+			sys.stdout.flush()
+			for f in glob.glob('%s/boost/lib/*.so*' % libs_prefix):
+				sys.stdout.write('Removing so [%s]\n' % f)
+				sys.stdout.flush()
+				os.remove(f)
+
 		if self.dev_static_libs:
 			if distr_info['short_name'] == 'centos' or self.jenkins:
 

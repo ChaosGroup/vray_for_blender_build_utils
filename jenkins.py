@@ -255,7 +255,7 @@ def main(args):
     cmd.append('--dir_cgr_installer=%s' % os.path.join(dir_source, 'blender-for-vray-libs', 'cgr_installer'))
 
     if args.jenkins_with_static_libc:
-        cmd.append('--jenkins_with_static_libc')
+        cmd.append('--teamcity_with_static_libc')
 
     cmd.append('--dev_static_libs')
 

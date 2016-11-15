@@ -445,7 +445,7 @@ class LinuxBuilder(Builder):
 
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")
 		cmake.append("-DWITH_OPENSUBDIV=ON")
-
+		cmake.append("-DWITH_STATIC_LIBS=ON")
 
 		libs_prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
 

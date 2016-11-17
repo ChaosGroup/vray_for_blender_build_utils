@@ -115,6 +115,13 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
         sys.stdout.flush()
         os.system(cmd)
 
+    tar_name = appsdk_name[0:-3]
+    if utils.get_host_os() == utils.LNX and os.path.exists(os.path.join(appsdk_path, tar_name)):
+        cmd = "7z x %s" % tar_name
+        sys.stdout.write('Extract tar CMD [%s]\n' % cmd)
+        sys.stdout.flush()
+        os.system(cmd)
+
     utils.remove_path(os.path.join(appsdk_path, appsdk_name))
     return all_appsdk_root
 

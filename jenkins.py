@@ -60,7 +60,7 @@ def setup_msvc_2013(cgrepo):
         os.environ[var] = ";".join(env[var]).format(CGR_SDK=cgrepo)
 
 
-def get_appsdk(remote_name, appsdk_version, dir_source):
+def get_appsdk(appsdk_name, appsdk_version, dir_source):
     appsdk_os_dir_name = {
         utils.WIN: 'windows',
         utils.LNX: 'linux',
@@ -91,11 +91,11 @@ def get_appsdk(remote_name, appsdk_version, dir_source):
         pass
 
     curl = 'curl -s -S -o %s ftp://%s:%s@nightlies.chaosgroup.com/vrayappsdk/%s/%s' % (
-        appsdk_remote_name,
+        appsdk_name,
         os.environ['NIGHTLIES_USER'],
         os.environ['NIGHTLIES_PASS'],
         appsdk_version,
-        appsdk_remote_name,
+        appsdk_name,
     )
 
     sys.stdout.write('Downloading appsdk:\n')
@@ -105,9 +105,9 @@ def get_appsdk(remote_name, appsdk_version, dir_source):
     os.system(curl)
 
     extract_cmds = {
-        utils.WIN: ['7z x %s' % appsdk_remote_name],
-        utils.LNX: ['7z x %s' % appsdk_remote_name],
-        utils.MAC: ['7z x %s' % appsdk_remote_name, 'mv *.tar appsdk.tar', '7z x appsdk.tar'],
+        utils.WIN: ['7z x %s' % appsdk_name],
+        utils.LNX: ['7z x %s' % appsdk_name],
+        utils.MAC: ['7z x %s' % appsdk_name, 'mv *.tar appsdk.tar', '7z x appsdk.tar'],
     }[utils.get_host_os()]
 
     for cmd in extract_cmds:
@@ -115,7 +115,7 @@ def get_appsdk(remote_name, appsdk_version, dir_source):
         sys.stdout.flush()
         os.system(cmd)
 
-    utils.remove_path(os.path.join(this_appsdk_path, appsdk_remote_name))
+    utils.remove_path(os.path.join(this_appsdk_path, appsdk_name))
 
 
 def main(args):

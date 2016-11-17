@@ -60,7 +60,7 @@ def setup_msvc_2013(cgrepo):
         os.environ[var] = ";".join(env[var]).format(CGR_SDK=cgrepo)
 
 
-def get_appsdk(remote_name, version, deps_dir):
+def get_appsdk(remote_name, appsdk_version, dir_source):
     appsdk_os_dir_name = {
         utils.WIN: 'windows',
         utils.LNX: 'linux',
@@ -69,7 +69,7 @@ def get_appsdk(remote_name, version, deps_dir):
 
     vray_ext = 'exe' if utils.get_host_os() == utils.WIN else 'bin'
 
-    appsdk_path = os.path.join(deps_dir, 'vray-appsdk')
+    appsdk_path = os.path.join(dir_source, 'vray-appsdk')
 
     # clean all non-needed files
     for item in glob.glob('%s/*' % appsdk_path):

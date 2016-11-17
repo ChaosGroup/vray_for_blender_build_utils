@@ -72,7 +72,7 @@ def get_appsdk(remote_name, version, deps_dir):
     appsdk_path = os.path.join(deps_dir, 'vray-appsdk')
 
     # clean all non-needed files
-    for item in glob.glob('%s/*' % deps_dir):
+    for item in glob.glob('%s/*' % appsdk_path):
         if re.match(r'^\d{8}$', item) is None:
             if os.path.isdir(item):
                 utils.remove_path(item)

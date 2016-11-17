@@ -66,7 +66,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		return lambda: os.chdir(newDir) or True
 
 	def getDownloadCmd(url, name):
-		return lambda: dbg('wget -c %s -O %s/%s' % (url, wd, name)) and 0 == os.system('wget -c %s -O %s/%s' % (url, wd, name))
+		return lambda: dbg('wget -c %s -O %s/%s' % (url, wd, name)) and 0 == os.system('wget -c "%s" -O %s/%s' % (url, wd, name))
 
 	def patchOpenEXRCmake():
 		with open(os.path.join(wd, 'OpenEXR-%s' % OPENEXR_VERSION, 'IlmImf', 'CMakeLists.txt'), 'r+') as f:

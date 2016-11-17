@@ -69,24 +69,24 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
 
     vray_ext = 'exe' if utils.get_host_os() == utils.WIN else 'bin'
 
-    appsdk_path = os.path.join(dir_source, 'vray-appsdk')
+    all_appsdk_root = os.path.join(dir_source, 'vray-appsdk')
 
     # clean all non-needed files
-    for item in glob.glob('%s/*' % appsdk_path):
+    for item in glob.glob('%s/*' % all_appsdk_root):
         if re.match(r'^\d{8}$', item) is None:
             if os.path.isdir(item):
                 utils.remove_path(item)
 
-    this_appsdk_path = os.path.join(appsdk_path, appsdk_version, appsdk_os_dir_name)
-    appsdk_check = os.path.join(this_appsdk_path, 'bin', 'vray.%s' % vray_ext)
+    appsdk_path = os.path.join(all_appsdk_root, appsdk_version, appsdk_os_dir_name)
+    appsdk_check = os.path.join(appsdk_path, 'bin', 'vray.%s' % vray_ext)
     download_appsdk = not os.path.exists(appsdk_check)
 
     sys.stdout.write('Missing vray [%s]\n' % appsdk_check)
-    sys.stdout.write('Creating dir [%s]\n' % this_appsdk_path)
+    sys.stdout.write('Creating dir [%s]\n' % appsdk_path)
     sys.stdout.flush()
 
     try:
-        os.makedirs(this_appsdk_path)
+        os.makedirs(appsdk_path)
     except:
         pass
 
@@ -101,7 +101,7 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
     sys.stdout.write('Downloading appsdk:\n')
     sys.stdout.write('CURL [%s]\n' % curl)
     sys.stdout.flush()
-    os.chdir(this_appsdk_path)
+    os.chdir(appsdk_path)
     os.system(curl)
 
     extract_cmds = {
@@ -115,7 +115,8 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
         sys.stdout.flush()
         os.system(cmd)
 
-    utils.remove_path(os.path.join(this_appsdk_path, appsdk_name))
+    utils.remove_path(os.path.join(appsdk_path, appsdk_name))
+    return appsdk_path
 
 
 def main(args):
@@ -161,7 +162,7 @@ def main(args):
 
         appsdk_version = re.match(r'.*?vray\d{5}-(\d{8})\.(?:tar\.xz|7z)*?', appsdk_remote_name).groups()[0]
 
-        get_appsdk(appsdk_remote_name, appsdk_version, dir_source)
+        appsdk_path = get_appsdk(appsdk_remote_name, appsdk_version, dir_source)
 
         sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, appsdk_version))
         os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type

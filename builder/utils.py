@@ -487,7 +487,7 @@ def remove_path(path):
 def remove_file(path):
 	sys.stdout.write('Called utils.remove_file(%s)\n' % path)
 	sys.stdout.flush()
-	os.path.remove(path)
+	os.remove(path)
 
 
 def remove_directory(path):

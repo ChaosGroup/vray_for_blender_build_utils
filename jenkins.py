@@ -116,7 +116,7 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
         os.system(cmd)
 
     utils.remove_path(os.path.join(appsdk_path, appsdk_name))
-    return appsdk_path
+    return all_appsdk_root
 
 
 def main(args):

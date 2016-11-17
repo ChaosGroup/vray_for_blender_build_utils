@@ -59,6 +59,64 @@ def setup_msvc_2013(cgrepo):
         os.environ[var] = ";".join(env[var]).format(CGR_SDK=cgrepo)
 
 
+def get_appsdk(remote_name, version, deps_dir):
+    appsdk_os_dir_name = {
+        utils.WIN: 'windows',
+        utils.LNX: 'linux',
+        utils.MAC: 'darwin',
+    }[utils.get_host_os()]
+
+    vray_ext = 'exe' if utils.get_host_os() == utils.WIN else 'bin'
+
+    appsdk_path = os.path.join(deps_dir, 'vray-appsdk')
+
+    # clean all non-needed files
+    for item in glob.globl('%s/*' % deps_dir):
+        if re.match(r'^\d{8}$', item) is None:
+            if os.path.isdir(item):
+                utils.remove_path(item)
+
+    this_appsdk_path = os.path.join(appsdk_path, appsdk_version, appsdk_os_dir_name)
+    appsdk_check = os.path.join(this_appsdk_path, 'bin', 'vray.%s' % vray_ext)
+    download_appsdk = not os.path.exists(appsdk_check)
+
+    sys.stdout.write('Missing vray [%s]\n' % appsdk_check)
+    sys.stdout.write('Creating dir [%s]\n' % this_appsdk_path)
+    sys.stdout.flush()
+
+    try:
+        os.makedirs(this_appsdk_path)
+    except:
+        pass
+
+    curl = 'curl -s -S -o %s ftp://%s:%s@nightlies.chaosgroup.com/vrayappsdk/%s/%s' % (
+        appsdk_remote_name,
+        os.environ['NIGHTLIES_USER'],
+        os.environ['NIGHTLIES_PASS'],
+        appsdk_version,
+        appsdk_remote_name,
+    )
+
+    sys.stdout.write('Downloading appsdk:\n')
+    sys.stdout.write('CURL [%s]\n' % curl)
+    sys.stdout.flush()
+    os.chdir(this_appsdk_path)
+    os.system(curl)
+
+    extract_cmds = {
+        utils.WIN: ['7z x %s' % appsdk_remote_name],
+        utils.LNX: ['7z x %s' % appsdk_remote_name],
+        utils.MAC: ['7z x %s' % appsdk_remote_name, 'mv *.tar appsdk.tar', '7z x appsdk.tar'],
+    }[utils.get_host_os()]
+
+    for cmd in extract_cmds:
+        sys.stdout.write('Extract CMD [%s]\n' % cmd)
+        sys.stdout.flush()
+        os.system(cmd)
+
+    utils.remove_path(os.path.join(this_appsdk_path, appsdk_remote_name))
+
+
 def main(args):
     sys.stdout.write('jenkins args:\n%s\n' % str(args))
     sys.stdout.flush()
@@ -89,73 +147,21 @@ def main(args):
 
     branch = 'dev/vray_for_blender/%s' % args.jenkins_project_type
 
-    appsdk_remote_name = {
-        utils.WIN: 'appsdk-win-qt-nightly-1.11.00-vray34501-20161110.7z',
-        utils.LNX: 'appsdk-linux-qt-nightly-1.11.00-vray34501-20161110.tar.xz',
-        utils.MAC: 'appsdk-mac-qt-nightly-1.11.00-vray34501-20161110.tar.xz',
-    }[utils.get_host_os()]
-
-    if args.jenkins_appsdk_remote_name != '':
-        appsdk_remote_name = args.jenkins_appsdk_remote_name
-
-    appsdk_version = re.match(r'.*?vray\d{5}-(\d{8})\.(?:tar\.xz|7z)*?', appsdk_remote_name).groups()[0]
-
-    appsdk_os_dir_name = {
-        utils.WIN: 'windows',
-        utils.LNX: 'linux',
-        utils.MAC: 'darwin',
-    }[utils.get_host_os()]
-
-    vray_ext = 'exe' if utils.get_host_os() == utils.WIN else 'bin'
-
-    ### DOWNLOAD APPSDK
-    # just for test
-
-
-    appsdk_path = os.path.join(dir_source, 'vray-appsdk')
-    this_appsdk_path = os.path.join(appsdk_path, appsdk_version, appsdk_os_dir_name)
-    appsdk_check = os.path.join(this_appsdk_path, 'bin', 'vray.%s' % vray_ext)
-    download_appsdk = not os.path.exists(appsdk_check)
-
-    if args.jenkins_project_type == 'vb35' and download_appsdk:
-        sys.stdout.write('Missing vray [%s]\n' % appsdk_check)
-        sys.stdout.write('Creating dir [%s]\n' % this_appsdk_path)
-        sys.stderr.flush()
-
-        try:
-            os.makedirs(this_appsdk_path)
-        except:
-            pass
-
-        appsdk_name = 'appsdk.%s' % ('7z' if utils.get_host_os() == utils.WIN else 'tar.xz')
-        curl = 'curl -o %s ftp://%s:%s@nightlies.chaosgroup.com/vrayappsdk/20160510/%s' % (
-            appsdk_name,
-            os.environ['NIGHTLIES_USER'],
-            os.environ['NIGHTLIES_PASS'],
-            appsdk_remote_name,
-        )
-
-        sys.stdout.write('Downloading appsdk:\n')
-        sys.stdout.write('CURL [%s]\n' % curl)
-        sys.stdout.flush()
-        os.chdir(this_appsdk_path)
-        os.system(curl)
-
-        extract_cmds = {
-            utils.WIN: ['7z x %s' % appsdk_name],
-            utils.LNX: ['7z x %s' % appsdk_name, 'mv *.tar appsdk.tar', '7z x appsdk.tar'],
-            utils.MAC: ['7z x %s' % appsdk_name, 'mv *.tar appsdk.tar', '7z x appsdk.tar'],
+    ### GET APPSDK
+    if args.jenkins_project_type == 'vb35':
+        appsdk_remote_name = {
+            utils.WIN: 'appsdk-win-qt-nightly-1.11.00-vray34501-20161110.7z',
+            utils.LNX: 'appsdk-linux-qt-nightly-1.11.00-vray34501-20161110.tar.xz',
+            utils.MAC: 'appsdk-mac-qt-nightly-1.11.00-vray34501-20161110.tar.xz',
         }[utils.get_host_os()]
 
-        for cmd in extract_cmds:
-            sys.stdout.write('Extract CMD [%s]\n' % cmd)
-            sys.stdout.flush()
-            os.system(cmd)
+        if args.jenkins_appsdk_remote_name != '':
+            appsdk_remote_name = args.jenkins_appsdk_remote_name
 
-        os.chdir(dir_source)
+        appsdk_version = re.match(r'.*?vray\d{5}-(\d{8})\.(?:tar\.xz|7z)*?', appsdk_remote_name).groups()[0]
 
-    ### ADD APPSDK TO PATH
-    if args.jenkins_project_type == 'vb35':
+        get_appsdk(appsdk_remote_name, appsdk_version, dir_source)
+
         sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, appsdk_version))
         os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
         os.environ['CGR_APPSDK_PATH'] = appsdk_path

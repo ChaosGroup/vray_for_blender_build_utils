@@ -474,6 +474,22 @@ def python_get_suffix(path, version):
 	return ""
 
 
+def remove_path(path):
+	if os.path.isdir(path):
+		remove_directory(path)
+	elif os.path.isfile(path):
+		remove_file(path)
+	else:
+		sys.stderr.write('Called utils.remove_path(%s), but it is not dir nor file!\n' % path)
+		sys.stderr.flush()
+
+
+def remove_file(path):
+	sys.stdout.write('Called utils.remove_file(%s)\n' % path)
+	sys.stdout.flush()
+	os.path.remove(path)
+
+
 def remove_directory(path):
 	# Don't know why, but when deleting from python
 	# on Windows it fails to delete '.git' direcotry,

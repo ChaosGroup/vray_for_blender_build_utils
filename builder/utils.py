@@ -92,8 +92,9 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 	git_cmds = git_cmds + [
 		"git fetch origin",
 		"git clean -df",
-		"git submodule foreach --recursive git clean -df",
 		"git checkout -f %s" % branch,
+		"git pull",
+		"git submodule foreach --recursive git clean -df",
 		"git clean -ffd",
 	]
 

@@ -90,10 +90,11 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 
 	os.chdir(clone_dir)
 	git_cmds = git_cmds + [
-		"git checkout -- .",
-		"git reset --hard origin/%s" % branch,
-		"git checkout %s" % branch,
-		"git pull origin %s" % branch,
+		"git fetch origin",
+		"git clean -df",
+		"git submodule foreach --recursive git clean -df",
+		"git checkout -f %s" % branch,
+		"git clean -ffd",
 	]
 
 	for module in submodules:

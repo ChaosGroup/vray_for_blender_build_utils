@@ -204,18 +204,37 @@ def main(args):
         utils.get_repo('git@github.com:bdancer/vrayserverzmq', submodules=['extern/vray-zmq-wrapper'])
 
     if utils.get_host_os() == utils.MAC:
-        boost_src = os.path.join(kdrive, 'boost', 'boost_1_61')
+        boost_src = os.path.join(kdrive, 'boost', 'boost_1_61_0')
+
+        mac_version_names = {
+            "10.9": "mavericks",
+            "10.8": "mountain_lion",
+            "10.6": "snow_leopard",
+        }
+
+        mac_version = '.'.join(platform.mac_ver()[0].split('.')[0:2])
+        mac_name = mac_version_names[mac_version] if mac_version in mac_version_names else None
+        sys.stdout.write('Mac ver full [%s] -> %s == %s', (platform.mac_ver(), mac_version, mac_name))
+
+        boost_src = os.path.join(boost_src, '%s_x64' % mac_name)
+
+        if not mac_name or not os.path.exists(boost_src):
+            sys.stderr.write('Boost path [%s] missing for this version of mac!\n' % boost_src)
+            sys.stderr.flush()
+            sys.exit(1)
+
         python_patch = os.path.join(dir_source, 'blender-for-vray-libs', 'Darwin', 'pyport.h')
         patch_steps = [
-            "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal",
-            "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12",
+            "svn --non-interactive --trust-server-cert checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal",
+            "svn --non-interactive --trust-server-cert checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12",
             "cp -Rf lib/win64_vc12/opensubdiv/include/opensubdiv/* lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/",
             "cp lib/darwin-9.x.universal/png/lib/libpng12.a lib/darwin-9.x.universal/png/lib/libpng.a",
             "cp lib/darwin-9.x.universal/png/lib/libpng12.la lib/darwin-9.x.universal/png/lib/libpng.la",
             "mkdir -p lib/darwin-9.x.universal/release/site-packages",
             "rm -rf lib/darwin-9.x.universal/boost_1_60",
             "mv lib/darwin-9.x.universal/boost lib/darwin-9.x.universal/boost_1_60",
-            "cp -r %s lib/darwin-9.x.universal/boost" % boost_src,
+            "cp -r %s/lib lib/darwin-9.x.universal/boost/lib" % boost_src,
+            "cp -r %s/include lib/darwin-9.x.universal/boost/include" % boost_src,
             "cp -f %s lib/darwin-9.x.universal/python/include/python3.5m/pyport.h" % python_patch,
         ]
         os.chdir(dir_source)

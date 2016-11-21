@@ -259,6 +259,11 @@ def main(args):
             sys.stdout.flush()
             os.system(step)
 
+        sys.stdout.write("glob.glob('%s/lib/darwin-9.x.universal/release/*' % dir_source):\n")
+        for f in glob.glob('%s/lib/darwin-9.x.universal/release/*' % dir_source):
+            sys.stdout.write('\t[%s]\n' % f)
+        sys.stdout.flush()
+
     os.chdir(dir_build)
     ### CLONE REPOS
 

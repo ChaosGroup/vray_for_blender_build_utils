@@ -205,7 +205,7 @@ def main(args):
         utils.get_repo('git@github.com:bdancer/vrayserverzmq', submodules=['extern/vray-zmq-wrapper'])
 
     if utils.get_host_os() == utils.MAC:
-        boost_src = os.path.join(kdrive, 'boost', 'boost_1_61_0')
+        boost_root = os.path.join(kdrive, 'boost', 'boost_1_61_0')
 
         mac_version_names = {
             "10.9": "mavericks",
@@ -217,12 +217,22 @@ def main(args):
         mac_name = mac_version_names[mac_version] if mac_version in mac_version_names else None
         sys.stdout.write('Mac ver full [%s] -> %s == %s' % (str(platform.mac_ver()), mac_version, mac_name))
 
-        boost_src = os.path.join(boost_src, '%s_x64' % mac_name)
+        boost_src = os.path.join(boost_root, '%s_x64' % mac_name)
 
         if not mac_name or not os.path.exists(boost_src):
             sys.stderr.write('Boost path [%s] missing for this version of mac!\n' % boost_src)
             sys.stderr.flush()
-            sys.exit(1)
+
+            mac_name = mac_version_names['10.9']
+            boost_src = os.path.join(boost_root, '%s_x64' % mac_name)
+
+            if not mac_name or not os.path.exists(boost_src):
+                sys.stderr.write('Boost path [%s] missing for this version of mac... exiting!\n' % boost_src)
+                sys.stderr.flush()
+                sys.exit(1)
+            else:
+                sys.stderr.write('Trying to build with [%s] instead!\n' % boost_src)
+                sys.stderr.flush()
 
         python_patch = os.path.join(dir_source, 'blender-for-vray-libs', 'Darwin', 'pyport.h')
         patch_steps = [

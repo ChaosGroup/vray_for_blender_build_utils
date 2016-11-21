@@ -116,7 +116,7 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
         os.system(cmd)
 
     tar_name = appsdk_name[0:-3]
-    if utils.get_host_os() == utils.LNX and os.path.exists(os.path.join(appsdk_path, tar_name)):
+    if utils.get_host_os() != utils.WIN and os.path.exists(os.path.join(appsdk_path, tar_name)):
         cmd = "7z x %s" % tar_name
         sys.stdout.write('Extract tar CMD [%s]\n' % cmd)
         sys.stdout.flush()

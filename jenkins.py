@@ -215,7 +215,7 @@ def main(args):
 
         mac_version = '.'.join(platform.mac_ver()[0].split('.')[0:2])
         mac_name = mac_version_names[mac_version] if mac_version in mac_version_names else None
-        sys.stdout.write('Mac ver full [%s] -> %s == %s', (platform.mac_ver(), mac_version, mac_name))
+        sys.stdout.write('Mac ver full [%s] -> %s == %s' % (str(platform.mac_ver()), mac_version, mac_name))
 
         boost_src = os.path.join(boost_src, '%s_x64' % mac_name)
 

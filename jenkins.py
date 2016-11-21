@@ -205,6 +205,7 @@ def main(args):
         utils.get_repo('git@github.com:bdancer/vrayserverzmq', submodules=['extern/vray-zmq-wrapper'])
 
     if utils.get_host_os() == utils.MAC:
+        utils.remove_directory(os.path.join(dir_source, 'lib'))
         boost_root = os.path.join(kdrive, 'boost', 'boost_1_61_0')
 
         mac_version_names = {

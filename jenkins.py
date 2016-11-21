@@ -205,7 +205,6 @@ def main(args):
         utils.get_repo('git@github.com:bdancer/vrayserverzmq', submodules=['extern/vray-zmq-wrapper'])
 
     if utils.get_host_os() == utils.MAC:
-        utils.remove_directory(os.path.join(dir_source, 'lib'))
         boost_root = os.path.join(kdrive, 'boost', 'boost_1_61_0')
 
         mac_version_names = {
@@ -240,8 +239,8 @@ def main(args):
 
         python_patch = os.path.join(dir_source, 'blender-for-vray-libs', 'Darwin', 'pyport.h')
         patch_steps = [
-            "svn --non-interactive --trust-server-cert checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal",
-            "svn --non-interactive --trust-server-cert checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12",
+            "svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal",
+            "svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12",
             "cp -Rf lib/win64_vc12/opensubdiv/include/opensubdiv/* lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/",
             "cp lib/darwin-9.x.universal/png/lib/libpng12.a lib/darwin-9.x.universal/png/lib/libpng.a",
             "cp lib/darwin-9.x.universal/png/lib/libpng12.la lib/darwin-9.x.universal/png/lib/libpng.la",

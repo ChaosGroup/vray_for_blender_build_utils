@@ -591,10 +591,12 @@ def mac_rewrite_link_file(executable, source, dest):
 	"""
 	rename_cmd = ['install_name_tool', '-change', source, dest, executable]
 
-	print(" ".join(rename_cmd))
+	sys.stdout.write("[%s]\n" % ", ".join(rename_cmd))
+	sys.stdout.flush()
 	result = subprocess.call(rename_cmd)
 	if result != 0:
-		print('rename_cmd failed')
+		sys.stderr.write('rename_cmd failed\n')
+		sys.stderr.flush()
 		sys.exit(1)
 
 
@@ -606,10 +608,12 @@ def mac_rewrite_qt_links(binfile):
 	items = []
 	qt_find = ['otool', '-L', binfile]
 
-	print(qt_find)
+	sys.stdout.write("[%s]\n" % ", ".join(qt_find))
+	sys.stdout.flush()
 	res = _get_cmd_output_ex(qt_find)
 	if res['code'] != 0:
-		print('"%s" failed' % ' '.join(qt_find))
+		sys.stderr.write('"%s" failed\n' % ' '.join(qt_find))
+		sys.stderr.flush()
 		sys.exit(1)
 
 	links = res['output'].split('\n')
@@ -623,7 +627,8 @@ def mac_rewrite_qt_links(binfile):
 
 		items.append(q_path)
 		rename_path = '@executable_path/%s' % q_name
-		print("Renaming qt lib : %s -> %s" % (q_path, rename_path))
+		sys.stdout.write("Renaming qt lib : %s -> %s\n" % (q_path, rename_path))
+		sys.stdout.flush()
 		mac_rewrite_link_file(binfile, q_path, rename_path)
 
 	return items
@@ -684,9 +689,11 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 	target_name = os.path.basename(installer_path).replace('.dmg', '')
 	bin_path = installer_path.replace('.dmg', '.bin')
 
-	print('Macos installer tmp wd %s' % root_tmp)
+	sys.stdout.write('Macos installer tmp wd %s\n' % root_tmp)
+	sys.stdout.flush()
 
-	print('Step 1, create uninstaller/installer plist files')
+	sys.stdout.write('Step 1, create uninstaller/installer plist files\n')
+	sys.stdout.flush()
 	os.mkdir(os.path.join(root_tmp, 'installer'))
 	os.mkdir(os.path.join(root_tmp, 'uninstaller'))
 	plist_install = os.path.join(root_tmp, 'installer', 'Info.plist')
@@ -705,7 +712,8 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 		uninstaller_plist = uninstaller_plist.replace('${EXECUTABLENAME}', 'uninstaller.bin')
 		f.write(uninstaller_plist)
 
-	print('Step 2, write mac specific vars in main template')
+	sys.stdout.write('Step 2, write mac specific vars in main template\n')
+	sys.stdout.flush()
 	template = open(tmplFinal, 'r').read()
 
 	with open(tmplFinal, 'w+') as f:
@@ -713,7 +721,8 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 		template = template.replace('${MACOS_UNINSTALLER_PLIST}', plist_uninstall)
 		f.write(template)
 
-	print('Step 3, create installer bin')
+	sys.stdout.write('Step 3, create installer bin\n')
+	sys.stdout.flush()
 	cmd = ["%s/macos/packer.bin" % InstallerDir]
 	cmd.append('-debug=1')
 	cmd.append('-exe')
@@ -725,16 +734,19 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 	cmd.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
 	cmd.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
 
-	print(" ".join(cmd))
+	sys.stdout.write("[%s]\n" % ", ".join(cmd))
+	sys.stdout.flush()
 	if not self.mode_test:
 		if subprocess.call(cmd) != 0:
-			print('Failed macos installer creation')
+			sys.stderr.write('Failed macos installer creation\n')
+			sys.stderr.flush()
 			sys.exit(1)
 
 	st = os.stat(bin_path)
 	os.chmod(bin_path, st.st_mode | stat.S_IEXEC)
 
-	print('Step 4, create app folder structure')
+	sys.stdout.write('Step 4, create app folder structure\n')
+	sys.stdout.flush()
 	app_dir = os.path.join(root_tmp, '%s.app' % target_name)
 	os.mkdir(app_dir)
 	os.mkdir(os.path.join(app_dir, 'Contents'))
@@ -755,7 +767,8 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 		plist_tmpl = plist_tmpl.replace('${EXECUTABLENAME}', '%s.bin' % target_name)
 		f.write(plist_tmpl)
 
-	print('Step 5, create dmg file in %s' % root_tmp)
+	sys.stdout.write('Step 5, create dmg file in %s\n' % root_tmp)
+	sys.stdout.flush()
 	os.chdir(root_tmp)
 	dmg_file = '%s.dmg' % target_name
 	# Add some megabytes for the package additional files (icons, plist, etc)
@@ -772,51 +785,66 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 		'eject_final': ['hdiutil', 'eject', None], # none = mout_dmg drie
 	}
 
-	print(commands['create_dmg'])
+	sys.stdout.write("[%s]\n" % ", ".join(commands['create_dmg']))
+	sys.stdout.flush()
 	if _get_cmd_output_ex(commands['create_dmg'])['code'] != 0:
-		print('"%s" failed' % ' '.join(commands['create_dmg']))
+		sys.stderr.write('[%s] failed\n' % ', '.join(commands['create_dmg']))
+		sys.stderr.flush()
 		sys.exit(1)
 
-	print(commands['mount_dmg'])
+	sys.stdout.write("[%s]\n" % ", ".join(commands['mount_dmg']))
+	sys.stdout.flush()
 	mount_res = _get_cmd_output_ex(commands['mount_dmg'])
 	if mount_res['code'] != 0:
-		print('"%s" failed' % ' '.join(commands['mount_dmg']))
+		sys.stderr.write('[%s] failed\n' % ', '.join(commands['mount_dmg']))
+		sys.stderr.flush()
 		sys.exit(1)
 
 	commands['fs_dmg'][-1] = mount_res['output']
 	commands['eject_dmg'][-1] = mount_res['output']
 	commands['eject_final'][-1] = mount_res['output']
 
-	print(commands['fs_dmg'])
+	sys.stdout.write("[%s]\n" % ", ".join(commands['fs_dmg']))
+	sys.stdout.flush()
 	if _get_cmd_output_ex(commands['fs_dmg'])['code'] != 0:
-		print('"%s" failed' % ' '.join(commands['fs_dmg']))
+		sys.stderr.write('[%s] failed\n' % ', '.join(commands['fs_dmg']))
+		sys.stderr.flush()
 		sys.exit(1)
 
-	print(commands['eject_dmg'])
+	sys.stdout.write("[%s]\n" % ", ".join(commands['eject_dmg']))
+	sys.stdout.flush()
 	if _get_cmd_output_ex(commands['eject_dmg'])['code'] != 0:
-		print('"%s" failed' % ' '.join(commands['eject_dmg']))
+		sys.stderr.write('[%s] failed' % ', '.join(commands['eject_dmg']))
+		sys.stderr.flush()
 		sys.exit(1)
 
-	print(commands['path_dmg'])
+	sys.stdout.write("[%s]\n" % ", ".join(commands['path_dmg']))
+	sys.stdout.flush()
 	path_dmg_res = _get_cmd_output_ex(commands['path_dmg'])
 	if path_dmg_res['code'] != 0:
-		print('"%s" failed' % ' '.join(commands['path_dmg']))
+		sys.stderr.write('[%s] failed' % ', '.join(commands['path_dmg']))
+		sys.stderr.flush()
 		sys.exit(1)
 
 	disk, vpath = re.match(r'^([^\s]+)\s+(.+)$', path_dmg_res['output'], re.I | re.S).groups()
 	commands['copy_app'][-1] = vpath
 
-	print(commands['copy_app'])
+	sys.stdout.write("[%s]\n" % ", ".join(commands['copy_app']))
+	sys.stdout.flush()
 	if _get_cmd_output_ex(commands['copy_app'])['code'] != 0:
-		print('"%s" failed' % ' '.join(commands['copy_app']))
+		sys.stderr.write('[%s] failed' % ', '.join(commands['copy_app']))
+		sys.stderr.flush()
 		sys.exit(1)
 
-	print(commands['eject_final'])
+	sys.stdout.write("[%s]\n" % ", ".join(commands['eject_final']))
+	sys.stdout.flush()
 	if _get_cmd_output_ex(commands['eject_final'])['code'] != 0:
-		print('"%s" failed' % ' '.join(commands['eject_final']))
+		sys.stderr.write('[%s] failed' % ', '.join(commands['eject_final']))
+		sys.stderr.flush()
 		sys.exit(1)
 
-	print('WD %s' % root_tmp)
+	sys.stdout.write('WD %s\n' % root_tmp)
+	sys.stdout.flush()
 	shutil.move(os.path.join(root_tmp, dmg_file), installer_path)
 
 

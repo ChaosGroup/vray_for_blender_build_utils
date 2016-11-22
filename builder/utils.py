@@ -668,6 +668,8 @@ def get_zmq_build_items(self, appsdkFile):
 
 		# we will rename appsdk and Qt to point to appsdk folder
 		zmq_temp = "%s/VRayZmqServer" % tempfile.gettempdir()
+		if os.path.exists(zmq_temp):
+			remove_file(zmq_temp)
 		shutil.copyfile(zmq_build_path, zmq_temp)
 
 		# rewrite Qt links
@@ -980,6 +982,8 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		# on mac, copy appsdk, so we can rewrite Qt libs links
 		if host_os == MAC:
 			temp_appsdk = os.path.join(tempfile.gettempdir(), 'appsdk')
+			if os.path.exists(temp_appsdk):
+				remove_directory(temp_appsdk)
 			shutil.copytree(appsdk, temp_appsdk)
 
 		appsdk_root = os.path.normpath(os.path.join(cg_root, 'appsdk'))
@@ -1006,6 +1010,8 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 			installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (cg_root, item))
 
 	tmplFinal = "%s/installer.xml" % tempfile.gettempdir()
+	if os.path.exists(tmplFinal):
+		remove_file(tmplFinal)
 	replace_file = '%s/%s/replace_file%s' % (InstallerDir, get_host_os(), '.exe' if get_host_os() == WIN else '')
 
 	gen_tmpl = [replace_file]

@@ -58,10 +58,11 @@ class MacBuilder(Builder):
 		cmake.append("-DPNG_LIBRARIES=png12")
 
 		if self.jenkins or self.teamcity_project_type == 'vb35':
-			cmake.append("-DWITH_CXX11=ON")
-			cmake.append("-DLIBDIR=%s" % utils.path_join(self.dir_source, 'lib', 'darwin-9.x.universal'))
-			cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
-			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
+			if self.teamcity_project_type == 'vb35':
+				cmake.append("-DWITH_CXX11=ON")
+				cmake.append("-DLIBDIR=%s" % utils.path_join(self.dir_source, 'lib', 'darwin-9.x.universal'))
+				cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
+				cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
 			cmake.append("-DWITH_GAMEENGINE=OFF")
 			cmake.append("-DWITH_PLAYER=OFF")
 			cmake.append("-DWITH_LIBMV=OFF")

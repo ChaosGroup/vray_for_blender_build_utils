@@ -57,9 +57,10 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity))
 		cmake.append("-DPNG_LIBRARIES=png12")
 
+		if self.teamcity_project_type == 'vb35' or self.jenkins:
+			cmake.append("-DWITH_CXX11=ON")
 
 		if self.teamcity_project_type == 'vb35':
-			cmake.append("-DWITH_CXX11=ON")
 			cmake.append("-DLIBDIR=%s" % utils.path_join(self.dir_source, 'lib', 'darwin-9.x.universal'))
 			cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
 			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))

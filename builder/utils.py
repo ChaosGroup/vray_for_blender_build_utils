@@ -600,9 +600,9 @@ def mac_rewrite_link_file(executable, source, dest):
 		sys.exit(1)
 
 
-def mac_rewrite_qt_links(binfile):
+def mac_rewrite_qt_links(binfile, relpath=''):
 	"""For MAC OS only!
-	Rewrites all links for QtGui and QtCore to @executable_path
+	Rewrites all links for QtGui and QtCore to @executable_path/relpath
 	Returns paths to rewrote links
 	"""
 	items = []
@@ -623,11 +623,15 @@ def mac_rewrite_qt_links(binfile):
 			continue
 
 		q_path = re.split('\s+', line)[1]
+		if q_path[0] == '@':
+			sys.stderr.write("Binfile [%s] has already renamed lib path [%s]\n" % (binfile, q_path))
+			sys.stderr.flush()
+			continue
 		q_name = os.path.basename(q_path)
 
 		items.append(q_path)
-		rename_path = '@executable_path/%s' % q_name
-		sys.stdout.write("Renaming qt lib : %s -> %s\n" % (q_path, rename_path))
+		rename_path = os.path.join('@executable_path', relpath, q_name)
+		sys.stdout.write("Renaming qt lib : \"%s\" -> \"%s\"\n" % (q_path, rename_path))
 		sys.stdout.flush()
 		mac_rewrite_link_file(binfile, q_path, rename_path)
 
@@ -673,7 +677,7 @@ def get_zmq_build_items(self, appsdkFile):
 		shutil.copyfile(zmq_build_path, zmq_temp)
 
 		# rewrite Qt links
-		items = items + mac_rewrite_qt_links(zmq_temp)
+		items = items + mac_rewrite_qt_links(zmq_temp, 'appsdk')
 		mac_rewrite_link_file(zmq_temp, appsdkFile, '@executable_path/appsdk/%s' % appsdkFile)
 		items.append(zmq_temp)
 

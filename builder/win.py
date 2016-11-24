@@ -99,6 +99,7 @@ class WindowsBuilder(Builder):
 		cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))
 		cmake.append("-DWITH_LIBMV=%s" % utils.GetCmakeOnOff(self.with_tracker))
 		cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.with_collada))
+		cmake.append("-DWITH_CYCLES=%s" % utils.GetCmakeOnOff(self.with_cycles))
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")
 		cmake.append("-DWITH_OPENSUBDIV=ON")
 		cmake.append("-DWITH_FFTW3=ON")

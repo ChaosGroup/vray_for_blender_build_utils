@@ -299,6 +299,7 @@ def main(args):
     cmd.append('--with_ge')
     cmd.append('--with_player')
     cmd.append('--with_collada')
+    cmd.append('--with_cycles')
     if utils.get_host_os() == utils.WIN:
         cmd.append('--vc_2013')
 

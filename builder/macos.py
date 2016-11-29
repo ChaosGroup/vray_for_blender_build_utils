@@ -185,7 +185,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 				"-D BUILD_TESTING=OFF", "-D OIIO_BUILD_TESTS=OFF", "-D OIIO_BUILD_TOOLS=OFF",
 				"-D ILMBASE_VERSION=%s" % ILMBASE_VERSION ,"-D OPENEXR_VERSION=%s" % OPENEXR_VERSION,
 				"-D ILMBASE_HOME=%s/openexr" % prefix, "-D OPENEXR_HOME=%s/openexr" % prefix,
-				"-D BOOST_ROOT=%s/boost" % prefix, "-D Boost_NO_SYSTEM_PATHS=ON", "-D USE_OCIO=OFF", ".."#############
+				"-D BOOST_ROOT=%s/lib/darwin-9.x.universal/boost" % self.dir_source, "-D Boost_NO_SYSTEM_PATHS=ON", "-D USE_OCIO=OFF", ".."
 			),
 			'make -j %s' % jobs,
 			'make install',

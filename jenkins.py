@@ -204,66 +204,6 @@ def main(args):
     if args.jenkins_project_type == 'vb35':
         utils.get_repo('git@github.com:bdancer/vrayserverzmq', submodules=['extern/vray-zmq-wrapper'])
 
-    if utils.get_host_os() == utils.MAC:
-        boost_root = os.path.join(kdrive, 'boost', 'boost_1_61_0')
-
-        mac_version_names = {
-            "10.9": "mavericks",
-            "10.8": "mountain_lion",
-            "10.6": "snow_leopard",
-        }
-
-        mac_version = '.'.join(platform.mac_ver()[0].split('.')[0:2])
-        mac_name = mac_version_names[mac_version] if mac_version in mac_version_names else None
-        sys.stdout.write('Mac ver full [%s] -> %s == %s\n' % (str(platform.mac_ver()), mac_version, mac_name))
-        sys.stdout.flush()
-
-        boost_lib = os.path.join(boost_root, 'lib', '%s_x64' % mac_name)
-
-        if not mac_name or not os.path.exists(boost_lib):
-            sys.stderr.write('Boost path [%s] missing for this version of mac!\n' % boost_lib)
-            sys.stderr.flush()
-
-            mac_name = mac_version_names['10.9']
-            boost_lib = os.path.join(boost_root, 'lib', '%s_x64' % mac_name)
-
-            if not mac_name or not os.path.exists(boost_lib):
-                sys.stderr.write('Boost path [%s] missing for this version of mac... exiting!\n' % boost_lib)
-                sys.stderr.flush()
-                sys.exit(1)
-            else:
-                sys.stderr.write('Trying to build with [%s] instead!\n' % boost_lib)
-                sys.stderr.flush()
-
-        boost_lib_dir = os.path.join(boost_lib, 'gcc-4.2-cpp')
-
-        python_patch = os.path.join(dir_source, 'blender-for-vray-libs', 'Darwin', 'pyport.h')
-        patch_steps = [
-            "svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal",
-            "svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12",
-            "cp -Rf lib/win64_vc12/opensubdiv/include/opensubdiv/* lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/",
-            "cp lib/darwin-9.x.universal/png/lib/libpng12.a lib/darwin-9.x.universal/png/lib/libpng.a",
-            "cp lib/darwin-9.x.universal/png/lib/libpng12.la lib/darwin-9.x.universal/png/lib/libpng.la",
-            "mkdir -p lib/darwin-9.x.universal/release/site-packages",
-            "rm -rf lib/darwin-9.x.universal/boost_1_60",
-            "mv lib/darwin-9.x.universal/boost lib/darwin-9.x.universal/boost_1_60",
-            "mkdir -p lib/darwin-9.x.universal/boost/include",
-            "cp -r %s/boost lib/darwin-9.x.universal/boost/include/boost" % boost_root,
-            "cp -r %s lib/darwin-9.x.universal/boost/lib" % boost_lib_dir,
-            "cp -f %s lib/darwin-9.x.universal/python/include/python3.5m/pyport.h" % python_patch,
-        ]
-        os.chdir(dir_source)
-
-        for step in patch_steps:
-            sys.stdout.write('MAC patch step [%s]\n' % step)
-            sys.stdout.flush()
-            os.system(step)
-
-        sys.stdout.write("glob.glob('%s/lib/darwin-9.x.universal/release/*' % dir_source):\n")
-        for f in glob.glob('%s/lib/darwin-9.x.universal/release/*' % dir_source):
-            sys.stdout.write('\t[%s]\n' % f)
-        sys.stdout.flush()
-
     os.chdir(dir_build)
     ### CLONE REPOS
 

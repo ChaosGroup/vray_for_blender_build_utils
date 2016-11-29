@@ -25,18 +25,11 @@
 
 import os
 import sys
-import shutil
-import subprocess
-
-from .builder import utils
-from .builder import Builder
-
-import os
-import sys
 import glob
 import shutil
-import subprocess
 import inspect
+import platform
+import subprocess
 
 from .builder import utils
 from .builder import Builder
@@ -44,7 +37,7 @@ from .builder import Builder
 from .linux import PYTHON_VERSION
 from .linux import PYTHON_VERSION_BIG
 from .linux import NUMPY_VERSION
-from .linux import BOOST_VERSION
+BOOST_VERSION="1.61.0"
 from .linux import OCIO_VERSION
 from .linux import OPENEXR_VERSION
 from .linux import ILMBASE_VERSION
@@ -102,7 +95,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		return False
 
 	def getRemoveSoFiles(dir):
-		return lambda: all([removeSoFile(path) for path in glob.glob('%s/*.so*')])
+		return lambda: all([removeSoFile(path) for path in glob.glob('%s/*.dylib*')])
 
 	steps = (
 		('tiff', '%s/tiff-%s' % (prefix, TIFF_VERSION), (
@@ -125,96 +118,19 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'make  install',
 			'ln -s %s/fftw-%s %s/fftw' % (prefix, FFTW_VERSION, prefix),
 		)),
-		('ocio', '%s/ocio-%s' % (prefix, OCIO_VERSION), (
+		('boost', '%s/boost-%s' % (prefix, BOOST_VERSION),(
 			getChDirCmd(wd),
-			getDownloadCmd("https://github.com/imageworks/OpenColorIO/tarball/v%s" % OCIO_VERSION, 'ocio.tar.gz'),
-			'tar -xf ocio.tar.gz',
-			'mv imageworks-OpenColorIO* OpenColorIO-%s' % OCIO_VERSION,
-			'mkdir -p OpenColorIO-%s/build' % OCIO_VERSION,
-			getChDirCmd(os.path.join(wd, 'OpenColorIO-%s' % OCIO_VERSION, 'build')),
-			' '.join(["cmake", "-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s/ocio-%s" % (prefix, OCIO_VERSION),
-					  "-D CMAKE_INSTALL_PREFIX=%s/ocio-%s" % (prefix, OCIO_VERSION), "-D OCIO_BUILD_APPS=OFF",
-					  "-D OCIO_BUILD_PYGLUE=OFF", ".."]),
-			'make -j %s' % jobs,
-			'make install',
-			'rm -f %s/ocio-%s/lib/*.so*' % (prefix, OCIO_VERSION),
-			'cp ext/dist/lib/libtinyxml.a %s/ocio-%s/lib' % (prefix, OCIO_VERSION),
-			'cp ext/dist/lib/libyaml-cpp.a %s/ocio-%s/lib' % (prefix, OCIO_VERSION),
-			'make clean',
-			'ln -s %s/ocio-%s %s/ocio' % (prefix, OCIO_VERSION, prefix),
+			getDownloadCmd("http://sourceforge.net/projects/boost/files/boost/%s/boost_%s.tar.bz2/download" % (BOOST_VERSION, BOOST_VERSION.replace('.', '_')), 'boost.tar.bz2'),
+			'tar -xf boost.tar.bz2',
+			'mv boost_%s boost-%s' % (BOOST_VERSION.replace('.', '_'), BOOST_VERSION),
+			getChDirCmd(os.path.join(wd, 'boost-%s' % BOOST_VERSION)),
+			'./bootstrap.sh',
+			'./b2 -j %s -a link=static threading=multi --layout=tagged --with-system --with-filesystem --with-thread --with-regex --with-locale --with-date_time --with-wave --prefix=%s/boost-%s --disable-icu boost.locale.icu=off install'
+				% (jobs, prefix, BOOST_VERSION),
+			'./b2 clean',
+			'ln -s %s/boost-%s %s/boost' % (prefix, BOOST_VERSION, prefix),
+			getRemoveSoFiles('%s/boost/lib' % prefix)
 		)),
-		('ilmbase', '%s/ilmbase-%s' % (prefix, ILMBASE_VERSION), (
-			getChDirCmd(wd),
-			getDownloadCmd("http://download.savannah.nongnu.org/releases/openexr/ilmbase-%s.tar.gz" % ILMBASE_VERSION, 'ilmbase.tar.gz'),
-			'tar -xf ilmbase.tar.gz',
-			'mv ilmbase-* ILMBase-%s' % ILMBASE_VERSION,
-			'mkdir -p ILMBase-%s/build' % ILMBASE_VERSION,
-			getChDirCmd(os.path.join(wd, 'ILMBase-%s' % ILMBASE_VERSION, 'build')),
-			" ".join(["cmake", "-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s/ilmbase-%s" % (prefix, ILMBASE_VERSION),
-					  "-D CMAKE_INSTALL_PREFIX=%s/ilmbase-%s" % (prefix, ILMBASE_VERSION), "-D BUILD_SHARED_LIBS=OFF", ".."]),
-			'make -j %s' % jobs,
-			'make install',
-			'make clean',
-		)),
-		('openexr', '%s/openexr-%s' % (prefix, OPENEXR_VERSION), (
-			getChDirCmd(wd),
-			getDownloadCmd("http://download.savannah.nongnu.org/releases/openexr/openexr-%s.tar.gz" % OPENEXR_VERSION, 'openexr.tar.gz'),
-			'tar -xf openexr.tar.gz',
-			'mv openexr-* OpenEXR-%s' % OPENEXR_VERSION,
-			'mkdir -p OpenEXR-%s/build' % OPENEXR_VERSION,
-			patchOpenEXRCmake,
-			getChDirCmd(os.path.join(wd, 'OpenEXR-%s' % OPENEXR_VERSION, 'build')),
-			' '.join(["cmake" , "-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s/openexr-%s" % (prefix, OPENEXR_VERSION),
-					  "-D CMAKE_INSTALL_PREFIX=%s/openexr-%s" % (prefix, OPENEXR_VERSION),
-					  "-D ILMBASE_PACKAGE_PREFIX=%s/ilmbase-%s" % (prefix, ILMBASE_VERSION), "-D BUILD_SHARED_LIBS=OFF",  ".."]),
-			'make -j %s' % jobs,
-			'make install',
-			'make clean',
-			'cp -Lrn %s/ilmbase-%s/* %s/openexr-%s' % (prefix, ILMBASE_VERSION, prefix, OPENEXR_VERSION),
-			'ln -s %s/openexr-%s %s/openexr' % (prefix, OPENEXR_VERSION, prefix),
-		)),
-		('oiio', '%s/oiio-%s' % (prefix, OIIO_VERSION), (
-			getChDirCmd(wd),
-			getDownloadCmd("https://github.com/OpenImageIO/oiio/archive/Release-%s.tar.gz" % OIIO_VERSION, 'oiio.tar.gz'),
-			'mkdir -p OpenImageIO-%s' % OIIO_VERSION,
-			'tar -xf oiio.tar.gz',
-			'mv oiio-* OpenImageIO-%s' % OIIO_VERSION,
-			'mkdir -p OpenImageIO-%s/build' % OIIO_VERSION,
-			getChDirCmd(os.path.join(wd, 'OpenImageIO-%s' % OIIO_VERSION, 'build')),
-			getCmakeCommandStr(
-				"-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s" % prefix,
-				"-D CMAKE_INSTALL_PREFIX=%s/oiio-%s" % (prefix, OIIO_VERSION),
-				"-D STOP_ON_WARNING=OFF", "-D BUILDSTATIC=ON", "-D LINKSTATIC=ON", "-D USE_QT=OFF", "-D USE_PYTHON=OFF",
-				"-D BUILD_TESTING=OFF", "-D OIIO_BUILD_TESTS=OFF", "-D OIIO_BUILD_TOOLS=OFF",
-				"-D ILMBASE_VERSION=%s" % ILMBASE_VERSION ,"-D OPENEXR_VERSION=%s" % OPENEXR_VERSION,
-				"-D ILMBASE_HOME=%s/openexr" % prefix, "-D OPENEXR_HOME=%s/openexr" % prefix,
-				"-D BOOST_ROOT=%s/lib/darwin-9.x.universal/boost" % self.dir_source, "-D Boost_NO_SYSTEM_PATHS=ON", "-D USE_OCIO=OFF", ".."
-			),
-			'make -j %s' % jobs,
-			'make install',
-			'make clean',
-			'ln -s %s/oiio-%s %s/oiio' % (prefix, OIIO_VERSION, prefix),
-		)),
-		# ('clang', '%s/llvm-%s' % (prefix, LLVM_VERSION), (
-		# 	getChDirCmd(wd),
-		# 	getDownloadCmd("http://llvm.org/releases/%s/llvm-%s.src.tar.gz" % (LLVM_VERSION, LLVM_VERSION), 'llvm.tar.gz'),
-		# 	getOrCmd(
-		# 		getDownloadCmd("http://llvm.org/releases/%s/clang-%s.src.tar.gz" % (LLVM_VERSION, LLVM_VERSION), 'clang.tar.gz'),
-		# 		getDownloadCmd("http://llvm.org/releases/%s/cfe-%s.src.tar.gz" % (LLVM_VERSION, LLVM_VERSION), 'clang.tar.gz')
-		# 	),
-		# 	'tar -C . --transform "s,([^/]*/?)llvm-[^/]*(.*),\\1LLVM-%s\\2,x" -xf llvm.tar.gz' % LLVM_VERSION,
-		# 	'tar -C LLVM-%s/tools --transform "s,([^/]*/?)(clang|cfe)-[^/]*(.*),\\1clang\\3,x" -xf clang.tar.gz' % LLVM_VERSION,
-		# 	'mkdir -p LLVM-%s/build' % LLVM_VERSION,
-		# 	getChDirCmd(os.path.join(wd, 'LLVM-%s' % LLVM_VERSION, 'build')),
-		# 	patchLLVMCmake,
-		# 	' '.join(["cmake", "-D CMAKE_BUILD_TYPE=Release",
-		# 			  "-D CMAKE_INSTALL_PREFIX=%s/llvm-%s" % (prefix, LLVM_VERSION),
-		# 			  "-D LLVM_TARGETS_TO_BUILD=X86",
-		# 			  "-D LLVM_ENABLE_TERMINFO=OFF", ".."]),
-		# 	'make -j %s' % jobs,
-		# 	'make install',
-		# 	'make clean',
-		# )),
 	)
 
 	return steps
@@ -285,6 +201,75 @@ def DepsBuild(self):
 			sys.exit(-1)
 
 
+def PatchLibs(self):
+	boost_root = os.path.join(self.jenkins_kdrive_path, 'boost', 'boost_1_61_0')
+
+	mac_version_names = {
+		"10.9": "mavericks",
+		"10.8": "mountain_lion",
+		"10.6": "snow_leopard",
+	}
+
+	mac_version = '.'.join(platform.mac_ver()[0].split('.')[0:2])
+	mac_name = mac_version_names[mac_version] if mac_version in mac_version_names else None
+	sys.stdout.write('Mac ver full [%s] -> %s == %s\n' % (str(platform.mac_ver()), mac_version, mac_name))
+	sys.stdout.flush()
+
+	boost_lib = os.path.join(boost_root, 'lib', '%s_x64' % mac_name)
+
+	if not mac_name or not os.path.exists(boost_lib):
+		sys.stderr.write('Boost path [%s] missing for this version of mac!\n' % boost_lib)
+		sys.stderr.flush()
+
+		mac_name = mac_version_names['10.9']
+		boost_lib = os.path.join(boost_root, 'lib', '%s_x64' % mac_name)
+
+		if not mac_name or not os.path.exists(boost_lib):
+			sys.stderr.write('Boost path [%s] missing for this version of mac... exiting!\n' % boost_lib)
+			sys.stderr.flush()
+			sys.exit(1)
+		else:
+			sys.stderr.write('Trying to build with [%s] instead!\n' % boost_lib)
+			sys.stderr.flush()
+
+	boost_lib_dir = os.path.join(boost_lib, 'gcc-4.2-cpp')
+
+	python_patch = os.path.join(self.dir_source, 'blender-for-vray-libs', 'Darwin', 'pyport.h')
+	patch_steps = [
+		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal",
+		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12",
+		"cp -Rf lib/win64_vc12/opensubdiv/include/opensubdiv/* lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/",
+		"cp lib/darwin-9.x.universal/png/lib/libpng12.a lib/darwin-9.x.universal/png/lib/libpng.a",
+		"cp lib/darwin-9.x.universal/png/lib/libpng12.la lib/darwin-9.x.universal/png/lib/libpng.la",
+		"mkdir -p lib/darwin-9.x.universal/release/site-packages",
+		"rm -rf lib/darwin-9.x.universal/boost_1_60",
+		"mv lib/darwin-9.x.universal/boost lib/darwin-9.x.universal/boost_1_60",
+		"cp -f %s lib/darwin-9.x.universal/python/include/python3.5m/pyport.h" % python_patch,
+	]
+
+	if self.teamcity_project_type == 'vb35':
+		# for vb35 get boost from sdk/mac
+		patch_steps = patch_steps + [
+			"mkdir -p lib/darwin-9.x.universal/boost/include",
+			"cp -r %s/boost lib/darwin-9.x.universal/boost/include/boost" % boost_root,
+			"cp -r %s lib/darwin-9.x.universal/boost/lib" % boost_lib_dir,
+		]
+	else:
+		# for vb30 get boost from prebuilt libs
+		patch_steps = patch_steps + [
+			"cp -r %s lib/darwin-9.x.universal/boost" % os.path.join(self.dir_blender_libs, 'boost-%s' % BOOST_VERSION),
+		]
+
+	os.chdir(self.dir_source)
+
+	for step in patch_steps:
+		sys.stdout.write('MAC patch step [%s]\n' % step)
+		sys.stdout.flush()
+		os.system(step)
+
+	sys.stdout.flush()
+
+
 class MacBuilder(Builder):
 	def config(self):
 		# Not used on OS X anymore
@@ -293,6 +278,7 @@ class MacBuilder(Builder):
 	def post_init(self):
 		if utils.get_host_os() == utils.MAC:
 			DepsBuild(self)
+			PatchLibs(self)
 
 	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_build, "blender-cmake-build")

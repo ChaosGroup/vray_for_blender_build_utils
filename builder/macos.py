@@ -253,6 +253,10 @@ def DepsBuild(self):
 	sys.stdout.write('Building dependencies...\n')
 
 	for item in data:
+		if os.path.exists(item[1]):
+			sys.stdout.write('%s already installed, skipping ...\n' % item[1])
+			continue
+
 		sys.stdout.write('Installing %s...\n' % item[0])
 		fail = False
 		for step in item[2]:

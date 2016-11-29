@@ -68,7 +68,7 @@ class MacBuilder(Builder):
 			cmake.append("-DWITH_PLAYER=OFF")
 			cmake.append("-DWITH_LIBMV=OFF")
 			cmake.append("-DWITH_OPENCOLLADA=OFF")
-			cmake.append("-DWITH_CYCLES=OFF")
+			cmake.append("-DWITH_CYCLES=ON")
 			cmake.append("-DWITH_MOD_OCEANSIM=OFF")
 			cmake.append("-DWITH_OPENCOLORIO=OFF")
 			cmake.append("-DWITH_OPENIMAGEIO=OFF")

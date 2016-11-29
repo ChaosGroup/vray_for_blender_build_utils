@@ -264,65 +264,6 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 	return steps
 
 
-Deps = {
-	'ubuntu': {
-		'cmd' : "apt-get install",
-		'packages' : (
-			'build-essential',
-			'libalut-dev',
-			'libavcodec-dev',
-			'libavdevice-dev',
-			'libavformat-dev',
-			'libavutil-dev',
-			'libfftw3-dev',
-			'libfreetype6-dev',
-			'libglew-dev',
-			'libcheese-dev', # Fixes libglew-dev installation
-			'libglu1-mesa-dev',
-			'libjack-dev',
-			'libjack-dev',
-			'libjpeg-dev',
-			'libmp3lame-dev',
-			'libopenal-dev',
-			'libopenexr-dev',
-			'libopenjpeg-dev',
-			'libpng12-dev',
-			'libsdl1.2-dev',
-			'libsndfile1-dev',
-			'libspnav-dev',
-			'libswscale-dev',
-			'libtheora-dev',
-			'libtiff4-dev',
-			'libvorbis-dev',
-			'libx264-dev',
-			'libxi-dev',
-			'python3.4-dev',
-			'python3-numpy',
-			'libopenimageio-dev',
-			'libopencolorio-dev',
-			'libboost-all-dev'
-		)
-	},
-}
-
-
-def DepsInstall(self):
-	sys.stdout.write("Installing dependencies: \n")
-
-	distr = utils.get_linux_distribution()['short_name']
-
-	if distr in Deps:
-		cmd = "sudo %s %s" % (
-			Deps[distr]['cmd'],
-			" ".join(Deps[distr]['packages'])
-		)
-		sys.stdout.write("Calling: %s\n" % cmd)
-		os.system(cmd)
-
-	else:
-		sys.stdout.write("Your distribution \"%s\" doesn't support automatic dependencies installation!\n" % distr)
-
-
 def DepsBuild(self):
 	prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
 

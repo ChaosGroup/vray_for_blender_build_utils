@@ -34,25 +34,10 @@ import subprocess
 from .builder import utils
 from .builder import Builder
 
-from .linux import PYTHON_VERSION
-from .linux import PYTHON_VERSION_BIG
-from .linux import NUMPY_VERSION
 BOOST_VERSION="1.61.0"
-from .linux import OCIO_VERSION
-from .linux import OPENEXR_VERSION
-from .linux import ILMBASE_VERSION
-from .linux import OIIO_VERSION
-from .linux import LLVM_VERSION
-from .linux import TIFF_VERSION
-from .linux import FFTW_VERSION
 
 
 def getDepsCompilationData(self, prefix, wd, jobs):
-	common_cmake_args = []
-
-	def getCmakeCommandStr(*additionalArgs):
-		return ' '.join(['cmake'] + common_cmake_args + list(additionalArgs))
-
 	def dbg(x):
 		sys.stdout.write('%s\n' % x)
 		sys.stdout.flush()
@@ -63,29 +48,6 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 
 	def getDownloadCmd(url, name):
 		return lambda: dbg('wget -c %s -O %s/%s' % (url, wd, name)) and 0 == os.system('wget -c "%s" -O %s/%s' % (url, wd, name))
-
-	def patchOpenEXRCmake():
-		with open(os.path.join(wd, 'OpenEXR-%s' % OPENEXR_VERSION, 'IlmImf', 'CMakeLists.txt'), 'r+') as f:
-			content = [l.rstrip('\n') for l in f.readlines()]
-			sys.stdout.write("Swapping lines: \n\t%s\n\t%s\n" % (content[27], content[28]))
-			content[27], content[28] = content[28], content[27]
-			f.seek(0)
-			f.write('\n'.join(content))
-			f.truncate()
-		return True
-
-	def patchLLVMCmake():
-		with open(os.path.join(wd, 'LLVM-%s' % LLVM_VERSION, 'CMakeLists.txt'), 'r+') as f:
-			content = [l.rstrip('\n') for l in f.readlines()]
-			# set(PACKAGE_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}svn")
-			content[16] = '  set(PACKAGE_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}")'
-			f.seek(0)
-			f.write('\n'.join(content))
-			f.truncate()
-		return True
-
-	def getOrCmd(a, b):
-		return lambda: a() or b()
 
 	def removeSoFile(path):
 		if os.path.isfile(path):
@@ -98,26 +60,6 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		return lambda: all([removeSoFile(path) for path in glob.glob('%s/*.dylib*')])
 
 	steps = (
-		('tiff', '%s/tiff-%s' % (prefix, TIFF_VERSION), (
-			getChDirCmd(wd),
-			getDownloadCmd('http://download.osgeo.org/libtiff/tiff-%s.tar.gz' % TIFF_VERSION, 'tiff.tar.gz'),
-			'tar -C . -xf tiff.tar.gz',
-			getChDirCmd(os.path.join(wd, 'tiff-%s' % TIFF_VERSION)),
-			'./configure --prefix=%s/tiff-%s --enable-static' % (prefix, TIFF_VERSION),
-			'make -j %s' % jobs,
-			'make  install',
-			'ln -s %s/tiff-%s %s/tiff' % (prefix, TIFF_VERSION, prefix),
-		)),
-		('fftw', '%s/fftw-%s' % (prefix, FFTW_VERSION), (
-			getChDirCmd(wd),
-			getDownloadCmd('http://www.fftw.org/fftw-%s.tar.gz' % FFTW_VERSION, 'fftw.tar.gz'),
-			'tar -C . -xf fftw.tar.gz',
-			getChDirCmd(os.path.join(wd, 'fftw-%s' % FFTW_VERSION)),
-			'./configure --prefix=%s/fftw-%s --enable-static' % (prefix, FFTW_VERSION),
-			'make -j %s' % jobs,
-			'make  install',
-			'ln -s %s/fftw-%s %s/fftw' % (prefix, FFTW_VERSION, prefix),
-		)),
 		('boost', '%s/boost-%s' % (prefix, BOOST_VERSION),(
 			getChDirCmd(wd),
 			getDownloadCmd("http://sourceforge.net/projects/boost/files/boost/%s/boost_%s.tar.bz2/download" % (BOOST_VERSION, BOOST_VERSION.replace('.', '_')), 'boost.tar.bz2'),
@@ -297,22 +239,21 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity))
 		cmake.append("-DPNG_LIBRARIES=png12")
+		cmake.append("-DWITH_ALEMBIC=ON")
 
-		if self.jenkins or self.teamcity_project_type == 'vb35':
-			if self.teamcity_project_type == 'vb35':
-				cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
-				cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
-
+		if self.teamcity_project_type == 'vb35':
+			cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
+			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
 			cmake.append("-DWITH_CXX11=ON")
 			cmake.append("-DLIBDIR=%s" % utils.path_join(self.dir_source, 'lib', 'darwin-9.x.universal'))
 			cmake.append("-DWITH_GAMEENGINE=OFF")
 			cmake.append("-DWITH_PLAYER=OFF")
 			cmake.append("-DWITH_LIBMV=OFF")
 			cmake.append("-DWITH_OPENCOLLADA=OFF")
-			cmake.append("-DWITH_CYCLES=ON")
+			cmake.append("-DWITH_CYCLES=OFF")
 			cmake.append("-DWITH_MOD_OCEANSIM=OFF")
-			cmake.append("-DWITH_OPENCOLORIO=ON")
-			cmake.append("-DWITH_OPENIMAGEIO=ON")
+			cmake.append("-DWITH_OPENCOLORIO=OFF")
+			cmake.append("-DWITH_OPENIMAGEIO=OFF")
 			cmake.append("-DWITH_IMAGE_OPENEXR=OFF")
 			cmake.append("-DWITH_IMAGE_OPENJPEG=OFF")
 			cmake.append("-DWITH_FFTW3=OFF")
@@ -327,7 +268,7 @@ class MacBuilder(Builder):
 			cmake.append("-DWITH_MOD_OCEANSIM=ON")
 			# TODO: cmake.append("-DWITH_OPENSUBDIV=ON")
 			cmake.append("-DWITH_FFTW3=ON")
-			cmake.append("-DWITH_ALEMBIC=ON")
+
 
 
 		cmake.append(self.dir_blender)

@@ -129,7 +129,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getChDirCmd(wd),
 			getDownloadCmd("https://github.com/imageworks/OpenColorIO/tarball/v%s" % OCIO_VERSION, 'ocio.tar.gz'),
 			'tar -xf ocio.tar.gz',
-			'mv imageworks-OpenColorIO* 1OpenColorIO-%s' % OCIO_VERSION,
+			'mv imageworks-OpenColorIO* OpenColorIO-%s' % OCIO_VERSION,
 			'mkdir -p OpenColorIO-%s/build' % OCIO_VERSION,
 			getChDirCmd(os.path.join(wd, 'OpenColorIO-%s' % OCIO_VERSION, 'build')),
 			' '.join(["cmake", "-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s/ocio-%s" % (prefix, OCIO_VERSION),

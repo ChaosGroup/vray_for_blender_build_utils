@@ -128,7 +128,8 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		('ocio', '%s/ocio-%s' % (prefix, OCIO_VERSION), (
 			getChDirCmd(wd),
 			getDownloadCmd("https://github.com/imageworks/OpenColorIO/tarball/v%s" % OCIO_VERSION, 'ocio.tar.gz'),
-			'tar -C . --transform "s,(.*/?)imageworks-OpenColorIO[^/]*(.*),\\1OpenColorIO-%s\\2,x" -xf ocio.tar.gz' % OCIO_VERSION,
+			'tar -xf ocio.tar.gz',
+			'mv imageworks-OpenColorIO* 1OpenColorIO-%s' % OCIO_VERSION,
 			'mkdir -p OpenColorIO-%s/build' % OCIO_VERSION,
 			getChDirCmd(os.path.join(wd, 'OpenColorIO-%s' % OCIO_VERSION, 'build')),
 			' '.join(["cmake", "-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s/ocio-%s" % (prefix, OCIO_VERSION),
@@ -145,7 +146,8 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		('ilmbase', '%s/ilmbase-%s' % (prefix, ILMBASE_VERSION), (
 			getChDirCmd(wd),
 			getDownloadCmd("http://download.savannah.nongnu.org/releases/openexr/ilmbase-%s.tar.gz" % ILMBASE_VERSION, 'ilmbase.tar.gz'),
-			'tar -C . --transform "s,(.*/?)ilmbase-[^/]*(.*),\\1ILMBase-%s\\2,x" -xf ilmbase.tar.gz' % ILMBASE_VERSION,
+			'tar -xf ilmbase.tar.gz',
+			'mv ilmbase-* ILMBase-%s' % ILMBASE_VERSION,
 			'mkdir -p ILMBase-%s/build' % ILMBASE_VERSION,
 			getChDirCmd(os.path.join(wd, 'ILMBase-%s' % ILMBASE_VERSION, 'build')),
 			" ".join(["cmake", "-D CMAKE_BUILD_TYPE=Release", "-D CMAKE_PREFIX_PATH=%s/ilmbase-%s" % (prefix, ILMBASE_VERSION),
@@ -157,7 +159,8 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		('openexr', '%s/openexr-%s' % (prefix, OPENEXR_VERSION), (
 			getChDirCmd(wd),
 			getDownloadCmd("http://download.savannah.nongnu.org/releases/openexr/openexr-%s.tar.gz" % OPENEXR_VERSION, 'openexr.tar.gz'),
-			'tar -C . --transform "s,(.*/?)openexr[^/]*(.*),\\1OpenEXR-%s\\2,x" -xf openexr.tar.gz' % OPENEXR_VERSION,
+			'tar -xf openexr.tar.gz',
+			'mv openexr-* OpenEXR-%s' % OPENEXR_VERSION,
 			'mkdir -p OpenEXR-%s/build' % OPENEXR_VERSION,
 			patchOpenEXRCmake,
 			getChDirCmd(os.path.join(wd, 'OpenEXR-%s' % OPENEXR_VERSION, 'build')),
@@ -174,8 +177,8 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getChDirCmd(wd),
 			getDownloadCmd("https://github.com/OpenImageIO/oiio/archive/Release-%s.tar.gz" % OIIO_VERSION, 'oiio.tar.gz'),
 			'mkdir -p OpenImageIO-%s' % OIIO_VERSION,
-			'tar -C OpenImageIO-%s --strip-components=1 --transform "s,(.*/?)oiio-Release-[^/]*(.*),\\1OpenImageIO-%s\\2,x" -xf oiio.tar.gz'
-				% (OIIO_VERSION, OIIO_VERSION),
+			'tar -xf oiio.tar.gz',
+			'mv oiio-* OpenImageIO-%s' % OIIO_VERSION,
 			'mkdir -p OpenImageIO-%s/build' % OIIO_VERSION,
 			getChDirCmd(os.path.join(wd, 'OpenImageIO-%s' % OIIO_VERSION, 'build')),
 			getCmakeCommandStr(
@@ -192,26 +195,26 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'make clean',
 			'ln -s %s/oiio-%s %s/oiio' % (prefix, OIIO_VERSION, prefix),
 		)),
-		('clang', '%s/llvm-%s' % (prefix, LLVM_VERSION), (
-			getChDirCmd(wd),
-			getDownloadCmd("http://llvm.org/releases/%s/llvm-%s.src.tar.gz" % (LLVM_VERSION, LLVM_VERSION), 'llvm.tar.gz'),
-			getOrCmd(
-				getDownloadCmd("http://llvm.org/releases/%s/clang-%s.src.tar.gz" % (LLVM_VERSION, LLVM_VERSION), 'clang.tar.gz'),
-				getDownloadCmd("http://llvm.org/releases/%s/cfe-%s.src.tar.gz" % (LLVM_VERSION, LLVM_VERSION), 'clang.tar.gz')
-			),
-			'tar -C . --transform "s,([^/]*/?)llvm-[^/]*(.*),\\1LLVM-%s\\2,x" -xf llvm.tar.gz' % LLVM_VERSION,
-			'tar -C LLVM-%s/tools --transform "s,([^/]*/?)(clang|cfe)-[^/]*(.*),\\1clang\\3,x" -xf clang.tar.gz' % LLVM_VERSION,
-			'mkdir -p LLVM-%s/build' % LLVM_VERSION,
-			getChDirCmd(os.path.join(wd, 'LLVM-%s' % LLVM_VERSION, 'build')),
-			patchLLVMCmake,
-			' '.join(["cmake", "-D CMAKE_BUILD_TYPE=Release",
-					  "-D CMAKE_INSTALL_PREFIX=%s/llvm-%s" % (prefix, LLVM_VERSION),
-					  "-D LLVM_TARGETS_TO_BUILD=X86",
-					  "-D LLVM_ENABLE_TERMINFO=OFF", ".."]),
-			'make -j %s' % jobs,
-			'make install',
-			'make clean',
-		)),
+		# ('clang', '%s/llvm-%s' % (prefix, LLVM_VERSION), (
+		# 	getChDirCmd(wd),
+		# 	getDownloadCmd("http://llvm.org/releases/%s/llvm-%s.src.tar.gz" % (LLVM_VERSION, LLVM_VERSION), 'llvm.tar.gz'),
+		# 	getOrCmd(
+		# 		getDownloadCmd("http://llvm.org/releases/%s/clang-%s.src.tar.gz" % (LLVM_VERSION, LLVM_VERSION), 'clang.tar.gz'),
+		# 		getDownloadCmd("http://llvm.org/releases/%s/cfe-%s.src.tar.gz" % (LLVM_VERSION, LLVM_VERSION), 'clang.tar.gz')
+		# 	),
+		# 	'tar -C . --transform "s,([^/]*/?)llvm-[^/]*(.*),\\1LLVM-%s\\2,x" -xf llvm.tar.gz' % LLVM_VERSION,
+		# 	'tar -C LLVM-%s/tools --transform "s,([^/]*/?)(clang|cfe)-[^/]*(.*),\\1clang\\3,x" -xf clang.tar.gz' % LLVM_VERSION,
+		# 	'mkdir -p LLVM-%s/build' % LLVM_VERSION,
+		# 	getChDirCmd(os.path.join(wd, 'LLVM-%s' % LLVM_VERSION, 'build')),
+		# 	patchLLVMCmake,
+		# 	' '.join(["cmake", "-D CMAKE_BUILD_TYPE=Release",
+		# 			  "-D CMAKE_INSTALL_PREFIX=%s/llvm-%s" % (prefix, LLVM_VERSION),
+		# 			  "-D LLVM_TARGETS_TO_BUILD=X86",
+		# 			  "-D LLVM_ENABLE_TERMINFO=OFF", ".."]),
+		# 	'make -j %s' % jobs,
+		# 	'make install',
+		# 	'make clean',
+		# )),
 	)
 
 	return steps

@@ -85,7 +85,7 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
     if not download_appsdk:
         sys.stdout.write('Already have [%s]' % appsdk_name)
         sys.stdout.flush()
-        return
+        return all_appsdk_root
 
     sys.stdout.write('Missing vray [%s]\n' % appsdk_check)
     sys.stdout.write('Creating dir [%s]\n' % appsdk_path)

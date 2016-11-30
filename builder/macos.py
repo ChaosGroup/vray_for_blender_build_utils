@@ -205,6 +205,8 @@ def PatchLibs(self):
 	# 		"cp -r %s lib/darwin-9.x.universal/boost" % os.path.join(self.dir_blender_libs, 'boost-%s' % BOOST_VERSION),
 	# 	]
 
+	os.chdir(os.path.join(self.dir_source, 'lib', 'darwin-9.x.universal'))
+	os.system('svn revert -R .')
 	os.chdir(self.dir_source)
 
 	for step in patch_steps:

@@ -176,6 +176,19 @@ def PatchLibs(self):
 
 	boost_lib_dir = os.path.join(boost_lib, 'gcc-4.2-cpp')
 
+	svn_subdirs = [
+		os.path.join(self.dir_source, 'lib', 'darwin-9.x.universal'),
+		os.path.join(self.dir_source, 'lib', 'darwin'),
+		os.path.join(self.dir_source, 'lib', 'win64_vc12'),
+	]
+
+	for svn in svn_subdirs:
+		if os.path.exists(svn) and os.path.isdir(svn):
+			sys.stdout.write('reverting all changes in [%s] \n' % svn)
+			sys.stdout.flush()
+			os.chdir(svn)
+			os.system('svn revert -R .')
+
 	python_patch = os.path.join(self.dir_source, 'blender-for-vray-libs', 'Darwin', 'pyport.h')
 	patch_steps = [
 		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal",
@@ -188,25 +201,6 @@ def PatchLibs(self):
 		"cp -f %s lib/darwin/python/include/python3.5m/pyport.h" % python_patch,
 	]
 
-	# if self.teamcity_project_type == 'vb35':
-	# 	# for vb35 get boost from sdk/mac
-	# 	patch_steps = patch_steps + [
-	# 		"mkdir -p lib/darwin-9.x.universal/release/site-packages",
-	# 		"rm -rf lib/darwin-9.x.universal/boost_1_60",
-	# 		"mv lib/darwin-9.x.universal/boost lib/darwin-9.x.universal/boost_1_60",
-	# 		"mkdir -p lib/darwin-9.x.universal/boost/include",
-	# 		"cp -r %s/boost lib/darwin-9.x.universal/boost/include/boost" % boost_root,
-	# 		"cp -r %s lib/darwin-9.x.universal/boost/lib" % boost_lib_dir,
-	# 	]
-	# else:
-	# 	pass
-	# 	# for vb30 get boost from prebuilt libs
-	# 	patch_steps = patch_steps + [
-	# 		"cp -r %s lib/darwin-9.x.universal/boost" % os.path.join(self.dir_blender_libs, 'boost-%s' % BOOST_VERSION),
-	# 	]
-
-	os.chdir(os.path.join(self.dir_source, 'lib', 'darwin-9.x.universal'))
-	os.system('svn revert -R .')
 	os.chdir(self.dir_source)
 
 	for step in patch_steps:
@@ -246,35 +240,20 @@ class MacBuilder(Builder):
 		cmake.append("-DPNG_LIBRARIES=png12")
 		cmake.append("-DWITH_ALEMBIC=ON")
 
+		cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
+		cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))
+		cmake.append("-DWITH_LIBMV=%s" % utils.GetCmakeOnOff(self.with_tracker))
+		cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.with_collada))
+		cmake.append("-DWITH_CYCLES=%s" % utils.GetCmakeOnOff(self.with_cycles))
+		cmake.append("-DWITH_MOD_OCEANSIM=ON")
+		# TODO: cmake.append("-DWITH_OPENSUBDIV=ON")
+		cmake.append("-DWITH_FFTW3=ON")
+
 		if self.teamcity_project_type == 'vb35':
 			cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
 			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
 			cmake.append("-DWITH_CXX11=ON")
-			# cmake.append("-DLIBDIR=%s" % utils.path_join(self.dir_source, 'lib', 'darwin-9.x.universal'))
-			cmake.append("-DWITH_GAMEENGINE=OFF")
-			cmake.append("-DWITH_PLAYER=OFF")
-			cmake.append("-DWITH_LIBMV=OFF")
-			cmake.append("-DWITH_OPENCOLLADA=OFF")
-			cmake.append("-DWITH_CYCLES=ON")
-			cmake.append("-DWITH_MOD_OCEANSIM=OFF")
-			cmake.append("-DWITH_OPENCOLORIO=ON")
-			cmake.append("-DWITH_OPENIMAGEIO=ON")
-			cmake.append("-DWITH_IMAGE_OPENEXR=OFF")
-			cmake.append("-DWITH_IMAGE_OPENJPEG=OFF")
-			cmake.append("-DWITH_FFTW3=OFF")
-			cmake.append("-DWITH_CODEC_FFMPEG=OFF")
-			cmake.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=")
-		else:
-			cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
-			cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))
-			cmake.append("-DWITH_LIBMV=%s" % utils.GetCmakeOnOff(self.with_tracker))
-			cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.with_collada))
-			cmake.append("-DWITH_CYCLES=%s" % utils.GetCmakeOnOff(self.with_cycles))
-			cmake.append("-DWITH_MOD_OCEANSIM=ON")
-			# TODO: cmake.append("-DWITH_OPENSUBDIV=ON")
-			cmake.append("-DWITH_FFTW3=ON")
-
-
+			# cmake.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=")
 
 		cmake.append(self.dir_blender)
 

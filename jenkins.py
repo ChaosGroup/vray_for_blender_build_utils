@@ -74,13 +74,18 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
 
     # clean all non-needed files
     for item in glob.glob('%s/*' % all_appsdk_root):
-        if re.match(r'^\d{8}$', item) is None:
-            if os.path.isdir(item):
-                utils.remove_path(item)
+        item_name = os.path.basename(item)
+        if re.match(r'^\d{8}$', item_name) is None:
+            utils.remove_path(item)
 
     appsdk_path = os.path.join(all_appsdk_root, appsdk_version, appsdk_os_dir_name)
     appsdk_check = os.path.join(appsdk_path, 'bin', 'vray.%s' % vray_ext)
     download_appsdk = not os.path.exists(appsdk_check)
+
+    if not download_appsdk:
+        sys.stdout.write('Already have [%s]' % appsdk_name)
+        sys.stdout.flush()
+        return
 
     sys.stdout.write('Missing vray [%s]\n' % appsdk_check)
     sys.stdout.write('Creating dir [%s]\n' % appsdk_path)

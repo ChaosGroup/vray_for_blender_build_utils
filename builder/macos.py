@@ -179,6 +179,7 @@ def PatchLibs(self):
 	python_patch = os.path.join(self.dir_source, 'blender-for-vray-libs', 'Darwin', 'pyport.h')
 	patch_steps = [
 		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal",
+		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin lib/darwin",
 		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12",
 		"cp -Rf lib/win64_vc12/opensubdiv/include/opensubdiv/* lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/",
 		"cp lib/darwin-9.x.universal/png/lib/libpng12.a lib/darwin-9.x.universal/png/lib/libpng.a",
@@ -186,22 +187,22 @@ def PatchLibs(self):
 		"cp -f %s lib/darwin-9.x.universal/python/include/python3.5m/pyport.h" % python_patch,
 	]
 
-	if self.teamcity_project_type == 'vb35':
-		# for vb35 get boost from sdk/mac
-		patch_steps = patch_steps + [
-			"mkdir -p lib/darwin-9.x.universal/release/site-packages",
-			"rm -rf lib/darwin-9.x.universal/boost_1_60",
-			"mv lib/darwin-9.x.universal/boost lib/darwin-9.x.universal/boost_1_60",
-			"mkdir -p lib/darwin-9.x.universal/boost/include",
-			"cp -r %s/boost lib/darwin-9.x.universal/boost/include/boost" % boost_root,
-			"cp -r %s lib/darwin-9.x.universal/boost/lib" % boost_lib_dir,
-		]
-	else:
-		pass
-		# for vb30 get boost from prebuilt libs
-		# patch_steps = patch_steps + [
-		# 	"cp -r %s lib/darwin-9.x.universal/boost" % os.path.join(self.dir_blender_libs, 'boost-%s' % BOOST_VERSION),
-		# ]
+	# if self.teamcity_project_type == 'vb35':
+	# 	# for vb35 get boost from sdk/mac
+	# 	patch_steps = patch_steps + [
+	# 		"mkdir -p lib/darwin-9.x.universal/release/site-packages",
+	# 		"rm -rf lib/darwin-9.x.universal/boost_1_60",
+	# 		"mv lib/darwin-9.x.universal/boost lib/darwin-9.x.universal/boost_1_60",
+	# 		"mkdir -p lib/darwin-9.x.universal/boost/include",
+	# 		"cp -r %s/boost lib/darwin-9.x.universal/boost/include/boost" % boost_root,
+	# 		"cp -r %s lib/darwin-9.x.universal/boost/lib" % boost_lib_dir,
+	# 	]
+	# else:
+	# 	pass
+	# 	# for vb30 get boost from prebuilt libs
+	# 	patch_steps = patch_steps + [
+	# 		"cp -r %s lib/darwin-9.x.universal/boost" % os.path.join(self.dir_blender_libs, 'boost-%s' % BOOST_VERSION),
+	# 	]
 
 	os.chdir(self.dir_source)
 

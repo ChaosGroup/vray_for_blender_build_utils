@@ -192,9 +192,9 @@ def PatchLibs(self):
 
 	python_patch = os.path.join(self.dir_source, 'blender-for-vray-libs', 'Darwin', 'pyport.h')
 	patch_steps = [
-		["svn", "--non-interactive", "--trust-server-cert", "checkout", "--force", "https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal"],
-		["svn", "--non-interactive", "--trust-server-cert", "checkout", "--force", "https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin lib/darwin"],
-		["svn", "--non-interactive", "--trust-server-cert", "checkout", "--force", "https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12"],
+		["svn", "--non-interactive", "--trust-server-cert", "checkout", "--force", "https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal", "lib/darwin-9.x.universal"],
+		["svn", "--non-interactive", "--trust-server-cert", "checkout", "--force", "https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin", "lib/darwin"],
+		["svn", "--non-interactive", "--trust-server-cert", "checkout", "--force", "https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12", "lib/win64_vc12"],
 		["cp", "-Rf", "lib/darwin-9.x.universal/python", "lib/darwin/python"],
 		["cp", "-Rf", "lib/win64_vc12/opensubdiv/include/opensubdiv/*", "lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/"],
 		["cp", "lib/darwin-9.x.universal/png/lib/libpng12.a", "lib/darwin-9.x.universal/png/lib/libpng.a"],

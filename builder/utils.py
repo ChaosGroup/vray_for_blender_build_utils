@@ -352,7 +352,9 @@ def create_desktop_file(filepath = "/usr/share/applications/vrayblender.desktop"
 	ofile.close()
 
 
-def _get_cmd_output_ex(cmd, workDir=None):
+def execute_command(cmd, workDir=None):
+	""" Returns dict with 'code' and 'result' keys, expects cmd to be array
+	"""
 	pwd = os.getcwd()
 	if workDir:
 		os.chdir(workDir)
@@ -366,7 +368,9 @@ def _get_cmd_output_ex(cmd, workDir=None):
 			code = e.returncode
 			res = e.output
 	else:
-		proc = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+		proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+									 stderr=subprocess.PIPE,
+									 shell=True)
 		res = proc.communicate()[0]
 		code = proc.returncode
 	res = res.decode().strip(" \n\r\t")
@@ -377,13 +381,13 @@ def _get_cmd_output_ex(cmd, workDir=None):
 	return {'code': code, 'output': res}
 
 
-def _get_cmd_output(cmd, workDir=None):
-	return _get_cmd_output_ex(cmd, workDir)['output']
+def execute_command_output(cmd, workDir=None):
+	return execute_command(cmd, workDir)['output']
 
 
 def get_git_head_hash(root):
 	git_rev = ['git', 'rev-parse', '--short', 'HEAD']
-	return _get_cmd_output(git_rev, root)
+	return execute_command_output(git_rev, root)
 
 
 def get_svn_revision(svn_root):
@@ -391,8 +395,8 @@ def get_svn_revision(svn_root):
 	git_cnt = ['git', 'rev-list',  '--count', 'HEAD']
 
 	rev = get_git_head_hash(svn_root)
-	brev = _get_cmd_output(b_rev, svn_root)
-	cnt = _get_cmd_output(git_cnt, svn_root)
+	brev = execute_command_output(b_rev, svn_root)
+	cnt = execute_command_output(git_cnt, svn_root)
 
 	return rev, brev, cnt
 
@@ -609,7 +613,7 @@ def mac_rewrite_qt_links(binfile, relpath=''):
 
 	sys.stdout.write("[%s]\n" % ", ".join(qt_find))
 	sys.stdout.flush()
-	res = _get_cmd_output_ex(qt_find)
+	res = execute_command(qt_find)
 	if res['code'] != 0:
 		sys.stderr.write('"%s" failed\n' % ' '.join(qt_find))
 		sys.stderr.flush()
@@ -670,7 +674,7 @@ def get_zmq_build_items(self, appsdkFile):
 			zmq_build_path = os.path.expanduser("~/%s" % sub_dir_template)
 
 		# we will rename appsdk and Qt to point to appsdk folder
-		zmq_temp = "%s/VRayZmqServer" % tempfile.gettempdir()
+		zmq_temp = os.path.join(tempfile.gettempdir(), "VRayZmqServer")
 		if os.path.exists(zmq_temp):
 			remove_file(zmq_temp)
 		shutil.copyfile(zmq_build_path, zmq_temp)
@@ -792,14 +796,14 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 
 	sys.stdout.write("[%s]\n" % ", ".join(commands['create_dmg']))
 	sys.stdout.flush()
-	if _get_cmd_output_ex(commands['create_dmg'])['code'] != 0:
+	if execute_command(commands['create_dmg'])['code'] != 0:
 		sys.stderr.write('[%s] failed\n' % ', '.join(commands['create_dmg']))
 		sys.stderr.flush()
 		sys.exit(1)
 
 	sys.stdout.write("[%s]\n" % ", ".join(commands['mount_dmg']))
 	sys.stdout.flush()
-	mount_res = _get_cmd_output_ex(commands['mount_dmg'])
+	mount_res = execute_command(commands['mount_dmg'])
 	if mount_res['code'] != 0:
 		sys.stderr.write('[%s] failed\n' % ', '.join(commands['mount_dmg']))
 		sys.stderr.flush()
@@ -811,21 +815,21 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 
 	sys.stdout.write("[%s]\n" % ", ".join(commands['fs_dmg']))
 	sys.stdout.flush()
-	if _get_cmd_output_ex(commands['fs_dmg'])['code'] != 0:
+	if execute_command(commands['fs_dmg'])['code'] != 0:
 		sys.stderr.write('[%s] failed\n' % ', '.join(commands['fs_dmg']))
 		sys.stderr.flush()
 		sys.exit(1)
 
 	sys.stdout.write("[%s]\n" % ", ".join(commands['eject_dmg']))
 	sys.stdout.flush()
-	if _get_cmd_output_ex(commands['eject_dmg'])['code'] != 0:
+	if execute_command(commands['eject_dmg'])['code'] != 0:
 		sys.stderr.write('[%s] failed' % ', '.join(commands['eject_dmg']))
 		sys.stderr.flush()
 		sys.exit(1)
 
 	sys.stdout.write("[%s]\n" % ", ".join(commands['path_dmg']))
 	sys.stdout.flush()
-	path_dmg_res = _get_cmd_output_ex(commands['path_dmg'])
+	path_dmg_res = execute_command(commands['path_dmg'])
 	if path_dmg_res['code'] != 0:
 		sys.stderr.write('[%s] failed' % ', '.join(commands['path_dmg']))
 		sys.stderr.flush()
@@ -836,14 +840,14 @@ def generateMacInstaller(self, InstallerDir, tmplFinal, installer_path, short_ti
 
 	sys.stdout.write("[%s]\n" % ", ".join(commands['copy_app']))
 	sys.stdout.flush()
-	if _get_cmd_output_ex(commands['copy_app'])['code'] != 0:
+	if execute_command(commands['copy_app'])['code'] != 0:
 		sys.stderr.write('[%s] failed' % ', '.join(commands['copy_app']))
 		sys.stderr.flush()
 		sys.exit(1)
 
 	sys.stdout.write("[%s]\n" % ", ".join(commands['eject_final']))
 	sys.stdout.flush()
-	if _get_cmd_output_ex(commands['eject_final'])['code'] != 0:
+	if execute_command(commands['eject_final'])['code'] != 0:
 		sys.stderr.write('[%s] failed' % ', '.join(commands['eject_final']))
 		sys.stderr.flush()
 		sys.exit(1)
@@ -998,8 +1002,8 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 			dest_path = dest_path if dest_path != '.' else ''
 			for file_name in filenames:
 				source_path = os.path.join(dirpath, file_name)
-				if host_os == MAC:
-					mac_rewrite_qt_links(source_path)
+				# if host_os == MAC:
+				# 	mac_rewrite_qt_links(source_path)
 
 				st = os.stat(source_path)
 				if st.st_mode & stat.S_IEXEC:

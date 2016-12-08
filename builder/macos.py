@@ -187,28 +187,30 @@ def PatchLibs(self):
 			sys.stdout.write('reverting all changes in [%s] \n' % svn)
 			sys.stdout.flush()
 			os.chdir(svn)
-			os.system('svn revert -R .')
+			utils.execute_command(['svn', 'upgrade'])
+			utils.execute_command(['svn', 'revert', '-R', '.'])
 
 	python_patch = os.path.join(self.dir_source, 'blender-for-vray-libs', 'Darwin', 'pyport.h')
 	patch_steps = [
-		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal",
-		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin lib/darwin",
-		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12",
-		"mv lib/darwin/python lib/darwin/python-orig",
-		"cp -Rf lib/darwin-9.x.universal/python lib/darwin/python",
-		"cp -Rf lib/win64_vc12/opensubdiv/include/opensubdiv/* lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/",
-		"cp lib/darwin-9.x.universal/png/lib/libpng12.a lib/darwin-9.x.universal/png/lib/libpng.a",
-		"cp lib/darwin-9.x.universal/png/lib/libpng12.la lib/darwin-9.x.universal/png/lib/libpng.la",
-		"cp -f %s lib/darwin-9.x.universal/python/include/python3.5m/pyport.h" % python_patch,
-		"cp -f %s lib/darwin/python/include/python3.5m/pyport.h" % python_patch,
+		["svn", "--non-interactive", "--trust-server-cert", "checkout", "--force", "https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal"],
+		["svn", "--non-interactive", "--trust-server-cert", "checkout", "--force", "https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin lib/darwin"],
+		["svn", "--non-interactive", "--trust-server-cert", "checkout", "--force", "https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12"],
+		["mv", "lib/darwin/python", "lib/darwin/python-orig"],
+		["cp", "-Rf", "lib/darwin-9.x.universal/python", "lib/darwin/python"],
+		["cp", "-Rf", "lib/win64_vc12/opensubdiv/include/opensubdiv/*", "lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/"],
+		["cp", "lib/darwin-9.x.universal/png/lib/libpng12.a", "lib/darwin-9.x.universal/png/lib/libpng.a"],
+		["cp", "lib/darwin-9.x.universal/png/lib/libpng12.la", "lib/darwin-9.x.universal/png/lib/libpng.la"],
+		["cp", "-f", python_patch, "lib/darwin-9.x.universal/python/include/python3.5m/pyport.h"],
+		["cp", "-f", python_patch, "lib/darwin/python/include/python3.5m/pyport.h"],
 	]
 
 	os.chdir(self.dir_source)
 
 	for step in patch_steps:
-		sys.stdout.write('MAC patch step [%s]\n' % step)
+		sys.stdout.write('MAC patch step [%s]' % ' '.join(step))
+		code = utils.execute_command(step)['code']
+		sys.stdout.write(' code = [%s]' % code)
 		sys.stdout.flush()
-		os.system(step)
 
 	sys.stdout.flush()
 
@@ -298,14 +300,17 @@ class MacBuilder(Builder):
 		sys.stdout.write("Generating archive: %s\n" % archive_name)
 		sys.stdout.write("  in: %s\n" % (release_path))
 
-		cmd = "zip %s %s" % (archive_name, installer_name)
+		cmd = ['zip', archive_name, installer_name]
 
-		sys.stdout.write("Calling: %s\n" % (cmd))
+		sys.stdout.write("Calling: %s\n" % ' '.join(cmd))
 		sys.stdout.write("  in: %s\n" % (self.dir_install))
 
 		if not self.mode_test:
 			os.chdir(release_path)
-			os.system(cmd)
+			if utils.execute_command(cmd)['code'] != 0:
+				sys.stderr.write('Failed to zip!')
+				sys.stderr.flush()
+				sys.exit(1)
 
 		artefacts = (
 			os.path.join(release_path, installer_name),

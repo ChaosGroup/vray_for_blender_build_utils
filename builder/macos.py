@@ -209,7 +209,7 @@ def PatchLibs(self):
 	for step in patch_steps:
 		sys.stdout.write('MAC patch step [%s]' % ' '.join(step))
 		code = utils.execute_command(step)['code']
-		sys.stdout.write(' code = [%s]' % code)
+		sys.stdout.write(' code = [%s]\n' % code)
 		sys.stdout.flush()
 
 	sys.stdout.flush()

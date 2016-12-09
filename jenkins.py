@@ -96,39 +96,37 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
     except:
         pass
 
-    curl = [
-        'curl', '-s', '-S', '-o', appsdk_name,
-        'ftp://%s:%s@nightlies.chaosgroup.com/vrayappsdk/%s/%s' % (os.environ['NIGHTLIES_USER'],
-                                                                   os.environ['NIGHTLIES_PASS'],
-                                                                   appsdk_version,
-                                                                   appsdk_name)
-    ]
+    curl = 'curl -s -S -o %s ftp://%s:%s@nightlies.chaosgroup.com/vrayappsdk/%s/%s' % (
+        appsdk_name,
+        os.environ['NIGHTLIES_USER'],
+        os.environ['NIGHTLIES_PASS'],
+        appsdk_version,
+        appsdk_name,
+    )
 
     sys.stdout.write('Downloading appsdk:\n')
-    sys.stdout.write('CURL [%s]\n' % ' '.join(curl))
+    sys.stdout.write('CURL [%s]\n' % curl)
     sys.stdout.flush()
     os.chdir(appsdk_path)
-    if utils.execute_command(curl)['code'] != 0:
-        sys.stderr.write("Curl download of appsdk FAILED!\n")
-        sys.stderr.flush()
+    os.system(curl)
 
-    extract_cmd = ['7z', 'x', appsdk_name]
-    sys.stdout.write('Extract CMD [%s]\n' % ' '.join(extract_cmd))
-    sys.stdout.flush()
-    if utils.execute_command(extract_cmd)['code'] != 0:
-        sys.stderr.write('FAILED!')
-        sys.stderr.flush()
+    extract_cmds = {
+        utils.WIN: ['7z x %s' % appsdk_name],
+        utils.LNX: ['7z x %s' % appsdk_name],
+        utils.MAC: ['7z x %s' % appsdk_name, 'mv *.tar appsdk.tar', '7z x appsdk.tar'],
+    }[utils.get_host_os()]
 
+    for cmd in extract_cmds:
+        sys.stdout.write('Extract CMD [%s]\n' % cmd)
+        sys.stdout.flush()
+        os.system(cmd)
 
     tar_name = appsdk_name[0:-3]
     if utils.get_host_os() != utils.WIN and os.path.exists(os.path.join(appsdk_path, tar_name)):
-        cmd = ['7z', 'x', tar_name]
+        cmd = "7z x %s" % tar_name
         sys.stdout.write('Extract tar CMD [%s]\n' % cmd)
         sys.stdout.flush()
-        if utils.execute_command(cmd)['code'] != 0:
-            sys.stderr.write('FAILED!')
-            sys.stderr.flush()
-
+        os.system(cmd)
 
     utils.remove_path(os.path.join(appsdk_path, appsdk_name))
     return all_appsdk_root

@@ -216,7 +216,7 @@ class Builder:
 	def update(self):
 		if self.teamcity:
 			self.revision = self.teamcity_branch_hash
-			self.brev = utils.execute_command_output(['git', 'ls-remote', 'git://github.com/bdancer/blender-for-vray', 'master'])
+			self.brev = utils._get_cmd_output(['git', 'ls-remote', 'git://github.com/bdancer/blender-for-vray', 'master'])
 			self.brev = re.split('\s+', self.brev)[0][:7]
 			self.commits = ""
 		else:

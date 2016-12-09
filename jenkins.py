@@ -109,9 +109,8 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
     sys.stdout.flush()
     os.chdir(appsdk_path)
     if utils.execute_command(curl)['code'] != 0:
-        sys.stderr.write("Curl download of appsdk FAILED!")
+        sys.stderr.write("Curl download of appsdk FAILED!\n")
         sys.stderr.flush()
-        sys.exit(-1)
 
     extract_cmd = ['7z', 'x', appsdk_name]
     sys.stdout.write('Extract CMD [%s]\n' % ' '.join(extract_cmd))
@@ -119,7 +118,6 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
     if utils.execute_command(extract_cmd)['code'] != 0:
         sys.stderr.write('FAILED!')
         sys.stderr.flush()
-        sys.exit(-1)
 
 
     tar_name = appsdk_name[0:-3]
@@ -130,7 +128,6 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
         if utils.execute_command(cmd)['code'] != 0:
             sys.stderr.write('FAILED!')
             sys.stderr.flush()
-            sys.exit(-1)
 
 
     utils.remove_path(os.path.join(appsdk_path, appsdk_name))

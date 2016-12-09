@@ -359,21 +359,20 @@ def execute_command(cmd, workDir=None):
 	if workDir:
 		os.chdir(workDir)
 
-	res = "None"
-	code = 0
-	if hasattr(subprocess, "check_output"):
-		try:
-			res = subprocess.check_output(cmd)
-		except subprocess.CalledProcessError as e:
-			code = e.returncode
-			res = e.output
-	else:
-		proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
-									 stderr=subprocess.PIPE,
-									 shell=True)
-		res = proc.communicate()[0]
-		code = proc.returncode
-	res = res.decode().strip(" \n\r\t")
+	proc = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+								 stderr=subprocess.PIPE,
+								 shell=True)
+
+	outs, errs = "", ""
+	try:
+		outs, errs = proc.communicate(timeout=60 * 10)
+		# Fail after 10 min
+	except TimeoutExpired:
+		proc.kill()
+		outs, errs = proc.communicate()
+
+	code = proc.returncode
+	res = outs.decode().strip(" \n\r\t") + errs.decode().strip(" \n\r\t")
 
 	if workDir:
 		os.chdir(pwd)

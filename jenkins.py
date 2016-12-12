@@ -134,6 +134,7 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
 
 def main(args):
     sys.stdout.write('jenkins args:\n%s\n' % str(args))
+    sys.stdout.write('\n\t\tBuilding version [%s]\n\n' % (args.jenkins_project_type))
     sys.stdout.flush()
 
     dir_build = os.getcwd()

@@ -248,7 +248,7 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.with_collada))
 		cmake.append("-DWITH_CYCLES=%s" % utils.GetCmakeOnOff(self.with_cycles))
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")
-		# TODO: cmake.append("-DWITH_OPENSUBDIV=ON")
+		cmake.append("-DWITH_OPENSUBDIV=OFF")
 		cmake.append("-DWITH_FFTW3=ON")
 
 		if self.teamcity_project_type == 'vb35':

@@ -161,7 +161,7 @@ def main(args):
     if not os.path.exists(dir_source):
         os.makedirs(dir_source)
 
-    branch = 'dev/vray_for_blender/%s' % args.jenkins_project_type
+    blender_branch = 'dev/vray_for_blender/vb35'
 
     ### GET APPSDK
     if args.jenkins_project_type == 'vb35':
@@ -204,7 +204,7 @@ def main(args):
         blender_modules.append('intern/vray_for_blender_rt/extern/vray-zmq-wrapper')
 
     os.chdir(dir_source)
-    utils.get_repo('git@github.com:bdancer/blender-for-vray', branch=branch, submodules=blender_modules, target_name='blender')
+    utils.get_repo('git@github.com:bdancer/blender-for-vray', branch=blender_branch, submodules=blender_modules, target_name='blender')
     utils.get_repo('git@github.com:ChaosGroup/blender-for-vray-libs')
 
     if args.jenkins_project_type == 'vb35':
@@ -225,7 +225,7 @@ def main(args):
     cmd.append('--dir_build=%s' % dir_build)
     cmd.append("--teamcity_project_type=%s" % args.jenkins_project_type)
 
-    cmd.append('--github-src-branch=%s' % branch)
+    cmd.append('--github-src-branch=%s' % blender_branch)
     if args.jenkins_project_type == 'vb35':
         cmd.append('--teamcity_zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(dir_source, 'vrayserverzmq')))
 

@@ -381,9 +381,8 @@ class LinuxBuilder(Builder):
 		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity))
 		cmake.append('-DWITH_STATIC_LIBC=%s' % utils.GetCmakeOnOff(self.teamcity_with_static_libc))
 
-		if self.teamcity_project_type == 'vb35':
-			cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
-			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
+		cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
+		cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
 
 		cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
 		cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))
@@ -446,11 +445,10 @@ class LinuxBuilder(Builder):
 				cmake.append("-DOPENEXR_IMATH_LIBRARY=%s/openexr/lib/libImath.a" % libs_prefix)
 				cmake.append("-DOPENEXR_INCLUDE_DIR=%s/openexr/include" % libs_prefix)
 
-				if self.teamcity_project_type == 'vb35':
-					cmake.append("-DOPENCOLORIO_INCLUDE_DIR=%s/ocio/include" % libs_prefix)
-					cmake.append("-DOPENCOLORIO_TINYXML_LIBRARY=%s/ocio/lib/libtinyxml.a" % libs_prefix)
-					cmake.append("-DOPENCOLORIO_YAML-CPP_LIBRARY=%s/ocio/lib/libyaml-cpp.a" % libs_prefix)
-					cmake.append("-D_opencolorio_LIBRARIES=%s/ocio/lib/libOpenColorIO.a" % libs_prefix)
+				cmake.append("-DOPENCOLORIO_INCLUDE_DIR=%s/ocio/include" % libs_prefix)
+				cmake.append("-DOPENCOLORIO_TINYXML_LIBRARY=%s/ocio/lib/libtinyxml.a" % libs_prefix)
+				cmake.append("-DOPENCOLORIO_YAML-CPP_LIBRARY=%s/ocio/lib/libyaml-cpp.a" % libs_prefix)
+				cmake.append("-D_opencolorio_LIBRARIES=%s/ocio/lib/libOpenColorIO.a" % libs_prefix)
 
 				cmake.append("-DOPENIMAGEIO_INCLUDE_DIR=%s/oiio/include/" % libs_prefix)
 				cmake.append("-DOPENIMAGEIO_LIBRARY=%s/oiio/lib/libOpenImageIO.a" % libs_prefix)
@@ -492,11 +490,10 @@ class LinuxBuilder(Builder):
 				cmake.append("-DOPENEXR_ROOT_DIR=%s/openexr" % libs_prefix)
 				cmake.append("-DOPENEXR_ILMIMF_LIBRARY=%s/openexr/lib/libIlmImf.a" % libs_prefix)
 
-				if self.teamcity_project_type == 'vb35':
-					cmake.append("-D_opencolorio_LIBRARIES=%s/ocio/lib/libOpenColorIO.a" % libs_prefix)
-					cmake.append("-DOPENCOLORIO_INCLUDE_DIR=%s/ocio/include" % libs_prefix)
-					cmake.append("-DOPENCOLORIO_TINYXML_LIBRARY=%s/ocio/lib/libtinyxml.a" % libs_prefix)
-					cmake.append("-DOPENCOLORIO_YAML-CPP_LIBRARY=%s/ocio/lib/libyaml-cpp.a" % libs_prefix)
+				cmake.append("-D_opencolorio_LIBRARIES=%s/ocio/lib/libOpenColorIO.a" % libs_prefix)
+				cmake.append("-DOPENCOLORIO_INCLUDE_DIR=%s/ocio/include" % libs_prefix)
+				cmake.append("-DOPENCOLORIO_TINYXML_LIBRARY=%s/ocio/lib/libtinyxml.a" % libs_prefix)
+				cmake.append("-DOPENCOLORIO_YAML-CPP_LIBRARY=%s/ocio/lib/libyaml-cpp.a" % libs_prefix)
 
 				cmake.append("-DOPENIMAGEIO_INCLUDE_DIR=%s/oiio/include/" % libs_prefix)
 				cmake.append("-DOPENIMAGEIO_LIBRARY=%s/oiio/lib/libOpenImageIO.a" % libs_prefix)

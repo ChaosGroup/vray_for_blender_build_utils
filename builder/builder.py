@@ -50,11 +50,7 @@ class Builder:
 		for p in params:
 			setattr(self, p, params[p])
 
-		# Always building vb30
-		self.project        = "vrayblender3"
-		if self.teamcity_project_type == 'vb35':
-			self.project = "vrayblender35"
-
+		self.project        = "vrayblender35"
 		self.version        = utils.VERSION
 		self.revision       = utils.REVISION
 		self.brev           = ""
@@ -383,7 +379,7 @@ class Builder:
 
 		self.patch()
 
-		if self.teamcity_project_type == 'vb35' and self.jenkins:
+		if self.jenkins:
 			self.build_zmq()
 
 		if not self.export_only:

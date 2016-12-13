@@ -105,7 +105,6 @@ def main(args):
     cmd = [python_exe]
     cmd.append("vb25-patch/build.py")
     cmd.append("--teamcity")
-    cmd.append("--teamcity_project_type=%s" % args.teamcity_project_type)
     cmd.append("--teamcity_branch_hash=%s" % args.teamcity_branch_hash)
 
     cmd.append("--dir_build=%s" % os.getcwd())
@@ -113,7 +112,7 @@ def main(args):
 
     branch = args.teamcity_branch
     if branch == '':
-        branch = 'dev/vray_for_blender/%s' % args.teamcity_project_type
+        branch = 'dev/vray_for_blender/vb35'
         sys.stdout.write('No branch specified - using %s' % branch)
         sys.stdout.flush()
 
@@ -143,8 +142,7 @@ def main(args):
     if args.teamcity_with_cycles:
         cmd.append('--with_cycles')
 
-    if args.teamcity_zmq_server_hash != '' and args.teamcity_project_type == 'vb35':
-        cmd.append('--github-exp-branch=dev/vb35')
+    cmd.append('--github-exp-branch=master')
 
     if sys.platform == 'win32':
         cmd.append('--dir_install=H:/install/vray_for_blender')
@@ -191,11 +189,6 @@ if __name__ == '__main__':
 
     parser.add_argument('--teamcity_branch',
         default = "",
-    )
-
-    parser.add_argument('--teamcity_project_type',
-        choices=['vb30', 'vb35'],
-        default = 'vb30',
     )
 
     parser.add_argument('--teamcity_zmq_server_hash',

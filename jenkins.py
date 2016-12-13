@@ -134,7 +134,6 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
 
 def main(args):
     sys.stdout.write('jenkins args:\n%s\n' % str(args))
-    sys.stdout.write('\n\t\tBuilding version [%s]\n\n' % (args.jenkins_project_type))
     sys.stdout.flush()
 
     dir_build = os.getcwd()
@@ -164,24 +163,23 @@ def main(args):
     blender_branch = 'dev/vray_for_blender/vb35'
 
     ### GET APPSDK
-    if args.jenkins_project_type == 'vb35':
-        appsdk_remote_name = {
-            utils.WIN: 'appsdk-win-qt-nightly-1.11.00-vray34501-20161110.7z',
-            utils.LNX: 'appsdk-linux-qt-nightly-1.11.00-vray34501-20161110.tar.xz',
-            utils.MAC: 'appsdk-mac-qt-nightly-1.11.00-vray34501-20161110.tar.xz',
-        }[utils.get_host_os()]
+    appsdk_remote_name = {
+        utils.WIN: 'appsdk-win-qt-nightly-1.11.00-vray34501-20161110.7z',
+        utils.LNX: 'appsdk-linux-qt-nightly-1.11.00-vray34501-20161110.tar.xz',
+        utils.MAC: 'appsdk-mac-qt-nightly-1.11.00-vray34501-20161110.tar.xz',
+    }[utils.get_host_os()]
 
-        if args.jenkins_appsdk_remote_name != '':
-            appsdk_remote_name = args.jenkins_appsdk_remote_name
+    if args.jenkins_appsdk_remote_name != '':
+        appsdk_remote_name = args.jenkins_appsdk_remote_name
 
-        appsdk_version = re.match(r'.*?vray\d{5}-(\d{8})\.(?:tar\.xz|7z)*?', appsdk_remote_name).groups()[0]
+    appsdk_version = re.match(r'.*?vray\d{5}-(\d{8})\.(?:tar\.xz|7z)*?', appsdk_remote_name).groups()[0]
 
-        appsdk_path = get_appsdk(appsdk_remote_name, appsdk_version, dir_source)
+    appsdk_path = get_appsdk(appsdk_remote_name, appsdk_version, dir_source)
 
-        sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, appsdk_version))
-        os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
-        os.environ['CGR_APPSDK_PATH'] = appsdk_path
-        os.environ['CGR_APPSDK_VERSION'] = appsdk_version
+    sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, appsdk_version))
+    os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
+    os.environ['CGR_APPSDK_PATH'] = appsdk_path
+    os.environ['CGR_APPSDK_VERSION'] = appsdk_version
 
     ### ADD NINJA TO PATH
     ninja_path = 'None'
@@ -198,17 +196,13 @@ def main(args):
         "release/scripts/addons_contrib",
         "source/tools",
         "release/scripts/addons",
+        'intern/vray_for_blender_rt/extern/vray-zmq-wrapper',
     ]
-
-    if args.jenkins_project_type == 'vb35':
-        blender_modules.append('intern/vray_for_blender_rt/extern/vray-zmq-wrapper')
 
     os.chdir(dir_source)
     utils.get_repo('git@github.com:bdancer/blender-for-vray', branch=blender_branch, submodules=blender_modules, target_name='blender')
     utils.get_repo('git@github.com:ChaosGroup/blender-for-vray-libs')
-
-    if args.jenkins_project_type == 'vb35':
-        utils.get_repo('git@github.com:bdancer/vrayserverzmq', submodules=['extern/vray-zmq-wrapper'])
+    utils.get_repo('git@github.com:bdancer/vrayserverzmq', submodules=['extern/vray-zmq-wrapper'])
 
     os.chdir(dir_build)
     ### CLONE REPOS
@@ -223,11 +217,9 @@ def main(args):
     cmd.append("--jenkins")
     cmd.append('--dir_source=%s' % dir_source)
     cmd.append('--dir_build=%s' % dir_build)
-    cmd.append("--teamcity_project_type=%s" % args.jenkins_project_type)
 
     cmd.append('--github-src-branch=%s' % blender_branch)
-    if args.jenkins_project_type == 'vb35':
-        cmd.append('--teamcity_zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(dir_source, 'vrayserverzmq')))
+    cmd.append('--teamcity_zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(dir_source, 'vrayserverzmq')))
 
     cmd.append('--jenkins_kdrive_path=%s' % kdrive)
     os.environ['jenkins_kdrive_path'] = kdrive
@@ -294,12 +286,6 @@ if __name__ == '__main__':
 
     parser.add_argument('--jenkins_perm_path',
         default = "",
-        required=True,
-    )
-
-    parser.add_argument('--jenkins_project_type',
-        choices=['vb30', 'vb35'],
-        default = 'vb30',
         required=True,
     )
 

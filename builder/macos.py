@@ -252,11 +252,10 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_OPENSUBDIV=OFF")
 		cmake.append("-DWITH_FFTW3=ON")
 
-		if self.teamcity_project_type == 'vb35':
-			cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
-			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
-			cmake.append("-DWITH_CXX11=ON")
-			# cmake.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=")
+		cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
+		cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
+		cmake.append("-DWITH_CXX11=ON")
+		# cmake.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=")
 
 		cmake.append(self.dir_blender)
 

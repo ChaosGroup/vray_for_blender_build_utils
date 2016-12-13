@@ -178,7 +178,7 @@ gr_src.add_argument('--uppatch',
 gr_src.add_argument(
 	'--github-src-branch',
 	dest    = "use_github_branch",
-	default = "dev/vray_for_blender/vb30",
+	default = "dev/vray_for_blender/vb35",
 	help    = "Use sources from specific branch"
 )
 gr_src.add_argument(
@@ -249,10 +249,6 @@ parser.add_argument('--teamcity_branch_hash',
 )
 parser.add_argument('--teamcity_zmq_server_hash',
 	default = "",
-	help    = argparse.SUPPRESS
-)
-parser.add_argument('--teamcity_project_type',
-	default = "vb30",
 	help    = argparse.SUPPRESS
 )
 parser.add_argument('--teamcity_with_static_libc',

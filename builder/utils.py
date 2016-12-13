@@ -962,55 +962,59 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	appsdkFile = ''
 	host_os = get_host_os()
 
-	# add the zmq server if enabled
-	if self.teamcity_zmq_server_hash != '' and self.teamcity_project_type == 'vb35':
-		# bin file generated from postinstall.py
-		if host_os != WIN:
-			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]" DeleteDirs="1">blender.bin</Files>')
+	if self.teamcity_zmq_server_hash == '':
+		sys.stderr.write('\"teamcity_zmq_server_hash\"" is missing!')
+		sys.stderr.flush()
+		sys.exit(1)
 
-		cg_root = os.path.normpath(os.path.join(get_default_install_path(), 'V-Ray', 'VRayZmqServer'))
-		os_type = get_host_os()
-		os_dir = "darwin" if os_type == MAC else os_type
-		appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], os.environ['CGR_APPSDK_VERSION'], os_dir, 'bin')
-		appsdkFile = ''
+	# add the zmq server
+	# bin file generated from postinstall.py
+	if host_os != WIN:
+		removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]" DeleteDirs="1">blender.bin</Files>')
 
-		if host_os == WIN:
-			appsdkFile = 'VRaySDKLibrary.dll'
-		elif host_os == LNX:
-			appsdkFile = 'libVRaySDKLibrary.so'
-		else:
-			appsdkFile = "libVRaySDKLibrary.dylib"
+	cg_root = os.path.normpath(os.path.join(get_default_install_path(), 'V-Ray', 'VRayZmqServer'))
+	os_type = get_host_os()
+	os_dir = "darwin" if os_type == MAC else os_type
+	appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], os.environ['CGR_APPSDK_VERSION'], os_dir, 'bin')
+	appsdkFile = ''
 
-		temp_appsdk = appsdk
-		# on mac, copy appsdk, so we can rewrite Qt libs links
-		if host_os == MAC:
-			temp_appsdk = os.path.join(tempfile.gettempdir(), 'appsdk')
-			if os.path.exists(temp_appsdk):
-				remove_directory(temp_appsdk)
-			shutil.copytree(appsdk, temp_appsdk)
+	if host_os == WIN:
+		appsdkFile = 'VRaySDKLibrary.dll'
+	elif host_os == LNX:
+		appsdkFile = 'libVRaySDKLibrary.so'
+	else:
+		appsdkFile = "libVRaySDKLibrary.dylib"
 
-		appsdk_root = os.path.normpath(os.path.join(cg_root, 'appsdk'))
+	temp_appsdk = appsdk
+	# on mac, copy appsdk, so we can rewrite Qt libs links
+	if host_os == MAC:
+		temp_appsdk = os.path.join(tempfile.gettempdir(), 'appsdk')
+		if os.path.exists(temp_appsdk):
+			remove_directory(temp_appsdk)
+		shutil.copytree(appsdk, temp_appsdk)
 
-		# add the appsdk files
-		for dirpath, dirnames, filenames in os.walk(temp_appsdk):
-			rel_path = os.path.relpath(dirpath, temp_appsdk)
-			dest_path = os.path.join(appsdk_root, rel_path)
-			dest_path = dest_path if dest_path != '.' else ''
-			for file_name in filenames:
-				source_path = os.path.join(dirpath, file_name)
-				if host_os == MAC:
-					mac_rewrite_qt_links(source_path)
+	appsdk_root = os.path.normpath(os.path.join(cg_root, 'appsdk'))
 
-				st = os.stat(source_path)
-				if st.st_mode & stat.S_IEXEC:
-					installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (dest_path, source_path))
-				else:
-					installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (dest_path, source_path))
+	# add the appsdk files
+	for dirpath, dirnames, filenames in os.walk(temp_appsdk):
+		rel_path = os.path.relpath(dirpath, temp_appsdk)
+		dest_path = os.path.join(appsdk_root, rel_path)
+		dest_path = dest_path if dest_path != '.' else ''
+		for file_name in filenames:
+			source_path = os.path.join(dirpath, file_name)
+			if host_os == MAC:
+				mac_rewrite_qt_links(source_path)
+
+			st = os.stat(source_path)
+			if st.st_mode & stat.S_IEXEC:
+				installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (dest_path, source_path))
+			else:
+				installerFiles.append('\t\t\t<FN Dest="%s">%s</FN>\n' % (dest_path, source_path))
 
 
-		zmq_items = get_zmq_build_items(self, appsdkFile)
-		for item in zmq_items:
-			installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (cg_root, item))
+	zmq_items = get_zmq_build_items(self, appsdkFile)
+	for item in zmq_items:
+		installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (cg_root, item))
 
 	tmplFinal = "%s/installer.xml" % tempfile.gettempdir()
 	if os.path.exists(tmplFinal):
@@ -1059,15 +1063,14 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		tmpl = tmpl.replace("${INSTALL_XML_PATH}", tmplFinal)
 
 		# Appsdk env var path
-		if self.teamcity_zmq_server_hash != '' and self.teamcity_project_type == 'vb35':
-			if get_host_os() == WIN:
-				# set it as env var from installer
-				tmpl = tmpl.replace("${ZMQ_ENV_VARIABLE}", '<Replace VarName="VRAY_ZMQSERVER_APPSDK_PATH" IsPath="1">%s</Replace>'  % os.path.join(appsdk_root, appsdkFile))
-				tmpl = tmpl.replace("${VRAY_ZMQSERVER_APPSDK_PATH}", '')
-			else:
-				# set it as argument for postinstall.py
-				tmpl = tmpl.replace("${ZMQ_ENV_VARIABLE}", '')
-				tmpl = tmpl.replace("${VRAY_ZMQSERVER_APPSDK_PATH}", '%s/%s'  % (appsdk_root, appsdkFile))
+		if get_host_os() == WIN:
+			# set it as env var from installer
+			tmpl = tmpl.replace("${ZMQ_ENV_VARIABLE}", '<Replace VarName="VRAY_ZMQSERVER_APPSDK_PATH" IsPath="1">%s</Replace>'  % os.path.join(appsdk_root, appsdkFile))
+			tmpl = tmpl.replace("${VRAY_ZMQSERVER_APPSDK_PATH}", '')
+		else:
+			# set it as argument for postinstall.py
+			tmpl = tmpl.replace("${ZMQ_ENV_VARIABLE}", '')
+			tmpl = tmpl.replace("${VRAY_ZMQSERVER_APPSDK_PATH}", '%s/%s'  % (appsdk_root, appsdkFile))
 
 		# Versions
 		tmpl = tmpl.replace("${VERSION_MAJOR}", self.versionArr[1])

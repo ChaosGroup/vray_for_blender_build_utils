@@ -37,6 +37,7 @@ from .builder import Builder
 BOOST_VERSION="1.61.0"
 PYTHON_VERSION="3.5.1"
 PYTHON_VERSION_BIG="3.5"
+NUMPY_VERSION="1.10.1"
 
 
 def getDepsCompilationData(self, prefix, wd, jobs):

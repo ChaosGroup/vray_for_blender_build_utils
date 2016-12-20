@@ -89,9 +89,9 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'ln -s %s/python-%s %s/python-%s' % (prefix, PYTHON_VERSION, prefix, PYTHON_VERSION_BIG),
 			getRemoveSoFiles('%s/python-%s/lib' % (prefix, PYTHON_VERSION))
 		)),
-		('requests', '%s/python/lib/python%s/site-packages/requests/api.py' % (prefix, PYTHON_VERSION_BIG), (
-			'%s/python/bin/pip%s install requests' % (prefix, PYTHON_VERSION_BIG),
-		)),
+		# ('requests', '%s/python/lib/python%s/site-packages/requests/api.py' % (prefix, PYTHON_VERSION_BIG), (
+		# 	'%s/python/bin/pip%s install requests' % (prefix, PYTHON_VERSION_BIG),
+		# )),
 		('numpy', '%s/python/lib/python%s/site-packages/numpy' % (prefix, PYTHON_VERSION_BIG), (
 			getChDirCmd(wd),
 			getDownloadCmd("https://freefr.dl.sourceforge.net/project/numpy/NumPy/%s/numpy-%s.tar.gz" % (NUMPY_VERSION, NUMPY_VERSION), 'numpy.tar.gz'),

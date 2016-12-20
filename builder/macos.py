@@ -35,6 +35,8 @@ from .builder import utils
 from .builder import Builder
 
 BOOST_VERSION="1.61.0"
+PYTHON_VERSION="3.5.1"
+PYTHON_VERSION_BIG="3.5"
 
 
 def getDepsCompilationData(self, prefix, wd, jobs):
@@ -60,18 +62,42 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		return lambda: all([removeSoFile(path) for path in glob.glob('%s/*.dylib*')])
 
 	steps = (
-		('boost', '%s/boost-%s' % (prefix, BOOST_VERSION),(
+		# ('boost', '%s/boost-%s' % (prefix, BOOST_VERSION),(
+		# 	getChDirCmd(wd),
+		# 	getDownloadCmd("http://sourceforge.net/projects/boost/files/boost/%s/boost_%s.tar.bz2/download" % (BOOST_VERSION, BOOST_VERSION.replace('.', '_')), 'boost.tar.bz2'),
+		# 	'tar -xf boost.tar.bz2',
+		# 	'mv boost_%s boost-%s' % (BOOST_VERSION.replace('.', '_'), BOOST_VERSION),
+		# 	getChDirCmd(os.path.join(wd, 'boost-%s' % BOOST_VERSION)),
+		# 	'./bootstrap.sh',
+		# 	'./b2 -j %s -a link=static threading=multi --layout=tagged --with-system --with-filesystem --with-thread --with-regex --with-locale --with-date_time --with-wave --prefix=%s/boost-%s --disable-icu boost.locale.icu=off install'
+		# 		% (jobs, prefix, BOOST_VERSION),
+		# 	'./b2 clean',
+		# 	'ln -s %s/boost-%s %s/boost' % (prefix, BOOST_VERSION, prefix),
+		# 	getRemoveSoFiles('%s/boost/lib' % prefix)
+		# )),
+		('python', '%s/python-%s' % (prefix, PYTHON_VERSION), (
 			getChDirCmd(wd),
-			getDownloadCmd("http://sourceforge.net/projects/boost/files/boost/%s/boost_%s.tar.bz2/download" % (BOOST_VERSION, BOOST_VERSION.replace('.', '_')), 'boost.tar.bz2'),
-			'tar -xf boost.tar.bz2',
-			'mv boost_%s boost-%s' % (BOOST_VERSION.replace('.', '_'), BOOST_VERSION),
-			getChDirCmd(os.path.join(wd, 'boost-%s' % BOOST_VERSION)),
-			'./bootstrap.sh',
-			'./b2 -j %s -a link=static threading=multi --layout=tagged --with-system --with-filesystem --with-thread --with-regex --with-locale --with-date_time --with-wave --prefix=%s/boost-%s --disable-icu boost.locale.icu=off install'
-				% (jobs, prefix, BOOST_VERSION),
-			'./b2 clean',
-			'ln -s %s/boost-%s %s/boost' % (prefix, BOOST_VERSION, prefix),
-			getRemoveSoFiles('%s/boost/lib' % prefix)
+			getDownloadCmd("https://www.python.org/ftp/python/%s/Python-%s.tgz" % (PYTHON_VERSION, PYTHON_VERSION), 'python.tgz'),
+			'tar -xf python.tgz',
+			getChDirCmd(os.path.join(wd, 'Python-%s' % PYTHON_VERSION)),
+			'./configure --prefix=%s/python-%s --libdir=%s/python-%s/lib --enable-ipv6 --enable-loadable-sqlite-extensions --with-dbmliborder=bdb --with-computed-gotos --with-pymalloc --with-ensurepip=install'
+				% (prefix, PYTHON_VERSION, prefix, PYTHON_VERSION),
+			'make -j %s' % jobs,
+			'make install',
+			'ln -s %s/python-%s %s/python' % (prefix, PYTHON_VERSION, prefix),
+			'ln -s %s/python-%s %s/python-%s' % (prefix, PYTHON_VERSION, prefix, PYTHON_VERSION_BIG),
+			getRemoveSoFiles('%s/python-%s/lib' % (prefix, PYTHON_VERSION))
+		)),
+		('requests', '%s/python/lib/python%s/site-packages/requests/api.py' % (prefix, PYTHON_VERSION_BIG), (
+			'%s/python/bin/pip%s install requests' % (prefix, PYTHON_VERSION_BIG),
+		)),
+		('numpy', '%s/python/lib/python%s/site-packages/numpy' % (prefix, PYTHON_VERSION_BIG), (
+			getChDirCmd(wd),
+			getDownloadCmd("https://freefr.dl.sourceforge.net/project/numpy/NumPy/%s/numpy-%s.tar.gz" % (NUMPY_VERSION, NUMPY_VERSION), 'numpy.tar.gz'),
+			'tar -xf numpy.tar.gz',
+			getChDirCmd(os.path.join(wd, 'numpy-%s' % NUMPY_VERSION)),
+			'%s/python/bin/python3 setup.py install --prefix=%s/numpy-%s' % (prefix, prefix, NUMPY_VERSION),
+			'ln -s %s/numpy-%s %s/python/lib/python%s/site-packages/numpy' % (prefix, NUMPY_VERSION, prefix, PYTHON_VERSION_BIG)
 		)),
 	)
 
@@ -219,9 +245,8 @@ class MacBuilder(Builder):
 		pass
 
 	def post_init(self):
-		if utils.get_host_os() == utils.MAC:
-			DepsBuild(self)
-			PatchLibs(self)
+		DepsBuild(self)
+		PatchLibs(self)
 
 	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_build, "blender-cmake-build")
@@ -256,6 +281,16 @@ class MacBuilder(Builder):
 		cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
 		cmake.append("-DWITH_CXX11=ON")
 		# cmake.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=")
+
+		libs_prefix = self._blender_libs_location
+		cmake.append("-DPYTHON_VERSION=%s" % PYTHON_VERSION_BIG)
+		cmake.append("-DPYTHON_ROOT_DIR=%s/python-%s" % (libs_prefix, PYTHON_VERSION_BIG))
+		cmake.append("-DPYTHON_LIBRARY=%s/python-%s/lib/libpython%sm.a" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+		cmake.append("-DPYTHON_LIBPATH=%s/python-%s/lib" % (libs_prefix, PYTHON_VERSION_BIG))
+		cmake.append("-DPYTHON_LIBRARIES=%s/python-%s/lib" % (libs_prefix, PYTHON_VERSION_BIG))
+		cmake.append("-DPYTHON_INCLUDE_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+		cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+		cmake.append("-DPYTHON_NUMPY_PATH=%s/python-%s/lib/python%s/site-packages" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
 
 		cmake.append(self.dir_blender)
 

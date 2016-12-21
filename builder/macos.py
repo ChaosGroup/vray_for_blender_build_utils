@@ -227,6 +227,7 @@ def PatchLibs(self):
 		# "cp -Rf lib/darwin-9.x.universal/python lib/darwin/python",
 		"rm -rf lib/darwin/python",
 		"cp -Rf %s/python-%s lib/darwin/python" % (libs_prefix, PYTHON_VERSION),
+		"cp lib/darwin/python/lib/libpython3.5m.a lib/darwin/python/lib/python3.5/",
 		# "cp lib/darwin-9.x.universal/png/lib/libpng12.a lib/darwin-9.x.universal/png/lib/libpng.a",
 		# "cp lib/darwin-9.x.universal/png/lib/libpng12.la lib/darwin-9.x.universal/png/lib/libpng.la",
 		# "cp -f %s lib/darwin-9.x.universal/python/include/python3.5m/pyport.h" % python_patch,
@@ -241,6 +242,7 @@ def PatchLibs(self):
 		os.system(step)
 
 	sys.stdout.write('PY LIBS: [%s]' % '\n'.join(glob.glob('lib/darwin/python/lib/*')))
+	sys.stdout.write('PY LIBS: [%s]' % '\n'.join(glob.glob('lib/darwin/python/lib/python3.5/*')))
 	sys.stdout.flush()
 
 

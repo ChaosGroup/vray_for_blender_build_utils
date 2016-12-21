@@ -217,14 +217,16 @@ def PatchLibs(self):
 			os.system('svn revert -R .')
 
 	python_patch = os.path.join(self.dir_source, 'blender-for-vray-libs', 'Darwin', 'pyport.h')
+	libs_prefix = self._blender_libs_location
 	patch_steps = [
 		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal",
 		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin lib/darwin",
 		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12",
+		"cp -Rf lib/win64_vc12/opensubdiv/include/opensubdiv/* lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/",
 		# "mv lib/darwin/python lib/darwin/python-orig",
 		# "cp -Rf lib/darwin-9.x.universal/python lib/darwin/python",
 		"rm -rf lib/darwin/python",
-		"cp -Rf lib/win64_vc12/opensubdiv/include/opensubdiv/* lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/",
+		"cp -Rf %s/python-%s lib/darwin/python" % (libs_prefix, PYTHON_VERSION),
 		# "cp lib/darwin-9.x.universal/png/lib/libpng12.a lib/darwin-9.x.universal/png/lib/libpng.a",
 		# "cp lib/darwin-9.x.universal/png/lib/libpng12.la lib/darwin-9.x.universal/png/lib/libpng.la",
 		# "cp -f %s lib/darwin-9.x.universal/python/include/python3.5m/pyport.h" % python_patch,
@@ -284,15 +286,15 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_CXX11=ON")
 		# cmake.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=")
 
-		libs_prefix = self._blender_libs_location
-		cmake.append("-DPYTHON_VERSION=%s" % PYTHON_VERSION_BIG)
-		cmake.append("-DPYTHON_ROOT_DIR=%s/python-%s" % (libs_prefix, PYTHON_VERSION_BIG))
-		cmake.append("-DPYTHON_LIBRARY=%s/python-%s/lib/libpython%sm.a" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
-		cmake.append("-DPYTHON_LIBPATH=%s/python-%s/lib" % (libs_prefix, PYTHON_VERSION_BIG))
-		cmake.append("-DPYTHON_LIBRARIES=%s/python-%s/lib" % (libs_prefix, PYTHON_VERSION_BIG))
-		cmake.append("-DPYTHON_INCLUDE_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
-		cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
-		cmake.append("-DPYTHON_NUMPY_PATH=%s/python-%s/lib/python%s/site-packages" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+		# libs_prefix = self._blender_libs_location
+		# cmake.append("-DPYTHON_VERSION=%s" % PYTHON_VERSION_BIG)
+		# cmake.append("-DPYTHON_ROOT_DIR=%s/python-%s" % (libs_prefix, PYTHON_VERSION_BIG))
+		# cmake.append("-DPYTHON_LIBRARY=%s/python-%s/lib/libpython%sm.a" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+		# cmake.append("-DPYTHON_LIBPATH=%s/python-%s/lib" % (libs_prefix, PYTHON_VERSION_BIG))
+		# cmake.append("-DPYTHON_LIBRARIES=%s/python-%s/lib" % (libs_prefix, PYTHON_VERSION_BIG))
+		# cmake.append("-DPYTHON_INCLUDE_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+		# cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+		# cmake.append("-DPYTHON_NUMPY_PATH=%s/python-%s/lib/python%s/site-packages" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
 
 		cmake.append(self.dir_blender)
 

@@ -230,7 +230,7 @@ def PatchLibs(self):
 		# "cp lib/darwin-9.x.universal/png/lib/libpng12.a lib/darwin-9.x.universal/png/lib/libpng.a",
 		# "cp lib/darwin-9.x.universal/png/lib/libpng12.la lib/darwin-9.x.universal/png/lib/libpng.la",
 		# "cp -f %s lib/darwin-9.x.universal/python/include/python3.5m/pyport.h" % python_patch,
-		# "cp -f %s lib/darwin/python/include/python3.5m/pyport.h" % python_patch,
+		"cp -f %s lib/darwin/python/include/python3.5m/pyport.h" % python_patch,
 	]
 
 	os.chdir(self.dir_source)

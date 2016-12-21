@@ -283,6 +283,7 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")
 		cmake.append("-DWITH_OPENSUBDIV=OFF")
 		cmake.append("-DWITH_FFTW3=ON")
+		cmake.append("-DWITH_CODEC_FFMPEG=OFF")
 
 		cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
 		cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))

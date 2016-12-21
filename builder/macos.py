@@ -240,7 +240,7 @@ def PatchLibs(self):
 		sys.stdout.flush()
 		os.system(step)
 
-	sys.stdout.write('PY LIBS: [%s]' % '\n'.join(glob.glob('lib/darwin/python/lib*')))
+	sys.stdout.write('PY LIBS: [%s]' % '\n'.join(glob.glob('lib/darwin/python/lib/*')))
 	sys.stdout.flush()
 	sys.exit(1)
 

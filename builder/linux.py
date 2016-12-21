@@ -543,7 +543,7 @@ class LinuxBuilder(Builder):
 			b_info = os.path.join(release_path, 'build-info.txt')
 			sys.stdout.write('Writing build info in [%s]\n' % b_info)
 			sys.stdout.flush()
-			with open(b_info) as f:
+			with open(b_info, 'w') as f:
 				f.write('BLENDER_VERSION=\n' % self.version)
 				f.write('BLENDER_HASH=\n' % self.revision)
 

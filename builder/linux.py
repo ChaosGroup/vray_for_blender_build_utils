@@ -539,6 +539,14 @@ class LinuxBuilder(Builder):
 
 		release_path = os.path.join(self.dir_release, subdir)
 
+		if self.jenkins:
+			b_info = os.path.join(release_path, 'build-info.txt')
+			sys.stdout.write('Writing build info in [%s]\n' % b_info)
+			sys.stdout.flush()
+			with open(b_info) as f:
+				f.write('BLENDER_VERSION=\n' % self.version)
+				f.write('BLENDER_HASH=\n' % self.revision)
+
 		if not self.mode_test:
 			utils.path_create(release_path)
 

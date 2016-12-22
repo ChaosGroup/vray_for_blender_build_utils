@@ -549,8 +549,8 @@ class LinuxBuilder(Builder):
 				sys.stdout.flush()
 				utils.path_create(b_path)
 			with open(b_info, 'w+') as f:
-				f.write('BLENDER_VERSION=\n' % self.version)
-				f.write('BLENDER_HASH=\n' % self.revision)
+				f.write('BLENDER_VERSION=%s\n' % self.version)
+				f.write('BLENDER_HASH=%s\n' % self.revision)
 
 		if not self.mode_test:
 			utils.path_create(release_path)

@@ -559,7 +559,7 @@ def WritePackageInfo(self, packagePath):
 	if not os.path.isdir(packagePath):
 		sys.stdout.write('Creating [%s]\n' % packagePath)
 		sys.stdout.flush()
-		utils.path_create(packagePath)
+		path_create(packagePath)
 	with open(bInfo, 'w+') as f:
 		f.write('BLENDER_VERSION=%s\n' % self.version)
 		f.write('BLENDER_HASH=%s\n' % self.revision)

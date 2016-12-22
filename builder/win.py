@@ -227,6 +227,13 @@ class WindowsBuilder(Builder):
 		subdir = "windows" + "/" + self.build_arch
 
 		release_path = os.path.join(self.dir_release, subdir)
+		if self.jenkins:
+			utils.WritePackageInfo(self, release_path)
+
+		if self.jenkins:
+			sys.stdout.write('Windows jenkins builder skipping zip generation')
+			sys.stdout.flush()
+			return
 
 		if not self.mode_test:
 			utils.path_create(release_path)
@@ -260,38 +267,6 @@ class WindowsBuilder(Builder):
 			return subdir, zip_name
 		else:
 			return self.installer_nsis(installer_name, installer_path, installer_root)
-
-	def package_archive(self):
-		subdir = "windows" + "/" + self.build_arch
-
-		release_path = os.path.join(self.dir_release, subdir)
-		if self.jenkins:
-			utils.WritePackageInfo(self, release_path)
-
-		if self.jenkins:
-			sys.stdout.write('Windows jenkins builder skipping zip generation')
-			sys.stdout.flush()
-			return
-
-		if not self.mode_test:
-			utils.path_create(release_path)
-
-		archive_name = utils.GetPackageName(self, ext="zip")
-		archive_path = utils.path_join(release_path, archive_name)
-
-		sys.stdout.write("Generating archive: %s\n" % (archive_name))
-		sys.stdout.write("  in: %s\n" % (release_path))
-
-		cmd = "7z -tzip a %s %s" % (archive_path, self.dir_install_name)
-
-		sys.stdout.write("Calling: %s\n" % (cmd))
-		sys.stdout.write("  in: %s\n" % (self.dir_install))
-
-		if not self.mode_test:
-			os.chdir(self.dir_install)
-			os.system(cmd)
-
-		return subdir, archive_path
 
 
 	def post_init(self):

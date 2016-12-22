@@ -344,18 +344,6 @@ class Builder:
 			os.system("git submodule foreach git pull --rebase origin master")
 
 
-	def write_package_info(self, packagePath):
-		bInfo = os.path.join(packagePath, 'build-info.txt')
-		sys.stdout.write('Writing build info in [%s]\n' % bInfo)
-		sys.stdout.flush()
-		if not os.path.isdir(packagePath):
-			sys.stdout.write('Creating [%s]\n' % packagePath)
-			sys.stdout.flush()
-			utils.path_create(packagePath)
-		with open(bInfo, 'w+') as f:
-			f.write('BLENDER_VERSION=%s\n' % self.version)
-			f.write('BLENDER_HASH=%s\n' % self.revision)
-
 	def package(self):
 		"""
 		  Override this method in subclass.

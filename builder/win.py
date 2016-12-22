@@ -266,7 +266,7 @@ class WindowsBuilder(Builder):
 
 		release_path = os.path.join(self.dir_release, subdir)
 		if self.jenkins:
-			self.write_package_info(release_path)
+			utils.WritePackageInfo(self, release_path)
 
 		if self.jenkins:
 			sys.stdout.write('Windows jenkins builder skipping zip generation')

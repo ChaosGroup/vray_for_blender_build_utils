@@ -227,19 +227,19 @@ class WindowsBuilder(Builder):
 		subdir = "windows" + "/" + self.build_arch
 
 		release_path = os.path.join(self.dir_release, subdir)
+		installer_name = utils.GetPackageName(self)
 		if self.jenkins:
 			utils.WritePackageInfo(self, release_path)
 
 		if self.jenkins:
 			sys.stdout.write('Windows jenkins builder skipping zip generation')
 			sys.stdout.flush()
-			return
+			return subdir, installer_name
 
 		if not self.mode_test:
 			utils.path_create(release_path)
 
 		# Example: vrayblender-2.60-42181-windows-x86_64.exe
-		installer_name = utils.GetPackageName(self)
 		zip_name = utils.GetPackageName(self, ext='zip')
 		installer_path = utils.path_slashify(utils.path_join(release_path, installer_name))
 		installer_root = utils.path_join(self.dir_source, "vb25-patch", "installer")

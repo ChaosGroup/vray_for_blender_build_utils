@@ -326,6 +326,8 @@ class MacBuilder(Builder):
 		subdir = "macos" + "/" + self.build_arch
 
 		release_path = utils.path_join(self.dir_release, subdir)
+		if self.jenkins:
+			self.write_package_info(release_path)
 
 		if not self.mode_test:
 			utils.path_create(release_path)

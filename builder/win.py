@@ -268,6 +268,11 @@ class WindowsBuilder(Builder):
 		if self.jenkins:
 			self.write_package_info(release_path)
 
+		if self.jenkins:
+			sys.stdout.write('Windows jenkins builder skipping zip generation')
+			sys.stdout.flush()
+			return
+
 		if not self.mode_test:
 			utils.path_create(release_path)
 

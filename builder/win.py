@@ -231,11 +231,6 @@ class WindowsBuilder(Builder):
 		if self.jenkins:
 			utils.WritePackageInfo(self, release_path)
 
-		if self.jenkins:
-			sys.stdout.write('Windows jenkins builder skipping zip generation')
-			sys.stdout.flush()
-			return subdir, installer_name
-
 		if not self.mode_test:
 			utils.path_create(release_path)
 
@@ -247,22 +242,23 @@ class WindowsBuilder(Builder):
 		if self.use_installer == 'CGR':
 			self.installer_cgr(installer_path)
 
-			cmd = "7z -tzip a %s %s" % (zip_name, installer_name)
+			if not self.jenkins:
+				cmd = "7z -tzip a %s %s" % (zip_name, installer_name)
 
-			sys.stdout.write("Calling: %s\n" % (cmd))
-			sys.stdout.write("  in: %s\n" % (release_path))
+				sys.stdout.write("Calling: %s\n" % (cmd))
+				sys.stdout.write("  in: %s\n" % (release_path))
 
-			if not self.mode_test:
-				os.chdir(release_path)
-				os.system(cmd)
+				if not self.mode_test:
+					os.chdir(release_path)
+					os.system(cmd)
 
-			artefacts = (
-				os.path.normpath(os.path.join(release_path, installer_name)),
-				os.path.normpath(os.path.join(release_path, zip_name)),
-			)
+				artefacts = (
+					os.path.normpath(os.path.join(release_path, installer_name)),
+					os.path.normpath(os.path.join(release_path, zip_name)),
+				)
 
-			sys.stdout.write("##teamcity[setParameter name='env.ENV_ARTEFACT_FILES' value='%s']" % '|n'.join(artefacts))
-			sys.stdout.flush()
+				sys.stdout.write("##teamcity[setParameter name='env.ENV_ARTEFACT_FILES' value='%s']" % '|n'.join(artefacts))
+				sys.stdout.flush()
 
 			return subdir, zip_name
 		else:

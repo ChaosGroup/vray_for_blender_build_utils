@@ -160,7 +160,7 @@ def main(args):
     if not os.path.exists(dir_source):
         os.makedirs(dir_source)
 
-    blender_branch = 'dev/vray_for_blender/vb35'
+    blender_branch = 'dev/lyubomir.koev/mt-exporter'
 
     ### GET APPSDK
     appsdk_remote_name = {

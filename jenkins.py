@@ -136,6 +136,10 @@ def main(args):
     sys.stdout.write('jenkins args:\n%s\n' % str(args))
     sys.stdout.flush()
 
+    blender_branch = args.jenkins_blender_git_ref
+    sys.stdout.write('Blender git ref:\t %s\n' % blender_branch)
+    sys.stdout.flush()
+
     dir_build = os.getcwd()
     os.environ['http_proxy'] = '10.0.0.1:1234'
     os.environ['https_proxy'] = '10.0.0.1:1234'
@@ -159,8 +163,6 @@ def main(args):
     dir_source = os.path.join(args.jenkins_perm_path, 'blender-dependencies')
     if not os.path.exists(dir_source):
         os.makedirs(dir_source)
-
-    blender_branch = 'dev/vray_for_blender/vb35'
 
     ### GET APPSDK
     appsdk_remote_name = {
@@ -288,6 +290,11 @@ if __name__ == '__main__':
     parser.add_argument('--jenkins_perm_path',
         default = "",
         required=True,
+    )
+
+    parser.add_argument('--jenkins_blender_git_ref',
+        default = "dev/vray_for_blender/vb35",
+        required=False,
     )
 
     parser.add_argument('--jenkins_with_static_libc',

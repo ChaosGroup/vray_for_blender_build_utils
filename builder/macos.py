@@ -267,7 +267,7 @@ class MacBuilder(Builder):
 		cmake.append("-G")
 		cmake.append("Ninja")
 
-		cmake.append("-DCMAKE_BUILD_TYPE=Release")
+		cmake.append("-DCMAKE_BUILD_TYPE=%s" % self.build_type.capitalize())
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity))
@@ -284,21 +284,10 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_FFTW3=ON")
 		cmake.append("-DWITH_CODEC_FFMPEG=OFF")
 
-		cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
-		cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
+		if self.build_mode == 'nightly':
+			cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
+			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
 		cmake.append("-DWITH_CXX11=ON")
-		# cmake.append("-DCMAKE_OSX_DEPLOYMENT_TARGET=")
-
-		# libs_prefix = self._blender_libs_location
-		# cmake.append("-DPYTHON_VERSION=%s" % PYTHON_VERSION_BIG)
-		# cmake.append("-DPYTHON_ROOT_DIR=%s/python-%s" % (libs_prefix, PYTHON_VERSION_BIG))
-		# cmake.append("-DPYTHON_LIBRARY=%s/python-%s/lib/libpython%sm.a" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
-		# cmake.append("-DPYTHON_LIBPATH=%s/python-%s/lib" % (libs_prefix, PYTHON_VERSION_BIG))
-		# cmake.append("-DPYTHON_LIBRARIES=%s/python-%s/lib" % (libs_prefix, PYTHON_VERSION_BIG))
-		# cmake.append("-DPYTHON_INCLUDE_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
-		# cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
-		# cmake.append("-DPYTHON_NUMPY_PATH=%s/python-%s/lib/python%s/site-packages" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
-
 		cmake.append(self.dir_blender)
 
 		sys.stdout.write('cmake args:\n%s\n' % '\n\t'.join(cmake))

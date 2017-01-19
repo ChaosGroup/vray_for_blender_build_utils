@@ -85,14 +85,15 @@ class WindowsBuilder(Builder):
 			os.environ['PATH'] = utils.path_join(self.patch_dir, "tools")
 			self.setup_msvc_2013(self.jenkins_kdrive_path)
 
-		cmake.append("-DCMAKE_BUILD_TYPE=Release")
+		cmake.append("-DCMAKE_BUILD_TYPE=%s" % self.build_type.capitalize())
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
 
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity))
 
-		cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
-		cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
+		if self.build_mode == 'nightly':
+			cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
+			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
 
 		cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
 		cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))

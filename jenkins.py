@@ -245,7 +245,7 @@ def main(args):
     if utils.get_host_os() == utils.WIN:
         cmd.append('--vc_2013')
 
-    cmd.append('--build_mode=release')
+    cmd.append('--build_mode=%s' % args.jenkins_build_mode)
     cmd.append('--build_type=%s' % args.jenkins_build_type)
     cmd.append('--use_package')
     cmd.append('--use_installer=CGR')
@@ -300,6 +300,12 @@ if __name__ == '__main__':
 
     parser.add_argument('--jenkins_with_static_libc',
         action = 'store_true',
+    )
+
+    parser.add_argument('--jenkins_build_mode',
+        choices=['nightly', 'release'],
+        default='nightly',
+        required=True,
     )
 
     parser.add_argument('--jenkins_build_type',

@@ -133,7 +133,6 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
 
 
 def main(args):
-    args.jenkins_build_type = args.jenkins_build_type.capitalize()
     sys.stdout.write('jenkins args:\n%s\n' % str(args))
     sys.stdout.flush()
 

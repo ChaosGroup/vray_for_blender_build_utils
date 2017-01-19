@@ -140,6 +140,11 @@ def main(args):
     sys.stdout.write('Blender git ref:\t %s\n' % blender_branch)
     sys.stdout.flush()
 
+    if args.jenkins_build_mode == 'default':
+        args.jenkins_build_mode = 'nightly'
+        sys.stdout.write('\n\tjenkins_build_mode is set to "default", building "nightly" version and *not* uploading\n')
+        sys.stdout.flush()
+
     dir_build = os.getcwd()
     os.environ['http_proxy'] = '10.0.0.1:1234'
     os.environ['https_proxy'] = '10.0.0.1:1234'
@@ -302,9 +307,8 @@ if __name__ == '__main__':
     )
 
     parser.add_argument('--jenkins_build_mode',
-        choices=['nightly', 'release'],
-        default='nightly',
-        required=True,
+        choices=['nightly', 'release', 'default'],
+        default='default',
     )
 
     parser.add_argument('--jenkins_build_type',

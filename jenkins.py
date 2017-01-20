@@ -311,7 +311,7 @@ if __name__ == '__main__':
         default='default',
     )
 
-    parser.add_argument('--jenkins_zmq_branch'
+    parser.add_argument('--jenkins_zmq_branch',
         default='master'
     )
 

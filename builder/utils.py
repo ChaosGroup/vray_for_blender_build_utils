@@ -88,14 +88,14 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 	os.chdir(clone_dir)
 	git_cmds = git_cmds + [
 		"git fetch origin",
-		"git clean -df",
+		"git clean -ffd",
 		"git checkout -f origin/%s" % branch,
-		"git submodule foreach --recursive git clean -df",
+		"git submodule foreach --recursive git clean -ffd",
 		"git clean -ffd",
 	]
 
 	for module in submodules:
-		git_cmds.append("git submodule update --force --init --remote --recursive %s" % module)
+		git_cmds.append("git submodule update --force --init --recursive %s" % module)
 
 	for cmd in git_cmds:
 		sys.stdout.write('GIT: [%s]\n' % cmd)

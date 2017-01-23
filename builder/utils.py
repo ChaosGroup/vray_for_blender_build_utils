@@ -81,12 +81,9 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 		get_cmd = ""
 		if target_name and not target_dir:
 			# just rename clone
-			get_cmd = "git clone %s %s" % (repo_url, target_name)
+			git_cmds.append("git clone %s %s" % (repo_url, target_name))
 		else:
-			get_cmd = "git clone %s" % repo_url
-		sys.stdout.write('GIT: [%s]\n' % get_cmd)
-		sys.stdout.flush()
-		os.system(get_cmd)
+			git_cmds.append("git clone %s" % repo_url)
 
 	os.chdir(clone_dir)
 	git_cmds = git_cmds + [
@@ -98,12 +95,15 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 	]
 
 	for module in submodules:
-		git_cmds.append("git submodule update --init --remote --recursive %s" % module)
+		git_cmds.append("git submodule update --force --init --remote --recursive %s" % module)
 
 	for cmd in git_cmds:
 		sys.stdout.write('GIT: [%s]\n' % cmd)
 		sys.stdout.flush()
-		os.system(cmd)
+		if 0 != os.system(cmd):
+			sys.stderr.write('GIT: command failed! [%s]\n', cmd)
+			sys.stderr.flush()
+			sys.exit(2)
 
 	if target_dir:
 		to_dir = os.path.join(target_dir, repo_name)

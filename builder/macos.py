@@ -273,6 +273,7 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity))
 		cmake.append("-DPNG_LIBRARIES=png12")
 		cmake.append("-DWITH_ALEMBIC=ON")
+		cmake.append("-DWITH_INPUT_NDOF=ON")
 
 		cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
 		cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))

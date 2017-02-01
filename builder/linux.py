@@ -301,7 +301,7 @@ def DepsBuild(self):
 		sys.stdout.write('Installing %s...\n' % item[0])
 		shouldStop = False
 		if os.path.exists(item[1]):
-			if item[0] in ('numpy', 'requests'):
+			if item[0] in ('numpy', 'requests') and installed_python:
 				rm_cmd = 'rm -r %s/%s*' % (prefix, item[0])
 				sys.stdout.write('We reinstalled python, removing %s with [%s] so we can reinstall it also\n' % (item[0], rm_cmd))
 				sys.stdout.flush()
@@ -309,9 +309,11 @@ def DepsBuild(self):
 			else:
 				sys.stdout.write('%s already installed, skipping ...\n' % item[1])
 				continue
-
-		if item[0] == 'python':
-			installed_python = True
+		else:
+			# we will install current item
+			if item[0] == 'python':
+				# if it is python save it
+				installed_python = True
 
 		fail = False
 		for step in item[2]:

@@ -26,7 +26,6 @@ import os
 import re
 import sys
 import glob
-import locale
 import platform
 import subprocess
 
@@ -134,12 +133,6 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
 
 
 def main(args):
-    if utils.get_host_os() == utils.LNX:
-        # attempt to fix jenkins log clutter
-        sys.stdout.write('Setting locale to (C)')
-        sys.stdout.flush()
-        locale.setlocale(locale.LC_ALL, 'C')
-
     sys.stdout.write('jenkins args:\n%s\n' % str(args))
     sys.stdout.flush()
 

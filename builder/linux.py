@@ -379,6 +379,7 @@ class LinuxBuilder(Builder):
 		cmake.append("-DWITH_ALEMBIC=ON")
 		cmake.append("-DWITH_CXX11=ON")
 		cmake.append("-DWITH_INPUT_NDOF=ON")
+		cmake.append("-DWITH_X11_XINPUT=ON")
 
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity))

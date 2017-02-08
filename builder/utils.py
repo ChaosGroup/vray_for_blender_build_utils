@@ -102,7 +102,7 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 		sys.stdout.write('GIT: [%s]\n' % cmd)
 		sys.stdout.flush()
 		if 0 != os.system(cmd):
-			sys.stderr.write('GIT: command failed! [%s]\n', cmd)
+			sys.stderr.write('GIT: command failed! [%s]\n' % cmd)
 			sys.stderr.flush()
 			sys.exit(2)
 

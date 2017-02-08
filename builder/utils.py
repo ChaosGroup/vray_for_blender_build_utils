@@ -41,6 +41,7 @@ WIN = "windows"
 LNX = "linux"
 MAC = "macos"
 
+install_package_ignores = ['vray.exe', 'vray.bin']
 
 def get_host_os():
 	if sys.platform == "win32":
@@ -1014,6 +1015,11 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		dest_path = os.path.join(appsdk_root, rel_path)
 		dest_path = dest_path if dest_path != '.' else ''
 		for file_name in filenames:
+			if file_name in install_package_ignores:
+				sys.stdout.write('Skipping file [%s]\n' % file_name)
+				sys.stdout.flush()
+				continue
+
 			source_path = os.path.join(dirpath, file_name)
 			if host_os == MAC:
 				mac_rewrite_qt_links(source_path)

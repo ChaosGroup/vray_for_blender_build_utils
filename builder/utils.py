@@ -41,7 +41,21 @@ WIN = "windows"
 LNX = "linux"
 MAC = "macos"
 
-install_package_ignores = ['vray.exe', 'vray.bin']
+install_package_ignores = [
+	'vray.exe',      # ignore std from appsdk
+	'vray.bin',      # ignore std from appsdk
+	'vray.dll',      # this is WX version
+	'libvray.so',    # this is WX version
+	'libvray.dylib', # this is WX version
+]
+
+# rename qt version to original name
+appsdk_renames = {
+	'vray_qt.dll': 'vray_qt.dll'
+	'libvray_qt.so': 'libvray_qt.so'
+	'libvray_qt.dylib': 'libvray.dylib'
+}
+
 
 def get_host_os():
 	if sys.platform == "win32":
@@ -651,6 +665,20 @@ def mac_rewrite_qt_links(binfile, relpath=''):
 	return items
 
 
+def prepare_appsdk(appsdk_path):
+	for dirpath, dirnames, filenames in os.walk(appsdk_path):
+		for file_name in filenames:
+			file_path = os.path.join(dirpath, file_name)
+			if file_name in install_package_ignores:
+				os.remove(file_path)
+
+			if file_name in appsdk_renames:
+				os.rename(file_path, os.path.join(dirpath, appsdk_renames[file_name]))
+
+			if host_os == MAC:
+				mac_rewrite_qt_links(source_path)
+
+
 def get_zmq_build_items(self, appsdkFile):
 	host_os = get_host_os()
 	zmq_hash = self.teamcity_zmq_server_hash
@@ -1000,12 +1028,13 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		appsdkFile = "libVRaySDKLibrary.dylib"
 
 	temp_appsdk = appsdk
-	# on mac, copy appsdk, so we can rewrite Qt libs links
-	if host_os == MAC:
-		temp_appsdk = os.path.join(tempfile.gettempdir(), 'appsdk')
-		if os.path.exists(temp_appsdk):
-			remove_directory(temp_appsdk)
-		shutil.copytree(appsdk, temp_appsdk)
+	# copy appsdk so we can make modifications freely
+	temp_appsdk = os.path.join(tempfile.gettempdir(), 'appsdk')
+	if os.path.exists(temp_appsdk):
+		remove_directory(temp_appsdk)
+	shutil.copytree(appsdk, temp_appsdk)
+
+	prepare_appsdk(temp_appsdk)
 
 	appsdk_root = os.path.normpath(os.path.join(cg_root, 'appsdk'))
 
@@ -1015,14 +1044,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		dest_path = os.path.join(appsdk_root, rel_path)
 		dest_path = dest_path if dest_path != '.' else ''
 		for file_name in filenames:
-			if file_name in install_package_ignores:
-				sys.stdout.write('Skipping file [%s]\n' % file_name)
-				sys.stdout.flush()
-				continue
-
 			source_path = os.path.join(dirpath, file_name)
-			if host_os == MAC:
-				mac_rewrite_qt_links(source_path)
 
 			st = os.stat(source_path)
 			if st.st_mode & stat.S_IEXEC:

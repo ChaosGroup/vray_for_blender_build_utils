@@ -675,9 +675,10 @@ def prepare_appsdk(appsdk_path):
 
 			if file_name in appsdk_renames:
 				os.rename(file_path, os.path.join(dirpath, appsdk_renames[file_name]))
+				file_path = os.path.join(dirpath, appsdk_renames[file_name])
 
 			if host_os == MAC:
-				mac_rewrite_qt_links(source_path)
+				mac_rewrite_qt_links(file_path)
 
 
 def get_zmq_build_items(self, appsdkFile):

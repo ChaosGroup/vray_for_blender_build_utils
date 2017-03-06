@@ -51,8 +51,8 @@ install_package_ignores = [
 
 # rename qt version to original name
 appsdk_renames = {
-	'vray_qt.dll': 'vray_qt.dll',
-	'libvray_qt.so': 'libvray_qt.so',
+	'vray_qt.dll': 'vray.dll',
+	'libvray_qt.so': 'libvray.so',
 	'libvray_qt.dylib': 'libvray.dylib',
 }
 
@@ -674,8 +674,11 @@ def prepare_appsdk(appsdk_path):
 				os.remove(file_path)
 
 			if file_name in appsdk_renames:
-				os.rename(file_path, os.path.join(dirpath, appsdk_renames[file_name]))
-				file_path = os.path.join(dirpath, appsdk_renames[file_name])
+				dest = os.path.join(dirpath, appsdk_renames[file_name])
+				if os.path.exists(dest):
+					os.unlink(dest)
+				os.rename(file_path, dest)
+				file_path = dest
 
 			if host_os == MAC:
 				mac_rewrite_qt_links(file_path)

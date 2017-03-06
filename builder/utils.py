@@ -666,6 +666,7 @@ def mac_rewrite_qt_links(binfile, relpath=''):
 
 
 def prepare_appsdk(appsdk_path):
+	host_os = get_host_os()
 	for dirpath, dirnames, filenames in os.walk(appsdk_path):
 		for file_name in filenames:
 			file_path = os.path.join(dirpath, file_name)

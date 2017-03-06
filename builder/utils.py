@@ -51,9 +51,9 @@ install_package_ignores = [
 
 # rename qt version to original name
 appsdk_renames = {
-	'vray_qt.dll': 'vray_qt.dll'
-	'libvray_qt.so': 'libvray_qt.so'
-	'libvray_qt.dylib': 'libvray.dylib'
+	'vray_qt.dll': 'vray_qt.dll',
+	'libvray_qt.so': 'libvray_qt.so',
+	'libvray_qt.dylib': 'libvray.dylib',
 }
 
 

@@ -669,6 +669,7 @@ def prepare_appsdk(appsdk_path):
 			file_path = os.path.join(dirpath, file_name)
 			if file_name in install_package_ignores:
 				os.remove(file_path)
+				continue
 
 			if file_name in appsdk_renames:
 				dest = os.path.join(dirpath, appsdk_renames[file_name])

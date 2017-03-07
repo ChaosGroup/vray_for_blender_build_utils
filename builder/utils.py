@@ -44,9 +44,6 @@ MAC = "macos"
 install_package_ignores = [
 	'vray.exe',      # ignore std from appsdk
 	'vray.bin',      # ignore std from appsdk
-	'vray.dll',      # this is WX version
-	'libvray.so',    # this is WX version
-	'libvray.dylib', # this is WX version
 ]
 
 # rename qt version to original name

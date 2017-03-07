@@ -171,9 +171,9 @@ def main(args):
 
     ### GET APPSDK
     appsdk_remote_name = {
-        utils.WIN: 'appsdk-win-qt-nightly-1.11.00-vray34501-20161110.7z',
-        utils.LNX: 'appsdk-linux-qt-nightly-1.11.00-vray34501-20161110.tar.xz',
-        utils.MAC: 'appsdk-mac-qt-nightly-1.11.00-vray34501-20161110.tar.xz',
+        utils.WIN: 'appsdk-win-binaries-nightly-1.11.00-vray35701-20170307.7z',
+        utils.LNX: 'appsdk-linux-binaries-nightly-1.11.00-vray35701-20170307.tar.xz',
+        utils.MAC: 'appsdk-mac-binaries-nightly-1.11.00-vray35701-20170307.tar.xz',
     }[utils.get_host_os()]
 
     if args.jenkins_appsdk_remote_name != '':

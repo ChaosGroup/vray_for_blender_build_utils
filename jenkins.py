@@ -172,7 +172,7 @@ def main(args):
     ### GET APPSDK
     appsdk_remote_name = {
         utils.WIN: 'appsdk-win-binaries-nightly-1.11.00-vray35701-20170307.7z',
-        utils.LNX: 'appsdk-linux-binaries-nightly-1.11.00-vray35701-20170307.tar.xz',
+        utils.LNX: 'appsdk-linux-binaries-nightly-1.11.00-vray35701-20170315.tar.xz',
         utils.MAC: 'appsdk-mac-binaries-nightly-1.11.00-vray35701-20170307.tar.xz',
     }[utils.get_host_os()]
 

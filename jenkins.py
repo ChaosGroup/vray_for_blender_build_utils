@@ -249,7 +249,7 @@ def main(args):
     if utils.get_host_os() == utils.WIN:
         cmd.append('--vc_2013')
 
-    if args.jenkins_minimal_build in ['1', 'yes'] and args.jenkins_build_mode == 'default':
+    if args.jenkins_minimal_build in ['1', 'yes', 'true'] and args.jenkins_build_mode == 'default':
         cmd.append('--jenkins_minimal_build')
     cmd.append('--build_mode=%s' % args.jenkins_build_mode)
     cmd.append('--build_type=%s' % args.jenkins_build_type)
@@ -319,7 +319,7 @@ if __name__ == '__main__':
 
     parser.add_argument('--jenkins_minimal_build',
         default='0',
-        choices=['yes', 'no', '1', '0'],
+        choices=['yes', 'no', '1', '0', 'true', 'false'],
         required=False,
     )
 

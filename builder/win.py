@@ -106,6 +106,11 @@ class WindowsBuilder(Builder):
 			cmake.append("-DWITH_FFTW3=OFF")
 			cmake.append("-DWITH_ALEMBIC=OFF")
 			cmake.append("-DWITH_INPUT_NDOF=OFF")
+			cmake.append("-WITH_MOD_FLUID=OFF")
+			cmake.append("-WITH_MOD_REMESH=OFF")
+			cmake.append("-WITH_MOD_BOOLEAN=OFF")
+			cmake.append("-WITH_CODEC_FFMPEG=OFF")
+			cmake.append("-WITH_CODEC_AVI=OFF")
 		else:
 			cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
 			cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))

@@ -315,6 +315,12 @@ if __name__ == '__main__':
         default='master'
     )
 
+    parser.add_argument('--jenkins_minimal_build',
+        action='store_true',
+        default=False,
+        required=False,
+    )
+
     parser.add_argument('--jenkins_build_type',
         choices=['debug', 'release'],
         default = 'release',

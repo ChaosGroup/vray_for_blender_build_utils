@@ -269,6 +269,12 @@ parser.add_argument('--jenkins_kdrive_path',
 	default = "",
 	help    = argparse.SUPPRESS
 )
+parser.add_argument('--jenkins_minimal_build',
+	action='store_true',
+	default=False,
+	required=False,
+	help    = argparse.SUPPRESS
+)
 
 args = parser.parse_args()
 

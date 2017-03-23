@@ -249,6 +249,8 @@ def main(args):
     if utils.get_host_os() == utils.WIN:
         cmd.append('--vc_2013')
 
+    if args.jenkins_minimal_build and args.jenkins_build_mode == 'default':
+        cmd.append('--jenkins_minimal_build')
     cmd.append('--build_mode=%s' % args.jenkins_build_mode)
     cmd.append('--build_type=%s' % args.jenkins_build_type)
     cmd.append('--use_package')

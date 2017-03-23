@@ -140,7 +140,10 @@ def main(args):
     sys.stdout.write('Blender git ref:\t %s\n' % blender_branch)
     sys.stdout.flush()
 
+    # minimal build is only true if build_mode == 'default'
+    minimal_build = False
     if args.jenkins_build_mode == 'default':
+        minimal_build = args.jenkins_minimal_build  in ['1', 'yes', 'true']
         args.jenkins_build_mode = 'nightly'
         sys.stdout.write('\n\tjenkins_build_mode is set to "default", building "nightly" version and *not* uploading\n')
         sys.stdout.flush()
@@ -249,7 +252,7 @@ def main(args):
     if utils.get_host_os() == utils.WIN:
         cmd.append('--vc_2013')
 
-    if args.jenkins_minimal_build in ['1', 'yes', 'true'] and args.jenkins_build_mode == 'default':
+    if minimal_build:
         cmd.append('--jenkins_minimal_build')
     cmd.append('--build_mode=%s' % args.jenkins_build_mode)
     cmd.append('--build_type=%s' % args.jenkins_build_type)

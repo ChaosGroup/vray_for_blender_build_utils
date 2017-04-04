@@ -271,8 +271,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		('osl', getLibPrefix('osl'), (
 			getChDirCmd(wd),
 			getDownloadCmd('https://github.com/imageworks/OpenShadingLanguage/archive/Release-%s.tar.gz' % OSL_VERSION, 'osl.tar.gz'),
-			'tar -C . --transform "s,(.*/?)OpenShadingLanguage-[^/]*(.*),\1OpenShadingLanguage-%s\2,x" -xf osl.tar.gz' % (OSL_VERSION),
-			'ls -la OpenShadingLanguage-%s' % OSL_VERSION,
+			'tar -C . --transform "s,(.*/?)OpenShadingLanguage-[^/]*(.*),\\1OpenShadingLanguage-%s\\2,x" -xf osl.tar.gz' % (OSL_VERSION),
 			'mkdir -p OpenShadingLanguage-%s/build' % OSL_VERSION,
 			getChDirCmd(os.path.join(wd, 'OpenShadingLanguage-%s' % OSL_VERSION, 'build')),
 			' '.join(["cmake", "-D CMAKE_BUILD_TYPE=Release","-D CMAKE_INSTALL_PREFIX=" + getLibPrefix('osl'),

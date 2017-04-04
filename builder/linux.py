@@ -327,7 +327,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getChDirCmd(wd),
 			getDownloadCmd('https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-%s-linux-x86-64.tar.gz' % WEBP_VERSION, 'webp.tar.gz'),
 			'tar -C %s --transform "s,(.*/?)libwebp-[^/]*(.*),\\1libwebp-%s\\2,x" -xf webp.tar.gz' % (prefix, WEBP_VERSION),
-			'ln -s %s %s/webp' % (getLibPrefix('webp', prefix))
+			'ln -s %s %s/webp' % (getLibPrefix('webp'), prefix)
 		))
 	)
 

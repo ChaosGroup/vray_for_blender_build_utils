@@ -45,6 +45,7 @@ LLVM_VERSION="3.4"
 TIFF_VERSION="3.9.7"
 FFTW_VERSION="3.3.4"
 OSL_VERSION="1.7.5"
+FFMPEG_VERSION="3.2.1"
 
 
 def getDepsCompilationData(self, prefix, wd, jobs):
@@ -287,6 +288,26 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'make install',
 			'make clean',
 			'ln -s %s %s/osl' % (getLibPrefix('osl'), prefix),
+		)),
+		('ffmpeg', getLibPrefix('ffmpeg'), (
+			getChDirCmd(wd),
+			getDownloadCmd("http://ffmpeg.org/releases/ffmpeg-%s.tar.bz2" % FFMPEG_VERSION, 'ffmpeg.tar.bz2'),
+			'tar -C . -xf ffmpeg.tar.bz2',
+			getChDirCmd(prefix, 'ffmpeg-%s' % FFMPEG_VERSION),
+			' '.join(['./configure', '--cc="gcc -Wl,--as-needed"', '--extra-ldflags="-pthread -static-libgcc"',
+					  '--prefix=%s' % getLibPrefix('ffmpeg'), '--enable-static', '--disable-ffplay',
+					  '--disable-ffserver --disable-doc', '--enable-gray', '--enable-avfilter', '--disable-vdpau',
+					  '--disable-bzlib', '--disable-libgsm', '--disable-libspeex', '--enable-pthreads',
+					  '--enable-zlib', '--enable-stripping', '--enable-runtime-cpudetect', '--disable-vaapi',
+					  '--disable-nonfree', '--enable-gpl', '--disable-postproc', '--disable-librtmp',
+					  '--disable-libopencore-amrnb', '--disable-libopencore-amrwb', '--disable-libdc1394',
+					  '--disable-version3', '--disable-outdev=sdl', '--disable-libxcb', '--disable-outdev=xv',
+					  '--disable-indev=sndio', '--disable-outdev=sndio', '--disable-outdev=alsa',
+					  '--disable-indev=sdl', '--disable-indev=alsa', '--disable-indev=jack', '--disable-indev=lavfi']),
+			'make -j %s' % jobs,
+			'make install',
+			'make clean',
+			'ln -s %s %s/ffmpeg' % (getLibPrefix('ffmpeg'), prefix),
 		))
 	)
 
@@ -507,9 +528,10 @@ class LinuxBuilder(Builder):
 				cmake.append("-DTIFF_LIBRARY=%s/tiff/lib/libtiff.a" % libs_prefix)
 
 				cmake.append("-DLLVM_ROOT_DIR=%s/llvm-%s" % (libs_prefix, LLVM_VERSION))
+				cmake.append("-DFFMPEG_ROOT_DIR=%s/ffmpeg" % libs_prefix)
 
-				cmake.append("-DOSL_ROOT_DIR=%s/osl-%s" % (libs_prefix, OSL_VERSION))
-				cmake.append("-DOSL_INCLUDE_DIR=%s/osl-%s/include" % (libs_prefix, OSL_VERSION))
+				cmake.append("-DOSL_ROOT_DIR=%s/osl" % libs_prefix)
+				cmake.append("-DOSL_INCLUDE_DIR=%s/osl/include" % libs_prefix)
 			else:
 				cmake.append("-DBoost_DIR=%s/boost" % libs_prefix)
 				cmake.append("-DBoost_INCLUDE_DIR=%s/boost/include" % libs_prefix)

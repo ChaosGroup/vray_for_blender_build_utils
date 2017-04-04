@@ -312,7 +312,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'make clean',
 			'ln -s %s %s/ffmpeg' % (getLibPrefix('ffmpeg'), prefix),
 		)),
-		('giflib', getLibPrefix('figlib'), (
+		('giflib', getLibPrefix('giflib'), (
 			getChDirCmd(wd),
 			getDownloadCmd('http://downloads.sourceforge.net/giflib/giflib-%s.tar.bz2' % GIFLIB_VERSION, 'giflib.tar.bz2'),
 			'tar -C . -xf giflib.tar.bz2',

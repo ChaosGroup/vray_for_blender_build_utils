@@ -499,7 +499,7 @@ class LinuxBuilder(Builder):
 				cmake.append("-DTIFF_LIBRARY=%s/tiff/lib/libtiff.a" % libs_prefix)
 
 				cmake.append("-DOSL_ROOT_DIR=%s/osl-%s" % (libs_prefix, OSL_VERSION))
-
+				cmake.append("-DOSL_INCLUDE_DIR=%s/osl-%s/include" % (libs_prefix, OSL_VERSION))
 			else:
 				cmake.append("-DBoost_DIR=%s/boost" % libs_prefix)
 				cmake.append("-DBoost_INCLUDE_DIR=%s/boost/include" % libs_prefix)

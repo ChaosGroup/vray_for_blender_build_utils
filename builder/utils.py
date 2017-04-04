@@ -89,13 +89,21 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 
 	git_cmds = []
 
+	def dumpAndExec(cmd):
+		sys.stdout.write('GIT: [%s]\n' % cmd)
+		sys.stdout.flush()
+		if 0 != os.system(cmd):
+			sys.stderr.write('GIT: command failed! [%s]\n' % cmd)
+			sys.stderr.flush()
+			sys.exit(2)
+
 	if not os.path.exists(clone_dir):
 		get_cmd = ""
 		if target_name and not target_dir:
 			# just rename clone
-			git_cmds.append("git clone %s %s" % (repo_url, target_name))
+			dumpAndExec("git clone %s %s" % (repo_url, target_name))
 		else:
-			git_cmds.append("git clone %s" % repo_url)
+			dumpAndExec("git clone %s" % repo_url)
 
 	os.chdir(clone_dir)
 	git_cmds = git_cmds + [
@@ -110,12 +118,7 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 		git_cmds.append("git submodule update --force --init --recursive %s" % module)
 
 	for cmd in git_cmds:
-		sys.stdout.write('GIT: [%s]\n' % cmd)
-		sys.stdout.flush()
-		if 0 != os.system(cmd):
-			sys.stderr.write('GIT: command failed! [%s]\n' % cmd)
-			sys.stderr.flush()
-			sys.exit(2)
+		dumpAndExec(cmd)
 
 	if target_dir:
 		to_dir = os.path.join(target_dir, repo_name)

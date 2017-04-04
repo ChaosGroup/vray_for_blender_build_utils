@@ -284,6 +284,10 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_OPENSUBDIV=OFF")
 		cmake.append("-DWITH_FFTW3=ON")
 		cmake.append("-DWITH_CODEC_FFMPEG=OFF")
+		if self.with_cycles:
+			cmake.append("-DWITH_CYCLES_OSL=ON")
+			cmake.append("-DWITH_OSL=ON")
+			cmake.append("-DOSL_STATIC_LIBRARY=ON")
 
 		if self.build_mode == 'nightly':
 			cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")

@@ -503,6 +503,8 @@ class LinuxBuilder(Builder):
 				cmake.append("-DTIFF_INCLUDE_DIR=%s/tiff/include" % libs_prefix)
 				cmake.append("-DTIFF_LIBRARY=%s/tiff/lib/libtiff.a" % libs_prefix)
 
+				cmake.append("-DLLVM_ROOT_DIR=%s/llvm-%s" % (libs_prefix, LLVM_VERSION))
+
 				cmake.append("-DOSL_ROOT_DIR=%s/osl-%s" % (libs_prefix, OSL_VERSION))
 				cmake.append("-DOSL_INCLUDE_DIR=%s/osl-%s/include" % (libs_prefix, OSL_VERSION))
 			else:

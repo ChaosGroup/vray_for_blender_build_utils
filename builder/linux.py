@@ -554,8 +554,8 @@ class LinuxBuilder(Builder):
 				cmake.append("-DOSL_ROOT=%s/osl-%s" % (libs_prefix, OSL_VERSION))
 				cmake.append("-DOSL_INCLUDE_DIR=%s/osl-%s/include" % (libs_prefix, OSL_VERSION))
 
-				cmake.append("-DGIFLIB_LIBRARY=%s/giflib/lib/libgif.a" % prefix)
-				cmake.append("-DWEBP_LIBRARY=%s/webp/lib/libwebp.a" % (prefix, GIFLIB_VERSION))
+				cmake.append("-DGIFLIB_LIBRARY=%s/giflib/lib/libgif.a" % libs_prefix)
+				cmake.append("-DWEBP_LIBRARY=%s/webp/lib/libwebp.a" % (libs_prefix, GIFLIB_VERSION))
 			else:
 				cmake.append("-DBoost_DIR=%s/boost" % libs_prefix)
 				cmake.append("-DBoost_INCLUDE_DIR=%s/boost/include" % libs_prefix)

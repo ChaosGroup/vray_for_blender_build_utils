@@ -46,6 +46,8 @@ TIFF_VERSION="3.9.7"
 FFTW_VERSION="3.3.4"
 OSL_VERSION="1.7.5"
 FFMPEG_VERSION="3.2.1"
+GIFLIB_VERSION="5.1.4"
+WEBP_VERSION="0.6.0"
 
 
 def getDepsCompilationData(self, prefix, wd, jobs):
@@ -309,6 +311,23 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'make install',
 			'make clean',
 			'ln -s %s %s/ffmpeg' % (getLibPrefix('ffmpeg'), prefix),
+		)),
+		('giflib', getLibPrefix('figlib'), (
+			getChDirCmd(wd),
+			getDownloadCmd('http://downloads.sourceforge.net/giflib/giflib-%s.tar.bz2' % GIFLIB_VERSION, 'giflib.tar.bz2'),
+			'tar -C . -xf giflib.tar.bz2',
+			getChDirCmd(os.path.join(wd, 'giflib-%s' % GIFLIB_VERSION)),
+			' '.join(['./configure', '--enable-static', '--prefix=%s' % getLibPrefix('giflib')]),
+			'make -j %s' % jobs,
+			'make install',
+			'make clean',
+			'ln -s %s %s/giflib' % (getLibPrefix('giflib', prefix))
+		)),
+		('webp', getLibPrefix('webp'),(
+			getChDirCmd(wd),
+			getDownloadCmd('https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-%s-linux-x86-64.tar.gz' % WEBP_VERSION, 'webp.tar.gz'),
+			'tar -C %s --transform "s,(.*/?)libwebp-[^/]*(.*),\\1libwebp-%s\\2,x" -xf webp.tar.gz' % (prefix, WEBP_VERSION),
+			'ln -s %s %s/webp' % (getLibPrefix('webp', prefix))
 		))
 	)
 
@@ -531,9 +550,12 @@ class LinuxBuilder(Builder):
 				cmake.append("-DLLVM_ROOT_DIR=%s/llvm-%s" % (libs_prefix, LLVM_VERSION))
 				cmake.append("-DFFMPEG_ROOT_DIR=%s/ffmpeg" % libs_prefix)
 
-				cmake.append("-DOSL_ROOT_DIR=%s/osl" % libs_prefix)
-				cmake.append("-DOSL_ROOT=%s/osl" % libs_prefix)
-				cmake.append("-DOSL_INCLUDE_DIR=%s/osl/include" % libs_prefix)
+				cmake.append("-DOSL_ROOT_DIR=%s/osl-%s" % (libs_prefix, OSL_VERSION))
+				cmake.append("-DOSL_ROOT=%s/osl-%s" % (libs_prefix, OSL_VERSION))
+				cmake.append("-DOSL_INCLUDE_DIR=%s/osl-%s/include" % (libs_prefix, OSL_VERSION))
+
+				cmake.append("-DGIFLIB_LIBRARY=%s/giflib/lib/libgif.a" % prefix)
+				cmake.append("-DWEBP_LIBRARY=%s/webp/lib/libwebp.a" % (prefix, GIFLIB_VERSION))
 			else:
 				cmake.append("-DBoost_DIR=%s/boost" % libs_prefix)
 				cmake.append("-DBoost_INCLUDE_DIR=%s/boost/include" % libs_prefix)

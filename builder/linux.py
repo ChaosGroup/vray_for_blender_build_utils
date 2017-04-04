@@ -532,6 +532,7 @@ class LinuxBuilder(Builder):
 				cmake.append("-DFFMPEG_ROOT_DIR=%s/ffmpeg" % libs_prefix)
 
 				cmake.append("-DOSL_ROOT_DIR=%s/osl" % libs_prefix)
+				cmake.append("-DOSL_ROOT=%s/osl" % libs_prefix)
 				cmake.append("-DOSL_INCLUDE_DIR=%s/osl/include" % libs_prefix)
 			else:
 				cmake.append("-DBoost_DIR=%s/boost" % libs_prefix)

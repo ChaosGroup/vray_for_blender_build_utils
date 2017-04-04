@@ -293,7 +293,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getChDirCmd(wd),
 			getDownloadCmd("http://ffmpeg.org/releases/ffmpeg-%s.tar.bz2" % FFMPEG_VERSION, 'ffmpeg.tar.bz2'),
 			'tar -C . -xf ffmpeg.tar.bz2',
-			getChDirCmd(prefix, 'ffmpeg-%s' % FFMPEG_VERSION),
+			getChDirCmd(os.path.join(wd, 'ffmpeg-%s' % FFMPEG_VERSION)),
 			' '.join(['./configure', '--cc="gcc -Wl,--as-needed"', '--extra-ldflags="-pthread -static-libgcc"',
 					  '--prefix=%s' % getLibPrefix('ffmpeg'), '--enable-static', '--disable-ffplay',
 					  '--disable-ffserver --disable-doc', '--enable-gray', '--enable-avfilter', '--disable-vdpau',

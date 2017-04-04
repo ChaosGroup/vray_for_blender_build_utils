@@ -321,7 +321,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'make -j %s' % jobs,
 			'make install',
 			'make clean',
-			'ln -s %s %s/giflib' % (getLibPrefix('giflib', prefix))
+			'ln -s %s %s/giflib' % (getLibPrefix('giflib'), prefix)
 		)),
 		('webp', getLibPrefix('webp'),(
 			getChDirCmd(wd),

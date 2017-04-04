@@ -285,7 +285,10 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_FFTW3=ON")
 		cmake.append("-DWITH_CODEC_FFMPEG=OFF")
 		if self.with_cycles:
+			cmake.append("-DWITH_LLVM=ON")
 			cmake.append("-DWITH_CYCLES_OSL=ON")
+			cmake.append("-DWITH_CYCLES_CUDA=ON")
+			cmake.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
 			cmake.append("-DWITH_OSL=ON")
 			cmake.append("-DOSL_STATIC_LIBRARY=ON")
 

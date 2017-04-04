@@ -424,6 +424,7 @@ class LinuxBuilder(Builder):
 		cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.with_collada))
 		cmake.append("-DWITH_CYCLES=%s" % utils.GetCmakeOnOff(self.with_cycles))
 		if self.with_cycles:
+			cmake.append("-DWITH_LLVM=ON")
 			cmake.append("-DWITH_CYCLES_CUDA=ON")
 			cmake.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
 			cmake.append("-DWITH_CYCLES_OSL=ON")

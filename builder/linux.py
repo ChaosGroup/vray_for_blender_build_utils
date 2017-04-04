@@ -44,6 +44,7 @@ OIIO_VERSION="1.6.9"
 LLVM_VERSION="3.4"
 TIFF_VERSION="3.9.7"
 FFTW_VERSION="3.3.4"
+OSL_VERSION="1.7.5"
 
 
 def getDepsCompilationData(self, prefix, wd, jobs):
@@ -53,6 +54,14 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 	"-D TIFF_LIBRARY=%s" % os.path.join(prefix, 'tiff-%s' % TIFF_VERSION, 'lib' 'libtiff.a'),
 	"-D TIFF_INCLUDE_DIR=%s" % os.path.join(prefix, 'tiff-%s' % TIFF_VERSION, 'include'),
 	]
+
+	def getLibPrefix(name):
+		varName = name.upper() + "_VERSION"
+		if varName in globals():
+			return '%s/%s-%s' % (prefix, name, globals()[varName])
+		sys.stderr.write("Can't find prefix for '%s'" % name)
+		sys.stderr.flush()
+		sys.exit(-1)
 
 	def getCmakeCommandStr(*additionalArgs):
 		return ' '.join(['cmake'] + common_cmake_args + list(additionalArgs))
@@ -259,6 +268,25 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'make install',
 			'make clean',
 		)),
+		('osl', getLibPrefix('osl'), (
+			getChDirCmd(wd),
+			getDownloadCmd('https://github.com/imageworks/OpenShadingLanguage/archive/Release-%s.tar.gz' % OSL_VERSION, 'osl.tar.gz'),
+			'tar -C . --transform "s,(.*/?)OpenShadingLanguage-[^/]*(.*),\1OpenShadingLanguage-%s\2,x" -xf osl.tar.gz' % (OSL_VERSION),
+			'mkdir -p OpenShadingLanguage-%s/build' % OSL_VERSION,
+			getChDirCmd(os.path.join(wd, 'OpenShadingLanguage-%s' % OSL_VERSION, 'build')),
+			' '.join(["cmake", "-D CMAKE_BUILD_TYPE=Release","-D CMAKE_INSTALL_PREFIX=" + getLibPrefix('osl'),
+					  "-D BUILD_TESTING=OFF","-D STOP_ON_WARNING=OFF","-D BUILDSTATIC=ON",
+					  "-D OSL_BUILD_PLUGINS=OFF","-D OSL_BUILD_TESTS=OFF","-D USE_SIMD=sse2",
+					  "-D OSL_BUILD_CPP11=1", "-D ILMBASE_HOME=" + getLibPrefix('openexr'),
+					  "-D ILMBASE_CUSTOM=ON", "-D ILMBASE_CUSTOM_LIBRARIES='Half;Iex;Imath;IlmThread'",
+					  "-D BOOST_ROOT=" + getLibPrefix('boost'), "-D Boost_NO_SYSTEM_PATHS=ON",
+					  "-D OPENIMAGEIOHOME=" + getLibPrefix('oiio'),
+					  "-D LLVM_VERSION=%s" % LLVM_VERSION, "-D LLVM_DIRECTORY=" + getLibPrefix('llvm'),
+					  "-D LLVM_STATIC=ON", ".."]),
+			'make -j %s' % jobs,
+			'make install',
+			'make clean'
+		))
 	)
 
 	return steps

@@ -321,13 +321,11 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'make -j %s' % jobs,
 			'make install',
 			'make clean',
-			'ln -s %s %s/giflib' % (getLibPrefix('giflib'), prefix)
 		)),
 		('webp', getLibPrefix('webp'),(
 			getChDirCmd(wd),
 			getDownloadCmd('https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-%s-linux-x86-64.tar.gz' % WEBP_VERSION, 'webp.tar.gz'),
 			'tar -C %s --transform "s,(.*/?)libwebp-[^/]*(.*),\\1libwebp-%s\\2,x" -xf webp.tar.gz' % (prefix, WEBP_VERSION),
-			'ln -s %s %s/webp' % (getLibPrefix('webp'), prefix)
 		))
 	)
 
@@ -368,7 +366,7 @@ def DepsBuild(self):
 	installed_python = False
 
 	for item in data:
-		sys.stdout.write('Installing %s...\n' % item[0])
+		sys.stdout.write('Installing %s...' % item[0])
 		shouldStop = False
 		if os.path.exists(item[1]):
 			if item[0] in ('numpy', 'requests') and installed_python:
@@ -380,10 +378,12 @@ def DepsBuild(self):
 				sys.stdout.write('%s already installed, skipping ...\n' % item[1])
 				continue
 		else:
+			sys.stdout.write('%s missing - proceeding\n' % item[1])
 			# we will install current item
 			if item[0] == 'python':
 				# if it is python save it
 				installed_python = True
+		sys.stdout.flush()
 
 		fail = False
 		for step in item[2]:

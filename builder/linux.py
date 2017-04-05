@@ -480,7 +480,7 @@ class LinuxBuilder(Builder):
 		cmake.append("-DWITH_CYCLES=%s" % utils.GetCmakeOnOff(self.with_cycles))
 		if self.with_cycles:
 			cmake.append("-DWITH_CODEC_FFMPEG=ON")
-			cmake.append("-DFFMPEG_LIBRARIES='avformat;avcodec;avutil;avdevice;swscale;swresample;lzma;rt'")
+			cmake.append("-DFFMPEG_LIBRARIES='avformat;avcodec;avutil;avdevice;swscale;swresample;rt'")
 			cmake.append("-DWITH_OPENCOLORIO=ON")
 			cmake.append("-DWITH_OPENIMAGEIO=ON")
 			cmake.append("-DWITH_LLVM=ON")

@@ -287,7 +287,6 @@ class MacBuilder(Builder):
 		if self.with_cycles:
 			cmake.append("-DWITH_LLVM=ON")
 			cmake.append("-DWITH_CYCLES_OSL=ON")
-			cmake.append("-DWITH_OSL=ON")
 			cmake.append("-DOSL_STATIC_LIBRARY=ON")
 
 		if self.build_mode == 'nightly':

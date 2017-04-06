@@ -488,7 +488,6 @@ class LinuxBuilder(Builder):
 			cmake.append("-DWITH_CYCLES_CUDA=ON")
 			cmake.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
 			cmake.append("-DWITH_CYCLES_OSL=ON")
-			cmake.append("-DWITH_OSL=ON")
 			cmake.append("-DOSL_STATIC_LIBRARY=ON")
 
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")

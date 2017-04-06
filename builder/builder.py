@@ -503,11 +503,19 @@ class Builder:
 		import datetime
 		now = datetime.datetime.now()
 
+		lines = []
+		lines.append('#define BUILD_COMMIT_TIMESTAMP 0')
+		lines.append('#define BUILD_BRANCH "%s"' % (self.use_github_branch))
+		lines.append('#define BUILD_HASH "%s"' % (self.revision[:7]))
+		lines.append('#define BUILD_DATE "%s"' % (now.strftime("%d %b %Y")))
+		lines.append('#define BUILD_TIME "%s"' % (now.strftime("%H:%M:%S")))
+		lines.append('')
+
+		buildInfoText = '\n'.join(lines)
+
+		sys.stdout.write('Manul buildinfo.h content:\n%s\n' % buildInfoText)
+		sys.stdout.flush()
+
 		buildinfoTxt = os.path.join(buildDir, "source", "creator", "buildinfo.h")
 		with open(buildinfoTxt, 'w') as buildinfo:
-			buildinfo.write('#define BUILD_COMMIT_TIMESTAMP 0\n')
-			buildinfo.write('#define BUILD_BRANCH "%s"\n' % (self.use_github_branch))
-			buildinfo.write('#define BUILD_HASH "%s"\n' % (self.revision[:7]))
-			buildinfo.write('#define BUILD_DATE "%s"\n' % (now.strftime("%d %b %Y")))
-			buildinfo.write('#define BUILD_TIME "%s"\n' % (now.strftime("%H:%M:%S")))
-			buildinfo.write('\n')
+			buildinfo.write(buildInfoText)

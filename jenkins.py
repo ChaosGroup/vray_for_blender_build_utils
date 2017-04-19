@@ -62,6 +62,7 @@ def setup_msvc_2013(cgrepo):
 
 
 def get_appsdk(appsdk_name, appsdk_version, dir_source):
+    fail = False
     appsdk_os_dir_name = {
         utils.WIN: 'windows',
         utils.LNX: 'linux',
@@ -85,7 +86,7 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
     if not download_appsdk:
         sys.stdout.write('Already have [%s]' % appsdk_name)
         sys.stdout.flush()
-        return all_appsdk_root
+        return (fail, all_appsdk_root)
 
     sys.stdout.write('Missing vray [%s]\n' % appsdk_check)
     sys.stdout.write('Creating dir [%s]\n' % appsdk_path)
@@ -108,7 +109,7 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
     sys.stdout.write('CURL [%s]\n' % curl)
     sys.stdout.flush()
     os.chdir(appsdk_path)
-    os.system(curl)
+    fail = fail or os.system(curl) != 0
 
     extract_cmds = {
         utils.WIN: ['7z x %s' % appsdk_name],
@@ -119,17 +120,17 @@ def get_appsdk(appsdk_name, appsdk_version, dir_source):
     for cmd in extract_cmds:
         sys.stdout.write('Extract CMD [%s]\n' % cmd)
         sys.stdout.flush()
-        os.system(cmd)
+        fail = fail or os.system(cmd) != 0
 
     tar_name = appsdk_name[0:-3]
     if utils.get_host_os() != utils.WIN and os.path.exists(os.path.join(appsdk_path, tar_name)):
         cmd = "7z x %s" % tar_name
         sys.stdout.write('Extract tar CMD [%s]\n' % cmd)
         sys.stdout.flush()
-        os.system(cmd)
+        fail = fail or os.system(cmd) != 0
 
     utils.remove_path(os.path.join(appsdk_path, appsdk_name))
-    return all_appsdk_root
+    return (fail, all_appsdk_root)
 
 
 def main(args):
@@ -184,7 +185,13 @@ def main(args):
 
     appsdk_version = re.match(r'.*?vray\d{5}-(\d{8})\.(?:tar\.xz|7z)*?', appsdk_remote_name).groups()[0]
 
-    appsdk_path = get_appsdk(appsdk_remote_name, appsdk_version, dir_source)
+    for retry in range(3):
+        if retry > 0:
+            sys.stdout.write('Retry #%d to download_appsdk' % retry)
+            sys.stdout.flush()
+        fail, appsdk_path = get_appsdk(appsdk_remote_name, appsdk_version, dir_source)
+        if not fail:
+            break
 
     sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, appsdk_version))
     os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type

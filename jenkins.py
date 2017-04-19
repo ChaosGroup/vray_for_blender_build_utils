@@ -172,6 +172,11 @@ def main(args):
     dir_source = os.path.join(args.jenkins_perm_path, 'blender-dependencies')
     if not os.path.exists(dir_source):
         os.makedirs(dir_source)
+    else:
+        # if job is interrupted while in git operation this file is left behind
+        lock_file = os.path.join(dir_source, 'vrayserverzmq','.git','modules','extern','vray-zmq-wrapper','modules','extern','cppzmq','index.lock')
+        if os.path.exists(lock_file):
+            utils.remove_path(lock_file)
 
     ### GET APPSDK
     appsdk_remote_name = {

@@ -466,7 +466,7 @@ class LinuxBuilder(Builder):
 		cmake.append("-DWITH_X11_XINPUT=ON")
 
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
-		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity))
+		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity or self.jenkins))
 		cmake.append('-DWITH_STATIC_LIBC=%s' % utils.GetCmakeOnOff(self.teamcity_with_static_libc))
 
 		if self.build_mode == 'nightly':

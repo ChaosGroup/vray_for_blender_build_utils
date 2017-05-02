@@ -26,6 +26,7 @@ import os
 import re
 import sys
 import glob
+import time
 import platform
 import subprocess
 
@@ -192,8 +193,10 @@ def main(args):
 
     for retry in range(3):
         if retry > 0:
-            sys.stdout.write('Retry #%d to download_appsdk' % retry)
+            wait_time = 10
+            sys.stdout.write('Retry #%d to download_appsdk after %d sec' % (retry, wait_time))
             sys.stdout.flush()
+            time.sleep(wait_time)
         fail, appsdk_path = get_appsdk(appsdk_remote_name, appsdk_version, dir_source)
         if not fail:
             break

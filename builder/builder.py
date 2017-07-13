@@ -135,6 +135,7 @@ class Builder:
 					sys.stdout.flush()
 					if not self.mode_test:
 						os.chdir(lib_dir)
+						os.system("svn cleanup")
 						os.system("svn update")
 
 	def update_sources(self):

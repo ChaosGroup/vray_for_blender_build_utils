@@ -222,6 +222,7 @@ def main(args):
         "source/tools",
         "release/scripts/addons",
         'intern/vray_for_blender_rt/extern/vray-zmq-wrapper',
+        'release/datafiles/locale', # WITH_INTERNATIONAL
     ]
 
     os.chdir(dir_source)

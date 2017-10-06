@@ -112,6 +112,7 @@ class WindowsBuilder(Builder):
 			cmake.append("-DWITH_CODEC_FFMPEG=OFF")
 			cmake.append("-DWITH_CODEC_AVI=OFF")
 		else:
+			cmake.append("-DWITH_INTERNATIONAL=ON")
 			cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
 			cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))
 			cmake.append("-DWITH_LIBMV=%s" % utils.GetCmakeOnOff(self.with_tracker))

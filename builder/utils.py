@@ -97,7 +97,19 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 			sys.stderr.flush()
 			sys.exit(2)
 
-	if not os.path.exists(clone_dir):
+	repo_dir_exists = os.path.exists(clone_dir)
+
+	if repo_dir_exists:
+		existing_url = get_git_remote_url(clone_dir)
+		sys.stderr.write('target_name "%s" exists [%s]' % (target_name, clone_dir))
+		sys.stderr.write('requested url [%s], present url [%s]' % (repo_url, existing_url))
+		sys.stderr.flush()
+		if existing_url != repo_url:
+			sys.stderr.write("Urls are different - removing [%s]" % clone_dir)
+			remove_directory(clone_dir)
+			repo_dir_exists = False
+
+	if not repo_dir_exists:
 		get_cmd = ""
 		if target_name and not target_dir:
 			# just rename clone
@@ -395,6 +407,10 @@ def _get_cmd_output_ex(cmd, workDir=None):
 def _get_cmd_output(cmd, workDir=None):
 	return _get_cmd_output_ex(cmd, workDir)['output']
 
+
+def get_git_remote_url(root):
+	get_remote = ['git', 'remote', 'get-url', 'origin']
+	return _get_cmd_output(get_remote)
 
 def get_git_head_hash(root):
 	git_rev = ['git', 'rev-parse', '--short', 'HEAD']

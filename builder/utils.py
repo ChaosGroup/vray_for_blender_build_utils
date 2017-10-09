@@ -427,6 +427,7 @@ def get_git_remote_url(root):
 			if name == 'origin':
 				return url
 
+
 def get_git_head_hash(root):
 	git_rev = ['git', 'rev-parse', '--short', 'HEAD']
 	return _get_cmd_output(git_rev, root)

@@ -105,8 +105,8 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 
 	if repo_dir_exists:
 		existing_url = get_git_remote_url(clone_dir)
-		sys.stderr.write('target_name "%s" exists [%s]' % (target_name, clone_dir))
-		sys.stderr.write('requested url [%s], present url [%s]\n' % (repo_url, existing_url))
+		sys.stderr.write('target_name "%s" exists [%s]' % (repo_name, clone_dir))
+		sys.stderr.write('\trequested url:[%s]\n\tpresent url:[%s]\n' % (repo_url, existing_url))
 		sys.stderr.flush()
 		if existing_url != repo_url:
 			sys.stderr.write("Urls are different - removing [%s]\n" % clone_dir)

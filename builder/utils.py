@@ -385,6 +385,8 @@ def create_desktop_file(filepath = "/usr/share/applications/vrayblender.desktop"
 
 
 def _get_cmd_output_ex(cmd, workDir=None):
+	sys.stdout.write('Executing [%s] inside [%s]n' % (' '.join(cmd), workDir))
+	sys.stdout.flush()
 	pwd = os.getcwd()
 	if workDir:
 		os.chdir(workDir)

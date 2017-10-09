@@ -151,13 +151,10 @@ def main(args):
         sys.stdout.flush()
 
     dir_build = os.getcwd()
-    os.environ['http_proxy'] = '10.0.0.1:1234'
-    os.environ['https_proxy'] = '10.0.0.1:1234'
-    os.environ['ftp_proxy'] = '10.0.0.1:1234'
-    os.environ['socks_proxy'] = '10.0.0.1:1080'
-
     os.environ['http_proxy'] = 'http://10.0.0.1:1234/'
     os.environ['https_proxy'] = 'https://10.0.0.1:1234/'
+    os.environ['ftp_proxy'] = '10.0.0.1:1234'
+    os.environ['socks_proxy'] = '10.0.0.1:1080'
 
     cgrepo = os.environ['VRAY_CGREPO_PATH']
     kdrive_os_dir_name = {
@@ -179,32 +176,8 @@ def main(args):
         if os.path.exists(lock_file):
             utils.remove_path(lock_file)
 
-    ### GET APPSDK
-    appsdk_remote_name = {
-        utils.WIN: 'appsdk-win-binaries-nightly-1.11.00-vray35701-20170307.7z',
-        utils.LNX: 'appsdk-linux-binaries-nightly-1.11.00-vray35701-20170315.tar.xz',
-        utils.MAC: 'appsdk-mac-binaries-nightly-1.11.00-vray35701-20170307.tar.xz',
-    }[utils.get_host_os()]
-
-    if args.jenkins_appsdk_remote_name != '':
-        appsdk_remote_name = args.jenkins_appsdk_remote_name
-
-    appsdk_version = re.match(r'.*?vray\d{5}-(\d{8})\.(?:tar\.xz|7z)*?', appsdk_remote_name).groups()[0]
-
-    for retry in range(3):
-        if retry > 0:
-            wait_time = 10
-            sys.stdout.write('Retry #%d to download_appsdk after %d sec' % (retry, wait_time))
-            sys.stdout.flush()
-            time.sleep(wait_time)
-        fail, appsdk_path = get_appsdk(appsdk_remote_name, appsdk_version, dir_source)
-        if not fail:
-            break
-
     sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, appsdk_version))
     os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
-    os.environ['CGR_APPSDK_PATH'] = appsdk_path
-    os.environ['CGR_APPSDK_VERSION'] = appsdk_version
 
     ### ADD NINJA TO PATH
     ninja_path = 'None'
@@ -231,7 +204,18 @@ def main(args):
     utils.get_repo('git@github.com:bdancer/vrayserverzmq', branch=args.jenkins_zmq_branch, submodules=['extern/vray-zmq-wrapper'])
 
     os.chdir(dir_build)
-    ### CLONE REPOS
+
+    ### ADD APPSDK PATH
+    bl_libs_os_dir_name = {
+        # TODO: fix this for vc14
+        utils.WIN: 'Windows/vc12',
+        utils.LNX: 'Linux',
+        utils.MAC: 'Darwin',
+    }[utils.get_host_os()]
+    appsdk_path = os.path.join(dir_source, 'blender-for-vray-libs', bl_libs_os_dir_name, 'appsdk')
+    appsdk_version = '20170307'# re.match(r'.*?vray\d{5}-(\d{8})\.(?:tar\.xz|7z)*?', appsdk_remote_name).groups()[0]
+    os.environ['CGR_APPSDK_PATH'] = appsdk_path
+    os.environ['CGR_APPSDK_VERSION'] = appsdk_version
 
     python_exe = sys.executable
 

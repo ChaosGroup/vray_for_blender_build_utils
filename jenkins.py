@@ -126,7 +126,7 @@ def main(args):
     os.chdir(dir_source)
     utils.get_repo('https://github.com/bdancer/blender-for-vray', branch=blender_branch, submodules=blender_modules, target_name='blender')
     utils.get_repo('ssh://gitolite@mantis.chaosgroup.com:2047/vray_for_blender_libs', target_name='blender-for-vray-libs')
-    utils.get_repo('git@github.com:bdancer/vrayserverzmq', branch=args.jenkins_zmq_branch, submodules=['extern/vray-zmq-wrapper'])
+    utils.get_repo('https://github.com/bdancer/vrayserverzmq', branch=args.jenkins_zmq_branch, submodules=['extern/vray-zmq-wrapper'])
 
     os.chdir(dir_build)
 

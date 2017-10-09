@@ -94,7 +94,7 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 	sys.stdout.write("Repo [%s]\n" % repo_url)
 	sys.stdout.flush()
 
-	repo_name = target_name if target_name else os.path.basename(repo_url)
+	repo_name = target_name if target_name is not None else os.path.basename(repo_url)
 	cwd = os.getcwd()
 	clone_dir = os.path.join(cwd, repo_name)
 
@@ -386,7 +386,7 @@ def create_desktop_file(filepath = "/usr/share/applications/vrayblender.desktop"
 
 def _get_cmd_output_ex(cmd, workDir=None):
 	logDir = workDir if workDir is not None else 'None(%s)' % os.getcwd()
-	sys.stdout.write('Executing [%s] inside [%s]n' % (' '.join(cmd), logDir))
+	sys.stdout.write('Executing [%s] inside [%s]\n' % (' '.join(cmd), logDir))
 	sys.stdout.flush()
 	pwd = os.getcwd()
 	if workDir:
@@ -418,7 +418,7 @@ def _get_cmd_output(cmd, workDir=None):
 
 def get_git_remote_url(root):
 	get_remote = ['git', 'remote', 'get-url', 'origin']
-	return _get_cmd_output(get_remote)
+	return _get_cmd_output(get_remote, workDir=root)
 
 def get_git_head_hash(root):
 	git_rev = ['git', 'rev-parse', '--short', 'HEAD']

@@ -62,78 +62,6 @@ def setup_msvc_2013(cgrepo):
         os.environ[var] = ";".join(env[var]).format(CGR_SDK=cgrepo)
 
 
-def get_appsdk(appsdk_name, appsdk_version, dir_source):
-    fail = False
-    appsdk_os_dir_name = {
-        utils.WIN: 'windows',
-        utils.LNX: 'linux',
-        utils.MAC: 'darwin',
-    }[utils.get_host_os()]
-
-    vray_ext = 'exe' if utils.get_host_os() == utils.WIN else 'bin'
-
-    all_appsdk_root = os.path.join(dir_source, 'vray-appsdk')
-
-    # clean all non-needed files
-    for item in glob.glob('%s/*' % all_appsdk_root):
-        item_name = os.path.basename(item)
-        if re.match(r'^\d{8}$', item_name) is None:
-            utils.remove_path(item)
-
-    appsdk_path = os.path.join(all_appsdk_root, appsdk_version, appsdk_os_dir_name)
-    appsdk_check = os.path.join(appsdk_path, 'bin', 'vray.%s' % vray_ext)
-    download_appsdk = not os.path.exists(appsdk_check)
-
-    if not download_appsdk:
-        sys.stdout.write('Already have [%s]' % appsdk_name)
-        sys.stdout.flush()
-        return (fail, all_appsdk_root)
-
-    sys.stdout.write('Missing vray [%s]\n' % appsdk_check)
-    sys.stdout.write('Creating dir [%s]\n' % appsdk_path)
-    sys.stdout.flush()
-
-    try:
-        os.makedirs(appsdk_path)
-    except:
-        pass
-
-    curl = 'curl -s -S -o %s ftp://%s:%s@nightlies.chaosgroup.com/vrayappsdk/%s/%s' % (
-        appsdk_name,
-        os.environ['NIGHTLIES_USER'],
-        os.environ['NIGHTLIES_PASS'],
-        appsdk_version,
-        appsdk_name,
-    )
-
-    sys.stdout.write('Downloading appsdk:\n')
-    sys.stdout.write('CURL [%s]\n' % curl)
-    sys.stdout.flush()
-    os.chdir(appsdk_path)
-    fail = fail or os.system(curl) != 0
-
-    extract_cmds = {
-        utils.WIN: ['7z x %s' % appsdk_name],
-        utils.LNX: ['7z x %s' % appsdk_name],
-        utils.MAC: ['7z x %s' % appsdk_name, 'mv *.tar appsdk.tar', '7z x appsdk.tar'],
-    }[utils.get_host_os()]
-
-    for cmd in extract_cmds:
-        sys.stdout.write('Extract CMD [%s]\n' % cmd)
-        sys.stdout.flush()
-        fail = fail or os.system(cmd) != 0
-
-    tar_name = appsdk_name[0:-3]
-    if utils.get_host_os() != utils.WIN and os.path.exists(os.path.join(appsdk_path, tar_name)):
-        cmd = "7z x %s" % tar_name
-        sys.stdout.write('Extract tar CMD [%s]\n' % cmd)
-        sys.stdout.flush()
-        fail = fail or os.system(cmd) != 0
-
-    utils.remove_path(os.path.join(appsdk_path, appsdk_name))
-    return (fail, all_appsdk_root)
-
-
 def main(args):
     sys.stdout.write('jenkins args:\n%s\n' % str(args))
     sys.stdout.flush()
@@ -151,13 +79,10 @@ def main(args):
         sys.stdout.flush()
 
     dir_build = os.getcwd()
-    os.environ['http_proxy'] = '10.0.0.1:1234'
-    os.environ['https_proxy'] = '10.0.0.1:1234'
-    os.environ['ftp_proxy'] = '10.0.0.1:1234'
-    os.environ['socks_proxy'] = '10.0.0.1:1080'
-
     os.environ['http_proxy'] = 'http://10.0.0.1:1234/'
     os.environ['https_proxy'] = 'https://10.0.0.1:1234/'
+    os.environ['ftp_proxy'] = '10.0.0.1:1234'
+    os.environ['socks_proxy'] = '10.0.0.1:1080'
 
     cgrepo = os.environ['VRAY_CGREPO_PATH']
     kdrive_os_dir_name = {
@@ -179,33 +104,6 @@ def main(args):
         if os.path.exists(lock_file):
             utils.remove_path(lock_file)
 
-    ### GET APPSDK
-    appsdk_remote_name = {
-        utils.WIN: 'appsdk-win-binaries-nightly-1.11.00-vray35701-20170307.7z',
-        utils.LNX: 'appsdk-linux-binaries-nightly-1.11.00-vray35701-20170315.tar.xz',
-        utils.MAC: 'appsdk-mac-binaries-nightly-1.11.00-vray35701-20170307.tar.xz',
-    }[utils.get_host_os()]
-
-    if args.jenkins_appsdk_remote_name != '':
-        appsdk_remote_name = args.jenkins_appsdk_remote_name
-
-    appsdk_version = re.match(r'.*?vray\d{5}-(\d{8})\.(?:tar\.xz|7z)*?', appsdk_remote_name).groups()[0]
-
-    for retry in range(3):
-        if retry > 0:
-            wait_time = 10
-            sys.stdout.write('Retry #%d to download_appsdk after %d sec' % (retry, wait_time))
-            sys.stdout.flush()
-            time.sleep(wait_time)
-        fail, appsdk_path = get_appsdk(appsdk_remote_name, appsdk_version, dir_source)
-        if not fail:
-            break
-
-    sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, appsdk_version))
-    os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
-    os.environ['CGR_APPSDK_PATH'] = appsdk_path
-    os.environ['CGR_APPSDK_VERSION'] = appsdk_version
-
     ### ADD NINJA TO PATH
     ninja_path = 'None'
     if sys.platform == 'win32':
@@ -226,12 +124,26 @@ def main(args):
     ]
 
     os.chdir(dir_source)
-    utils.get_repo('git@github.com:bdancer/blender-for-vray', branch=blender_branch, submodules=blender_modules, target_name='blender')
-    utils.get_repo('git@github.com:ChaosGroup/blender-for-vray-libs')
-    utils.get_repo('git@github.com:bdancer/vrayserverzmq', branch=args.jenkins_zmq_branch, submodules=['extern/vray-zmq-wrapper'])
+    utils.get_repo('https://github.com/bdancer/blender-for-vray', branch=blender_branch, submodules=blender_modules, target_name='blender')
+    utils.get_repo('ssh://gitolite@mantis.chaosgroup.com:2047/vray_for_blender_libs', target_name='blender-for-vray-libs')
+    utils.get_repo('https://github.com/bdancer/vrayserverzmq', branch=args.jenkins_zmq_branch, submodules=['extern/vray-zmq-wrapper'])
 
     os.chdir(dir_build)
-    ### CLONE REPOS
+
+    ### ADD APPSDK PATH
+    bl_libs_os_dir_name = {
+        # TODO: fix this for vc14
+        utils.WIN: 'Windows/vc12',
+        utils.LNX: 'Linux',
+        utils.MAC: 'Darwin',
+    }[utils.get_host_os()]
+    appsdk_path = os.path.join(dir_source, 'blender-for-vray-libs', bl_libs_os_dir_name, 'appsdk')
+    appsdk_version = '20170307'# re.match(r'.*?vray\d{5}-(\d{8})\.(?:tar\.xz|7z)*?', appsdk_remote_name).groups()[0]
+    os.environ['CGR_APPSDK_PATH'] = appsdk_path
+    os.environ['CGR_APPSDK_VERSION'] = appsdk_version
+    os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
+    sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, appsdk_version))
+    sys.stdout.flush()
 
     python_exe = sys.executable
 
@@ -302,15 +214,9 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(usage="python3 jenkins.py [options]")
 
-
     parser.add_argument('--jenkins_output',
         default = "",
         required=True,
-    )
-
-    parser.add_argument('--jenkins_appsdk_remote_name',
-        default = "",
-        help='Remote name of the appsdk archive, examples: "appsdk-win-qt-nightly-1.09.00-vray33501-20160510.7z" OR "appsdk-linux-qt-nightly-1.09.00-vray33501-20160510.tar.xz" OR "appsdk-mac-qt-nightly-1.09.00-vray33501-20160510.tar.xz"',
     )
 
     parser.add_argument('--jenkins_perm_path',

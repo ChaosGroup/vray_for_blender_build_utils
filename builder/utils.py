@@ -75,6 +75,17 @@ def get_default_install_path():
 		return "/usr/ChaosGroup/"
 
 
+def exec_and_log(cmd, tag="", exit=False):
+	tag = tag if tag != '' else 'CMD: '
+	sys.stdout.write('%s: [%s] cwd(%s) \n' % (tag, cmd, os.getcwd()))
+	sys.stdout.flush()
+	if 0 != os.system(cmd):
+		sys.stderr.write('%s: command failed! [%s]\n' % (tag, cmd))
+		sys.stderr.flush()
+		if exit:
+			sys.exit(2)
+
+
 def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submodules=[]):
 	"""
 	This will clone the repo in CWD. If target_dir != None it will copy 
@@ -83,21 +94,27 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 	sys.stdout.write("Repo [%s]\n" % repo_url)
 	sys.stdout.flush()
 
-	repo_name = target_name if target_name else os.path.basename(repo_url)
+	repo_name = target_name if target_name is not None else os.path.basename(repo_url)
 	cwd = os.getcwd()
 	clone_dir = os.path.join(cwd, repo_name)
 
 	git_cmds = []
+	dumpAndExec = lambda cmd: exec_and_log(cmd, 'GIT', True)
 
-	def dumpAndExec(cmd):
-		sys.stdout.write('GIT: [%s]\n' % cmd)
-		sys.stdout.flush()
-		if 0 != os.system(cmd):
-			sys.stderr.write('GIT: command failed! [%s]\n' % cmd)
+	repo_dir_exists = os.path.exists(clone_dir)
+
+	if repo_dir_exists:
+		existing_url = get_git_remote_url(clone_dir)
+		sys.stderr.write('target_name "%s" exists [%s]' % (repo_name, clone_dir))
+		sys.stderr.write('\trequested url:[%s]\n\tpresent url:[%s]\n' % (repo_url, existing_url))
+		sys.stderr.flush()
+		if existing_url != repo_url:
+			sys.stderr.write("Urls are different - removing [%s]\n" % clone_dir)
 			sys.stderr.flush()
-			sys.exit(2)
+			remove_directory(clone_dir)
+			repo_dir_exists = False
 
-	if not os.path.exists(clone_dir):
+	if not repo_dir_exists:
 		get_cmd = ""
 		if target_name and not target_dir:
 			# just rename clone
@@ -368,6 +385,9 @@ def create_desktop_file(filepath = "/usr/share/applications/vrayblender.desktop"
 
 
 def _get_cmd_output_ex(cmd, workDir=None):
+	logDir = workDir if workDir is not None else 'None(%s)' % os.getcwd()
+	sys.stdout.write('Executing [%s] inside [%s]\n' % (' '.join(cmd), logDir))
+	sys.stdout.flush()
 	pwd = os.getcwd()
 	if workDir:
 		os.chdir(workDir)
@@ -395,6 +415,10 @@ def _get_cmd_output_ex(cmd, workDir=None):
 def _get_cmd_output(cmd, workDir=None):
 	return _get_cmd_output_ex(cmd, workDir)['output']
 
+
+def get_git_remote_url(root):
+	get_remote = ['git', 'remote', 'get-url', 'origin']
+	return _get_cmd_output(get_remote, workDir=root)
 
 def get_git_head_hash(root):
 	git_rev = ['git', 'rev-parse', '--short', 'HEAD']
@@ -1023,7 +1047,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	cg_root = os.path.normpath(os.path.join(get_default_install_path(), 'V-Ray', 'VRayZmqServer'))
 	os_type = get_host_os()
 	os_dir = "darwin" if os_type == MAC else os_type
-	appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], os.environ['CGR_APPSDK_VERSION'], os_dir, 'bin')
+	appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], 'bin')
 	appsdkFile = ''
 
 	if host_os == WIN:

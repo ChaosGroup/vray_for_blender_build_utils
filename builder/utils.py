@@ -77,7 +77,7 @@ def get_default_install_path():
 
 def exec_and_log(cmd, tag="", exit=False):
 	tag = tag if tag != '' else 'CMD: '
-	sys.stdout.write('%s: [%s]\n' % (tag, cmd))
+	sys.stdout.write('%s: [%s] cwd(%s) \n' % (tag, cmd, os.getcwd()))
 	sys.stdout.flush()
 	if 0 != os.system(cmd):
 		sys.stderr.write('%s: command failed! [%s]\n' % (tag, cmd))

@@ -417,8 +417,15 @@ def _get_cmd_output(cmd, workDir=None):
 
 
 def get_git_remote_url(root):
-	get_remote = ['git', 'remote', 'get-url', 'origin']
-	return _get_cmd_output(get_remote, workDir=root)
+	get_remote = ['git', 'remote', '-v']
+	lines = _get_cmd_output(get_remote, workDir=root).split('\n')
+	sys.stdout.write('get_git_remote_url(%s):\n%s\n\n' % (root, lines))
+	for l in lines:
+		match = re.match(r'(\w+?) ([^ ]+?) \((\w+?)\)', l)
+		if match is not None:
+			name, url, tp = match.groups()
+			if name == 'origin':
+				return url
 
 def get_git_head_hash(root):
 	git_rev = ['git', 'rev-parse', '--short', 'HEAD']

@@ -105,7 +105,7 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 
 	if repo_dir_exists:
 		existing_url = get_git_remote_url(clone_dir)
-		sys.stderr.write('target_name "%s" exists [%s]' % (repo_name, clone_dir))
+		sys.stderr.write('target_name "%s" exists [%s]\n' % (repo_name, clone_dir))
 		sys.stderr.write('\trequested url:[%s]\n\tpresent url:[%s]\n' % (repo_url, existing_url))
 		sys.stderr.flush()
 		if existing_url != repo_url:
@@ -420,8 +420,9 @@ def get_git_remote_url(root):
 	get_remote = ['git', 'remote', '-v']
 	lines = _get_cmd_output(get_remote, workDir=root).split('\n')
 	sys.stdout.write('get_git_remote_url(%s):\n%s\n\n' % (root, lines))
+	sys.stdout.flush()
 	for l in lines:
-		match = re.match(r'(\w+?) ([^ ]+?) \((\w+?)\)', l)
+		match = re.match(r'(\w+?)\s([^ ]+?)\s\((\w+?)\)', l)
 		if match is not None:
 			name, url, tp = match.groups()
 			if name == 'origin':

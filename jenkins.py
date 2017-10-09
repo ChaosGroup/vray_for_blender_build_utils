@@ -214,15 +214,9 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser(usage="python3 jenkins.py [options]")
 
-
     parser.add_argument('--jenkins_output',
         default = "",
         required=True,
-    )
-
-    parser.add_argument('--jenkins_appsdk_remote_name',
-        default = "",
-        help='Remote name of the appsdk archive, examples: "appsdk-win-qt-nightly-1.09.00-vray33501-20160510.7z" OR "appsdk-linux-qt-nightly-1.09.00-vray33501-20160510.tar.xz" OR "appsdk-mac-qt-nightly-1.09.00-vray33501-20160510.tar.xz"',
     )
 
     parser.add_argument('--jenkins_perm_path',

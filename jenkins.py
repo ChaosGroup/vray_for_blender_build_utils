@@ -123,10 +123,19 @@ def main(args):
         'release/datafiles/locale', # WITH_INTERNATIONAL
     ]
 
+    https_prefix = 'https://github.com/'
+    ssh_prefix = 'git@github.com:'
+    git_prefix = ''
+    if utils.get_host_os() == utils.WIN:
+        # for win - use public url
+        git_prefix = https_prefix
+    else:
+        git_prefix = ssh_prefix
+
     os.chdir(dir_source)
-    utils.get_repo('https://github.com/bdancer/blender-for-vray', branch=blender_branch, submodules=blender_modules, target_name='blender')
+    utils.get_repo(git_prefix + 'bdancer/blender-for-vray', branch=blender_branch, submodules=blender_modules, target_name='blender')
     utils.get_repo('ssh://gitolite@mantis.chaosgroup.com:2047/vray_for_blender_libs', target_name='blender-for-vray-libs')
-    utils.get_repo('https://github.com/bdancer/vrayserverzmq', branch=args.jenkins_zmq_branch, submodules=['extern/vray-zmq-wrapper'])
+    utils.get_repo(git_prefix + 'bdancer/vrayserverzmq', branch=args.jenkins_zmq_branch, submodules=['extern/vray-zmq-wrapper'])
 
     os.chdir(dir_build)
 

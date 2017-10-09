@@ -176,9 +176,6 @@ def main(args):
         if os.path.exists(lock_file):
             utils.remove_path(lock_file)
 
-    sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, appsdk_version))
-    os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
-
     ### ADD NINJA TO PATH
     ninja_path = 'None'
     if sys.platform == 'win32':
@@ -216,6 +213,9 @@ def main(args):
     appsdk_version = '20170307'# re.match(r'.*?vray\d{5}-(\d{8})\.(?:tar\.xz|7z)*?', appsdk_remote_name).groups()[0]
     os.environ['CGR_APPSDK_PATH'] = appsdk_path
     os.environ['CGR_APPSDK_VERSION'] = appsdk_version
+    os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
+    sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, appsdk_version))
+    sys.stdout.flush()
 
     python_exe = sys.executable
 

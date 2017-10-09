@@ -103,6 +103,8 @@ class Builder:
 			sys.stdout.flush()
 			return
 
+		svn_exec = lambda cmd: utils.exec_and_log(cmd, 'SVN')
+
 		# Update Blender libs
 		if self.upblender == 'on' or self.jenkins:
 			lib_dir = None
@@ -129,14 +131,15 @@ class Builder:
 					sys.stdout.flush()
 					if not self.mode_test:
 						os.chdir(self.dir_source)
-						os.system(svn_cmd)
+						svn_exec(svn_cmd)
 				else:
 					sys.stdout.write("Updating \"lib\" data... [svn update]\n")
 					sys.stdout.flush()
 					if not self.mode_test:
 						os.chdir(lib_dir)
-						os.system("svn cleanup")
-						os.system("svn update")
+						svn_exec("svn revert . --recursive --depth=infinity")
+						svn_exec("svn cleanup")
+						svn_exec("svn update")
 
 	def update_sources(self):
 		"""

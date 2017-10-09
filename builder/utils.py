@@ -75,6 +75,17 @@ def get_default_install_path():
 		return "/usr/ChaosGroup/"
 
 
+def exec_and_log(cmd, tag="", exit=False):
+	tag = tag if tag != '' else 'CMD: '
+	sys.stdout.write('%s: [%s]\n' % (tag, cmd))
+	sys.stdout.flush()
+	if 0 != os.system(cmd):
+		sys.stderr.write('%s: command failed! [%s]\n' % (tag, cmd))
+		sys.stderr.flush()
+		if exit:
+			sys.exit(2)
+
+
 def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submodules=[]):
 	"""
 	This will clone the repo in CWD. If target_dir != None it will copy 
@@ -88,14 +99,7 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 	clone_dir = os.path.join(cwd, repo_name)
 
 	git_cmds = []
-
-	def dumpAndExec(cmd):
-		sys.stdout.write('GIT: [%s]\n' % cmd)
-		sys.stdout.flush()
-		if 0 != os.system(cmd):
-			sys.stderr.write('GIT: command failed! [%s]\n' % cmd)
-			sys.stderr.flush()
-			sys.exit(2)
+	dumpAndExec = lambda cmd: exec_and_log(cmd, 'GIT', True)
 
 	repo_dir_exists = os.path.exists(clone_dir)
 

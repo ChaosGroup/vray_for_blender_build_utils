@@ -1010,6 +1010,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 	installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]">%s/postinstall.py</FN>' % InstallerDir)
 
+	total_lost_time = 0
 	for dirpath, dirnames, filenames in os.walk(self.dir_install_path):
 		if dirpath.startswith('.svn') or dirpath.endswith('__pycache__'):
 			continue
@@ -1034,10 +1035,21 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">__pycache__</Files>' % (relInstDir))
 
 			st = os.stat(absFilePath)
+			if st.st_size == 0:
+				before_write = time.time()
+				# TODO: unhack this when installer can handle 0 size files
+				with open(absFilePath, 'a') as tmp:
+					f.write(' ')
+
+				total_lost_time += time.time() - before_write
+
 			if st.st_mode & stat.S_IEXEC:
 				installerFiles.append('\t\t\t<FN Executable="1" Dest="[INSTALL_ROOT]%s">%s</FN>' % (relInstDir, absFilePath))
 			else:
 				installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]%s">%s</FN>' % (relInstDir, absFilePath))
+
+	sys.stdout.write('Total time spent handling non empty files: %f seconds' % (total_lost_time))
+	sys.stdout.flush()
 
 	appsdk_root = ''
 	appsdkFile = ''
@@ -1048,11 +1060,11 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		sys.stderr.flush()
 		sys.exit(1)
 
-	# add the zmq server
 	# bin file generated from postinstall.py
 	if host_os != WIN:
 		removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]" DeleteDirs="1">blender.bin</Files>')
 
+	# add the zmq server
 	cg_root = os.path.normpath(os.path.join(get_default_install_path(), 'V-Ray', 'VRayZmqServer'))
 	os_type = get_host_os()
 	os_dir = "darwin" if os_type == MAC else os_type

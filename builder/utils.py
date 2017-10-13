@@ -1012,8 +1012,8 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]">%s/postinstall.py</FN>' % InstallerDir)
 
 	empty_installer_files = [
-		os.path.join(InstallerDir, '/assets/backup.bin'),
-		os.path.join(InstallerDir, '/assets/install.log'),
+		os.path.join(InstallerDir, 'assets/backup.bin'),
+		os.path.join(InstallerDir, 'assets/install.log'),
 	]
 
 	for dirpath, dirnames, filenames in os.walk(self.dir_install_path):

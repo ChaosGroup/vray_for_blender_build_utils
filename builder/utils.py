@@ -33,6 +33,7 @@ import sys
 import subprocess
 import shutil
 import tempfile
+import time
 
 VERSION  = "2.61"
 REVISION = "svn"

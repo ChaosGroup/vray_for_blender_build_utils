@@ -1011,7 +1011,11 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 	installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]">%s/postinstall.py</FN>' % InstallerDir)
 
-	total_lost_time = 0
+	empty_installer_files = [
+		os.path.join(InstallerDir, '/assets/backup.bin'),
+		os.path.join(InstallerDir, '/assets/install.log'),
+	]
+
 	for dirpath, dirnames, filenames in os.walk(self.dir_install_path):
 		if dirpath.startswith('.svn') or dirpath.endswith('__pycache__'):
 			continue
@@ -1037,21 +1041,12 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 			st = os.stat(absFilePath)
 			if st.st_size == 0:
-				before_write = time.time()
-				sys.stdout.write('File [%s] size == 0, will append one char\n' % absFilePath)
-				sys.stdout.flush()
-				# TODO: unhack this when installer can handle 0 size files
-				with open(absFilePath, 'a') as file_fix:
-					file_fix.write(' ')
-				total_lost_time += time.time() - before_write
+				empty_installer_files.append(absFilePath)
 
 			if st.st_mode & stat.S_IEXEC:
 				installerFiles.append('\t\t\t<FN Executable="1" Dest="[INSTALL_ROOT]%s">%s</FN>' % (relInstDir, absFilePath))
 			else:
 				installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]%s">%s</FN>' % (relInstDir, absFilePath))
-
-	sys.stdout.write('Total time spent handling non empty files: %f seconds\n' % (total_lost_time))
-	sys.stdout.flush()
 
 	appsdk_root = ''
 	appsdkFile = ''
@@ -1100,6 +1095,9 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 			source_path = os.path.join(dirpath, file_name)
 
 			st = os.stat(source_path)
+			if st.st_size == 0:
+				empty_installer_files.append(source_path)
+
 			if st.st_mode & stat.S_IEXEC:
 				installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (dest_path, source_path))
 			else:
@@ -1108,6 +1106,9 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 	zmq_items = get_zmq_build_items(self, appsdkFile)
 	for item in zmq_items:
+		st = os.stat(item)
+		if st.st_size == 0:
+			empty_installer_files.append(item)
 		installerFiles.append('\t\t\t<FN Executable="1" Dest="%s">%s</FN>\n' % (cg_root, item))
 
 	tmplFinal = "%s/installer.xml" % tempfile.gettempdir()
@@ -1183,6 +1184,18 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		tmpl = tmpl.replace("${PLATFORM}", "x86_64")
 
 		f.write(tmpl)
+
+	total_lost_time = 0
+	before_write = time.time()
+	for file in empty_installer_files:
+		sys.stdout.write('File [%s] size == 0, will append one char\n' % absFilePath)
+		sys.stdout.flush()
+		# TODO: unhack this when installer can handle 0 size files
+		with open(absFilePath, 'a') as file_fix:
+			file_fix.write(' ')
+
+	sys.stdout.write('Total time spent handling non empty files: %f seconds\n' % (time.time() - before_write))
+	sys.stdout.flush()
 
 	packer = []
 	# Run installer generator

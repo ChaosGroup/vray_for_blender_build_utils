@@ -1041,8 +1041,8 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 				sys.stdout.write('File [%s] size == 0, will append one char' % absFilePath)
 				sys.stdout.flush()
 				# TODO: unhack this when installer can handle 0 size files
-				with open(absFilePath, 'a') as tmp:
-					f.write(' ')
+				with open(absFilePath, 'a') as file_fix:
+					file_fix.write(' ')
 				total_lost_time += time.time() - before_write
 
 			if st.st_mode & stat.S_IEXEC:

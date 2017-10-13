@@ -1187,11 +1187,11 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 
 	total_lost_time = 0
 	before_write = time.time()
-	for file in empty_installer_files:
-		sys.stdout.write('File [%s] size == 0, will append one char\n' % absFilePath)
+	for fix_file_path in empty_installer_files:
+		sys.stdout.write('File [%s] size == 0, will append one char\n' % fix_file_path)
 		sys.stdout.flush()
 		# TODO: unhack this when installer can handle 0 size files
-		with open(absFilePath, 'a') as file_fix:
+		with open(fix_file_path, 'a') as file_fix:
 			file_fix.write(' ')
 
 	sys.stdout.write('Total time spent handling non empty files: %f seconds\n' % (time.time() - before_write))

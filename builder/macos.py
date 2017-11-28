@@ -275,6 +275,8 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_ALEMBIC=ON")
 		cmake.append("-DWITH_INPUT_NDOF=ON")
 		cmake.append("-DWITH_INTERNATIONAL=ON")
+		cmake.append("-DWITH_PYTHON_INSTALL=ON")
+		cmake.append("-DWITH_PYTHON_INSTALL_NUMPY=ON")
 
 		cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
 		cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))

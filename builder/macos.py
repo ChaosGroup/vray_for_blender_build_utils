@@ -233,7 +233,7 @@ class MacBuilder(Builder):
 		pass
 
 
-	def _init_libs_prefix(self):
+	def init_libs_prefix(self):
 		prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
 
 		if self.jenkins and self.dir_blender_libs == '':
@@ -305,6 +305,7 @@ class MacBuilder(Builder):
 
 
 	def post_init(self):
+		self.init_libs_prefix()
 		if self.libs_need_clean():
 			self.clean_prebuilt_libs()
 		DepsBuild(self)

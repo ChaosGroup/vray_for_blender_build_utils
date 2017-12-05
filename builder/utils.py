@@ -546,12 +546,44 @@ def delete_dir_contents(path):
 		return
 
 	stdout_log("delete_dir_contents(%s)" % path)
+
+	def rmtree_onerror(func, path, exc_info):
+		if os.path.islink(path):
+			os.unlink(path)
+
+	def _remove_readonly(fn, path, excinfo):
+		# Handle read-only files and directories
+		if fn is os.rmdir:
+			os.chmod(path, stat.S_IWRITE)
+			os.rmdir(path)
+		elif fn is os.remove:
+			os.lchmod(path, stat.S_IWRITE)
+			os.remove(path)
+
+
+	def force_remove_file_or_symlink(path):
+		try:
+			os.remove(path)
+		except OSError:
+			os.lchmod(path, stat.S_IWRITE)
+			os.remove(path)
+
+
+	# Code from shutil.rmtree()
+	def is_regular_dir(path):
+		try:
+			mode = os.lstat(path).st_mode
+		except os.error:
+			mode = 0
+		return stat.S_ISDIR(mode)
+
+
 	for name in os.listdir(path):
 		fullpath = os.path.join(path, name)
-		if os.path.isdir(fullpath):
-			shutil.rmtree(fullpath)
+		if is_regular_dir(fullpath):
+			shutil.rmtree(fullpath, onerror=_remove_readonly)
 		else:
-			os.remove(fullpath)
+			force_remove_file_or_symlink(fullpath)
 
 
 def remove_path(path):

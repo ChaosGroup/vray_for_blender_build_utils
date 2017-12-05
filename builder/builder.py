@@ -33,7 +33,7 @@ import datetime
 
 from . import utils
 
-PREBUILD_LIB_NUMBER = 12
+PREBUILD_LIB_NUMBER = 13
 
 OFFICIAL_REPO = "http://git.blender.org/blender.git"
 GITHUB_REPO   = "https://github.com/bdancer/blender-for-vray.git"

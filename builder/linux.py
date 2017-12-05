@@ -295,7 +295,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 					  "-D OSL_BUILD_CPP11=1", "-D ILMBASE_HOME=" + getLibPath('openexr'),
 					  "-D ILMBASE_CUSTOM=ON", "-D ILMBASE_CUSTOM_LIBRARIES='Half;Iex;Imath;IlmThread'",
 					  "-D BOOST_ROOT=" + getLibPath('boost'), "-D Boost_NO_SYSTEM_PATHS=ON",
-					  "-D OPENIMAGEIOHOME=" + getLibPath('oiio'),
+					  "-D  Boost_USE_STATIC_LIBS", "-D OPENIMAGEIOHOME=" + getLibPath('oiio'),
 					  "-D LLVM_VERSION=%s" % LLVM_VERSION, "-D LLVM_DIRECTORY=" + getLibPath('llvm'),
 					  "-D LLVM_STATIC=ON", ".."]),
 			'make -j %s' % jobs,

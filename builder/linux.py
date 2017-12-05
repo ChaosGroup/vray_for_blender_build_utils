@@ -345,30 +345,11 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 
 
 def DepsBuild(self):
-	prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
-
-	if self.jenkins and self.dir_blender_libs == '':
-		sys.stderr.write('Running on jenkins and dir_blender_libs is missing!\n')
-		sys.stderr.flush()
-		sys.exit(-1)
-
-	if self.dir_blender_libs != '':
-		prefix = self.dir_blender_libs
-
-	wd = os.path.expanduser('~/blender-libs-builds')
-	if self.jenkins:
-		wd = os.path.join(prefix, 'builds')
-
-	sys.stdout.write('Blender libs build dir [%s]\n' % wd)
-	sys.stdout.write('Blender libs install dir [%s]\n' % prefix)
-	sys.stdout.flush()
-
-	if not os.path.isdir(wd):
-		os.makedirs(wd)
+	prefix = self._blender_libs_location
+	wd = self._blender_libs_wd
 
 	global LIBS_PREFIX
 	LIBS_PREFIX = prefix
-	self._blender_libs_location = prefix
 
 	data = getDepsCompilationData(self, prefix, wd, self.build_jobs)
 
@@ -429,11 +410,19 @@ def DepsBuild(self):
 				utils.remove_directory(item[1])
 			sys.exit(-1)
 
+	return True
+
 
 class LinuxBuilder(Builder):
+
 	def post_init(self):
-		if utils.get_host_os() == utils.LNX:
-			DepsBuild(self)
+		self.init_libs_prefix()
+		if self.libs_need_clean():
+			self.clean_prebuilt_libs()
+
+		if DepsBuild(self):
+			self.libs_update_cache_number()
+
 
 	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_build, "blender-cmake-build")

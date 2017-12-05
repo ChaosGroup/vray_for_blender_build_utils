@@ -149,6 +149,8 @@ def DepsBuild(self):
 				utils.remove_directory(item[1])
 			sys.exit(-1)
 
+	return True
+
 
 def PatchLibs(self):
 	boost_root = os.path.join(self.jenkins_kdrive_path, 'boost', 'boost_1_61_0')
@@ -225,6 +227,8 @@ def PatchLibs(self):
 	sys.stdout.write('PY LIBS: [%s]' % '\n'.join(glob.glob('lib/darwin/python/lib/python3.5/*')))
 	sys.stdout.flush()
 
+	return True
+
 
 
 class MacBuilder(Builder):
@@ -233,84 +237,14 @@ class MacBuilder(Builder):
 		pass
 
 
-	def init_libs_prefix(self):
-		prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
-
-		if self.jenkins and self.dir_blender_libs == '':
-			sys.stderr.write('Running on jenkins and dir_blender_libs is missing!\n')
-			sys.stderr.flush()
-			sys.exit(-1)
-
-		if self.dir_blender_libs != '':
-			prefix = self.dir_blender_libs
-
-		wd = os.path.expanduser('~/blender-libs-builds')
-		if self.jenkins:
-			wd = os.path.join(prefix, 'builds')
-
-		utils.stdout_log('Blender libs build dir [%s]' % wd)
-		utils.stdout_log('Blender libs install dir [%s]' % prefix)
-
-		if not os.path.isdir(wd):
-			os.makedirs(wd)
-
-		self._blender_libs_wd = wd
-		self._blender_libs_location = prefix
-		return prefix
-
-
-	def clean_prebuilt_libs(self):
-		prefix = self._blender_libs_location
-		wd = self._blender_libs_wd
-		utils.stdout_log("Clearing prebuilt libs location [%s]")
-
-		utils.delete_dir_contents(prefix)
-
-		if not os.path.isdir(wd):
-			os.makedirs(wd)
-
-
-	def get_libs_cache_file_path(self):
-		return os.path.join(self._blender_libs_location, "prebuilt_cache.txt")
-
-
-	def libs_need_clean(self):
-		prefix = self._blender_libs_location
-		cache_file = self.get_libs_cache_file_path()
-		utils.stdout_log("Trying to open cache file [%s]" % cache_file)
-
-		if not os.path.exists(cache_file):
-			utils.stdout_log("Cache file does not exist [%s]" % cache_file)
-			return True
-
-		with open(cache_file, "r") as file:
-			contents = file.read()
-			file_data = int(contents)
-			utils.stdout_log("Cache file contents [%s] = %d <=> %d" % (contents, file_data, self.libs_cache_number))
-			if file_data < self.libs_cache_number:
-				utils.stdout_log("Cache is older than our version")
-				return True
-
-		utils.stdout_log("Cache is updated enough, will not clear")
-		return False
-
-
-	def libs_update_cache_number(self):
-		cache_file = self.get_libs_cache_file_path()
-		utils.stdout_log("Trying to open cache file [%s]" % cache_file)
-
-		with open(cache_file, "w") as file:
-			utils.stdout_log("Updating cache file to %s" % str(self.libs_cache_number))
-			file.write(str(self.libs_cache_number))
-
-
 	def post_init(self):
 		self.init_libs_prefix()
 		if self.libs_need_clean():
 			self.clean_prebuilt_libs()
-		DepsBuild(self)
-		PatchLibs(self)
-		self.libs_update_cache_number()
+		deps = DepsBuild(self)
+		patch = PatchLibs(self)
+		if deps and patch:
+			self.libs_update_cache_number()
 
 
 	def compile(self):

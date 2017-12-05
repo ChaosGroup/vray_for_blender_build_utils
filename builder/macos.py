@@ -98,7 +98,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'tar -xf numpy.tar.gz',
 			getChDirCmd(os.path.join(wd, 'numpy-%s' % NUMPY_VERSION)),
 			# '%s/python/bin/python3 setup.py install --prefix=%s/numpy-%s' % (prefix, prefix, NUMPY_VERSION),
-			'%s/python/bin/python3 setup.py install --prefix=%s/python' % (prefix, prefix, PYTHON_VERSION_BIG),
+			'%s/python/bin/python3 setup.py install --prefix=%s/python' % (prefix, PYTHON_VERSION_BIG),
 		)),
 	)
 

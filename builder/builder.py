@@ -54,7 +54,7 @@ class Builder:
 		# if the saved number is less than what we have we will clear all pre-built libs
 		# and rebuild everything
 		# Bump this when changing prebuild libs config
-		self.libs_cache_number = 10
+		self.libs_cache_number = 11
 
 		self.project        = "vrayblender35"
 		self.version        = utils.VERSION

@@ -50,6 +50,12 @@ class Builder:
 		for p in params:
 			setattr(self, p, params[p])
 
+		# this is saved along when pre-building libs (mac and linux atm)
+		# if the saved number is less than what we have we will clear all pre-built libs
+		# and rebuild everything
+		# Bump this when changing prebuild libs config
+		self.libs_cache_number = 10
+
 		self.project        = "vrayblender35"
 		self.version        = utils.VERSION
 		self.revision       = utils.REVISION

@@ -55,6 +55,18 @@ appsdk_renames = {
 }
 
 
+def stdout_log(*args):
+	sys.stdout.write(*args)
+	sys.stdout.write('\n')
+	sys.stdout.flush()
+
+
+def stderr_log(*args):
+	sys.stderr.write(*args)
+	sys.stderr.write('\n')
+	sys.stderr.flush()
+
+
 def get_host_os():
 	if sys.platform == "win32":
 		return WIN
@@ -522,6 +534,24 @@ def python_get_suffix(path, version):
 		if os.path.exists("%s%s%s" % (path,version,s)):
 			return s
 	return ""
+
+
+def delete_dir_contents(path):
+	if not os.path.exists(path):
+		stdout_log("Failed to clean_dir(%s), path does not exist" % path)
+		return
+
+	if not os.path.isdir(path):
+		stdout_log("Failed to clean_dir(%s), path is not dir" % path)
+		return
+
+	stdout_log("delete_dir_contents(%s)" % path)
+	for name in os.listdir(path):
+		fullpath = os.path.join(path, name)
+		if os.path.isdir(fullpath):
+			shutil.rmtree(fullpath)
+		else:
+			os.remove(fullpath)
 
 
 def remove_path(path):

@@ -106,28 +106,8 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 
 
 def DepsBuild(self):
-	prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
-
-	if self.jenkins and self.dir_blender_libs == '':
-		sys.stderr.write('Running on jenkins and dir_blender_libs is missing!\n')
-		sys.stderr.flush()
-		sys.exit(-1)
-
-	if self.dir_blender_libs != '':
-		prefix = self.dir_blender_libs
-
-	wd = os.path.expanduser('~/blender-libs-builds')
-	if self.jenkins:
-		wd = os.path.join(prefix, 'builds')
-
-	sys.stdout.write('Blender libs build dir [%s]\n' % wd)
-	sys.stdout.write('Blender libs install dir [%s]\n' % prefix)
-	sys.stdout.flush()
-
-	if not os.path.isdir(wd):
-		os.makedirs(wd)
-
-	self._blender_libs_location = prefix
+	prefix = self._blender_libs_location
+	wd = self._blender_libs_wd
 
 	data = getDepsCompilationData(self, prefix, wd, self.build_jobs)
 
@@ -246,14 +226,91 @@ def PatchLibs(self):
 	sys.stdout.flush()
 
 
+
 class MacBuilder(Builder):
 	def config(self):
 		# Not used on OS X anymore
 		pass
 
+
+	def _init_libs_prefix(self):
+		prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
+
+		if self.jenkins and self.dir_blender_libs == '':
+			sys.stderr.write('Running on jenkins and dir_blender_libs is missing!\n')
+			sys.stderr.flush()
+			sys.exit(-1)
+
+		if self.dir_blender_libs != '':
+			prefix = self.dir_blender_libs
+
+		wd = os.path.expanduser('~/blender-libs-builds')
+		if self.jenkins:
+			wd = os.path.join(prefix, 'builds')
+
+		utils.stdout_log('Blender libs build dir [%s]' % wd)
+		utils.stdout_log('Blender libs install dir [%s]' % prefix)
+
+		if not os.path.isdir(wd):
+			os.makedirs(wd)
+
+		self._blender_libs_wd = wd
+		self._blender_libs_location = prefix
+		return prefix
+
+
+	def clean_prebuilt_libs(self):
+		prefix = self._blender_libs_location
+		wd = self._blender_libs_wd
+		utils.stdout_log("Clearing prebuilt libs location [%s]")
+
+		utils.delete_dir_contents(prefix)
+
+		if not os.path.isdir(wd):
+			os.makedirs(wd)
+
+
+	def get_libs_cache_file_path(self):
+		return os.path.join(self._blender_libs_location, "prebuilt_cache.txt")
+
+
+	def libs_need_clean(self):
+		prefix = self._blender_libs_location
+		cache_file = self.get_libs_cache_file_path()
+		utils.stdout_log("Trying to open cache file [%s]" % cache_file)
+
+		if not os.path.exists(cache_file):
+			utils.stdout_log("Cache file does not exist [%s]" % cache_file)
+			return True
+
+		with open(cache_file, "r") as file:
+			contents = file.read()
+			file_data = int(contents)
+			utils.stdout_log("Cache file contents [%s] = %d <=> %d" % (contents, file_data, self.libs_cache_number))
+			if file_data < self.libs_cache_number:
+				utils.stdout_log("Cache is older than our version")
+				return True
+
+		utils.stdout_log("Cache is updated enough, will not clear")
+		return False
+
+
+	def libs_update_cache_number(self):
+		cache_file = self.get_libs_cache_file_path()
+		utils.stdout_log("Trying to open cache file [%s]" % cache_file)
+
+		with open(cache_file, "w") as file:
+			utils.stdout_log("Updating cache file to %s" % str(self.libs_cache_number))
+			file.write(str(self.libs_cache_number))
+
+
 	def post_init(self):
+		if self.libs_need_clean():
+			self.clean_prebuilt_libs()
 		DepsBuild(self)
 		PatchLibs(self)
+		self.libs_update_cache_number()
+
 
 	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_build, "blender-cmake-build")
@@ -295,7 +352,7 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_CXX11=ON")
 		cmake.append(self.dir_blender)
 
-		sys.stdout.write('cmake args:\n%s\n' % '\n\t'.join(cmake))
+		utils.stdout_log('cmake args:\n%s\n' % '\n\t'.join(cmake))
 		sys.stdout.flush()
 
 		os.chdir(cmake_build_dir)

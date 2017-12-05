@@ -33,6 +33,7 @@ import datetime
 
 from . import utils
 
+PREBUILD_LIB_NUMBER = 12
 
 OFFICIAL_REPO = "http://git.blender.org/blender.git"
 GITHUB_REPO   = "https://github.com/bdancer/blender-for-vray.git"
@@ -54,7 +55,7 @@ class Builder:
 		# if the saved number is less than what we have we will clear all pre-built libs
 		# and rebuild everything
 		# Bump this when changing prebuild libs config
-		self.libs_cache_number = 11
+		self.libs_cache_number = PREBUILD_LIB_NUMBER
 
 		self.project        = "vrayblender35"
 		self.version        = utils.VERSION

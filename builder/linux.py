@@ -295,7 +295,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 					  "-DOSL_BUILD_CPP11=1", "-DILMBASE_HOME=" + getLibPath('openexr'),
 					  "-DILMBASE_CUSTOM=ON", "-DILMBASE_CUSTOM_LIBRARIES='Half;Iex;Imath;IlmThread'",
 					  "-DBOOST_ROOT=" + getLibPath('boost'), "-DBoost_NO_SYSTEM_PATHS=ON",
-					  "-DBoost_USE_STATIC_LIBS", "-DOPENIMAGEIOHOME=" + getLibPath('oiio'),
+					  "-DBoost_USE_STATIC_LIBS=ON", "-DOPENIMAGEIOHOME=" + getLibPath('oiio'),
 					  "-DLLVM_VERSION=%s" % LLVM_VERSION, "-DLLVM_DIRECTORY=" + getLibPath('llvm'),
 					  "-DLLVM_STATIC=ON", ".."]),
 			'make -j %s' % jobs,

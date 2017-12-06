@@ -98,7 +98,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'tar -xf numpy.tar.gz',
 			getChDirCmd(os.path.join(wd, 'numpy-%s' % NUMPY_VERSION)),
 			'%s/python/bin/python3 setup.py install --prefix=%s/numpy-%s' % (prefix, prefix, NUMPY_VERSION),
-			'ln -s %s/numpy-%s %s/numpy' % (prefix, NUMPY_VERSION, prefix),
+			'mv %s/numpy-%s %s/numpy' % (prefix, NUMPY_VERSION, prefix) # move numpy because cmake will append numpy to the path given
 			#'%s/python/bin/python3 setup.py install --prefix=%s/python' % (prefix, prefix),
 		)),
 	)
@@ -246,14 +246,9 @@ class MacBuilder(Builder):
 		self.init_libs_prefix()
 		if self.libs_need_clean():
 			self.clean_prebuilt_libs()
+
 		deps = DepsBuild(self)
 		patch = PatchLibs(self)
-
-		prefix = self._blender_libs_location
-		source = os.path.join(prefix, 'numpy')
-		dest = os.path.join(prefix, 'python', 'lib', 'python%s' % PYTHON_VERSION_BIG, 'site-packages', 'numpy')
-		utils.stdout_log('shutil.copytree(%s, %s)' % (source, dest))
-		shutil.copytree(source, dest)
 
 		if deps and patch:
 			self.libs_update_cache_number()
@@ -289,6 +284,10 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_OPENSUBDIV=OFF")
 		cmake.append("-DWITH_FFTW3=ON")
 		cmake.append("-DWITH_CODEC_FFMPEG=OFF")
+
+		prefix = self._blender_libs_location
+		cmake.append("-DPYTHON_NUMPY_PATH=%s" % prefix) # cmake will append numpy to path
+
 		if self.with_cycles:
 			cmake.append("-DWITH_LLVM=ON")
 			cmake.append("-DWITH_CYCLES_OSL=ON")

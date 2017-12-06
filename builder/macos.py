@@ -38,7 +38,7 @@ BOOST_VERSION="1.61.0"
 PYTHON_VERSION="3.5.1"
 PYTHON_VERSION_BIG="3.5"
 NUMPY_VERSION="1.10.1"
-LIBS_GENERATION = 22
+LIBS_GENERATION = 23
 
 def getDepsCompilationData(self, prefix, wd, jobs):
 	def dbg(x):

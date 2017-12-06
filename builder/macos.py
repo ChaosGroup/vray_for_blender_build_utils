@@ -38,7 +38,7 @@ BOOST_VERSION="1.61.0"
 PYTHON_VERSION="3.5.1"
 PYTHON_VERSION_BIG="3.5"
 NUMPY_VERSION="1.10.1"
-LIBS_GENERATION = 21
+LIBS_GENERATION = 22
 
 def getDepsCompilationData(self, prefix, wd, jobs):
 	def dbg(x):
@@ -97,8 +97,9 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getDownloadCmd("https://freefr.dl.sourceforge.net/project/numpy/NumPy/%s/numpy-%s.tar.gz" % (NUMPY_VERSION, NUMPY_VERSION), 'numpy.tar.gz'),
 			'tar -xf numpy.tar.gz',
 			getChDirCmd(os.path.join(wd, 'numpy-%s' % NUMPY_VERSION)),
-			# '%s/python/bin/python3 setup.py install --prefix=%s/numpy-%s' % (prefix, prefix, NUMPY_VERSION),
-			'%s/python/bin/python3 setup.py install --prefix=%s/python' % (prefix, prefix),
+			'%s/python/bin/python3 setup.py install --prefix=%s/numpy-%s' % (prefix, prefix, NUMPY_VERSION),
+			'ln -s %s/numpy-%s %s/numpy' % (prefix, NUMPY_VERSION, prefix),
+			#'%s/python/bin/python3 setup.py install --prefix=%s/python' % (prefix, prefix),
 		)),
 	)
 
@@ -248,8 +249,11 @@ class MacBuilder(Builder):
 		deps = DepsBuild(self)
 		patch = PatchLibs(self)
 
-		py_files = glob.glob(os.path.join(self._blender_libs_location, 'python', '*'))
-		utils.stdout_log('PY LIBS: [\n%s\n]' % '\n\t'.join(py_files))
+		prefix = self._blender_libs_location
+		source = os.path.join(prefix, 'numpy')
+		dest = os.path.join(prefix, 'python', 'lib', 'python%s' % PYTHON_VERSION_BIG, 'site-packages', 'numpy')
+		utils.stdout_log('shutil.copytree(%s, %s)' % (source, dest))
+		shutil.copytree(source, dest)
 
 		if deps and patch:
 			self.libs_update_cache_number()

@@ -50,6 +50,7 @@ GIFLIB_VERSION     = "5.1.4"
 WEBP_VERSION       = "0.6.0"
 
 LIBS_PREFIX = None
+LIBS_GENERATION = 20
 
 
 def getLibPath(name, *subdirs):
@@ -422,6 +423,10 @@ class LinuxBuilder(Builder):
 
 		if DepsBuild(self):
 			self.libs_update_cache_number()
+
+
+	def get_cache_num(self):
+		return LIBS_GENERATION
 
 
 	def compile(self):

@@ -38,7 +38,7 @@ BOOST_VERSION="1.61.0"
 PYTHON_VERSION="3.5.1"
 PYTHON_VERSION_BIG="3.5"
 NUMPY_VERSION="1.10.1"
-
+LIBS_GENERATION = 20
 
 def getDepsCompilationData(self, prefix, wd, jobs):
 	def dbg(x):
@@ -237,12 +237,19 @@ class MacBuilder(Builder):
 		pass
 
 
+	def get_cache_num(self):
+		return LIBS_GENERATION
+
+
 	def post_init(self):
 		self.init_libs_prefix()
 		if self.libs_need_clean():
 			self.clean_prebuilt_libs()
 		deps = DepsBuild(self)
 		patch = PatchLibs(self)
+
+		os.system('find %s' % os.path.join(self._blender_libs_location, 'python'))
+
 		if deps and patch:
 			self.libs_update_cache_number()
 

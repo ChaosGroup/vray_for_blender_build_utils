@@ -51,12 +51,6 @@ class Builder:
 		for p in params:
 			setattr(self, p, params[p])
 
-		# this is saved along when pre-building libs (mac and linux atm)
-		# if the saved number is less than what we have we will clear all pre-built libs
-		# and rebuild everything
-		# Bump this when changing prebuild libs config
-		self.libs_cache_number = PREBUILD_LIB_NUMBER
-
 		self.project        = "vrayblender35"
 		self.version        = utils.VERSION
 		self.revision       = utils.REVISION
@@ -78,6 +72,10 @@ class Builder:
 
 		# Build architecture
 		self.build_arch     = self.host_arch
+
+
+	def get_cache_num(self):
+		raise ValueError()
 
 
 	def info(self):
@@ -301,7 +299,7 @@ class Builder:
 
 	def libs_need_clean(self):
 		""" Check prebuilt_cache.txt to see if it exists and if it does
-		check if the version inside is equal to ours (self.libs_cache_number)
+		check if the version inside is equal to ours (self.get_cache_num())
 		"""
 		prefix = self._blender_libs_location
 		cache_file = self.get_libs_cache_file_path()
@@ -314,8 +312,8 @@ class Builder:
 		with open(cache_file, "r") as file:
 			contents = file.read()
 			file_data = int(contents)
-			utils.stdout_log("Cache file contents [%s] = %d <=> %d" % (contents, file_data, self.libs_cache_number))
-			if file_data < self.libs_cache_number:
+			utils.stdout_log("Cache file contents [%s] = %d <=> %d" % (contents, file_data, self.get_cache_num()))
+			if file_data < self.get_cache_num():
 				utils.stdout_log("Cache is older than our version")
 				return True
 
@@ -324,14 +322,14 @@ class Builder:
 
 
 	def libs_update_cache_number(self):
-		""" Update prebuilt_cache.txt with self.libs_cache_number
+		""" Update prebuilt_cache.txt with self.get_cache_num()
 		"""
 		cache_file = self.get_libs_cache_file_path()
 		utils.stdout_log("Trying to open cache file [%s]" % cache_file)
 
 		with open(cache_file, "w") as file:
-			utils.stdout_log("Updating cache file to %s" % str(self.libs_cache_number))
-			file.write(str(self.libs_cache_number))
+			utils.stdout_log("Updating cache file to %s" % str(self.get_cache_num()))
+			file.write(str(self.get_cache_num()))
 
 
 	def init_libs_prefix(self):

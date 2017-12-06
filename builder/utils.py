@@ -206,6 +206,16 @@ def path_create(path):
 		os.makedirs(path)
 
 
+def dir_contents_recursive(path):
+	res = []
+	for dirpath, dirnames, filenames in os.walk(path):
+		for dir_name in dirnames:
+			res.append(os.path.join(dirpath, dir_name))
+		for file_name in filenames:
+			res.append(os.path.join(dirpath, file_name))
+	return res
+
+
 def path_expand(path):
 	"""
 	  Expands some special chars to real values

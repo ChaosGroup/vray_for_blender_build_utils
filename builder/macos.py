@@ -253,8 +253,14 @@ class MacBuilder(Builder):
 		prefix = self._blender_libs_location
 		source = os.path.join(prefix, 'numpy')
 		dest = os.path.join(prefix, 'python', 'lib', 'python%s' % PYTHON_VERSION_BIG, 'site-packages', 'numpy')
+		if os.path.exists(dest):
+			utils.stdout_log("Removing [%s], dest for copytree" % dest)
+			utils.remove_path(dest)
 		utils.stdout_log('shutil.copytree(%s, %s)' % (source, dest))
 		shutil.copytree(source, dest)
+
+		for f in utils.dir_contents_recursive(dest):
+			utils.stdout_log('DEST FILE: [%s]' % f)
 
 		if deps and patch:
 			self.libs_update_cache_number()

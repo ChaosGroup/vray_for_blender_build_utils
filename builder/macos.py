@@ -223,9 +223,9 @@ def PatchLibs(self):
 		sys.stdout.flush()
 		os.system(step)
 
-	sys.stdout.write('PY LIBS: [%s]' % '\n'.join(glob.glob('lib/darwin/python/lib/*')))
-	sys.stdout.write('PY LIBS: [%s]' % '\n'.join(glob.glob('lib/darwin/python/lib/python3.5/*')))
-	sys.stdout.flush()
+	# sys.stdout.write('PY LIBS: [%s]' % '\n'.join(glob.glob('lib/darwin/python/lib/*')))
+	# sys.stdout.write('PY LIBS: [%s]' % '\n'.join(glob.glob('lib/darwin/python/lib/python3.5/*')))
+	# sys.stdout.flush()
 
 	return True
 
@@ -248,7 +248,8 @@ class MacBuilder(Builder):
 		deps = DepsBuild(self)
 		patch = PatchLibs(self)
 
-		os.system('find %s' % os.path.join(self._blender_libs_location, 'python'))
+		py_files = glob.glob(os.path.join(self._blender_libs_location, 'python', '*'))
+		utils.stdout_log('PY LIBS: [\n%s\n]' % '\n\t'.join(py_files))
 
 		if deps and patch:
 			self.libs_update_cache_number()

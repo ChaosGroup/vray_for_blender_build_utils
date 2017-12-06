@@ -250,6 +250,12 @@ class MacBuilder(Builder):
 		deps = DepsBuild(self)
 		patch = PatchLibs(self)
 
+		prefix = self._blender_libs_location
+		source = os.path.join(prefix, 'numpy')
+		dest = os.path.join(prefix, 'python', 'lib', 'python%s' % PYTHON_VERSION_BIG, 'site-packages', 'numpy')
+		utils.stdout_log('shutil.copytree(%s, %s)' % (source, dest))
+		shutil.copytree(source, dest)
+
 		if deps and patch:
 			self.libs_update_cache_number()
 

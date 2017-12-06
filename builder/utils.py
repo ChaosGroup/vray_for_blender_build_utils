@@ -746,10 +746,6 @@ def mac_rewrite_qt_links(binfile, relpath=''):
 			continue
 
 		q_path = re.split('\s+', line)[1]
-		if q_path[0] == '@':
-			sys.stderr.write("Binfile [%s] has already renamed lib path [%s]\n" % (binfile, q_path))
-			sys.stderr.flush()
-			continue
 		q_name = os.path.basename(q_path)
 
 		items.append(q_path)

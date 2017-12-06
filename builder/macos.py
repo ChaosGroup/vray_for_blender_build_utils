@@ -252,7 +252,7 @@ class MacBuilder(Builder):
 
 		prefix = self._blender_libs_location
 		source = os.path.join(prefix, 'numpy')
-		dest = os.path.join(prefix, 'python', 'lib', 'python%s' % PYTHON_VERSION_BIG, 'site-packages', 'numpy')
+		dest = os.path.join(prefix, 'python')
 		if os.path.exists(dest):
 			utils.stdout_log("Removing [%s], dest for copytree" % dest)
 			utils.remove_path(dest)

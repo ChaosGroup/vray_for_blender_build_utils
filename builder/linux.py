@@ -148,7 +148,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'tar -C . -xf numpy.tar.gz',
 			getChDirCmd(os.path.join(wd, 'numpy-%s' % NUMPY_VERSION)),
 			'%s/python/bin/python3 setup.py install --prefix=%s/numpy-%s' % (prefix, prefix, NUMPY_VERSION),
-			'ln -s %s/numpy-%s %s/python/lib/python%s/site-packages/numpy' % (prefix, NUMPY_VERSION, prefix, PYTHON_VERSION_BIG)
+			'mv %s/numpy-%s %s/numpy' % (prefix, NUMPY_VERSION, prefix) # move numpy because cmake will append numpy to the path given
 		)),
 		('boost', '%s/boost-%s' % (prefix, BOOST_VERSION),(
 			getChDirCmd(wd),
@@ -551,7 +551,7 @@ class LinuxBuilder(Builder):
 				cmake.append("-DPYTHON_LIBRARIES=%s/python-%s/lib" % (libs_prefix, PYTHON_VERSION_BIG))
 				cmake.append("-DPYTHON_INCLUDE_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
 				cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
-				cmake.append("-DPYTHON_NUMPY_PATH=%s/python-%s/lib/python%s/site-packages" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+				cmake.append("-DPYTHON_NUMPY_PATH=%s" % prefix) # cmake will append numpy to path 
 
 				cmake.append("-DTIFF_INCLUDE_DIR=%s/tiff/include" % libs_prefix)
 				cmake.append("-DTIFF_LIBRARY=%s/tiff/lib/libtiff.a" % libs_prefix)
@@ -605,7 +605,7 @@ class LinuxBuilder(Builder):
 				cmake.append("-DPYTHON_LIBRARIES=%s/python-%s/lib" % (libs_prefix, PYTHON_VERSION_BIG))
 				cmake.append("-DPYTHON_INCLUDE_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
 				cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
-				cmake.append("-DPYTHON_NUMPY_PATH=%s/python-%s/lib/python%s/site-packages" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+				cmake.append("-DPYTHON_NUMPY_PATH=%s" %  prefix) # cmake will append numpy to path 
 
 		if self.jenkins:
 			cmake.append("-DJPEG_LIBRARY=%s" % os.path.join(self.dir_source, 'blender-for-vray-libs', 'Linux', 'jpeg-turbo', 'lib', 'Release', 'libjpeg-turbo.a'))

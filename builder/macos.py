@@ -287,7 +287,7 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_CODEC_FFMPEG=OFF")
 
 		prefix = self._blender_libs_location
-		cmake.append("-DPYTHON_NUMPY_PATH=%s" % prefix) # cmake will append numpy to path
+		cmake.append("-DPYTHON_NUMPY_PATH=%s/numpy/lib/python%s/site-packages" % (prefix, PYTHON_VERSION_BIG)) # cmake will append numpy to path
 
 		if self.with_cycles:
 			cmake.append("-DWITH_LLVM=ON")
@@ -318,6 +318,7 @@ class MacBuilder(Builder):
 		if not res == 0:
 			sys.stderr.write("There was an error during the compilation!\n")
 			sys.exit(1)
+
 
 	def package(self):
 		subdir = "macos" + "/" + self.build_arch

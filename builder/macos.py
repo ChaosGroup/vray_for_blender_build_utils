@@ -251,15 +251,6 @@ class MacBuilder(Builder):
 		deps = DepsBuild(self)
 		patch = PatchLibs(self)
 
-		prefix = self._blender_libs_location
-		source = os.path.join(prefix, 'numpy')
-		dest = os.path.join(prefix, 'python')
-		utils.stdout_log('copy_tree(%s, %s)' % (source, dest))
-		copy_tree(source, dest)
-
-		for f in utils.dir_contents_recursive(dest):
-			utils.stdout_log('DEST FILE: [%s]' % f)
-
 		if deps and patch:
 			self.libs_update_cache_number()
 

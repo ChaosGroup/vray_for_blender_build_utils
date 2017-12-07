@@ -1108,7 +1108,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">__pycache__</Files>' % (relInstDir))
 
 			if not os.path.exists(absFilePath):
-				stderr_log("os.walk(%s) [%s] does not exists", % (self.dir_install_path, absFilePath))
+				stderr_log("os.walk(%s) [%s] does not exists" % (self.dir_install_path, absFilePath))
 				continue
 			st = os.stat(absFilePath)
 			if st.st_size == 0:

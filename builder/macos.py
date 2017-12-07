@@ -287,7 +287,8 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_CODEC_FFMPEG=OFF")
 
 		prefix = self._blender_libs_location
-		cmake.append("-DPYTHON_NUMPY_PATH=%s/numpy/lib/python%s/site-packages" % (prefix, PYTHON_VERSION_BIG)) # cmake will append numpy to path
+		numpyInstallPath = os.path.join(prefix, "numpy", "lib", "python%s" % PYTHON_VERSION_BIG, "site-packages")
+		cmake.append("-DPYTHON_NUMPY_PATH=%s" % numpyInstallPath) # cmake will append numpy to path
 
 		if self.with_cycles:
 			cmake.append("-DWITH_LLVM=ON")
@@ -318,6 +319,20 @@ class MacBuilder(Builder):
 		if not res == 0:
 			sys.stderr.write("There was an error during the compilation!\n")
 			sys.exit(1)
+
+		installPrefix = self.dir_install_path
+		blNumpyPath = os.path.join(installPrefix, '/blender.app/Contents/Resources/2.79/python/lib/python3.5/site-packages/numpy')
+		plNumpyPath = os.path.join(installPrefix, '/blenderplayer.app/Contents/Resources/2.79/python/lib/python3.5/site-packages/numpy')
+
+		for numPath in [blNumpyPath, plNumpyPath]:
+			if os.path.islink(numPath):
+				utils.stdout_log('Path [%s] is LINK' % numPath)
+				utils.stdout_log('os.unlink(%s)' % numPath)
+				os.unlink(numPath)
+				utils.stdout_log('shutil.copytree(%s, %s)' % (numpyInstallPath, numPath))
+				shutil.copytree(numpyInstallPath, numPath)
+			else:
+				utils.stdout_log('Path [%s] is dir' % numPath)
 
 
 	def package(self):

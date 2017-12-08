@@ -50,6 +50,7 @@ GIFLIB_VERSION     = "5.1.4"
 WEBP_VERSION       = "0.6.0"
 
 LIBS_PREFIX = None
+LIBS_GENERATION = 21
 
 
 def getLibPath(name, *subdirs):
@@ -147,7 +148,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'tar -C . -xf numpy.tar.gz',
 			getChDirCmd(os.path.join(wd, 'numpy-%s' % NUMPY_VERSION)),
 			'%s/python/bin/python3 setup.py install --prefix=%s/numpy-%s' % (prefix, prefix, NUMPY_VERSION),
-			'ln -s %s/numpy-%s %s/python/lib/python%s/site-packages/numpy' % (prefix, NUMPY_VERSION, prefix, PYTHON_VERSION_BIG)
+			'mv %s/numpy-%s %s/numpy' % (prefix, NUMPY_VERSION, prefix) # move numpy because cmake will append numpy to the path given
 		)),
 		('boost', '%s/boost-%s' % (prefix, BOOST_VERSION),(
 			getChDirCmd(wd),
@@ -290,14 +291,14 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'mkdir -p OpenShadingLanguage-%s/build' % OSL_VERSION,
 			getChDirCmd(os.path.join(wd, 'OpenShadingLanguage-%s' % OSL_VERSION, 'build')),
 			' '.join(["cmake", "-D CMAKE_BUILD_TYPE=Release","-D CMAKE_INSTALL_PREFIX=" + getLibPath('osl'),
-					  "-D BUILD_TESTING=OFF","-D STOP_ON_WARNING=OFF","-D BUILDSTATIC=ON",
-					  "-D OSL_BUILD_PLUGINS=OFF","-D OSL_BUILD_TESTS=OFF","-D USE_SIMD=sse2",
-					  "-D OSL_BUILD_CPP11=1", "-D ILMBASE_HOME=" + getLibPath('openexr'),
-					  "-D ILMBASE_CUSTOM=ON", "-D ILMBASE_CUSTOM_LIBRARIES='Half;Iex;Imath;IlmThread'",
-					  "-D BOOST_ROOT=" + getLibPath('boost'), "-D Boost_NO_SYSTEM_PATHS=ON",
-					  "-D OPENIMAGEIOHOME=" + getLibPath('oiio'),
-					  "-D LLVM_VERSION=%s" % LLVM_VERSION, "-D LLVM_DIRECTORY=" + getLibPath('llvm'),
-					  "-D LLVM_STATIC=ON", ".."]),
+					  "-DBUILD_TESTING=OFF","-DSTOP_ON_WARNING=OFF","-DBUILDSTATIC=ON",
+					  "-DOSL_BUILD_PLUGINS=OFF","-DOSL_BUILD_TESTS=OFF","-DUSE_SIMD=sse2",
+					  "-DOSL_BUILD_CPP11=1", "-DILMBASE_HOME=" + getLibPath('openexr'),
+					  "-DILMBASE_CUSTOM=ON", "-DILMBASE_CUSTOM_LIBRARIES='Half;Iex;Imath;IlmThread'",
+					  "-DBOOST_ROOT=" + getLibPath('boost'), "-DBoost_NO_SYSTEM_PATHS=ON",
+					  "-DBoost_USE_STATIC_LIBS=ON", "-DOPENIMAGEIOHOME=" + getLibPath('oiio'),
+					  "-DLLVM_VERSION=%s" % LLVM_VERSION, "-DLLVM_DIRECTORY=" + getLibPath('llvm'),
+					  "-DLLVM_STATIC=ON", ".."]),
 			'make -j %s' % jobs,
 			'make install',
 			'make clean',
@@ -345,30 +346,11 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 
 
 def DepsBuild(self):
-	prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
-
-	if self.jenkins and self.dir_blender_libs == '':
-		sys.stderr.write('Running on jenkins and dir_blender_libs is missing!\n')
-		sys.stderr.flush()
-		sys.exit(-1)
-
-	if self.dir_blender_libs != '':
-		prefix = self.dir_blender_libs
-
-	wd = os.path.expanduser('~/blender-libs-builds')
-	if self.jenkins:
-		wd = os.path.join(prefix, 'builds')
-
-	sys.stdout.write('Blender libs build dir [%s]\n' % wd)
-	sys.stdout.write('Blender libs install dir [%s]\n' % prefix)
-	sys.stdout.flush()
-
-	if not os.path.isdir(wd):
-		os.makedirs(wd)
+	prefix = self._blender_libs_location
+	wd = self._blender_libs_wd
 
 	global LIBS_PREFIX
 	LIBS_PREFIX = prefix
-	self._blender_libs_location = prefix
 
 	data = getDepsCompilationData(self, prefix, wd, self.build_jobs)
 
@@ -429,11 +411,23 @@ def DepsBuild(self):
 				utils.remove_directory(item[1])
 			sys.exit(-1)
 
+	return True
+
 
 class LinuxBuilder(Builder):
+
 	def post_init(self):
-		if utils.get_host_os() == utils.LNX:
-			DepsBuild(self)
+		self.init_libs_prefix()
+		if self.libs_need_clean():
+			self.clean_prebuilt_libs()
+
+		if DepsBuild(self):
+			self.libs_update_cache_number()
+
+
+	def get_cache_num(self):
+		return LIBS_GENERATION
+
 
 	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_build, "blender-cmake-build")
@@ -559,7 +553,7 @@ class LinuxBuilder(Builder):
 				cmake.append("-DPYTHON_LIBRARIES=%s/python-%s/lib" % (libs_prefix, PYTHON_VERSION_BIG))
 				cmake.append("-DPYTHON_INCLUDE_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
 				cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
-				cmake.append("-DPYTHON_NUMPY_PATH=%s/python-%s/lib/python%s/site-packages" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+				cmake.append("-DPYTHON_NUMPY_PATH=%s" % libs_prefix) # cmake will append numpy to path 
 
 				cmake.append("-DTIFF_INCLUDE_DIR=%s/tiff/include" % libs_prefix)
 				cmake.append("-DTIFF_LIBRARY=%s/tiff/lib/libtiff.a" % libs_prefix)
@@ -613,7 +607,7 @@ class LinuxBuilder(Builder):
 				cmake.append("-DPYTHON_LIBRARIES=%s/python-%s/lib" % (libs_prefix, PYTHON_VERSION_BIG))
 				cmake.append("-DPYTHON_INCLUDE_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
 				cmake.append("-DPYTHON_INCLUDE_CONFIG_DIR=%s/python-%s/include/python%sm" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
-				cmake.append("-DPYTHON_NUMPY_PATH=%s/python-%s/lib/python%s/site-packages" % (libs_prefix, PYTHON_VERSION_BIG, PYTHON_VERSION_BIG))
+				cmake.append("-DPYTHON_NUMPY_PATH=%s" %  libs_prefix) # cmake will append numpy to path 
 
 		if self.jenkins:
 			cmake.append("-DJPEG_LIBRARY=%s" % os.path.join(self.dir_source, 'blender-for-vray-libs', 'Linux', 'jpeg-turbo', 'lib', 'Release', 'libjpeg-turbo.a'))

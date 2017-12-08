@@ -30,6 +30,7 @@ import shutil
 import inspect
 import platform
 import subprocess
+from distutils.dir_util import copy_tree
 
 from .builder import utils
 from .builder import Builder
@@ -38,7 +39,7 @@ BOOST_VERSION="1.61.0"
 PYTHON_VERSION="3.5.1"
 PYTHON_VERSION_BIG="3.5"
 NUMPY_VERSION="1.10.1"
-
+LIBS_GENERATION = 23
 
 def getDepsCompilationData(self, prefix, wd, jobs):
 	def dbg(x):
@@ -98,7 +99,8 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'tar -xf numpy.tar.gz',
 			getChDirCmd(os.path.join(wd, 'numpy-%s' % NUMPY_VERSION)),
 			'%s/python/bin/python3 setup.py install --prefix=%s/numpy-%s' % (prefix, prefix, NUMPY_VERSION),
-			'ln -s %s/numpy-%s %s/python/lib/python%s/site-packages/numpy' % (prefix, NUMPY_VERSION, prefix, PYTHON_VERSION_BIG)
+			'mv %s/numpy-%s %s/numpy' % (prefix, NUMPY_VERSION, prefix) # move numpy because cmake will append numpy to the path given
+			#'%s/python/bin/python3 setup.py install --prefix=%s/python' % (prefix, prefix),
 		)),
 	)
 
@@ -106,28 +108,8 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 
 
 def DepsBuild(self):
-	prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
-
-	if self.jenkins and self.dir_blender_libs == '':
-		sys.stderr.write('Running on jenkins and dir_blender_libs is missing!\n')
-		sys.stderr.flush()
-		sys.exit(-1)
-
-	if self.dir_blender_libs != '':
-		prefix = self.dir_blender_libs
-
-	wd = os.path.expanduser('~/blender-libs-builds')
-	if self.jenkins:
-		wd = os.path.join(prefix, 'builds')
-
-	sys.stdout.write('Blender libs build dir [%s]\n' % wd)
-	sys.stdout.write('Blender libs install dir [%s]\n' % prefix)
-	sys.stdout.flush()
-
-	if not os.path.isdir(wd):
-		os.makedirs(wd)
-
-	self._blender_libs_location = prefix
+	prefix = self._blender_libs_location
+	wd = self._blender_libs_wd
 
 	data = getDepsCompilationData(self, prefix, wd, self.build_jobs)
 
@@ -168,6 +150,8 @@ def DepsBuild(self):
 			if os.path.exists(item[1]):
 				utils.remove_directory(item[1])
 			sys.exit(-1)
+
+	return True
 
 
 def PatchLibs(self):
@@ -241,9 +225,12 @@ def PatchLibs(self):
 		sys.stdout.flush()
 		os.system(step)
 
-	sys.stdout.write('PY LIBS: [%s]' % '\n'.join(glob.glob('lib/darwin/python/lib/*')))
-	sys.stdout.write('PY LIBS: [%s]' % '\n'.join(glob.glob('lib/darwin/python/lib/python3.5/*')))
-	sys.stdout.flush()
+	# sys.stdout.write('PY LIBS: [%s]' % '\n'.join(glob.glob('lib/darwin/python/lib/*')))
+	# sys.stdout.write('PY LIBS: [%s]' % '\n'.join(glob.glob('lib/darwin/python/lib/python3.5/*')))
+	# sys.stdout.flush()
+
+	return True
+
 
 
 class MacBuilder(Builder):
@@ -251,9 +238,22 @@ class MacBuilder(Builder):
 		# Not used on OS X anymore
 		pass
 
+
+	def get_cache_num(self):
+		return LIBS_GENERATION
+
+
 	def post_init(self):
-		DepsBuild(self)
-		PatchLibs(self)
+		self.init_libs_prefix()
+		if self.libs_need_clean():
+			self.clean_prebuilt_libs()
+
+		deps = DepsBuild(self)
+		patch = PatchLibs(self)
+
+		if deps and patch:
+			self.libs_update_cache_number()
+
 
 	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_build, "blender-cmake-build")
@@ -287,6 +287,11 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_OPENSUBDIV=OFF")
 		cmake.append("-DWITH_FFTW3=ON")
 		cmake.append("-DWITH_CODEC_FFMPEG=OFF")
+
+		prefix = self._blender_libs_location
+		numpyInstallPath = os.path.join(prefix, "numpy", "lib", "python%s" % PYTHON_VERSION_BIG, "site-packages")
+		cmake.append("-DPYTHON_NUMPY_PATH=%s" % numpyInstallPath) # cmake will append numpy to path
+
 		if self.with_cycles:
 			cmake.append("-DWITH_LLVM=ON")
 			cmake.append("-DWITH_CYCLES_OSL=ON")
@@ -297,7 +302,7 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_CXX11=ON")
 		cmake.append(self.dir_blender)
 
-		sys.stdout.write('cmake args:\n%s\n' % '\n\t'.join(cmake))
+		utils.stdout_log('cmake args:\n%s\n' % '\n\t'.join(cmake))
 		sys.stdout.flush()
 
 		os.chdir(cmake_build_dir)
@@ -316,6 +321,18 @@ class MacBuilder(Builder):
 		if not res == 0:
 			sys.stderr.write("There was an error during the compilation!\n")
 			sys.exit(1)
+
+		installPrefix = self.dir_install_path
+		blNumpyPath = os.path.join(installPrefix, 'blender.app/Contents/Resources/2.79/python/lib/python3.5/site-packages/numpy')
+		plNumpyPath = os.path.join(installPrefix, 'blenderplayer.app/Contents/Resources/2.79/python/lib/python3.5/site-packages/numpy')
+
+		for numPath in [blNumpyPath, plNumpyPath]:
+			utils.remove_path(numPath)
+			sourcePath = os.path.join(numpyInstallPath, 'numpy')
+			utils.stdout_log('shutil.copytree(%s, %s)' % (sourcePath, numPath))
+			shutil.copytree(sourcePath, numPath)
+
+
 
 	def package(self):
 		subdir = "macos" + "/" + self.build_arch

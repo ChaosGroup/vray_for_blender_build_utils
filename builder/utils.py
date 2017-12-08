@@ -55,6 +55,18 @@ appsdk_renames = {
 }
 
 
+def stdout_log(*args):
+	sys.stdout.write(*args)
+	sys.stdout.write('\n')
+	sys.stdout.flush()
+
+
+def stderr_log(*args):
+	sys.stderr.write(*args)
+	sys.stderr.write('\n')
+	sys.stderr.flush()
+
+
 def get_host_os():
 	if sys.platform == "win32":
 		return WIN
@@ -192,6 +204,16 @@ def path_create(path):
 	if not os.path.exists(path):
 		sys.stdout.write("Directory (%s) doesn\'t exist! Trying to create...\n" % (path))
 		os.makedirs(path)
+
+
+def dir_contents_recursive(path):
+	res = []
+	for dirpath, dirnames, filenames in os.walk(path):
+		for dir_name in dirnames:
+			res.append(os.path.join(dirpath, dir_name))
+		for file_name in filenames:
+			res.append(os.path.join(dirpath, file_name))
+	return res
 
 
 def path_expand(path):
@@ -524,11 +546,66 @@ def python_get_suffix(path, version):
 	return ""
 
 
+def delete_dir_contents(path):
+	if not os.path.exists(path):
+		stdout_log("Failed to clean_dir(%s), path does not exist" % path)
+		return
+
+	if not os.path.isdir(path):
+		stdout_log("Failed to clean_dir(%s), path is not dir" % path)
+		return
+
+	stdout_log("delete_dir_contents(%s)" % path)
+
+	def rmtree_onerror(func, path, exc_info):
+		if os.path.islink(path):
+			os.unlink(path)
+
+	def _remove_readonly(fn, path, excinfo):
+		# Handle read-only files and directories
+		if fn is os.rmdir:
+			os.chmod(path, stat.S_IWRITE)
+			os.rmdir(path)
+		elif fn is os.remove:
+			os.lchmod(path, stat.S_IWRITE)
+			os.remove(path)
+
+
+	def force_remove_file_or_symlink(path):
+		try:
+			os.remove(path)
+		except OSError:
+			os.lchmod(path, stat.S_IWRITE)
+			os.remove(path)
+
+
+	# Code from shutil.rmtree()
+	def is_regular_dir(path):
+		try:
+			mode = os.lstat(path).st_mode
+		except os.error:
+			mode = 0
+		return stat.S_ISDIR(mode)
+
+
+	for name in os.listdir(path):
+		fullpath = os.path.join(path, name)
+		if is_regular_dir(fullpath):
+			shutil.rmtree(fullpath, onerror=_remove_readonly)
+		else:
+			force_remove_file_or_symlink(fullpath)
+
+
 def remove_path(path):
+	if not os.path.exists(path):
+		stdout_log('remove_path(%s) but path does not exist' % path)
 	if os.path.isdir(path):
 		remove_directory(path)
 	elif os.path.isfile(path):
 		remove_file(path)
+	elif os.path.islink(path):
+		stdout_log("utils.remove_path(%s) -> unlink" % path)
+		os.unlink(path)
 	else:
 		sys.stderr.write('Called utils.remove_path(%s), but it is not dir nor file!\n' % path)
 		sys.stderr.flush()
@@ -684,15 +761,13 @@ def mac_rewrite_qt_links(binfile, relpath=''):
 			continue
 
 		q_path = re.split('\s+', line)[1]
-		if q_path[0] == '@':
-			sys.stderr.write("Binfile [%s] has already renamed lib path [%s]\n" % (binfile, q_path))
-			sys.stderr.flush()
-			continue
 		q_name = os.path.basename(q_path)
+		qtLibFile = 'lib%s.dylib' % q_name
 
-		items.append(q_path)
-		rename_path = os.path.join('@executable_path', relpath, q_name)
-		sys.stdout.write("Renaming qt lib : \"%s\" -> \"%s\"\n" % (q_path, rename_path))
+		fullPath = os.path.join(os.path.dirname(binfile), relpath, qtLibFile)
+		rename_path = os.path.join('@executable_path', relpath, qtLibFile)
+		# items.append(fullPath)
+		sys.stdout.write("Renaming qt lib : \"%s\" -> \"%s\" [%s]\n" % (q_path, rename_path, fullPath))
 		sys.stdout.flush()
 		mac_rewrite_link_file(binfile, q_path, rename_path)
 
@@ -1039,6 +1114,9 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">*.pyc</Files>' % (relInstDir))
 			removeJunk.add('\t\t\t<Files Dest="[INSTALL_ROOT]%s" DeleteDirs="1">__pycache__</Files>' % (relInstDir))
 
+			if not os.path.exists(absFilePath):
+				stderr_log("os.walk(%s) [%s] does not exists" % (self.dir_install_path, absFilePath))
+				continue
 			st = os.stat(absFilePath)
 			if st.st_size == 0:
 				empty_installer_files.append(absFilePath)

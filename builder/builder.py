@@ -33,6 +33,7 @@ import datetime
 
 from . import utils
 
+PREBUILD_LIB_NUMBER = 13
 
 OFFICIAL_REPO = "http://git.blender.org/blender.git"
 GITHUB_REPO   = "https://github.com/bdancer/blender-for-vray.git"
@@ -71,6 +72,10 @@ class Builder:
 
 		# Build architecture
 		self.build_arch     = self.host_arch
+
+
+	def get_cache_num(self):
+		raise ValueError()
 
 
 	def info(self):
@@ -271,6 +276,90 @@ class Builder:
 					iconFilepathDst = os.path.join(icons_path_dst, fileName)
 
 					shutil.copyfile(iconFilepathSrc, iconFilepathDst)
+
+
+	def clean_prebuilt_libs(self):
+		""" Delete all files and dirs inside self._blender_libs_location dir 
+		"""
+		prefix = self._blender_libs_location
+		wd = self._blender_libs_wd
+		utils.stdout_log("Clearing prebuilt libs location [%s]")
+
+		utils.delete_dir_contents(prefix)
+
+		if not os.path.isdir(wd):
+			os.makedirs(wd)
+
+
+	def get_libs_cache_file_path(self):
+		""" Get the full path to the prebuilt_cache.txt file
+		"""
+		return os.path.join(self._blender_libs_location, "prebuilt_cache.txt")
+
+
+	def libs_need_clean(self):
+		""" Check prebuilt_cache.txt to see if it exists and if it does
+		check if the version inside is equal to ours (self.get_cache_num())
+		"""
+		prefix = self._blender_libs_location
+		cache_file = self.get_libs_cache_file_path()
+		utils.stdout_log("Trying to open cache file [%s]" % cache_file)
+
+		if not os.path.exists(cache_file):
+			utils.stdout_log("Cache file does not exist [%s]" % cache_file)
+			return True
+
+		with open(cache_file, "r") as file:
+			contents = file.read()
+			file_data = int(contents)
+			utils.stdout_log("Cache file contents [%s] = %d <=> %d" % (contents, file_data, self.get_cache_num()))
+			if file_data < self.get_cache_num():
+				utils.stdout_log("Cache is older than our version")
+				return True
+
+		utils.stdout_log("Cache is updated enough, will not clear")
+		return False
+
+
+	def libs_update_cache_number(self):
+		""" Update prebuilt_cache.txt with self.get_cache_num()
+		"""
+		cache_file = self.get_libs_cache_file_path()
+		utils.stdout_log("Trying to open cache file [%s]" % cache_file)
+
+		with open(cache_file, "w") as file:
+			utils.stdout_log("Updating cache file to %s" % str(self.get_cache_num()))
+			file.write(str(self.get_cache_num()))
+
+
+	def init_libs_prefix(self):
+		""" Determine what path will be used for prebuilt libs
+		and what path will be used as temp dir for building the libs
+		"""
+		prefix = '/opt/lib' if utils.get_linux_distribution()['short_name'] == 'centos' else '/opt'
+
+		if self.jenkins and self.dir_blender_libs == '':
+			sys.stderr.write('Running on jenkins and dir_blender_libs is missing!\n')
+			sys.stderr.flush()
+			sys.exit(-1)
+
+		if self.dir_blender_libs != '':
+			prefix = self.dir_blender_libs
+
+		wd = os.path.expanduser('~/blender-libs-builds')
+		if self.jenkins:
+			wd = os.path.join(prefix, 'builds')
+
+		utils.stdout_log('Blender libs build dir [%s]' % wd)
+		utils.stdout_log('Blender libs install dir [%s]' % prefix)
+
+		if not os.path.isdir(wd):
+			os.makedirs(wd)
+
+		self._blender_libs_wd = wd
+		self._blender_libs_location = prefix
+		return prefix
+
 
 	def post_init(self):
 		"""

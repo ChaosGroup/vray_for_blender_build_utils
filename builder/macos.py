@@ -321,11 +321,12 @@ class MacBuilder(Builder):
 			sys.exit(1)
 
 		installPrefix = self.dir_install_path
-		blNumpyPath = os.path.join(installPrefix, 'blender.app/Contents/Resources/2.79/python/lib/python3.5/site-packages/')
-		plNumpyPath = os.path.join(installPrefix, 'blenderplayer.app/Contents/Resources/2.79/python/lib/python3.5/site-packages/')
+		blNumpyPath = os.path.join(installPrefix, 'blender.app/Contents/Resources/2.79/python/lib/python3.5/site-packages/numpy')
+		plNumpyPath = os.path.join(installPrefix, 'blenderplayer.app/Contents/Resources/2.79/python/lib/python3.5/site-packages/numpy')
 
 		for numPath in [blNumpyPath, plNumpyPath]:
 			utils.remove_path(numPath)
+			sourcePath = os.path.join(numpyInstallPath, 'numpy')
 			utils.stdout_log('shutil.copytree(%s, %s)' % (numpyInstallPath, numPath))
 			shutil.copytree(numpyInstallPath, numPath)
 

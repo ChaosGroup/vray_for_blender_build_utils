@@ -321,8 +321,8 @@ class MacBuilder(Builder):
 			sys.exit(1)
 
 		installPrefix = self.dir_install_path
-		blNumpyPath = os.path.join(installPrefix, 'blender.app/Contents/Resources/2.79/python/lib/python3.5/site-packages/numpy')
-		plNumpyPath = os.path.join(installPrefix, 'blenderplayer.app/Contents/Resources/2.79/python/lib/python3.5/site-packages/numpy')
+		blNumpyPath = os.path.join(installPrefix, 'blender.app/Contents/Resources/2.79/python/lib/python3.5/site-packages/')
+		plNumpyPath = os.path.join(installPrefix, 'blenderplayer.app/Contents/Resources/2.79/python/lib/python3.5/site-packages/')
 
 		for numPath in [blNumpyPath, plNumpyPath]:
 			utils.remove_path(numPath)

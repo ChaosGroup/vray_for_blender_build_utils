@@ -325,8 +325,6 @@ class MacBuilder(Builder):
 		plNumpyPath = os.path.join(installPrefix, 'blenderplayer.app/Contents/Resources/2.79/python/lib/python3.5/site-packages/numpy')
 
 		for numPath in [blNumpyPath, plNumpyPath]:
-			utils.stdout_log('Path [%s] is LINK' % numPath)
-			utils.stdout_log('os.unlink(%s)' % numPath)
 			utils.remove_path(numPath)
 			utils.stdout_log('shutil.copytree(%s, %s)' % (numpyInstallPath, numPath))
 			shutil.copytree(numpyInstallPath, numPath)

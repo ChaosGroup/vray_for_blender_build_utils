@@ -597,10 +597,15 @@ def delete_dir_contents(path):
 
 
 def remove_path(path):
+	if not os.path.exists(path):
+		stdout_log('remove_path(%s) but path does not exist' % path)
 	if os.path.isdir(path):
 		remove_directory(path)
 	elif os.path.isfile(path):
 		remove_file(path)
+	elif os.path.islink(path):
+		stdout_log("utils.remove_path(%s) -> unlink" % path)
+		os.unlink(path)
 	else:
 		sys.stderr.write('Called utils.remove_path(%s), but it is not dir nor file!\n' % path)
 		sys.stderr.flush()

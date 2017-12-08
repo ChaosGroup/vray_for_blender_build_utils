@@ -327,8 +327,8 @@ class MacBuilder(Builder):
 		for numPath in [blNumpyPath, plNumpyPath]:
 			utils.remove_path(numPath)
 			sourcePath = os.path.join(numpyInstallPath, 'numpy')
-			utils.stdout_log('shutil.copytree(%s, %s)' % (numpyInstallPath, numPath))
-			shutil.copytree(numpyInstallPath, numPath)
+			utils.stdout_log('shutil.copytree(%s, %s)' % (sourcePath, numPath))
+			shutil.copytree(sourcePath, numPath)
 
 
 

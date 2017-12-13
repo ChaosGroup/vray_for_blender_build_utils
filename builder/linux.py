@@ -50,7 +50,7 @@ GIFLIB_VERSION     = "5.1.4"
 WEBP_VERSION       = "0.6.0"
 
 LIBS_PREFIX = None
-LIBS_GENERATION = 21
+LIBS_GENERATION = 22
 
 
 def getLibPath(name, *subdirs):
@@ -148,7 +148,8 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'tar -C . -xf numpy.tar.gz',
 			getChDirCmd(os.path.join(wd, 'numpy-%s' % NUMPY_VERSION)),
 			'%s/python/bin/python3 setup.py install --prefix=%s/numpy-%s' % (prefix, prefix, NUMPY_VERSION),
-			'mv %s/numpy-%s %s/numpy' % (prefix, NUMPY_VERSION, prefix) # move numpy because cmake will append numpy to the path given
+			'ln -s %s/numpy-%s %s/numpy' % (prefix, NUMPY_VERSION, prefix)
+			#'mv %s/numpy-%s %s/numpy' % (prefix, NUMPY_VERSION, prefix) # move numpy because cmake will append numpy to the path given
 		)),
 		('boost', '%s/boost-%s' % (prefix, BOOST_VERSION),(
 			getChDirCmd(wd),

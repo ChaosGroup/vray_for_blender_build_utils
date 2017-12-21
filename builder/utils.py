@@ -796,16 +796,15 @@ def prepare_appsdk(appsdk_path):
 
 def get_zmq_build_items(self, appsdkFile):
 	host_os = get_host_os()
-	zmq_hash = self.teamcity_zmq_server_hash
 
 	extension = '.exe' if host_os == WIN else ''
-	sub_dir_template = "install/vrayserverzmq/%s/V-Ray/VRayZmqServer/VRayZmqServer%s" % (zmq_hash, extension)
+	sub_dir_template = "install/vrayserverzmq/V-Ray/VRayZmqServer/VRayZmqServer%s" % extension
 
 	items = []
 
 	zmq_build_path = ''
 	if self.jenkins:
-		zmq_build_path = os.path.join(self.dir_install, '..', 'vrayserverzmq', zmq_hash, 'V-Ray', 'VRayZmqServer', 'VRayZmqServer%s' % extension)
+		zmq_build_path = os.path.join(self.dir_install, '..', 'vrayserverzmq', 'V-Ray', 'VRayZmqServer', 'VRayZmqServer%s' % extension)
 
 	if host_os == WIN:
 		if not os.path.exists(zmq_build_path):
@@ -1129,11 +1128,6 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	appsdk_root = ''
 	appsdkFile = ''
 	host_os = get_host_os()
-
-	if self.teamcity_zmq_server_hash == '':
-		sys.stderr.write('\"teamcity_zmq_server_hash\"" is missing!')
-		sys.stderr.flush()
-		sys.exit(1)
 
 	# bin file generated from postinstall.py
 	if host_os != WIN:

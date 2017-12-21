@@ -445,13 +445,18 @@ class Builder:
 		sys.stderr.write("Base class method called: package() This souldn't happen.\n")
 
 	def build_zmq(self):
+		saveDir = os.getcwd()
+		buildPath = os.path.join(self.dir_build, 'vrayserverzmq-cmake-build')
+		if not os.path.exists(buildPath):
+			os.makedirs(buildPath)
+		os.chdir(buildPath)
+
 		command = [sys.executable]
-		command.append(os.path.join(self.dir_source, 'vrayserverzmq', 'build', 'teamcity.py'))
-		command.append('--teamcity_branch_hash=%s' % self.teamcity_zmq_server_hash)
-		command.append('--teamcity_install_path=%s' % os.path.normpath(os.path.join(self.dir_install, '..', 'vrayserverzmq')))
-		command.append('--teamcity_release_path=%s' % os.path.normpath(os.path.join(self.dir_release, '..', 'vrayserverzmq')))
-		command.append('--teamcity_build_path=%s' % os.path.join(self.dir_build, 'vrayserverzmq-cmake-build'))
-		command.append('--jenkins')
+		command.append(os.path.join(self.dir_source, 'vrayserverzmq', 'build', 'builder.py'))
+		command.append('--source_path=%s' % os.path.join(self.dir_source, 'vrayserverzmq'))
+		command.append('--libs_path=%s' % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
+		command.append('--kdrive2_path=%s' % self.jenkins_kdrive_path)
+		command.append('--install_path=%s' % os.path.normpath(os.path.join(self.dir_install, '..', 'vrayserverzmq')))
 
 		sys.stdout.write('Calling builder:\n%s\n' % '\n\t'.join(command))
 		sys.stdout.flush()
@@ -461,6 +466,8 @@ class Builder:
 			sys.stderr.write('Failed compilation of vrayserverzmq\n')
 			sys.stderr.flush()
 			sys.exit(-1)
+
+		os.chdir(saveDir)
 
 	def build(self):
 		self.init_paths()

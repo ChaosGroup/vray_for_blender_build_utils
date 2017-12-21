@@ -142,7 +142,7 @@ def main(args):
     ### ADD APPSDK PATH
     bl_libs_os_dir_name = {
         # TODO: fix this for vc14
-        utils.WIN: 'Windows/vc12',
+        utils.WIN: 'Windows',
         utils.LNX: 'Linux',
         utils.MAC: 'Darwin',
     }[utils.get_host_os()]

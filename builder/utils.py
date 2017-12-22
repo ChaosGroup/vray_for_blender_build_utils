@@ -757,7 +757,7 @@ def mac_rewrite_qt_links(binfile, relpath=''):
 	links = res['output'].split('\n')
 
 	for line in links:
-		if re.match(r'.*?\/Qt(Core|Gui)\s.*?', line) == None:
+		if re.match(r'.*?\/Qt5?(Core|Gui)\s.*?', line) == None:
 			continue
 
 		q_path = re.split('\s+', line)[1]

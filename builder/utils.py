@@ -754,7 +754,7 @@ def mac_rewrite_qt_links(binfile, relpath=''):
 		sys.stderr.flush()
 		sys.exit(1)
 
-	links = res['output'].split('\n')
+	links = ('\t' + res['output']).split('\n')
 
 	for line in links:
 		sys.stdout.write('line: [%s]\n' % line)

@@ -766,7 +766,7 @@ def mac_rewrite_qt_links(binfile, relpath=''):
 
 		q_path = re.split('\s+', line)[1]
 		q_name = os.path.basename(q_path)
-		qtLibFile = 'lib%s.dylib' % regExMatch.groups()[0]
+		qtLibFile = 'libQt5%s.5.dylib' % regExMatch.groups()[0]
 
 		fullPath = os.path.join(os.path.dirname(binfile), relpath, qtLibFile)
 		rename_path = os.path.join('@executable_path', relpath, qtLibFile)

@@ -757,6 +757,9 @@ def mac_rewrite_qt_links(binfile, relpath=''):
 	links = res['output'].split('\n')
 
 	for line in links:
+		sys.stdout.write('line: [%s]\n' % line)
+		sys.stdout.flush()
+
 		regExMatch = re.match(r'.*?(?:lib)?Qt5?(Core|Gui|Widgets)(?:.5.dylib)?\s?.*?', line)
 		if regExMatch == None:
 			continue

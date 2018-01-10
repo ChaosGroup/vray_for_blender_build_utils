@@ -761,6 +761,8 @@ def mac_rewrite_qt_links(binfile, relpath=''):
 		if regExMatch == None:
 			continue
 
+		q_path = re.split('\s+', line)[1]
+		q_name = os.path.basename(q_path)
 		qtLibFile = 'lib%s.dylib' % regExMatch.groups()[0]
 
 		fullPath = os.path.join(os.path.dirname(binfile), relpath, qtLibFile)

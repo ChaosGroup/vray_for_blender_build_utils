@@ -738,7 +738,7 @@ def mac_rewrite_link_file(executable, source, dest):
 		sys.exit(1)
 
 
-def mac_rewrite_qt_links(binfile, relpath=''):
+def mac_rewrite_qt_links(binfile, relpath='appsdk'):
 	"""For MAC OS only!
 	Rewrites all links for QtGui and QtCore to @executable_path/relpath
 	Returns paths to rewrote links

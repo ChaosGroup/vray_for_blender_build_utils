@@ -773,7 +773,7 @@ def mac_rewrite_qt_links(binfile, relpath='appsdk'):
 		# items.append(fullPath)
 		sys.stdout.write("Renaming qt lib : [%s]:\"%s\" -> \"%s\" [%s]\n" % (line, q_path, rename_path, fullPath))
 		sys.stdout.flush()
-		mac_rewrite_link_file(binfile, q_path, rename_path)
+		#mac_rewrite_link_file(binfile, q_path, rename_path)
 
 	return items
 
@@ -837,7 +837,7 @@ def get_zmq_build_items(self, appsdkFile):
 
 		# rewrite Qt links
 		items = items + mac_rewrite_qt_links(zmq_temp, 'appsdk')
-		mac_rewrite_link_file(zmq_temp, appsdkFile, '@executable_path/appsdk/%s' % appsdkFile)
+		#mac_rewrite_link_file(zmq_temp, appsdkFile, '@executable_path/appsdk/%s' % appsdkFile)
 		items.append(zmq_temp)
 
 	for item in items:

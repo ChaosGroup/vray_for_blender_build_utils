@@ -33,14 +33,14 @@ import inspect
 from .builder import utils
 from .builder import Builder
 
-PYTHON_VERSION     = "3.5.1"
-PYTHON_VERSION_BIG = "3.5"
-NUMPY_VERSION      = "1.10.1"
+PYTHON_VERSION     = "3.6.2"
+PYTHON_VERSION_BIG = "3.6"
+NUMPY_VERSION      = "1.13.1"
 BOOST_VERSION      = "1.60.0"
 OCIO_VERSION       = "1.0.9"
 OPENEXR_VERSION    = "2.2.0"
 ILMBASE_VERSION    = "2.2.0"
-OIIO_VERSION       = "1.6.9"
+OIIO_VERSION       = "1.7.15"
 LLVM_VERSION       = "3.4"
 TIFF_VERSION       = "3.9.7"
 FFTW_VERSION       = "3.3.4"
@@ -50,7 +50,7 @@ GIFLIB_VERSION     = "5.1.4"
 WEBP_VERSION       = "0.6.0"
 
 LIBS_PREFIX = None
-LIBS_GENERATION = 23
+LIBS_GENERATION = 24
 
 
 def getLibPath(name, *subdirs):

@@ -36,10 +36,11 @@ from .builder import utils
 from .builder import Builder
 
 BOOST_VERSION="1.61.0"
-PYTHON_VERSION="3.5.1"
-PYTHON_VERSION_BIG="3.5"
-NUMPY_VERSION="1.10.1"
-LIBS_GENERATION = 23
+PYTHON_VERSION="3.6.2"
+PYTHON_VERSION_BIG="3.6"
+NUMPY_VERSION="1.13.1"
+
+LIBS_GENERATION = 24
 
 def getDepsCompilationData(self, prefix, wd, jobs):
 	def dbg(x):

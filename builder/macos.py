@@ -99,7 +99,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getDownloadCmd("https://github.com/numpy/numpy/releases/download/v%s/numpy-%s.tar.gz" % (NUMPY_VERSION, NUMPY_VERSION), 'numpy.tar.gz'),
 			'tar -xf numpy.tar.gz',
 			getChDirCmd(os.path.join(wd, 'numpy-%s' % NUMPY_VERSION)),
-			'%s/python/bin/python3 setup.py install --prefix=%s/numpy-%s' % (prefix, prefix, NUMPY_VERSION),
+			'%s/python/bin/python3 setup.py install --old-and-unmanageable --prefix=%s/numpy-%s' % (prefix, prefix, NUMPY_VERSION),
 			'mv %s/numpy-%s %s/numpy' % (prefix, NUMPY_VERSION, prefix) # move numpy because cmake will append numpy to the path given
 			#'%s/python/bin/python3 setup.py install --prefix=%s/python' % (prefix, prefix),
 		)),

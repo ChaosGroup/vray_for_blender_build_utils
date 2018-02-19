@@ -50,7 +50,7 @@ GIFLIB_VERSION     = "5.1.4"
 WEBP_VERSION       = "0.6.0"
 
 LIBS_PREFIX = None
-LIBS_GENERATION = 24
+LIBS_GENERATION = 25
 
 
 def getLibPath(name, *subdirs):

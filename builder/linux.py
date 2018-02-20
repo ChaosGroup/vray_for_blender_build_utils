@@ -510,7 +510,7 @@ class LinuxBuilder(Builder):
 			sys.stderr.flush()
 			sys.exit(1)
 
-		sys.stdout('ffmpeg includes:\n')
+		sys.stdout.write('ffmpeg includes:\n')
 		for file in glob.glob('%s/**/*'):
 			sys.stdout.write('[%s]\n' % file)
 		sys.stdout.flush()

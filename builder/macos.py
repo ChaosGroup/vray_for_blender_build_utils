@@ -249,7 +249,7 @@ class MacBuilder(Builder):
 		if self.libs_need_clean():
 			self.clean_prebuilt_libs()
 
-		deps = DepsBuild(self)
+		deps = True # DepsBuild(self)
 		patch = PatchLibs(self)
 
 		if deps and patch:

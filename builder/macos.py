@@ -81,7 +81,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		# )),
 		('zlib', '%s/zlib-%s' % (prefix, ZLIB_VERSION), (
 			getChDirCmd(wd),
-			getDownloadCmd("https://www.zlib.net/zlib-%s.tar.gz" % ZLIB_VERSION, 'python.tar.gz'),
+			getDownloadCmd("https://www.zlib.net/zlib-%s.tar.gz" % ZLIB_VERSION, 'zlib.tar.gz'),
 			'tar -xf zlib.tar.gz',
 			getChDirCmd(os.path.join(wd, 'zlib-%s' % ZLIB_VERSION)),
 			' '.join(['./configure', '--static', '--64', '--prefix=%s/zlib' % prefix]),

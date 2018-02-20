@@ -39,6 +39,7 @@ BOOST_VERSION="1.61.0"
 PYTHON_VERSION="3.6.2"
 PYTHON_VERSION_BIG="3.6"
 NUMPY_VERSION="1.13.1"
+ZLIB_VERSION="1.2.11"
 
 LIBS_GENERATION = 24
 
@@ -78,13 +79,25 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		# 	'ln -s %s/boost-%s %s/boost' % (prefix, BOOST_VERSION, prefix),
 		# 	getRemoveSoFiles('%s/boost/lib' % prefix)
 		# )),
+		('zlib', '%s/zlib-%s' % (prefix, ZLIB_VERSION), (
+			getChDirCmd(wd),
+			getDownloadCmd("https://www.zlib.net/zlib-%s.tar.gz" % ZLIB_VERSION, 'python.tar.gz'),
+			'tar -xf zlib.tar.gz',
+			getChDirCmd(os.path.join(wd, 'zlib-%s' % ZLIB_VERSION)),
+			' '.join(['./configure', '--static', '--64', '--prefix=%s/zlib' % prefix]),
+			'make -j %s' % jobs,
+			'make install',
+		)),
 		('python', '%s/python-%s' % (prefix, PYTHON_VERSION), (
 			getChDirCmd(wd),
 			getDownloadCmd("https://www.python.org/ftp/python/%s/Python-%s.tgz" % (PYTHON_VERSION, PYTHON_VERSION), 'python.tgz'),
 			'tar -xf python.tgz',
 			getChDirCmd(os.path.join(wd, 'Python-%s' % PYTHON_VERSION)),
-			'./configure --prefix=%s/python-%s --libdir=%s/python-%s/lib --enable-ipv6 --enable-loadable-sqlite-extensions --with-dbmliborder=bdb --with-computed-gotos --with-pymalloc --with-ensurepip=install'
-				% (prefix, PYTHON_VERSION, prefix, PYTHON_VERSION),
+			' '.join(['./configure', '--prefix=%s/python-%s' % (prefix, PYTHON_VERSION),
+					  '--libdir=%s/python-%s/lib' % (prefix, PYTHON_VERSION), '--enable-ipv6',
+					  '--enable-loadable-sqlite-extensions', '--with-dbmliborder=bdb',
+					  '--with-computed-gotos', '--with-pymalloc', '--with-ensurepip=install'
+					  '--with-zlib-dir=%s/zlib/lib' % prefix]),
 			'make -j %s' % jobs,
 			'make install',
 			'ln -s %s/python-%s %s/python' % (prefix, PYTHON_VERSION, prefix),
@@ -249,7 +262,7 @@ class MacBuilder(Builder):
 		if self.libs_need_clean():
 			self.clean_prebuilt_libs()
 
-		deps = True # DepsBuild(self)
+		deps = DepsBuild(self)
 		patch = PatchLibs(self)
 
 		if deps and patch:

@@ -362,10 +362,20 @@ def DepsBuild(self):
 	sys.stdout.write('Building dependencies...\n')
 	installed_python = False
 
+	def alreadyInstalled(path):
+		if not os.path.exists(path):
+			return False
+
+		content = utils.dir_contents_recursive(path)
+		if len(content) == 0:
+			return False
+
+		return True
+
 	for item in data:
 		sys.stdout.write('Installing %s...' % item[0])
 		shouldStop = False
-		if os.path.exists(item[1]):
+		if alreadyInstalled(item[1]):
 			if item[0] in ('numpy', 'requests') and installed_python:
 				rm_cmd = 'rm -r %s/%s*' % (prefix, item[0])
 				sys.stdout.write('We reinstalled python, removing %s with [%s] so we can reinstall it also\n' % (item[0], rm_cmd))
@@ -504,25 +514,10 @@ class LinuxBuilder(Builder):
 				sys.stdout.flush()
 				os.remove(f)
 
-		ffmpegDir = os.path.join(libs_prefix, 'ffmpeg')
-		if not os.path.exists(ffmpegDir):
-			sys.stderr.write('Dir [%s] does not exits\n' % ffmpegDir)
-			sys.stderr.flush()
-			sys.exit(1)
-
-		def printPathFiles(path):
-			for file in utils.dir_contents_recursive(path):
-				sys.stdout.write('[%s]\n' % file)
-			sys.stdout.flush()
-
-		sys.stdout.write('ffmpeg link dir:\n')
-		printPathFiles(os.path.join(libs_prefix, 'ffmpeg'))
-
-		sys.stdout.write('ffmpeg install dir:\n')
-		printPathFiles(getLibPath('ffmpeg'))
-
 		if self.dev_static_libs:
 			if distr_info['short_name'] == 'centos' or self.jenkins:
+
+				cmake.append("-DLIBDIR=%s" % libs_prefix)
 
 				# NOTES:
 				#   OpenJPEG is disabled in OpenImageIO

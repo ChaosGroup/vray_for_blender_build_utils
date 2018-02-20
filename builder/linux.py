@@ -511,7 +511,7 @@ class LinuxBuilder(Builder):
 			sys.exit(1)
 
 		def printPathFiles(path):
-			for file in glob.glob('%s/**/*'):
+			for file in utils.dir_contents_recursive(path):
 				sys.stdout.write('[%s]\n' % file)
 			sys.stdout.flush()
 

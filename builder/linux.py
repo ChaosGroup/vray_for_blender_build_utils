@@ -504,6 +504,17 @@ class LinuxBuilder(Builder):
 				sys.stdout.flush()
 				os.remove(f)
 
+		ffmpegDir = os.path.join(libs_prefix, 'ffmpeg', 'include')
+		if not os.path.exists(ffmpegDir):
+			sys.stderr.write('Dir [%s] does not exits\n' % ffmpegDir)
+			sys.stderr.flush()
+			sys.exit(1)
+
+		sys.stdout('ffmpeg includes:\n')
+		for file in glob.glob('%s/**/*'):
+			sys.stdout.write('[%s]\n' % file)
+		sys.stdout.flush()
+
 		if self.dev_static_libs:
 			if distr_info['short_name'] == 'centos' or self.jenkins:
 

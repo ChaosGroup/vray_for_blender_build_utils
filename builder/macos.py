@@ -62,6 +62,18 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			return True
 		return False
 
+	def patchPython():
+		with open(os.path.join(prefix, 'python-%s' % PYTHON_VERSION, 'Modules', 'Setup.dist'), 'r+') as f:
+			content = [l.rstrip('\n') for l in f.readlines()]
+			# #zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
+			sys.stdout.write('Uncommentig python config line [%s]\n' % content[364])
+			sys.stdout.flush()
+			content[364] = content[364][1:]
+			f.seek(0)
+			f.write('\n'.join(content))
+			f.truncate()
+		return True
+
 	def getRemoveSoFiles(dir):
 		return lambda: all([removeSoFile(path) for path in glob.glob('%s/*.dylib*')])
 
@@ -93,11 +105,12 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getDownloadCmd("https://www.python.org/ftp/python/%s/Python-%s.tgz" % (PYTHON_VERSION, PYTHON_VERSION), 'python.tgz'),
 			'tar -xf python.tgz',
 			getChDirCmd(os.path.join(wd, 'Python-%s' % PYTHON_VERSION)),
+			patchPython,
 			' '.join(['./configure', '--prefix=%s/python-%s' % (prefix, PYTHON_VERSION),
 					  '--libdir=%s/python-%s/lib' % (prefix, PYTHON_VERSION), '--enable-ipv6',
 					  '--enable-loadable-sqlite-extensions', '--with-dbmliborder=bdb',
 					  '--with-computed-gotos', '--with-pymalloc', '--with-ensurepip=install',
-					  '--with-zlib-dir=%s/zlib/lib' % prefix]),
+					  '--enable-optimizations', '--with-zlib-dir=%s/zlib/lib' % prefix]),
 			'make -j %s' % jobs,
 			'make install',
 			'ln -s %s/python-%s %s/python' % (prefix, PYTHON_VERSION, prefix),

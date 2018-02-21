@@ -96,7 +96,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			' '.join(['./configure', '--prefix=%s/python-%s' % (prefix, PYTHON_VERSION),
 					  '--libdir=%s/python-%s/lib' % (prefix, PYTHON_VERSION), '--enable-ipv6',
 					  '--enable-loadable-sqlite-extensions', '--with-dbmliborder=bdb',
-					  '--with-computed-gotos', '--with-pymalloc', '--with-ensurepip=install'
+					  '--with-computed-gotos', '--with-pymalloc', '--with-ensurepip=install',
 					  '--with-zlib-dir=%s/zlib/lib' % prefix]),
 			'make -j %s' % jobs,
 			'make install',

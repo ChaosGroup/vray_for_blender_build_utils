@@ -111,7 +111,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 					  '--enable-loadable-sqlite-extensions', '--with-dbmliborder=bdb',
 					  '--with-computed-gotos', '--with-pymalloc', '--with-ensurepip=install',
 					  '--enable-optimizations', '--with-zlib-dir=%s/zlib/lib' % prefix]),
-			'CPPFLAGS=-I%s/zlib/include/ LDFLAGS=-l%s/zlib/lib/ make -j %s' % (prefix, prefix, jobs),
+			'CPPFLAGS=-I%s/zlib/include/ LDFLAGS=-l%s/zlib/lib/libz.a make -j %s' % (prefix, prefix, jobs),
 			'make install',
 			'ln -s %s/python-%s %s/python' % (prefix, PYTHON_VERSION, prefix),
 			'ln -s %s/python-%s %s/python-%s' % (prefix, PYTHON_VERSION, prefix, PYTHON_VERSION_BIG),

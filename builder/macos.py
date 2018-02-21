@@ -41,7 +41,7 @@ PYTHON_VERSION_BIG="3.6"
 NUMPY_VERSION="1.13.1"
 ZLIB_VERSION="1.2.11"
 
-LIBS_GENERATION = 24
+LIBS_GENERATION = 25
 
 def getDepsCompilationData(self, prefix, wd, jobs):
 	def dbg(x):
@@ -121,7 +121,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		# ('requests', '%s/python/lib/python%s/site-packages/requests/api.py' % (prefix, PYTHON_VERSION_BIG), (
 		# 	'%s/python/bin/pip%s install requests' % (prefix, PYTHON_VERSION_BIG),
 		# )),
-		('numpy', '%s/python/lib/python%s/site-packages/numpy' % (prefix, PYTHON_VERSION_BIG), (
+		('numpy', '%s/numpy' % prefix, (
 			getChDirCmd(wd),
 			getDownloadCmd("https://github.com/numpy/numpy/releases/download/v%s/numpy-%s.tar.gz" % (NUMPY_VERSION, NUMPY_VERSION), 'numpy.tar.gz'),
 			'tar -xf numpy.tar.gz',

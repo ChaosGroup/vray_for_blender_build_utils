@@ -63,7 +63,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		return False
 
 	def patchPython():
-		with open(os.path.join(prefix, 'Python-%s' % PYTHON_VERSION, 'Modules', 'Setup.dist'), 'r+') as f:
+		with open(os.path.join(wd, 'Python-%s' % PYTHON_VERSION, 'Modules', 'Setup.dist'), 'r+') as f:
 			content = [l.rstrip('\n') for l in f.readlines()]
 			# #zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
 			sys.stdout.write('Uncommentig python config line [%s]\n' % content[364])

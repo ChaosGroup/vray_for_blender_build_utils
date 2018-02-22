@@ -79,19 +79,6 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		return lambda: all([removeSoFile(path) for path in glob.glob('%s/*.dylib*')])
 
 	steps = (
-		# ('boost', '%s/boost-%s' % (prefix, BOOST_VERSION),(
-		# 	getChDirCmd(wd),
-		# 	getDownloadCmd("http://sourceforge.net/projects/boost/files/boost/%s/boost_%s.tar.bz2/download" % (BOOST_VERSION, BOOST_VERSION.replace('.', '_')), 'boost.tar.bz2'),
-		# 	'tar -xf boost.tar.bz2',
-		# 	'mv boost_%s boost-%s' % (BOOST_VERSION.replace('.', '_'), BOOST_VERSION),
-		# 	getChDirCmd(os.path.join(wd, 'boost-%s' % BOOST_VERSION)),
-		# 	'./bootstrap.sh',
-		# 	'./b2 -j %s -a link=static threading=multi --layout=tagged --with-system --with-filesystem --with-thread --with-regex --with-locale --with-date_time --with-wave --prefix=%s/boost-%s --disable-icu boost.locale.icu=off install'
-		# 		% (jobs, prefix, BOOST_VERSION),
-		# 	'./b2 clean',
-		# 	'ln -s %s/boost-%s %s/boost' % (prefix, BOOST_VERSION, prefix),
-		# 	getRemoveSoFiles('%s/boost/lib' % prefix)
-		# )),
 		('zlib', '%s/zlib-%s' % (prefix, ZLIB_VERSION), (
 			getChDirCmd(wd),
 			getDownloadCmd("https://www.zlib.net/zlib-%s.tar.gz" % ZLIB_VERSION, 'zlib.tar.gz'),
@@ -118,9 +105,6 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'ln -s %s/python-%s %s/python-%s' % (prefix, PYTHON_VERSION, prefix, PYTHON_VERSION_BIG),
 			getRemoveSoFiles('%s/python-%s/lib' % (prefix, PYTHON_VERSION))
 		)),
-		# ('requests', '%s/python/lib/python%s/site-packages/requests/api.py' % (prefix, PYTHON_VERSION_BIG), (
-		# 	'%s/python/bin/pip%s install requests' % (prefix, PYTHON_VERSION_BIG),
-		# )),
 		('numpy', '%s/numpy' % prefix, (
 			getChDirCmd(wd),
 			getDownloadCmd("https://github.com/numpy/numpy/releases/download/v%s/numpy-%s.tar.gz" % (NUMPY_VERSION, NUMPY_VERSION), 'numpy.tar.gz'),
@@ -128,7 +112,6 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getChDirCmd(os.path.join(wd, 'numpy-%s' % NUMPY_VERSION)),
 			'%s/python/bin/python3 setup.py install --old-and-unmanageable --prefix=%s/numpy-%s' % (prefix, prefix, NUMPY_VERSION),
 			'mv %s/numpy-%s %s/numpy' % (prefix, NUMPY_VERSION, prefix) # move numpy because cmake will append numpy to the path given
-			#'%s/python/bin/python3 setup.py install --prefix=%s/python' % (prefix, prefix),
 		)),
 	)
 
@@ -183,87 +166,68 @@ def DepsBuild(self):
 
 
 def PatchLibs(self):
-	boost_root = os.path.join(self.jenkins_kdrive_path, 'boost', 'boost_1_61_0')
-
-	mac_version_names = {
-		"10.9": "mavericks",
-		"10.8": "mountain_lion",
-		"10.6": "snow_leopard",
-	}
-
-	mac_version = '.'.join(platform.mac_ver()[0].split('.')[0:2])
-	mac_name = mac_version_names[mac_version] if mac_version in mac_version_names else None
-	sys.stdout.write('Mac ver full [%s] -> %s == %s\n' % (str(platform.mac_ver()), mac_version, mac_name))
-	sys.stdout.flush()
-
-	boost_lib = os.path.join(boost_root, 'lib', '%s_x64' % mac_name)
-
-	if not mac_name or not os.path.exists(boost_lib):
-		sys.stderr.write('Boost path [%s] missing for this version of mac!\n' % boost_lib)
-		sys.stderr.flush()
-
-		mac_name = mac_version_names['10.9']
-		boost_lib = os.path.join(boost_root, 'lib', '%s_x64' % mac_name)
-
-		if not mac_name or not os.path.exists(boost_lib):
-			sys.stderr.write('Boost path [%s] missing for this version of mac... exiting!\n' % boost_lib)
-			sys.stderr.flush()
-			sys.exit(1)
-		else:
-			sys.stderr.write('Trying to build with [%s] instead!\n' % boost_lib)
-			sys.stderr.flush()
-
-	boost_lib_dir = os.path.join(boost_lib, 'gcc-4.2-cpp')
-
 	svn_subdirs = [
-		os.path.join(self.dir_source, 'lib', 'darwin-9.x.universal'),
 		os.path.join(self.dir_source, 'lib', 'darwin'),
 		os.path.join(self.dir_source, 'lib', 'win64_vc12'),
 	]
 
+	foundLibs = 0
+
 	for svn in svn_subdirs:
 		if os.path.exists(svn) and os.path.isdir(svn):
-			sys.stdout.write('reverting all changes in [%s] \n' % svn)
-			sys.stdout.flush()
+			foundLibs += 1
 			os.chdir(svn)
-			os.system('svn revert -R .')
+			utils.exec_and_log('svn revert . --recursive --depth=infinity', 'SVN CMD:')
+			utils.exec_and_log('svn cleanup', 'SVN CMD:')
+			utils.exec_and_log('svn update', 'SVN CMD:')
 
-	python_patch = os.path.join(self.dir_source, 'blender-for-vray-libs', 'Darwin', 'pyport.h')
+	if foundLibs == 2:
+		utils.stdout_log('Both svn repos present!')
+		return True
+
+	utils.stdout_log('Checking out svn repos:')
 	libs_prefix = self._blender_libs_location
 	patch_steps = [
-		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal",
 		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin lib/darwin",
 		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12",
 		"cp -Rf lib/win64_vc12/opensubdiv/include/opensubdiv/* lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/",
-		# "mv lib/darwin/python lib/darwin/python-orig",
-		# "cp -Rf lib/darwin-9.x.universal/python lib/darwin/python",
-		#"rm -rf lib/darwin/python",
-		#"cp -Rf %s/python-%s lib/darwin/python" % (libs_prefix, PYTHON_VERSION),
-		#"cp lib/darwin/python/lib/libpython3.5m.a lib/darwin/python/lib/python3.5/",
-		# "cp lib/darwin-9.x.universal/png/lib/libpng12.a lib/darwin-9.x.universal/png/lib/libpng.a",
-		# "cp lib/darwin-9.x.universal/png/lib/libpng12.la lib/darwin-9.x.universal/png/lib/libpng.la",
-		# "cp -f %s lib/darwin-9.x.universal/python/include/python3.5m/pyport.h" % python_patch,
-		#"cp -f %s lib/darwin/python/include/python3.5m/pyport.h" % python_patch,
 	]
 
 	os.chdir(self.dir_source)
 
 	for step in patch_steps:
-		sys.stdout.write('MAC patch step [%s]\n' % step)
-		sys.stdout.flush()
+		utils.stdout_log('MAC patch step [%s]' % step)
 		os.system(step)
 
-	# sys.stdout.write('PY LIBS: [%s]' % '\n'.join(glob.glob('lib/darwin/python/lib/*')))
-	# sys.stdout.write('PY LIBS: [%s]' % '\n'.join(glob.glob('lib/darwin/python/lib/python3.5/*')))
-	# sys.stdout.flush()
+	pythonDest = os.path.join(self.dir_source, 'lib', 'darwin', 'python')
+	pythonSource = os.path.join(libs_prefix, 'python')
+	utils.stdout_log('Python patch source [%s] dest [%s]' % (pythonSource, pythonDest))
+
+	def replace_path(path):
+		destPath = os.path.join(pythonDest, path)
+		sourcePath = os.path.join(pythonSource, path)
+		if os.path.isdir(destPath):
+			utils.stdout_log('shutil.rmtree(%s)' % destPath)
+			shutil.rmtree(destPath)
+			utils.stdout_log('shutil.copytree(%s, %s)' % (sourcePath, destPath))
+			shutil.copytree(sourcePath, destPath)
+		else:
+			utils.stdout_log('os.remove(%s)' % destPath)
+			os.remove(destPath)
+			utils.stdout_log('shutil.copy(%s, %s)' % (sourcePath, destPath))
+			shutil.copy(sourcePath, destPath)
+
+	replace_path(os.path.join('bin', 'python3.6m'))
+	replace_path(os.path.join('lib', 'libpython3.6m.a'))
+
+	replace_path(os.path.join('lib', 'python3.6'))
+	replace_path(os.path.join('include', 'python3.6m'))
 
 	return True
 
 
-
 class MacBuilder(Builder):
 	def config(self):
-		# Not used on OS X anymore
 		pass
 
 

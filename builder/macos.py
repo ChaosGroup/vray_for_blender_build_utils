@@ -199,7 +199,7 @@ def PatchLibs(self):
 		utils.stdout_log('Both svn repos present!')
 
 	pythonDest = os.path.join(self.dir_source, 'lib', 'darwin', 'python')
-	pythonSource = os.path.join(libs_prefix, 'python')
+	pythonSource = os.path.join(self._blender_libs_location, 'python')
 	utils.stdout_log('Python patch source [%s] dest [%s]' % (pythonSource, pythonDest))
 	def replace_path(path):
 		destPath = os.path.join(pythonDest, path)

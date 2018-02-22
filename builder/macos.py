@@ -195,12 +195,11 @@ def PatchLibs(self):
 		for step in patch_steps:
 			utils.stdout_log('MAC patch step [%s]' % step)
 			os.system(step)
-
-		pythonDest = os.path.join(self.dir_source, 'lib', 'darwin', 'python')
-		pythonSource = os.path.join(libs_prefix, 'python')
 	else:
 		utils.stdout_log('Both svn repos present!')
 
+	pythonDest = os.path.join(self.dir_source, 'lib', 'darwin', 'python')
+	pythonSource = os.path.join(libs_prefix, 'python')
 	utils.stdout_log('Python patch source [%s] dest [%s]' % (pythonSource, pythonDest))
 	def replace_path(path):
 		destPath = os.path.join(pythonDest, path)
@@ -322,7 +321,6 @@ class MacBuilder(Builder):
 			sourcePath = os.path.join(numpyInstallPath, 'numpy')
 			utils.stdout_log('shutil.copytree(%s, %s)' % (sourcePath, numPath))
 			shutil.copytree(sourcePath, numPath)
-
 
 
 	def package(self):

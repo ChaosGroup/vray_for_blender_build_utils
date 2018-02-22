@@ -1234,7 +1234,7 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		tmpl = tmpl.replace("${INSTALL_XML_PATH}", tmplFinal)
 
 		# Appsdk env var path
-		if get_host_os() == WIN:
+		if get_host_os() == WIN || get_host_os() == MAC:
 			# set it as env var from installer
 			tmpl = tmpl.replace("${ZMQ_ENV_VARIABLE}", '<Replace VarName="VRAY_ZMQSERVER_APPSDK_PATH" IsPath="1">%s</Replace>'  % os.path.join(appsdk_root, appsdkFile))
 			tmpl = tmpl.replace("${VRAY_ZMQSERVER_APPSDK_PATH}", '')

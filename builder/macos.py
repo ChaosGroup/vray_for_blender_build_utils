@@ -181,28 +181,27 @@ def PatchLibs(self):
 			utils.exec_and_log('svn --non-interactive --trust-server-cert cleanup', 'SVN CMD:')
 			utils.exec_and_log('svn --non-interactive --trust-server-cert update', 'SVN CMD:')
 
-	if foundLibs == 2:
+	if foundLibs != 2:
+		utils.stdout_log('Checking out svn repos:')
+		libs_prefix = self._blender_libs_location
+		patch_steps = [
+			"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin lib/darwin",
+			"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12",
+			"cp -Rf lib/win64_vc12/opensubdiv/include/opensubdiv/* lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/",
+		]
+
+		os.chdir(self.dir_source)
+
+		for step in patch_steps:
+			utils.stdout_log('MAC patch step [%s]' % step)
+			os.system(step)
+
+		pythonDest = os.path.join(self.dir_source, 'lib', 'darwin', 'python')
+		pythonSource = os.path.join(libs_prefix, 'python')
+	else:
 		utils.stdout_log('Both svn repos present!')
-		return True
 
-	utils.stdout_log('Checking out svn repos:')
-	libs_prefix = self._blender_libs_location
-	patch_steps = [
-		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin lib/darwin",
-		"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12",
-		"cp -Rf lib/win64_vc12/opensubdiv/include/opensubdiv/* lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/",
-	]
-
-	os.chdir(self.dir_source)
-
-	for step in patch_steps:
-		utils.stdout_log('MAC patch step [%s]' % step)
-		os.system(step)
-
-	pythonDest = os.path.join(self.dir_source, 'lib', 'darwin', 'python')
-	pythonSource = os.path.join(libs_prefix, 'python')
 	utils.stdout_log('Python patch source [%s] dest [%s]' % (pythonSource, pythonDest))
-
 	def replace_path(path):
 		destPath = os.path.join(pythonDest, path)
 		sourcePath = os.path.join(pythonSource, path)

@@ -177,9 +177,9 @@ def PatchLibs(self):
 		if os.path.exists(svn) and os.path.isdir(svn):
 			foundLibs += 1
 			os.chdir(svn)
-			utils.exec_and_log('svn revert . --recursive --depth=infinity', 'SVN CMD:')
-			utils.exec_and_log('svn cleanup', 'SVN CMD:')
-			utils.exec_and_log('svn update', 'SVN CMD:')
+			utils.exec_and_log('svn --non-interactive --trust-server-cert revert . --recursive --depth=infinity', 'SVN CMD:')
+			utils.exec_and_log('svn --non-interactive --trust-server-cert cleanup', 'SVN CMD:')
+			utils.exec_and_log('svn --non-interactive --trust-server-cert update', 'SVN CMD:')
 
 	if foundLibs == 2:
 		utils.stdout_log('Both svn repos present!')

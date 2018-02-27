@@ -128,7 +128,7 @@ def main(args):
     git_prefix = ''
     if utils.get_host_os() == utils.WIN:
         # for win - use public url
-        git_prefix = https_prefix
+        git_prefix = ssh_prefix
     else:
         git_prefix = ssh_prefix
 

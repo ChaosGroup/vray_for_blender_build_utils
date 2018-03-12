@@ -180,6 +180,9 @@ def main(args):
         os.makedirs(dir_blender_libs)
     cmd.append('--dir_blender_libs=%s' % dir_blender_libs)
 
+    if args.jenkins_exporter_git_ref != 'master':
+        cmd.append('--github-exp-branch=%s' % args.jenkins_exporter_git_ref)
+
     cmd.append('--build_clean')
     cmd.append('--with_ge')
     cmd.append('--with_player')
@@ -235,6 +238,11 @@ if __name__ == '__main__':
 
     parser.add_argument('--jenkins_blender_git_ref',
         default = "dev/vray_for_blender/vb35",
+        required=False,
+    )
+
+    parser.add_argument('--jenkins_exporter_git_ref',
+        default = "master",
         required=False,
     )
 

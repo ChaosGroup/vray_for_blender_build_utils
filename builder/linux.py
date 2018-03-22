@@ -48,9 +48,10 @@ OSL_VERSION        = "1.7.5"
 FFMPEG_VERSION     = "3.2.1"
 GIFLIB_VERSION     = "5.1.4"
 WEBP_VERSION       = "0.6.0"
+PNG_VERSION        = "1.2.59"
 
 LIBS_PREFIX = None
-LIBS_GENERATION = 25
+LIBS_GENERATION = 26
 
 
 def getLibPath(name, *subdirs):
@@ -164,6 +165,16 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'sh -c "echo \"%s/boost/lib\" > /etc/ld.so.conf.d/boost.conf"' % prefix,
 			'/sbin/ldconfig',
 			getRemoveSoFiles('%s/boost/lib' % prefix)
+		)),
+		('png', '%s/png-%s' % (prefix, PNG_VERSION), (
+			getChDirCmd(wd),
+			getDownloadCmd('https://sourceforge.net/projects/libpng/files/libpng12/%s/libpng-%s.tar.xz/download' % (PNG_VERSION, PNG_VERSION), 'libpng-%s.tar.xz' % PNG_VERSION),
+			'tar -C . -xf libpng-%s.tar.xz' % PNG_VERSION,
+			getChDirCmd(os.path.join(wd, 'libpng-%s' % PNG_VERSION)),
+			'./configure --prefix=%s/png-%s --enable-static=yes --enable-shared=no' % (prefix, PNG_VERSION),
+			'make -j %s' % jobs,
+			'make install',
+			'ln -s %s/png-%s %s/png' % (prefix, PNG_VERSION, prefix),
 		)),
 		('tiff', '%s/tiff-%s' % (prefix, TIFF_VERSION), (
 			getChDirCmd(wd),

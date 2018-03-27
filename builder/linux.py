@@ -353,7 +353,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getChDirCmd(wd),
 			getDownloadCmd('https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-%s-linux-x86-64.tar.gz' % WEBP_VERSION, 'webp.tar.gz'),
 			'tar -C %s --transform "s,(.*/?)libwebp-[^/]*(.*),\\1%s\\2,x" -xf webp.tar.gz' % (prefix, os.path.basename(getLibPath('webp'))),
-		))
+		)),
 		('collada', getLibPath('collada'), (
 			getChDirCmd(wd),
 			getDownloadCmd('https://github.com/KhronosGroup/OpenCOLLADA/archive/%s.zip' % COLLADA_UID, 'collada.zip'),

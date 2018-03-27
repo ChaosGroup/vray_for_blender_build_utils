@@ -116,6 +116,15 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			f.truncate()
 		return True
 
+	def patchXmlLibCollada():
+		with open(os.path.join(wd, 'OpenCOLLADA-%s' % COLLADA_UID, 'CMakeLists.txt'), 'r+') as f:
+			content = [l.rstrip('\n') for l in f.readlines()]
+			# if()
+			content[223] = '\t\tif (1)'
+			f.seek(0)
+			f.write('\n'.join(content))
+			f.truncate()
+
 	def getOrCmd(a, b):
 		return lambda: a() or b()
 
@@ -360,6 +369,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'unzip collada.zip',
 			'mkdir OpenCOLLADA-%s/build' % COLLADA_UID,
 			getChDirCmd(os.path.join(wd, 'OpenCOLLADA-%s' % COLLADA_UID, 'build')),
+			patchXmlLibCollada,
 			' '.join(['cmake', '../', '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_INSTALL_PREFIX=%s' % getLibPath('collada'),
 					  '-DUSE_EXPATH=OFF', '-DUSE_LIBXML=ON', '-DUSE_STATIC=ON', '-DUSE_SHARED=OFF']),
 			'make -j %s' % jobs,

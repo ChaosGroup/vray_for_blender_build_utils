@@ -124,6 +124,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			f.seek(0)
 			f.write('\n'.join(content))
 			f.truncate()
+		return True
 
 	def getOrCmd(a, b):
 		return lambda: a() or b()

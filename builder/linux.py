@@ -96,7 +96,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 
 	def getDownloadCmd(url, name):
 		def downloadFn():
-			utils.stdout_log.write('wget -c "%s" -O %s' % (url, name))
+			utils.stdout_log('wget -c "%s" -O %s' % (url, name))
 			if os.path.exists(name):
 				utils.stdout_log('file [%s] exists, will remove' % name)
 				utils.remove_file(name)

@@ -360,7 +360,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getDownloadCmd('https://git.gnome.org/browse/libxml2/snapshot/libxml2-%s.tar.xz' % LIBXML_VERSION, 'libxml.tar.xz'),
 			'tar -C . -xf libxml.tar.xz',
 			getChDirCmd(os.path.join(wd, 'libxml2-%s' % LIBXML_VERSION)),
-			' '.join(['./autogen.sh', '--enable-static', '--disable-shared', '--prefix=%s' % getLibPath('libxml')]),
+			' '.join(['./autogen.sh', '--enable-static', '--disable-shared', '--without-python', '--prefix=%s' % getLibPath('libxml')]),
 			'make -j %s' % jobs,
 			'make install',
 		)),

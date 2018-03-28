@@ -49,6 +49,7 @@ FFMPEG_VERSION     = "3.2.1"
 GIFLIB_VERSION     = "5.1.4"
 WEBP_VERSION       = "0.6.0"
 PNG_VERSION        = "1.2.59"
+LIBXML_VERSION     = "2.9.7"
 COLLADA_VERSION    = "1.6.51"
 COLLADA_UID        = "0c2cdc17c22cf42050e4d42154bed2176363549c"
 
@@ -111,16 +112,6 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			content = [l.rstrip('\n') for l in f.readlines()]
 			# set(PACKAGE_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}svn")
 			content[16] = '  set(PACKAGE_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}")'
-			f.seek(0)
-			f.write('\n'.join(content))
-			f.truncate()
-		return True
-
-	def patchXmlLibCollada():
-		with open(os.path.join(wd, 'OpenCOLLADA-%s' % COLLADA_UID, 'CMakeLists.txt'), 'r+') as f:
-			content = [l.rstrip('\n') for l in f.readlines()]
-			# if()
-			content[223] = '\t\tif (1)'
 			f.seek(0)
 			f.write('\n'.join(content))
 			f.truncate()
@@ -364,19 +355,28 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getDownloadCmd('https://storage.googleapis.com/downloads.webmproject.org/releases/webp/libwebp-%s-linux-x86-64.tar.gz' % WEBP_VERSION, 'webp.tar.gz'),
 			'tar -C %s --transform "s,(.*/?)libwebp-[^/]*(.*),\\1%s\\2,x" -xf webp.tar.gz' % (prefix, os.path.basename(getLibPath('webp'))),
 		)),
-		# ('collada', getLibPath('collada'), (
-		# 	getChDirCmd(wd),
-		# 	getDownloadCmd('https://github.com/KhronosGroup/OpenCOLLADA/archive/%s.zip' % COLLADA_UID, 'collada.zip'),
-		# 	'unzip collada.zip',
-		# 	'mkdir OpenCOLLADA-%s/build' % COLLADA_UID,
-		# 	getChDirCmd(os.path.join(wd, 'OpenCOLLADA-%s' % COLLADA_UID, 'build')),
-		# 	patchXmlLibCollada,
-		# 	' '.join(['cmake', '../', '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_INSTALL_PREFIX=%s' % getLibPath('collada'),
-		# 			  '-DUSE_EXPATH=OFF', '-DUSE_LIBXML=ON', '-DUSE_STATIC=ON', '-DUSE_SHARED=OFF']),
-		# 	'make -j %s' % jobs,
-		# 	'make install',
-		# 	'make clean',
-		# )),
+		('libxml2', getLibPath('libxml'), (
+			getChDirCmd(wd),
+			getDownloadCmd('https://git.gnome.org/browse/libxml2/snapshot/libxml2-%s.tar.xz' % LIBXML_VERSION, 'libxml.tar.xz'),
+			'tar -C . -xf libxml.tar.xz',
+			getChDirCmd(os.path.join(wd, 'libxml2-%s' % LIBXML_VERSION)),
+			' '.join(['./autogen.sh', '--enable-static', '--disable-shared', '--prefix=%s' % getLibPath('libxml')]),
+			'make -j %s' % jobs,
+			'make install',
+		)),
+		('collada', getLibPath('collada'), (
+			getChDirCmd(wd),
+			getDownloadCmd('https://github.com/KhronosGroup/OpenCOLLADA/archive/%s.zip' % COLLADA_UID, 'collada.zip'),
+			'unzip collada.zip',
+			'mkdir OpenCOLLADA-%s/build' % COLLADA_UID,
+			getChDirCmd(os.path.join(wd, 'OpenCOLLADA-%s' % COLLADA_UID, 'build')),
+			' '.join(['cmake', '../', '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_INSTALL_PREFIX=%s' % getLibPath('collada'),
+					  '-DUSE_EXPATH=OFF', '-DUSE_LIBXML=ON', '-DUSE_STATIC=ON', '-DUSE_SHARED=OFF'
+					  '-DCMAKE_PREFIX_PATH=%s' % getLibPath('libxml')]),
+			'make -j %s' % jobs,
+			'make install',
+			'make clean',
+		)),
 	)
 
 	return steps
@@ -616,7 +616,7 @@ class LinuxBuilder(Builder):
 
 				cmake.append("-DGIFLIB_LIBRARY=%s/giflib-%s/lib/libgif.a" % (libs_prefix, GIFLIB_VERSION))
 				cmake.append("-DWEBP_LIBRARY=%s/webp-%s/lib/libwebp.a" % (libs_prefix, WEBP_VERSION))
-				# cmake.append("-DOPENCOLLADA_ROOT_DIR=%s" % getLibPath('collada'))
+				cmake.append("-DOPENCOLLADA_ROOT_DIR=%s" % getLibPath('collada'))
 			else:
 				cmake.append("-DBoost_DIR=%s/boost" % libs_prefix)
 				cmake.append("-DBoost_INCLUDE_DIR=%s/boost/include" % libs_prefix)

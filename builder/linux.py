@@ -95,7 +95,13 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		return lambda: os.chdir(newDir) or True
 
 	def getDownloadCmd(url, name):
-		return lambda: dbg('wget -c %s -O %s' % (url, name)) and 0 == os.system('wget -c "%s" -O %s' % (url, name))
+		def downloadFn():
+			utils.stdout_log.write('wget -c "%s" -O %s' % (url, name))
+			if os.path.exists(name):
+				utils.stdout_log('file [%s] exists, will remove' % name)
+				utils.remove_file(name)
+			return 0 == os.system('wget -c "%s" -O %s' % (url, name))
+		return downloadFn
 
 	def patchOpenEXRCmake():
 		with open(os.path.join(wd, 'OpenEXR-%s' % OPENEXR_VERSION, 'IlmImf', 'CMakeLists.txt'), 'r+') as f:

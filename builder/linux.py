@@ -374,7 +374,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getChDirCmd(wd),
 			getDownloadCmd('https://github.com/KhronosGroup/OpenCOLLADA/archive/%s.zip' % COLLADA_UID, 'collada.zip'),
 			'unzip -o collada.zip',
-			'mkdir OpenCOLLADA-%s/build' % COLLADA_UID,
+			'mkdir -p OpenCOLLADA-%s/build' % COLLADA_UID,
 			getChDirCmd(os.path.join(wd, 'OpenCOLLADA-%s' % COLLADA_UID, 'build')),
 			' '.join(['cmake', '../', '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_INSTALL_PREFIX=%s' % getLibPath('collada'),
 					  '-DUSE_EXPATH=OFF', '-DUSE_LIBXML=ON', '-DUSE_STATIC=ON', '-DUSE_SHARED=OFF',

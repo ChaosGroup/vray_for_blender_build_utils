@@ -386,7 +386,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		)),
 		('pcre', getLibPath('pcre'), (
 			getChDirCmd(wd),
-			getDownnloadCmd('https://ftp.pcre.org/pub/pcre/pcre-%s.tar.gz' % PCRE_VERSION, 'pcre.tar.gz'),
+			getDownloadCmd('https://ftp.pcre.org/pub/pcre/pcre-%s.tar.gz' % PCRE_VERSION, 'pcre.tar.gz'),
 			'tar -C . -xf pcre-%s.tar.gz' % PCRE_VERSION,
 			getChDirCmd(os.path.join(wd, 'pcre-%s' % PCRE_VERSION)),
 			' '.join(['./configure', '--prefix=%s' % getLibPath('pcre'), '--enable-static', '--disable-shared',

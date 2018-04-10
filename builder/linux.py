@@ -49,6 +49,7 @@ FFMPEG_VERSION     = "3.2.1"
 GIFLIB_VERSION     = "5.1.4"
 WEBP_VERSION       = "0.6.0"
 PNG_VERSION        = "1.2.59"
+PCRE_VERSION       = "8.42"
 LIBXML_VERSION     = "2.9.7"
 COLLADA_VERSION    = "1.6.51"
 COLLADA_UID        = "0c2cdc17c22cf42050e4d42154bed2176363549c"
@@ -383,6 +384,17 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'make install',
 			'make clean',
 		)),
+		('pcre', getLibPath('pcre'), (
+			getChDirCmd(wd),
+			getDownnloadCmd('https://ftp.pcre.org/pub/pcre/pcre-%s.tar.gz' % PCRE_VERSION, 'pcre.tar.gz'),
+			'tar -C . -xf pcre-%s.tar.gz' % PCRE_VERSION,
+			getChDirCmd(os.path.join(wd, 'pcre-%s' % PCRE_VERSION)),
+			' '.join(['./configure', '--prefix=%s' % getLibPath('pcre'), '--enable-static', '--disable-shared',
+					  '--enable-pcre16', '--enable-pcre32', '--enable-unicode-properties']),
+			'make -j %s' % jobs,
+			'make install',
+			'make clean',
+		)),
 	)
 
 	return steps
@@ -623,6 +635,8 @@ class LinuxBuilder(Builder):
 				cmake.append("-DGIFLIB_LIBRARY=%s/giflib-%s/lib/libgif.a" % (libs_prefix, GIFLIB_VERSION))
 				cmake.append("-DWEBP_LIBRARY=%s/webp-%s/lib/libwebp.a" % (libs_prefix, WEBP_VERSION))
 				cmake.append("-DOPENCOLLADA_ROOT_DIR=%s" % getLibPath('collada'))
+
+				cmake.append("-DPCRE_DIR=%s" % getLibPath('pcre'))
 			else:
 				cmake.append("-DBoost_DIR=%s/boost" % libs_prefix)
 				cmake.append("-DBoost_INCLUDE_DIR=%s/boost/include" % libs_prefix)

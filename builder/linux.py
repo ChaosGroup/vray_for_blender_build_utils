@@ -55,7 +55,7 @@ COLLADA_VERSION    = "1.6.51"
 COLLADA_UID        = "0c2cdc17c22cf42050e4d42154bed2176363549c"
 
 LIBS_PREFIX = None
-LIBS_GENERATION = 26
+LIBS_GENERATION = 27
 
 
 def getLibPath(name, *subdirs):
@@ -371,6 +371,17 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			'make -j %s' % jobs,
 			'make install',
 		)),
+		('pcre', getLibPath('pcre'), (
+			getChDirCmd(wd),
+			getDownloadCmd('https://ftp.pcre.org/pub/pcre/pcre-%s.tar.gz' % PCRE_VERSION, 'pcre.tar.gz'),
+			'tar -C . -xf pcre.tar.gz',
+			getChDirCmd(os.path.join(wd, 'pcre-%s' % PCRE_VERSION)),
+			' '.join(['./configure', '--prefix=%s' % getLibPath('pcre'), '--enable-static', '--disable-shared',
+					  '--enable-pcre16', '--enable-pcre32', '--enable-unicode-properties']),
+			'make -j %s' % jobs,
+			'make install',
+			'make clean',
+		)),
 		('collada', getLibPath('collada'), (
 			getChDirCmd(wd),
 			getDownloadCmd('https://github.com/KhronosGroup/OpenCOLLADA/archive/%s.zip' % COLLADA_UID, 'collada.zip'),
@@ -379,18 +390,8 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getChDirCmd(os.path.join(wd, 'OpenCOLLADA-%s' % COLLADA_UID, 'build')),
 			' '.join(['cmake', '../', '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_INSTALL_PREFIX=%s' % getLibPath('collada'),
 					  '-DUSE_EXPATH=OFF', '-DUSE_LIBXML=ON', '-DUSE_STATIC=ON', '-DUSE_SHARED=OFF',
-					  '-DCMAKE_PREFIX_PATH=%s' % getLibPath('libxml'), '-DCMAKE_EXE_LINKER_FLAGS="-lz"']),
-			'make -j %s' % jobs,
-			'make install',
-			'make clean',
-		)),
-		('pcre', getLibPath('pcre'), (
-			getChDirCmd(wd),
-			getDownloadCmd('https://ftp.pcre.org/pub/pcre/pcre-%s.tar.gz' % PCRE_VERSION, 'pcre.tar.gz'),
-			'tar -C . -xf pcre.tar.gz',
-			getChDirCmd(os.path.join(wd, 'pcre-%s' % PCRE_VERSION)),
-			' '.join(['./configure', '--prefix=%s' % getLibPath('pcre'), '--enable-static', '--disable-shared',
-					  '--enable-pcre16', '--enable-pcre32', '--enable-unicode-properties']),
+					  '-DCMAKE_PREFIX_PATH=%s' % getLibPath('libxml'), '-DPCRE_DIR=%s' % getLibPath('pcre')
+					  '-DCMAKE_EXE_LINKER_FLAGS="-lz"']),
 			'make -j %s' % jobs,
 			'make install',
 			'make clean',

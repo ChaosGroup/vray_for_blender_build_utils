@@ -55,7 +55,7 @@ COLLADA_VERSION    = "1.6.51"
 COLLADA_UID        = "0c2cdc17c22cf42050e4d42154bed2176363549c"
 
 LIBS_PREFIX = None
-LIBS_GENERATION = 28
+LIBS_GENERATION = 29
 
 
 def getLibPath(name, *subdirs):
@@ -119,6 +119,17 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			content = [l.rstrip('\n') for l in f.readlines()]
 			# set(PACKAGE_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}svn")
 			content[16] = '  set(PACKAGE_VERSION "${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}")'
+			f.seek(0)
+			f.write('\n'.join(content))
+			f.truncate()
+		return True
+
+	def pathColladaCmake():
+		with open(os.path.join(wd, 'OpenCOLLADA-%s' % COLLADA_UID, 'CMakeLists.txt'), 'r+') as f:
+			content = [l.rstrip('\n') for l in f.readlines()]
+			newLine = 'set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})'
+			utils.stdout_log('Swapping lines:\n[%s] -> [%s]' % (content[212], newLine))
+			content[212] = newLine
 			f.seek(0)
 			f.write('\n'.join(content))
 			f.truncate()
@@ -386,6 +397,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getChDirCmd(wd),
 			getDownloadCmd('https://github.com/KhronosGroup/OpenCOLLADA/archive/%s.zip' % COLLADA_UID, 'collada.zip'),
 			'unzip -o collada.zip',
+			pathColladaCmake,
 			'mkdir -p OpenCOLLADA-%s/build' % COLLADA_UID,
 			getChDirCmd(os.path.join(wd, 'OpenCOLLADA-%s' % COLLADA_UID, 'build')),
 			' '.join(['cmake', '../', '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_INSTALL_PREFIX=%s' % getLibPath('collada'),

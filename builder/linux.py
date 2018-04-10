@@ -390,7 +390,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getChDirCmd(os.path.join(wd, 'OpenCOLLADA-%s' % COLLADA_UID, 'build')),
 			' '.join(['cmake', '../', '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_INSTALL_PREFIX=%s' % getLibPath('collada'),
 					  '-DUSE_EXPATH=OFF', '-DUSE_LIBXML=ON', '-DUSE_STATIC=ON', '-DUSE_SHARED=OFF',
-					  '-DCMAKE_PREFIX_PATH=%s' % getLibPath('libxml'), '-DPCRE_DIR=%s' % getLibPath('pcre')
+					  '-DCMAKE_PREFIX_PATH=%s' % getLibPath('libxml'), '-DPCRE_DIR=%s' % getLibPath('pcre'),
 					  '-DCMAKE_EXE_LINKER_FLAGS="-lz"']),
 			'make -j %s' % jobs,
 			'make install',

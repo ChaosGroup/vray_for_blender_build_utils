@@ -649,7 +649,7 @@ class LinuxBuilder(Builder):
 				cmake.append("-DWEBP_LIBRARY=%s/webp-%s/lib/libwebp.a" % (libs_prefix, WEBP_VERSION))
 				cmake.append("-DOPENCOLLADA_ROOT_DIR=%s" % getLibPath('collada'))
 
-				cmake.append("-DPCRE_DIR=%s" % getLibPath('pcre'))
+				cmake.append("-DPCRE_ROOT_DIR=%s" % getLibPath('pcre'))
 			else:
 				cmake.append("-DBoost_DIR=%s/boost" % libs_prefix)
 				cmake.append("-DBoost_INCLUDE_DIR=%s/boost/include" % libs_prefix)

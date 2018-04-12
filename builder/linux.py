@@ -551,7 +551,7 @@ class LinuxBuilder(Builder):
 		cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
 		cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))
 		cmake.append("-DWITH_LIBMV=%s" % utils.GetCmakeOnOff(self.with_tracker))
-		cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.with_collada))
+		# cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.with_collada))
 		cmake.append("-DWITH_CYCLES=%s" % utils.GetCmakeOnOff(self.with_cycles))
 		if self.with_cycles:
 			cmake.append("-DWITH_CODEC_FFMPEG=ON")
@@ -647,7 +647,7 @@ class LinuxBuilder(Builder):
 
 				cmake.append("-DGIFLIB_LIBRARY=%s/giflib-%s/lib/libgif.a" % (libs_prefix, GIFLIB_VERSION))
 				cmake.append("-DWEBP_LIBRARY=%s/webp-%s/lib/libwebp.a" % (libs_prefix, WEBP_VERSION))
-				cmake.append("-DOPENCOLLADA_ROOT_DIR=%s" % getLibPath('collada'))
+				# cmake.append("-DOPENCOLLADA_ROOT_DIR=%s" % getLibPath('collada'))
 
 				cmake.append("-DPCRE_ROOT_DIR=%s" % getLibPath('pcre'))
 			else:

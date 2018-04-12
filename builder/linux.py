@@ -124,17 +124,6 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			f.truncate()
 		return True
 
-	def pathColladaCmake():
-		with open(os.path.join(wd, 'OpenCOLLADA-%s' % COLLADA_UID, 'CMakeLists.txt'), 'r+') as f:
-			content = [l.rstrip('\n') for l in f.readlines()]
-			newLine = 'set(CMAKE_FIND_LIBRARY_SUFFIXES .a ${CMAKE_FIND_LIBRARY_SUFFIXES})'
-			utils.stdout_log('Swapping lines:\n[%s] -> [%s]' % (content[212], newLine))
-			content[212] = newLine
-			f.seek(0)
-			f.write('\n'.join(content))
-			f.truncate()
-		return True
-
 	def getOrCmd(a, b):
 		return lambda: a() or b()
 
@@ -397,7 +386,6 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 			getChDirCmd(wd),
 			getDownloadCmd('https://github.com/KhronosGroup/OpenCOLLADA/archive/%s.zip' % COLLADA_UID, 'collada.zip'),
 			'unzip -o collada.zip',
-			pathColladaCmake,
 			'mkdir -p OpenCOLLADA-%s/build' % COLLADA_UID,
 			getChDirCmd(os.path.join(wd, 'OpenCOLLADA-%s' % COLLADA_UID, 'build')),
 			' '.join(['cmake', '../', '-DCMAKE_BUILD_TYPE=Release', '-DCMAKE_INSTALL_PREFIX=%s' % getLibPath('collada'),
@@ -551,7 +539,7 @@ class LinuxBuilder(Builder):
 		cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
 		cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))
 		cmake.append("-DWITH_LIBMV=%s" % utils.GetCmakeOnOff(self.with_tracker))
-		# cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.with_collada))
+		cmake.append("-DWITH_OPENCOLLADA=%s" % utils.GetCmakeOnOff(self.with_collada))
 		cmake.append("-DWITH_CYCLES=%s" % utils.GetCmakeOnOff(self.with_cycles))
 		if self.with_cycles:
 			cmake.append("-DWITH_CODEC_FFMPEG=ON")
@@ -647,7 +635,7 @@ class LinuxBuilder(Builder):
 
 				cmake.append("-DGIFLIB_LIBRARY=%s/giflib-%s/lib/libgif.a" % (libs_prefix, GIFLIB_VERSION))
 				cmake.append("-DWEBP_LIBRARY=%s/webp-%s/lib/libwebp.a" % (libs_prefix, WEBP_VERSION))
-				# cmake.append("-DOPENCOLLADA_ROOT_DIR=%s" % getLibPath('collada'))
+				cmake.append("-DOPENCOLLADA_ROOT_DIR=%s" % getLibPath('collada'))
 
 				cmake.append("-DPCRE_ROOT_DIR=%s" % getLibPath('pcre'))
 			else:

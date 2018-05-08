@@ -287,7 +287,6 @@ class MacBuilder(Builder):
 			cmake.append("-DWITH_CYCLES_OSL=ON")
 
 		if self.build_mode == 'nightly':
-			cmake.append("-DUSE_BLENDER_VRAY_ZMQ=ON")
 			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
 		cmake.append("-DWITH_CXX11=ON")
 		cmake.append(self.dir_blender)

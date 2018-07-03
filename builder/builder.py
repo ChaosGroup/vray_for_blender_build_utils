@@ -36,7 +36,7 @@ from . import utils
 PREBUILD_LIB_NUMBER = 13
 
 OFFICIAL_REPO = "http://git.blender.org/blender.git"
-GITHUB_REPO   = "https://github.com/bdancer/blender-for-vray.git"
+GITHUB_REPO   = "https://github.com/ChaosGroup/blender_with_vray_additions"
 
 BLENDER_HASH_271 = "772af36fc469e7666fc59d1d0b0e4dbcf52cfe2c"
 
@@ -216,13 +216,13 @@ class Builder:
 				sys.stdout.write("Getting V-Ray/Blender patches...\n")
 				if not self.mode_test:
 					os.chdir(self.dir_source)
-					os.system("git clone git://github.com/bdancer/vb25-patch.git")
+					os.system("git clone git://github.com/ChaosGroup/vray_for_blender_build_utils")
 
 
 	def update(self):
 		if self.teamcity:
 			self.revision = self.teamcity_branch_hash
-			self.brev = utils._get_cmd_output(['git', 'ls-remote', 'git://github.com/bdancer/blender-for-vray', 'master'])
+			self.brev = utils._get_cmd_output(['git', 'ls-remote', GITHUB_REPO, 'master'])
 			self.brev = re.split('\s+', self.brev)[0][:7]
 			self.commits = ""
 		else:
@@ -425,7 +425,7 @@ class Builder:
 			exporterPath = utils.path_join(addonsPath, "vb30")
 			if os.path.exists(exporterPath):
 				utils.remove_directory(exporterPath)
-			os.system("git clone --recursive https://github.com/bdancer/vb30.git")
+			os.system("git clone --recursive https://github.com/ChaosGroup/vray_for_blender_exporter")
 
 			if self.use_exp_branch not in {'master'}:
 				os.chdir(exporterPath)

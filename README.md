@@ -1,4 +1,4 @@
 V-Ray/Blender Patchset
 ======================
 
-Documentation: http://github.com/bdancer/vb25-patch/wiki
+Documentation: https://github.com/ChaosGroup/vray_for_blender_build_utils

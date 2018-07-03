@@ -64,7 +64,7 @@ cd C:\build
 
 Now clone **vb25-patch** repo:
 ```
-git clone git://github.com/bdancer/vb25-patch.git
+git clone git://github.com/ChaosGroup/vray_for_blender_build_utils
 ```
 
 ### Dependencies (Linux only)

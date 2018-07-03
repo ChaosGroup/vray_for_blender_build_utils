@@ -216,7 +216,7 @@ class Builder:
 				sys.stdout.write("Getting V-Ray/Blender patches...\n")
 				if not self.mode_test:
 					os.chdir(self.dir_source)
-					os.system("git clone git://github.com/ChaosGroup/vray_for_blender_build_utils")
+					os.system("git clone git://github.com/ChaosGroup/vray_for_blender_build_utils vb25-patch")
 
 
 	def update(self):
@@ -425,7 +425,7 @@ class Builder:
 			exporterPath = utils.path_join(addonsPath, "vb30")
 			if os.path.exists(exporterPath):
 				utils.remove_directory(exporterPath)
-			os.system("git clone --recursive https://github.com/ChaosGroup/vray_for_blender_exporter")
+			os.system("git clone --recursive https://github.com/ChaosGroup/vray_for_blender_exporter vb30")
 
 			if self.use_exp_branch not in {'master'}:
 				os.chdir(exporterPath)

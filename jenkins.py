@@ -133,9 +133,18 @@ def main(args):
         git_prefix = ssh_prefix
 
     os.chdir(dir_source)
-    utils.get_repo(git_prefix + 'ChaosGroup/blender_with_vray_additions', branch=blender_branch, submodules=blender_modules, target_name='blender')
-    utils.get_repo('ssh://gitolite@mantis.chaosgroup.com:2047/vray_for_blender_libs', target_name='blender-for-vray-libs')
-    utils.get_repo(git_prefix + 'ChaosGroup/vray_for_blender_server', branch=args.jenkins_zmq_branch, submodules=['extern/vray-zmq-wrapper'])
+    utils.get_repo(git_prefix + 'ChaosGroup/blender_with_vray_additions',
+                   branch=blender_branch,
+                   submodules=blender_modules,
+                   target_name='blender')
+
+    utils.get_repo('ssh://gitolite@mantis.chaosgroup.com:2047/vray_for_blender_libs',
+                   target_name='blender-for-vray-libs')
+
+    utils.get_repo(git_prefix + 'ChaosGroup/vray_for_blender_server',
+                   branch=args.jenkins_zmq_branch,
+                   submodules=['extern/vray-zmq-wrapper'],
+                   target_name='vrayserverzmq')
 
     os.chdir(dir_build)
 

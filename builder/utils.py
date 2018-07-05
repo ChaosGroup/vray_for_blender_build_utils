@@ -142,7 +142,7 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 		"git checkout -f origin/%s" % branch,
 		"git submodule foreach --recursive git clean -ffd",
 		"git clean -ffd",
-		'cat .gitmodules', # log the submodules
+		'test -e .gitmodules && cat .gitmodules', # log the submodules
 	]
 
 	for module in submodules:

@@ -127,17 +127,13 @@ def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submo
 			remove_directory(clone_dir)
 			repo_dir_exists = False
 
-	debug_str = ''
-	if target_name == "vrayserverzmq":
-		debug_str = "GIT_CURL_VERBOSE=1 GIT_TRACE=1"
-
 	if not repo_dir_exists:
 		get_cmd = ""
 		if target_name and not target_dir:
 			# just rename clone
-			dumpAndExec("%s git clone %s %s" % (debug_str, repo_url, target_name))
+			dumpAndExec("git clone %s %s" % (repo_url, target_name))
 		else:
-			dumpAndExec("%s git clone %s" % (debug_str, repo_url))
+			dumpAndExec("git clone %s" % repo_url)
 
 	os.chdir(clone_dir)
 	git_cmds = git_cmds + [

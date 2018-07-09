@@ -123,8 +123,6 @@ def main(args):
         'release/datafiles/locale', # WITH_INTERNATIONAL
     ]
 
-    utils.stdout_log(str(os.environ))
-
     os.chdir(dir_source)
     utils.get_repo('git@github.com:ChaosGroup/blender_with_vray_additions',
                    branch=blender_branch,
@@ -134,7 +132,7 @@ def main(args):
     utils.get_repo('ssh://gitolite@mantis.chaosgroup.com:2047/vray_for_blender_libs',
                    target_name='blender-for-vray-libs')
 
-    utils.get_repo('ssh://gitolite@gitolite.chaosgroup.com/vray_for_blender_server.git',
+    utils.get_repo('ssh://gitolite@mantis.chaosgroup.com:2047/vray_for_blender_server.git',
                    branch=args.jenkins_zmq_branch,
                    submodules=['extern/vray-zmq-wrapper'],
                    target_name='vrayserverzmq')

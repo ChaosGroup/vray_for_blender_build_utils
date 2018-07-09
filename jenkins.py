@@ -123,6 +123,8 @@ def main(args):
         'release/datafiles/locale', # WITH_INTERNATIONAL
     ]
 
+    utils.stdout_log(str(os.environ))
+
     os.chdir(dir_source)
     utils.get_repo('git@github.com:ChaosGroup/blender_with_vray_additions',
                    branch=blender_branch,

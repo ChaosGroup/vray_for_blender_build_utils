@@ -83,14 +83,14 @@ class WindowsBuilder(Builder):
 		}
 
 		for var in env:
-			os.environ[var] = os.pathsep.join(env[var]).format(xpakRoot=self.xpath_path)
+			os.environ[var] = os.pathsep.join(env[var]).format(xpakRoot=self.xpak_path)
 
 
 	def post_init(self):
 		cgrepoPath = os.environ['VRAY_CGREPO_PATH']
 		xpakTool = os.path.join(cgrepoPath, 'bintools', 'x64', 'xpaktool.exe')
 
-		xpakGetStudioCmd = "%s xinstall -pak MSVS2015/1900.23506.1000 -workdir %s" % (xpakTool, self.xpath_path)
+		xpakGetStudioCmd = "%s xinstall -pak MSVS2015/1900.23506.1000 -workdir %s" % (xpakTool, self.xpak_path)
 		utils.exec_and_log(xpakGetStudioCmd, 'XPAK', exit=True)
 		self.setup_msvc_2015_xpak()
 

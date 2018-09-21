@@ -379,8 +379,8 @@ class Builder:
 
 		self.dir_blender      = utils.path_join(self.dir_source, "blender")
 		self.dir_blender_svn  = utils.path_join(self.dir_source, "blender-git")
-		self.xpath_path = os.path.join(self.dir_source, 'xpak-workdir')
-		utils.path_create(self.xpath_path)
+		self.xpak_path = os.path.join(self.dir_source, 'xpak-workdir')
+		utils.path_create(self.xpak_path)
 
 
 	def compile(self):

@@ -54,14 +54,6 @@ def main(args):
     os.environ['ftp_proxy'] = '10.0.0.1:1234'
     os.environ['socks_proxy'] = '10.0.0.1:1080'
 
-    cgrepo = os.environ['VRAY_CGREPO_PATH']
-    kdrive_os_dir_name = {
-        utils.WIN: 'win',
-        utils.LNX: 'linux',
-        utils.MAC: 'mac',
-    }[utils.get_host_os()]
-    kdrive = os.path.join(cgrepo, 'sdk', kdrive_os_dir_name)
-
     dir_source = os.path.join(args.jenkins_perm_path, 'blender-dependencies')
     if not os.path.exists(dir_source):
         os.makedirs(dir_source)
@@ -70,16 +62,6 @@ def main(args):
         lock_file = os.path.join(dir_source, 'vrayserverzmq','.git','modules','extern','vray-zmq-wrapper','modules','extern','cppzmq','index.lock')
         if os.path.exists(lock_file):
             utils.remove_path(lock_file)
-
-    ### ADD NINJA TO PATH
-    ninja_path = 'None'
-    if sys.platform == 'win32':
-        ninja_path = os.path.join(cgrepo, 'build_scripts', 'cmake', 'tools', 'bin')
-    else:
-        ninja_path = os.path.join(os.environ['CI_ROOT'], 'ninja', 'ninja')
-    sys.stdout.write('Ninja path [%s]\n' % ninja_path)
-    sys.stdout.flush()
-    os.environ['PATH'] = ninja_path + os.pathsep + os.environ['PATH']
 
     ### CLONE REPOS
     blender_modules = [
@@ -104,6 +86,16 @@ def main(args):
                    branch=args.jenkins_zmq_branch,
                    submodules=['extern/vray-zmq-wrapper'],
                    target_name='vrayserverzmq')
+
+    ### ADD NINJA TO PATH
+    ninja_path = 'None'
+    if sys.platform == 'win32':
+        ninja_path = os.path.join(dir_source, 'blender-for-vray-libs', 'Windows')
+    else:
+        ninja_path = os.path.join(os.environ['CI_ROOT'], 'ninja', 'ninja')
+    sys.stdout.write('Ninja path [%s]\n' % ninja_path)
+    sys.stdout.flush()
+    os.environ['PATH'] = ninja_path + os.pathsep + os.environ['PATH']
 
     os.chdir(dir_build)
 
@@ -136,8 +128,6 @@ def main(args):
     cmd.append('--github-src-branch=%s' % blender_branch)
     cmd.append('--teamcity_zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(dir_source, 'vrayserverzmq')))
 
-    cmd.append('--jenkins_kdrive_path=%s' % kdrive)
-    os.environ['jenkins_kdrive_path'] = kdrive
     cmd.append('--jenkins_output=%s' % args.jenkins_output)
 
 

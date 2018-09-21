@@ -115,7 +115,7 @@ class WindowsBuilder(Builder):
 			utils.path_create(xpakRoot)
 			xpakGetStudioCmd = "%s xinstall -pak MSVS2015/1900.23506.1000 -workdir %s" % (xpakTool, xpakRoot)
 			utils.exec_and_log(xpakGetStudioCmd, 'XPAK', exit=True)
-			setup_msvc_2015_xpak(xpakRoot)
+			self.setup_msvc_2015_xpak(xpakRoot)
 
 
 		cmake.append("-DCMAKE_BUILD_TYPE=%s" % self.build_type.capitalize())

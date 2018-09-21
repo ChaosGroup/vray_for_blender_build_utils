@@ -61,7 +61,7 @@ class WindowsBuilder(Builder):
 		for var in env:
 			os.environ[var] = ";".join(env[var]).format(CGR_SDK=cgrepo)
 
-	def setup_msvc_2015_xpak(rootDir):
+	def setup_msvc_2015_xpak(self, rootDir):
 		env = {
 			'INCLUDE' : [
 				"{xpakRoot}/include",

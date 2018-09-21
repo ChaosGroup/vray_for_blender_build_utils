@@ -112,8 +112,9 @@ class WindowsBuilder(Builder):
 			os.environ['PATH'] = utils.path_join(self.patch_dir, "tools")
 
 			xpakRoot = os.path.join(self.dir_source, 'xpak-workdir')
+			utils.path_create(xpakRoot)
 			xpakGetStudioCmd = "%s xinstall -pak MSVS2015/1900.23506.1000 -workdir %s" % (xpakTool, xpakRoot)
-			exec_and_log(xpakGetStudioCmd, 'XPAK', exit=True)
+			utils.exec_and_log(xpakGetStudioCmd, 'XPAK', exit=True)
 			setup_msvc_2015_xpak(xpakRoot)
 
 

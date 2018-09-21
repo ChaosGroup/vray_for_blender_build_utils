@@ -379,6 +379,8 @@ class Builder:
 
 		self.dir_blender      = utils.path_join(self.dir_source, "blender")
 		self.dir_blender_svn  = utils.path_join(self.dir_source, "blender-git")
+		self.xpath_path = os.path.join(self.dir_source, 'xpak-workdir')
+		utils.path_create(self.xpath_path)
 
 
 	def compile(self):
@@ -455,7 +457,7 @@ class Builder:
 		command.append(os.path.join(self.dir_source, 'vrayserverzmq', 'build', 'builder.py'))
 		command.append('--source_path=%s' % os.path.join(self.dir_source, 'vrayserverzmq'))
 		command.append('--libs_path=%s' % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
-		command.append('--kdrive2_path=%s' % self.jenkins_kdrive_path)
+		command.append('--xpak_path=%s' % self.xpak_path)
 		command.append('--install_path=%s' % os.path.normpath(os.path.join(self.dir_install, '..', 'vrayserverzmq')))
 
 		sys.stdout.write('Calling builder:\n%s\n' % '\n\t'.join(command))

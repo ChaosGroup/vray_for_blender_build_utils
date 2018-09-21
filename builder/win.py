@@ -61,29 +61,38 @@ class WindowsBuilder(Builder):
 		for var in env:
 			os.environ[var] = ";".join(env[var]).format(CGR_SDK=cgrepo)
 
-	def setup_msvc_2015_xpak(self, rootDir):
+	def setup_msvc_2015_xpak(self):
 		env = {
 			'INCLUDE' : [
-				"{xpakRoot}/include",
-				"{xpakRoot}/atlmfc/include",
+				"{xpakRoot}/MSVS2015/include",
+				"{xpakRoot}/MSVS2015/atlmfc/include",
 			],
 
 			'LIB' : [
-				"{xpakRoot}/PlatformSDK/Lib/winv6.3/um/x64",
-				"{xpakRoot}/PlatformSDK/Lib/ucrt/x64",
-				"{xpakRoot}/atlmfc/lib/x64",
-				"{xpakRoot}/lib/x64",
+				"{xpakRoot}/MSVS2015/PlatformSDK/Lib/winv6.3/um/x64",
+				"{xpakRoot}/MSVS2015/PlatformSDK/Lib/ucrt/x64",
+				"{xpakRoot}/MSVS2015/atlmfc/lib/x64",
+				"{xpakRoot}/MSVS2015/lib/x64",
 			],
 
 			'PATH' : [
-				"{xpakRoot}/bin/Hostx64/x64",
-				"{xpakRoot}/bin",
-				"{xpakRoot}/PlatformSDK/bin/x64",
+				"{xpakRoot}/MSVS2015/bin/Hostx64/x64",
+				"{xpakRoot}/MSVS2015/bin",
+				"{xpakRoot}/MSVS2015/PlatformSDK/bin/x64",
 			] + os.environ['PATH'].split(os.pathsep),
 		}
 
 		for var in env:
-			os.environ[var] = os.pathsep.join(env[var]).format(xpakRoot=rootDir)
+			os.environ[var] = os.pathsep.join(env[var]).format(xpakRoot=self.xpath_path)
+
+
+	def post_init(self):
+		cgrepoPath = os.environ['VRAY_CGREPO_PATH']
+		xpakTool = os.path.join(cgrepoPath, 'bintools', 'x64', 'xpaktool.exe')
+
+		xpakGetStudioCmd = "%s xinstall -pak MSVS2015/1900.23506.1000 -workdir %s" % (xpakTool, self.xpath_path)
+		utils.exec_and_log(xpakGetStudioCmd, 'XPAK', exit=True)
+		self.setup_msvc_2015_xpak()
 
 
 	def compile(self):
@@ -104,18 +113,9 @@ class WindowsBuilder(Builder):
 
 		old_path = ''
 		if self.jenkins:
-			cgrepoPath = os.environ['VRAY_CGREPO_PATH']
-			xpakTool = os.path.join(cgrepoPath, 'bintools', 'x64', 'xpaktool.exe')
-
 			cmake[0] = utils.which('cmake')
 			old_path = os.environ['PATH']
 			os.environ['PATH'] = utils.path_join(self.patch_dir, "tools")
-
-			xpakRoot = os.path.join(self.dir_source, 'xpak-workdir')
-			utils.path_create(xpakRoot)
-			xpakGetStudioCmd = "%s xinstall -pak MSVS2015/1900.23506.1000 -workdir %s" % (xpakTool, xpakRoot)
-			utils.exec_and_log(xpakGetStudioCmd, 'XPAK', exit=True)
-			self.setup_msvc_2015_xpak(xpakRoot)
 
 
 		cmake.append("-DCMAKE_BUILD_TYPE=%s" % self.build_type.capitalize())
@@ -322,7 +322,3 @@ class WindowsBuilder(Builder):
 			return subdir, zip_name
 		else:
 			return self.installer_nsis(installer_name, installer_path, installer_root)
-
-
-	def post_init(self):
-		pass

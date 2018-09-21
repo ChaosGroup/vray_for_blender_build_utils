@@ -120,8 +120,8 @@ class Builder:
 					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/windows lib/windows"
 					if self.host_arch == "x86_64":
 						if self.vc2013:
-							lib_dir = utils.path_join(self.dir_source, "lib", "win64_vc12")
-							svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12"
+							lib_dir = utils.path_join(self.dir_source, "lib", "win64_vc14")
+							svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc14 lib/win64_vc14"
 						else:
 							lib_dir = utils.path_join(self.dir_source, "lib", "win64")
 							svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64 lib/win64"

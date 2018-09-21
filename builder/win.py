@@ -61,6 +61,30 @@ class WindowsBuilder(Builder):
 		for var in env:
 			os.environ[var] = ";".join(env[var]).format(CGR_SDK=cgrepo)
 
+	def setup_msvc_2015_xpak(rootDir):
+		env = {
+			'INCLUDE' : [
+				"{xpakRoot}/include",
+				"{xpakRoot}/atlmfc/include",
+			],
+
+			'LIB' : [
+				"{xpakRoot}/PlatformSDK/Lib/winv6.3/um/x64",
+				"{xpakRoot}/PlatformSDK/Lib/ucrt/x64",
+				"{xpakRoot}/atlmfc/lib/x64",
+				"{xpakRoot}/lib/x64",
+			],
+
+			'PATH' : [
+				"{xpakRoot}/bin/Hostx64/x64",
+				"{xpakRoot}/bin",
+				"{xpakRoot}/PlatformSDK/bin/x64",
+			] + os.environ['PATH'].split(os.pathsep),
+		}
+
+		for var in env:
+			os.environ[var] = os.pathsep.join(env[var]).format(xpakRoot=rootDir)
+
 
 	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_build, "blender-cmake-build")
@@ -80,10 +104,18 @@ class WindowsBuilder(Builder):
 
 		old_path = ''
 		if self.jenkins:
+			cgrepoPath = os.environ['VRAY_CGREPO_PATH']
+			xpakTool = os.path.join(cgrepoPath, 'bintools', 'x64', 'xpaktool.exe')
+
 			cmake[0] = utils.which('cmake')
 			old_path = os.environ['PATH']
 			os.environ['PATH'] = utils.path_join(self.patch_dir, "tools")
-			self.setup_msvc_2013(self.jenkins_kdrive_path)
+
+			xpakRoot = os.path.join(self.dir_source, 'xpak-workdir')
+			xpakGetStudioCmd = "%s xinstall -pak MSVS2015/1900.23506.1000 -workdir %s" % (xpakTool, xpakRoot)
+			exec_and_log(xpakGetStudioCmd, 'XPAK', exit=True)
+			setup_msvc_2015_xpak(xpakRoot)
+
 
 		cmake.append("-DCMAKE_BUILD_TYPE=%s" % self.build_type.capitalize())
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)

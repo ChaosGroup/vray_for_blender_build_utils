@@ -97,6 +97,8 @@ def exec_and_log(cmd, tag="", exit=False):
 		sys.stderr.flush()
 		if exit:
 			sys.exit(2)
+		return False
+	return True
 
 
 def get_repo(repo_url, branch='master', target_dir=None, target_name=None, submodules=[]):

@@ -32,36 +32,6 @@ import subprocess
 
 from builder import utils
 
-def setup_msvc_2013(cgrepo):
-    env = {
-        'INCLUDE' : [
-            "{CGR_SDK}/msvs2013/PlatformSDK/Include/shared",
-            "{CGR_SDK}/msvs2013/PlatformSDK/Include/um",
-            "{CGR_SDK}/msvs2013/PlatformSDK/Include/winrt",
-            "{CGR_SDK}/msvs2013/PlatformSDK/Include/ucrt",
-            "{CGR_SDK}/msvs2013/include",
-            "{CGR_SDK}/msvs2013/atlmfc/include",
-        ],
-
-        'LIB' : [
-            "{CGR_SDK}/msvs2013/PlatformSDK/Lib/winv6.3/um/x64",
-            "{CGR_SDK}/msvs2013/PlatformSDK/Lib/ucrt/x64",
-            "{CGR_SDK}/msvs2013/atlmfc/lib/amd64",
-            "{CGR_SDK}/msvs2013/lib/amd64",
-        ],
-
-        'PATH' : [
-                "{CGR_SDK}/msvs2013/bin/amd64",
-                "{CGR_SDK}/msvs2013/bin",
-                "{CGR_SDK}/msvs2013/PlatformSDK/bin/x64",
-            ] + os.environ['PATH'].split(os.pathsep)
-        ,
-    }
-    os.environ['__MS_VC_INSTALL_PATH'] = "{CGR_SDK}/msvs2013"
-    for var in env:
-        os.environ[var] = ";".join(env[var]).format(CGR_SDK=cgrepo)
-
-
 def main(args):
     sys.stdout.write('jenkins args:\n%s\n' % str(args))
     sys.stdout.flush()
@@ -91,9 +61,6 @@ def main(args):
         utils.MAC: 'mac',
     }[utils.get_host_os()]
     kdrive = os.path.join(cgrepo, 'sdk', kdrive_os_dir_name)
-
-    if sys.platform == 'win32':
-        setup_msvc_2013(kdrive)
 
     dir_source = os.path.join(args.jenkins_perm_path, 'blender-dependencies')
     if not os.path.exists(dir_source):

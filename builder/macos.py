@@ -38,10 +38,10 @@ from .builder import Builder
 BOOST_VERSION = "1.61.0"
 PYTHON_VERSION_BIG = "3.7"
 PYTHON_VERSION = ("%s.0" % PYTHON_VERSION_BIG)
-NUMPY_VERSION = "1.13.1"
+NUMPY_VERSION = "1.14.6"
 ZLIB_VERSION = "1.2.11"
 
-LIBS_GENERATION = 26
+LIBS_GENERATION = 27
 
 def getDepsCompilationData(self, prefix, wd, jobs):
 	def dbg(x):

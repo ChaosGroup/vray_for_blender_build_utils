@@ -83,7 +83,7 @@ class WindowsBuilder(Builder):
 				"{xpakRoot}/MSVS2015/bin/Hostx64/x64",
 				"{xpakRoot}/MSVS2015/bin",
 				"{xpakRoot}/PlatformSDK10/bin/x64",
-			] + os.environ['PATH'].split(os.pathsep),,
+			] + os.environ['PATH'].split(os.pathsep),
 		}
 
 		for var in env:

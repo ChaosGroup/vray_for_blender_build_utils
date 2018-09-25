@@ -260,7 +260,7 @@ class MacBuilder(Builder):
 		cmake.append("-DCMAKE_BUILD_TYPE=%s" % self.build_type.capitalize())
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
-		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity or self.jenkins))
+		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.jenkins))
 		cmake.append("-DPNG_LIBRARIES=png12")
 		cmake.append("-DWITH_ALEMBIC=ON")
 		cmake.append("-DWITH_INPUT_NDOF=ON")

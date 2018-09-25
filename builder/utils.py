@@ -667,7 +667,7 @@ def GetInstallDirName(self):
 			'hash'    : "",
 		})
 
-	if self.teamcity or self.jenkins:
+	if self.jenkins:
 		params.update({
 			'bhash' : "",
 			'nCommits' : "",
@@ -811,26 +811,15 @@ def get_zmq_build_items(self, appsdkFile):
 	zmq_build_path = ''
 	if self.jenkins:
 		zmq_build_path = os.path.join(self.dir_install, '..', 'vrayserverzmq', 'V-Ray', 'VRayZmqServer', 'VRayZmqServer%s' % extension)
+	if not os.path.exists(zmq_build_path):
+		stderr_log('missing vrayserverzmq build - existing')
+		sys.exit(1)
 
 	if host_os == WIN:
-		if not os.path.exists(zmq_build_path):
-			zmq_build_path = "H:/%s" % sub_dir_template
 		items = [zmq_build_path]
 	elif host_os == LNX:
-		if not os.path.exists(zmq_build_path):
-			zmq_build_path = "/home/teamcity/%s" % sub_dir_template
-		# lets try in our home dir
-		if not os.path.exists(zmq_build_path):
-			zmq_build_path = os.path.expanduser("~/%s" % sub_dir_template)
 		items = [zmq_build_path]
 	elif host_os == MAC:
-		# copy file, edit search path for appsdk lib and add to installation
-		if not os.path.exists(zmq_build_path):
-			zmq_build_path = "/Users/andreiizrantsev/%s" % sub_dir_template
-		# lets try in our home dir
-		if not os.path.exists(zmq_build_path):
-			zmq_build_path = os.path.expanduser("~/%s" % sub_dir_template)
-
 		# we will rename appsdk and Qt to point to appsdk folder
 		zmq_temp = "%s/VRayZmqServer" % tempfile.gettempdir()
 		if os.path.exists(zmq_temp):

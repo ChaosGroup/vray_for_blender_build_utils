@@ -238,20 +238,15 @@ parser.add_argument('--use_proxy',
 	help    = argparse.SUPPRESS
 )
 
-# Teamcity
-parser.add_argument('--teamcity',
-	action  = 'store_true',
-	help    = argparse.SUPPRESS
-)
-parser.add_argument('--teamcity_branch_hash',
+parser.add_argument('--branch_hash',
 	default = "",
 	help    = argparse.SUPPRESS
 )
-parser.add_argument('--teamcity_zmq_server_hash',
+parser.add_argument('--zmq_server_hash',
 	default = "",
 	help    = argparse.SUPPRESS
 )
-parser.add_argument('--teamcity_with_static_libc',
+parser.add_argument('--with_static_libc',
 	action = 'store_true',
 	help    = argparse.SUPPRESS
 )

@@ -126,7 +126,7 @@ def main(args):
     cmd.append('--dir_build=%s' % dir_build)
 
     cmd.append('--github-src-branch=%s' % blender_branch)
-    cmd.append('--teamcity_zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(dir_source, 'vrayserverzmq')))
+    cmd.append('--zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(dir_source, 'vrayserverzmq')))
 
     cmd.append('--jenkins_output=%s' % args.jenkins_output)
 
@@ -159,7 +159,7 @@ def main(args):
     cmd.append('--dir_cgr_installer=%s' % os.path.join(dir_source, 'blender-for-vray-libs', 'cgr_installer'))
 
     if args.jenkins_with_static_libc:
-        cmd.append('--teamcity_with_static_libc')
+        cmd.append('--with_static_libc')
 
     cmd.append('--dev_static_libs')
 

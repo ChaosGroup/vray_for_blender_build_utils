@@ -220,13 +220,7 @@ class Builder:
 
 
 	def update(self):
-		if self.teamcity:
-			self.revision = self.teamcity_branch_hash
-			self.brev = utils._get_cmd_output(['git', 'ls-remote', GITHUB_REPO, 'master'])
-			self.brev = re.split('\s+', self.brev)[0][:7]
-			self.commits = ""
-		else:
-			self.revision, self.brev, self.commits = utils.get_svn_revision(self.dir_blender)
+		self.revision, self.brev, self.commits = utils.get_svn_revision(self.dir_blender)
 
 		self.version = utils.get_blender_version(self.dir_blender)[0]
 		self.versionArr = utils.get_blender_version(self.dir_blender)

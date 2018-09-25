@@ -122,7 +122,7 @@ class WindowsBuilder(Builder):
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
 
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
-		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.teamcity or self.jenkins))
+		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.jenkins))
 
 		if self.build_mode == 'nightly':
 			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))

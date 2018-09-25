@@ -35,13 +35,13 @@ from distutils.dir_util import copy_tree
 from .builder import utils
 from .builder import Builder
 
-BOOST_VERSION="1.61.0"
-PYTHON_VERSION="3.6.2"
-PYTHON_VERSION_BIG="3.6"
-NUMPY_VERSION="1.13.1"
-ZLIB_VERSION="1.2.11"
+BOOST_VERSION = "1.61.0"
+PYTHON_VERSION_BIG = "3.7"
+PYTHON_VERSION = ("%s.0" % PYTHON_VERSION_BIG)
+NUMPY_VERSION = "1.13.1"
+ZLIB_VERSION = "1.2.11"
 
-LIBS_GENERATION = 25
+LIBS_GENERATION = 26
 
 def getDepsCompilationData(self, prefix, wd, jobs):
 	def dbg(x):

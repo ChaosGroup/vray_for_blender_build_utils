@@ -299,7 +299,7 @@ class Builder:
 		with open(cache_file, "r") as file:
 			contents = file.read()
 			file_data = int(contents)
-			utils.stdout_log("Cache file contents [%s] = %d <=> %d" % (contents, file_data, self.get_cache_num()))
+			utils.stdout_log("Cache file contents [%s] = parsed version %d <=> script version %d" % (contents, file_data, self.get_cache_num()))
 			if file_data < self.get_cache_num():
 				utils.stdout_log("Cache is older than our version")
 				return True

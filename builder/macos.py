@@ -168,7 +168,7 @@ def DepsBuild(self):
 def PatchLibs(self):
 	svn_subdirs = [
 		os.path.join(self.dir_source, 'lib', 'darwin'),
-		os.path.join(self.dir_source, 'lib', 'win64_vc12'),
+		os.path.join(self.dir_source, 'lib', 'win64_vc14'),
 	]
 
 	foundLibs = 0
@@ -186,8 +186,8 @@ def PatchLibs(self):
 		libs_prefix = self._blender_libs_location
 		patch_steps = [
 			"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin lib/darwin",
-			"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc12 lib/win64_vc12",
-			"cp -Rf lib/win64_vc12/opensubdiv/include/opensubdiv/* lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/",
+			"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc14 lib/win64_vc14",
+			"cp -Rf lib/win64_vc14/opensubdiv/include/opensubdiv/* lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/",
 		]
 
 		os.chdir(self.dir_source)

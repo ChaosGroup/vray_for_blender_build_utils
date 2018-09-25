@@ -64,13 +64,17 @@ class WindowsBuilder(Builder):
 	def setup_msvc_2015_xpak(self):
 		env = {
 			'INCLUDE' : [
+				"{xpakRoot}/PlatformSDK10/Include/shared",
+				"{xpakRoot}/PlatformSDK10/Include/um",
+				"{xpakRoot}/PlatformSDK10/Include/winrt",
+				"{xpakRoot}/PlatformSDK10/Include/ucrt",
 				"{xpakRoot}/MSVS2015/include",
 				"{xpakRoot}/MSVS2015/atlmfc/include",
 			],
 
 			'LIB' : [
-				"{xpakRoot}/MSVS2015/PlatformSDK/Lib/winv6.3/um/x64",
-				"{xpakRoot}/MSVS2015/PlatformSDK/Lib/ucrt/x64",
+				"{xpakRoot}/PlatformSDK10/Lib/winv6.3/um/x64",
+				"{xpakRoot}/PlatformSDK10/Lib/ucrt/x64",
 				"{xpakRoot}/MSVS2015/atlmfc/lib/x64",
 				"{xpakRoot}/MSVS2015/lib/x64",
 			],
@@ -78,8 +82,8 @@ class WindowsBuilder(Builder):
 			'PATH' : [
 				"{xpakRoot}/MSVS2015/bin/Hostx64/x64",
 				"{xpakRoot}/MSVS2015/bin",
-				"{xpakRoot}/MSVS2015/PlatformSDK/bin/x64",
-			] + os.environ['PATH'].split(os.pathsep),
+				"{xpakRoot}/PlatformSDK10/bin/x64",
+			] + os.environ['PATH'].split(os.pathsep),,
 		}
 
 		for var in env:
@@ -92,6 +96,9 @@ class WindowsBuilder(Builder):
 
 		xpakGetStudioCmd = "%s xinstall -pak MSVS2015/1900.23506.1000 -workdir %s" % (xpakTool, self.xpak_path)
 		utils.exec_and_log(xpakGetStudioCmd, 'XPAK', exit=True)
+
+		xpakGetWinSDK = "%s xinstall -pak PlatformSDK10/1000.10586.212.1000 -workdir %s" % (xpakTool, self.xpak_path)
+		utils.exec_and_log(xpakGetWinSDK, 'XPAK', exit=True)
 		self.setup_msvc_2015_xpak()
 
 

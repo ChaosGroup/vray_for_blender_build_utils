@@ -215,11 +215,11 @@ def PatchLibs(self):
 			utils.stdout_log('shutil.copy(%s, %s)' % (sourcePath, destPath))
 			shutil.copy(sourcePath, destPath)
 
-	replace_path(os.path.join('bin', 'python3.6m'))
-	replace_path(os.path.join('lib', 'libpython3.6m.a'))
+	replace_path(os.path.join('bin', 'python3.7m'))
+	replace_path(os.path.join('lib', 'libpython3.7m.a'))
 
-	replace_path(os.path.join('lib', 'python3.6'))
-	replace_path(os.path.join('include', 'python3.6m'))
+	replace_path(os.path.join('lib', 'python3.7'))
+	replace_path(os.path.join('include', 'python3.7m'))
 
 	return True
 

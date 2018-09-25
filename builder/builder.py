@@ -116,18 +116,11 @@ class Builder:
 			svn_cmd = None
 			if self.host_os != utils.LNX:
 				if self.host_os == utils.WIN:
-					lib_dir = utils.path_join(self.dir_source, "lib", "windows")
-					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/windows lib/windows"
-					if self.host_arch == "x86_64":
-						if self.vc2013:
-							lib_dir = utils.path_join(self.dir_source, "lib", "win64_vc14")
-							svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc14 lib/win64_vc14"
-						else:
-							lib_dir = utils.path_join(self.dir_source, "lib", "win64")
-							svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64 lib/win64"
+					lib_dir = utils.path_join(self.dir_source, "lib", "win64_vc14")
+					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc14 lib/win64_vc14"
 				elif self.host_os == utils.MAC:
 					lib_dir = utils.path_join(self.dir_source, "lib", "darwin-9.x.universal")
-					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin-9.x.universal lib/darwin-9.x.universal"
+					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin lib/darwin-9.x.universal"
 
 				sys.stdout.write('Lib dir: [%s]\n' % lib_dir)
 				sys.stdout.flush()

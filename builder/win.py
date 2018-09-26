@@ -75,8 +75,8 @@ class WindowsBuilder(Builder):
 			'LIB' : [
 				"{xpakRoot}/PlatformSDK10/Lib/winv6.3/um/x64",
 				"{xpakRoot}/PlatformSDK10/Lib/ucrt/x64",
-				"{xpakRoot}/MSVS2015/atlmfc/lib/x64",
-				"{xpakRoot}/MSVS2015/lib/x64",
+				"{xpakRoot}/MSVS2015/atlmfc/lib/amd64",
+				"{xpakRoot}/MSVS2015/lib/amd64",
 			],
 
 			'PATH' : [

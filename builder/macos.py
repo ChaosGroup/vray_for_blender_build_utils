@@ -175,11 +175,17 @@ def PatchLibs(self):
 
 	for svn in svn_subdirs:
 		if os.path.exists(svn) and os.path.isdir(svn):
-			foundLibs += 1
 			os.chdir(svn)
-			utils.exec_and_log('svn --non-interactive --trust-server-cert revert . --recursive --depth=infinity', 'SVN CMD:')
-			utils.exec_and_log('svn --non-interactive --trust-server-cert cleanup', 'SVN CMD:')
-			utils.exec_and_log('svn --non-interactive --trust-server-cert update', 'SVN CMD:')
+			success = True
+			success = success and utils.exec_and_log('svn --non-interactive --trust-server-cert revert . --recursive --depth=infinity', 'SVN CMD:')
+			success = success and utils.exec_and_log('svn --non-interactive --trust-server-cert cleanup', 'SVN CMD:')
+			success = success and utils.exec_and_log('svn --non-interactive --trust-server-cert update', 'SVN CMD:')
+			if not success:
+				os.chdir(os.path.join(svn, '..'))
+				utils.stdout_log('shutil.rmtree(%s)' % svn)
+				shutil.rmtree(svn)
+			else:
+				foundLibs += 1
 
 	if foundLibs != 2:
 		utils.stdout_log('Checking out svn repos:')
@@ -187,7 +193,7 @@ def PatchLibs(self):
 		patch_steps = [
 			"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin lib/darwin",
 			"svn --non-interactive --trust-server-cert checkout --force https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc14 lib/win64_vc14",
-			"cp -Rf lib/win64_vc14/opensubdiv/include/opensubdiv/* lib/darwin-9.x.universal/opensubdiv/include/opensubdiv/",
+			#"cp -Rf lib/win64_vc14/opensubdiv/include/opensubdiv/* lib/darwin/opensubdiv/include/opensubdiv/",
 		]
 
 		os.chdir(self.dir_source)
@@ -204,6 +210,9 @@ def PatchLibs(self):
 	def replace_path(path):
 		destPath = os.path.join(pythonDest, path)
 		sourcePath = os.path.join(pythonSource, path)
+		if not os.path.exists(destPath):
+			utils.stderr_log('Dest path [%s] does not exist' % destPath)
+			return
 		if os.path.isdir(destPath):
 			utils.stdout_log('shutil.rmtree(%s)' % destPath)
 			shutil.rmtree(destPath)

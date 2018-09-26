@@ -68,19 +68,19 @@ class WindowsBuilder(Builder):
 				"{xpakRoot}/PlatformSDK10/Include/um",
 				"{xpakRoot}/PlatformSDK10/Include/winrt",
 				"{xpakRoot}/PlatformSDK10/Include/ucrt",
-				"{xpakRoot}/MSVS2015/include",
-				"{xpakRoot}/MSVS2015/atlmfc/include",
+				"{xpakRoot}/MSVS2017/include",
+				"{xpakRoot}/MSVS2017/atlmfc/include",
 			],
 
 			'LIB' : [
 				"{xpakRoot}/PlatformSDK10/Lib/winv6.3/um/x64",
 				"{xpakRoot}/PlatformSDK10/Lib/ucrt/x64",
-				"{xpakRoot}/MSVS2015/atlmfc/lib/amd64",
-				"{xpakRoot}/MSVS2015/lib/amd64",
+				"{xpakRoot}/MSVS2017/atlmfc/lib/x64",
+				"{xpakRoot}/MSVS2017/lib/x64",
 			],
 
 			'PATH' : [
-				"{xpakRoot}/MSVS2015/bin/amd64",
+				"{xpakRoot}/MSVS2017/bin/Hostx64/x64",
 				"{xpakRoot}/PlatformSDK10/bin/x64",
 			] + os.environ['PATH'].split(os.pathsep),
 		}
@@ -95,7 +95,7 @@ class WindowsBuilder(Builder):
 		binToolsRoot = os.path.join(self.dir_source, 'bintools')
 		xpakTool = os.path.join(binToolsRoot, 'bintools', 'x64', 'xpaktool.exe')
 
-		xpakGetStudioCmd = "%s xinstall -pak MSVS2015/1900.23506.1000 -workdir %s" % (xpakTool, self.xpak_path)
+		xpakGetStudioCmd = "%s xinstall -pak MSVS2017/1912.25831.1000 -workdir %s" % (xpakTool, self.xpak_path)
 		utils.exec_and_log(xpakGetStudioCmd, 'XPAK', exit=True)
 
 		xpakGetWinSDK = "%s xinstall -pak PlatformSDK10/1000.10586.212.1000 -workdir %s" % (xpakTool, self.xpak_path)

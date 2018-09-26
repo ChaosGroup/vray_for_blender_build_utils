@@ -92,8 +92,8 @@ class WindowsBuilder(Builder):
 
 
 	def post_init(self):
-		cgrepoPath = os.environ['VRAY_CGREPO_PATH']
-		xpakTool = os.path.join(cgrepoPath, 'bintools', 'x64', 'xpaktool.exe')
+		binToolsRoot = os.path.join(self.dir_source, 'bintools')
+		xpakTool = os.path.join(binToolsRoot, 'bintools', 'x64', 'xpaktool.exe')
 
 		xpakGetStudioCmd = "%s xinstall -pak MSVS2015/1900.23506.1000 -workdir %s" % (xpakTool, self.xpak_path)
 		utils.exec_and_log(xpakGetStudioCmd, 'XPAK', exit=True)

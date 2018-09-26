@@ -80,8 +80,7 @@ class WindowsBuilder(Builder):
 			],
 
 			'PATH' : [
-				"{xpakRoot}/MSVS2015/bin/Hostx64/x64",
-				"{xpakRoot}/MSVS2015/bin",
+				"{xpakRoot}/MSVS2015/bin/amd64",
 				"{xpakRoot}/PlatformSDK10/bin/x64",
 			] + os.environ['PATH'].split(os.pathsep),
 		}

@@ -67,9 +67,9 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		with open(distPath, 'r+') as f:
 			content = [l.rstrip('\n') for l in f.readlines()]
 			# #zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
-			sys.stdout.write('Uncommentig python config line [%s]\n' % content[364])
+			sys.stdout.write('Uncommentig python config line [%s]\n' % content[337])
 			sys.stdout.flush()
-			content[364] = content[364][1:]
+			content[337] = content[337][1:]
 			f.seek(0)
 			f.write('\n'.join(content))
 			f.truncate()

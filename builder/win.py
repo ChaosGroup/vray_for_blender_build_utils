@@ -87,7 +87,7 @@ class WindowsBuilder(Builder):
 		utils.stdout_log("Setting msvc 2015 env variables")
 		for var in env:
 			varValue = os.pathsep.join(env[var]).format(xpakRoot=self.xpak_path)
-			utils.stdout_log('LIB: %s' % varValue)
+			utils.stdout_log('env[%s]=%s' % (var, varValue))
 			os.environ[var] = varValue
 
 

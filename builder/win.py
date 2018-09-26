@@ -123,7 +123,7 @@ class WindowsBuilder(Builder):
 		if self.jenkins:
 			cmake[0] = utils.which('cmake')
 			old_path = os.environ['PATH']
-			os.environ['PATH'] = utils.path_join(self.patch_dir, "tools")
+			os.environ['PATH'] += os.pathsep + utils.path_join(self.patch_dir, "tools")
 
 
 		cmake.append("-DCMAKE_BUILD_TYPE=%s" % self.build_type.capitalize())

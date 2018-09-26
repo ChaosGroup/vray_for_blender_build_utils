@@ -84,9 +84,11 @@ class WindowsBuilder(Builder):
 				"{xpakRoot}/PlatformSDK10/bin/x64",
 			] + os.environ['PATH'].split(os.pathsep),
 		}
-
+		utils.stdout_log("Setting msvc 2015 env variables")
 		for var in env:
-			os.environ[var] = os.pathsep.join(env[var]).format(xpakRoot=self.xpak_path)
+			varValue = os.pathsep.join(env[var]).format(xpakRoot=self.xpak_path)
+			utils.stdout_log('LIB: ', varValue)
+			os.environ[var] = varValue
 
 
 	def post_init(self):
@@ -98,10 +100,10 @@ class WindowsBuilder(Builder):
 
 		xpakGetWinSDK = "%s xinstall -pak PlatformSDK10/1000.10586.212.1000 -workdir %s" % (xpakTool, self.xpak_path)
 		utils.exec_and_log(xpakGetWinSDK, 'XPAK', exit=True)
-		self.setup_msvc_2015_xpak()
 
 
 	def compile(self):
+		self.setup_msvc_2015_xpak()
 		cmake_build_dir = os.path.join(self.dir_build, "blender-cmake-build")
 		if self.build_clean and os.path.exists(cmake_build_dir):
 			utils.remove_directory(cmake_build_dir)

@@ -450,7 +450,7 @@ class Builder:
 		sys.stdout.write('Calling builder:\n%s\n' % '\n\t'.join(command))
 		sys.stdout.flush()
 
-		res = subprocess.call(command, cwd=self.dir_source)
+		res = subprocess.call(command, cwd=buildPath)
 		if res != 0:
 			sys.stderr.write('Failed compilation of vrayserverzmq\n')
 			sys.stderr.flush()

@@ -208,7 +208,7 @@ class WindowsBuilder(Builder):
 		]
 
 		for f in files:
-			shutil.copy(utils.path_join(runtimeDir, f), self.dir_install_path)
+			shutil.copy(utils.path_join(dllDir, f), self.dir_install_path)
 
 
 	def config(self):

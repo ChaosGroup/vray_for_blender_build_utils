@@ -203,8 +203,7 @@ class WindowsBuilder(Builder):
 		dllDir = os.path.join(self.xpak_path, 'MSVS2017', 'bin', 'Hostx64', 'x64')
 		files = [
 			"msvcp140.dll",
-			"msvcr140.dll",
-			"vcomp140.dll",
+			"vcruntime140.dll",
 		]
 
 		for f in files:

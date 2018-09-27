@@ -87,8 +87,10 @@ def main(args):
                    submodules=['extern/vray-zmq-wrapper'],
                    target_name='vrayserverzmq')
 
-    utils.get_repo('gitolite@gitolite.chaosgroup.com:bintools',
-                   target_name='bintools')
+    if utils.get_host_os() == utils.WIN:
+        # we dont use that for other than windows
+        utils.get_repo('gitolite@gitolite.chaosgroup.com:bintools',
+                       target_name='bintools')
 
     ### ADD NINJA TO PATH
     ninja_path = 'None'

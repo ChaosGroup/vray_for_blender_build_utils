@@ -291,6 +291,7 @@ class MacBuilder(Builder):
 		prefix = self._blender_libs_location
 		numpyInstallPath = os.path.join(prefix, "numpy", "lib", "python%s" % PYTHON_VERSION_BIG, "site-packages")
 		cmake.append("-DPYTHON_NUMPY_PATH=%s" % numpyInstallPath) # cmake will append numpy to path
+		cmake.append("-PREBUILT_ZLIB=%s" % os.path.join(prefix, 'zlib'))
 
 		if self.with_cycles:
 			cmake.append("-DWITH_LLVM=ON")

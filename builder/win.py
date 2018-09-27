@@ -199,6 +199,18 @@ class WindowsBuilder(Builder):
 			os.environ['PATH'] = old_path
 
 
+	def compile_post(self):
+		dllDir = os.path.join(self.xpak_path, 'MSVS2017', 'bin', 'Hostx64', 'x64')
+		files = [
+			"msvcp140.dll",
+			"msvcr140.dll",
+			"vcomp140.dll",
+		]
+
+		for f in files:
+			shutil.copy(utils.path_join(runtimeDir, f), self.dir_install_path)
+
+
 	def config(self):
 		# Not used on Windows anymore
 		pass

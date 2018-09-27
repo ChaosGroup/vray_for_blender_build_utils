@@ -378,19 +378,7 @@ class Builder:
 
 
 	def compile_post(self):
-		if self.host_os == utils.WIN:
-			runtimeDir = utils.path_join(self.patch_dir, "non-gpl", self.build_arch)
-			files = []
-			if self.vc2013:
-				files.extend([
-					"msvcp120.dll",
-					"msvcr120.dll",
-					"vcomp120.dll",
-				])
-			else:
-				files.append("vcomp90.dll")
-			for f in files:
-				shutil.copy(utils.path_join(runtimeDir, f), self.dir_install_path)
+		pass
 
 
 	def exporter(self):

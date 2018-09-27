@@ -286,6 +286,7 @@ class MacBuilder(Builder):
 		cmake.append("-DWITH_OPENSUBDIV=OFF")
 		cmake.append("-DWITH_FFTW3=ON")
 		cmake.append("-DWITH_CODEC_FFMPEG=OFF")
+		cmake.append("-DLIBDIR==%s" % os.path.join(self.dir_source, 'lib', 'darwin'))
 
 		prefix = self._blender_libs_location
 		numpyInstallPath = os.path.join(prefix, "numpy", "lib", "python%s" % PYTHON_VERSION_BIG, "site-packages")

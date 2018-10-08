@@ -96,11 +96,15 @@ class WindowsBuilder(Builder):
 		binToolsRoot = os.path.join(self.dir_source, 'bintools')
 		xpakTool = os.path.join(binToolsRoot, 'bintools', 'x64', 'xpaktool.exe')
 
-		xpakGetStudioCmd = "%s xinstall -pak MSVS2017/1912.25831.1000 -workdir %s" % (xpakTool, self.xpak_path)
-		utils.exec_and_log(xpakGetStudioCmd, 'XPAK', exit=True)
+		xpak_list = [
+			'MSVS2017/1912.25831.1000',
+			'PlatformSDK10/1000.10586.212.1000',
+			'CUDA9/1000',
+		]
 
-		xpakGetWinSDK = "%s xinstall -pak PlatformSDK10/1000.10586.212.1000 -workdir %s" % (xpakTool, self.xpak_path)
-		utils.exec_and_log(xpakGetWinSDK, 'XPAK', exit=True)
+		for pak in xpak_list:
+			xpakInstall = "%s xinstall -pak %s -workdir %s" % (xpakTool, pak, self.xpak_path)
+			utils.exec_and_log(xpakInstall, 'XPAK', exit=True)
 
 
 	def compile(self):
@@ -166,6 +170,7 @@ class WindowsBuilder(Builder):
 				cmake.append("-DWITH_CYCLES_OSL=ON")
 				cmake.append("-DWITH_CYCLES_CUDA=ON")
 				cmake.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
+				cmake.append("-DCUDA_TOOLKIT_ROOT_DIR=%s" % os.path.join(self.xpak_path, 'CUDA9'))
 			cmake.append("-DWITH_MOD_OCEANSIM=ON")
 			cmake.append("-DWITH_OPENSUBDIV=ON")
 			cmake.append("-DWITH_FFTW3=ON")

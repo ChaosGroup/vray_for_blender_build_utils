@@ -564,7 +564,7 @@ class LinuxBuilder(Builder):
 			libs_prefix = self._blender_libs_location
 
 		if self.jenkins:
-			sys.stdout.write('Removing boost so files ...\n')+
+			sys.stdout.write('Removing boost so files ...\n')
 			sys.stdout.flush()
 			for f in glob.glob('%s/boost/lib/*.so*' % libs_prefix):
 				sys.stdout.write('Removing so [%s]\n' % f)

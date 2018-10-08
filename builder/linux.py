@@ -507,6 +507,8 @@ class LinuxBuilder(Builder):
 
 		distr_info = utils.get_linux_distribution()
 
+		os.environ['PATH'] = os.environ['PATH'] + os.pathsep + os.path.join(self.xpak_path, 'CUDA9', 'bin')
+
 		cmake = ['cmake']
 
 		cmake.append("-G")

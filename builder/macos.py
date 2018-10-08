@@ -263,6 +263,8 @@ class MacBuilder(Builder):
 		if not os.path.exists(cmake_build_dir):
 			os.makedirs(cmake_build_dir)
 
+		os.environ['PATH'] = os.environ['PATH'] + os.pathsep + os.path.join(self.xpak_path, 'CUDA9', 'bin')
+
 		cmake = ['cmake']
 
 		cmake.append("-G")

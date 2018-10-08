@@ -164,8 +164,8 @@ class WindowsBuilder(Builder):
 			if self.with_cycles:
 				cmake.append("-DWITH_LLVM=ON")
 				cmake.append("-DWITH_CYCLES_OSL=ON")
-				# cmake.append("-DWITH_CYCLES_CUDA=ON")
-				# cmake.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
+				cmake.append("-DWITH_CYCLES_CUDA=ON")
+				cmake.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
 			cmake.append("-DWITH_MOD_OCEANSIM=ON")
 			cmake.append("-DWITH_OPENSUBDIV=ON")
 			cmake.append("-DWITH_FFTW3=ON")

@@ -100,9 +100,9 @@ class Builder:
 	def xpak_pak_install(self, pakAndVersion):
 		binToolsRoot = os.path.join(self.dir_source, 'bintools')
 		osDir = {
-			utils.WIN: 'x64'
-			utils.LNX: 'linux_x64'
-			utils.MAC: 'mavericks_x64'
+			utils.WIN: 'x64',
+			utils.LNX: 'linux_x64',
+			utils.MAC: 'mavericks_x64',
 		}[utils.get_host_os()]
 
 		executableName = 'xpaktool'

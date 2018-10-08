@@ -253,6 +253,8 @@ class MacBuilder(Builder):
 		if deps and patch:
 			self.libs_update_cache_number()
 
+		self.xpak_pak_install('CUDA9/1000')
+
 
 	def compile(self):
 		cmake_build_dir = os.path.join(self.dir_build, "blender-cmake-build")
@@ -296,6 +298,9 @@ class MacBuilder(Builder):
 		if self.with_cycles:
 			cmake.append("-DWITH_LLVM=ON")
 			cmake.append("-DWITH_CYCLES_OSL=ON")
+			cmake.append("-DWITH_CYCLES_CUDA=ON")
+			cmake.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
+			cmake.append("-DCUDA_TOOLKIT_ROOT_DIR=%s" % os.path.join(self.xpak_path, 'CUDA9'))
 
 		if self.build_mode == 'nightly':
 			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))

@@ -93,9 +93,6 @@ class WindowsBuilder(Builder):
 
 
 	def post_init(self):
-		binToolsRoot = os.path.join(self.dir_source, 'bintools')
-		xpakTool = os.path.join(binToolsRoot, 'bintools', 'x64', 'xpaktool.exe')
-
 		xpak_list = [
 			'MSVS2017/1912.25831.1000',
 			'PlatformSDK10/1000.10586.212.1000',
@@ -103,8 +100,7 @@ class WindowsBuilder(Builder):
 		]
 
 		for pak in xpak_list:
-			xpakInstall = "%s xinstall -pak %s -workdir %s" % (xpakTool, pak, self.xpak_path)
-			utils.exec_and_log(xpakInstall, 'XPAK', exit=True)
+			self.xpak_pak_install(pak)
 
 
 	def compile(self):

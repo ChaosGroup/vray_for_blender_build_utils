@@ -490,6 +490,8 @@ class LinuxBuilder(Builder):
 		if DepsBuild(self):
 			self.libs_update_cache_number()
 
+		self.xpak_pak_install('CUDA9/1000')
+
 
 	def get_cache_num(self):
 		return LIBS_GENERATION
@@ -547,8 +549,9 @@ class LinuxBuilder(Builder):
 			cmake.append("-DWITH_OPENIMAGEIO=ON")
 			cmake.append("-DWITH_LLVM=ON")
 			cmake.append("-DLLVM_STATIC=ON")
-			# cmake.append("-DWITH_CYCLES_CUDA=ON")
-			# cmake.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
+			cmake.append("-DWITH_CYCLES_CUDA=ON")
+			cmake.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
+			cmake.append("-DCUDA_TOOLKIT_ROOT_DIR=%s" % os.path.join(self.xpak_path, 'CUDA9'))
 			cmake.append("-DWITH_CYCLES_OSL=ON")
 
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")
@@ -561,7 +564,7 @@ class LinuxBuilder(Builder):
 			libs_prefix = self._blender_libs_location
 
 		if self.jenkins:
-			sys.stdout.write('Removing boost so files ...\n')
+			sys.stdout.write('Removing boost so files ...\n')+
 			sys.stdout.flush()
 			for f in glob.glob('%s/boost/lib/*.so*' % libs_prefix):
 				sys.stdout.write('Removing so [%s]\n' % f)

@@ -97,6 +97,22 @@ class Builder:
 		sys.stdout.write("\n")
 
 
+	def xpak_pak_install(self, pakAndVersion):
+		binToolsRoot = os.path.join(self.dir_source, 'bintools')
+		osDir = {
+			utils.WIN: 'x64'
+			utils.LNX: 'linux_x64'
+			utils.MAC: 'mavericks_x64'
+		}[utils.get_host_os()]
+
+		executableName = 'xpaktool'
+		if utils.get_host_os() == utils.WIN:
+			executableName = executableName + '.exe'
+
+		xpakTool = os.path.join(binToolsRoot, 'bintools', osDir, executableName)
+		xpakInstall = "%s xinstall -pak %s -workdir %s" % (xpakTool, pakAndVersion, self.xpak_path)
+		return utils.exec_and_log(xpakInstall, 'XPAK', exit=True)
+
 	def get_svn_libs(self):
 		if utils.get_host_os() == utils.LNX:
 			sys.stdout.write('Skipping svn libs for linux.\n')

@@ -239,6 +239,9 @@ def path_slashify(path):
 		return path
 
 	path = os.path.normpath(path)
+	# if path has mixed slashes - replace double slashes with single
+	path = path.replace('\\\\', '\\')
+	# the replace all single with double slash
 	path = path.replace('\\','\\\\')
 
 	return path

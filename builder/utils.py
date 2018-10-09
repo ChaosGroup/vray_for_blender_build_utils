@@ -273,6 +273,16 @@ def pathExpand(path):
 	return path
 
 
+def appendPathToEnvVariable(varName, *paths):
+	initialValue = ''
+	if varName in os.environ:
+		initialValue = os.environ[varName]
+
+	pathAppend = os.pathsep.join(paths)
+	stdout_log('Appending [%s] to env[%s]=[%s]' % (pathAppend, varName, initialValue))
+	os.environ[varName] = initialValue + os.pathsep + pathAppend
+
+
 def which(program, add_ext=False):
 	"""
 	  Returns full path of "program" or None, if it fails will print where it tried

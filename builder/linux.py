@@ -490,7 +490,7 @@ class LinuxBuilder(Builder):
 		if DepsBuild(self):
 			self.libs_update_cache_number()
 
-		self.xpak_pak_install('CUDA9/1000')
+		self.xpak_pak_install('CUDA8/1000')
 		cudaBinPath = os.path.join(self.xpak_path, 'CUDA9', 'bin')
 		os.environ['PATH'] = os.environ['PATH'] + os.pathsep + cudaBinPath
 		os.environ['CUDA_BIN_PATH'] = cudaBinPath

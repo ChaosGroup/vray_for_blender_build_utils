@@ -490,10 +490,12 @@ class LinuxBuilder(Builder):
 		if DepsBuild(self):
 			self.libs_update_cache_number()
 
-		self.xpak_pak_install('CUDA8/1000')
-		cudaBinPath = os.path.join(self.xpak_path, 'CUDA9', 'bin')
+		self.xpak_pak_install('CUDA9/1000')
+		cudaRoot = os.path.join(self.xpak_path, 'CUDA9')
+		cudaBinPath = os.path.join(cudaRoot 'bin')
 		os.environ['PATH'] = os.environ['PATH'] + os.pathsep + cudaBinPath
 		os.environ['CUDA_BIN_PATH'] = cudaBinPath
+		os.environ['LD_LIBRARY_PATH'] = os.environ['LD_LIBRARY_PATH'] + os.pathsep + os.path.join(cudaRoot, 'lib', 'linux_x64')
 		utils.stdout_log('nvcc path: [%s]' % utils.which('nvcc'))
 
 

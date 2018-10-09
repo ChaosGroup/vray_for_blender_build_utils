@@ -494,7 +494,7 @@ class LinuxBuilder(Builder):
 		cudaBinPath = os.path.join(self.xpak_path, 'CUDA9', 'bin')
 		os.environ['PATH'] = os.environ['PATH'] + os.pathsep + cudaBinPath
 		os.environ['CUDA_BIN_PATH'] = cudaBinPath
-		utils.which('nvcc')
+		utils.stdout_log('nvcc path: [%s]' % utils.which('nvcc'))
 
 
 	def get_cache_num(self):
@@ -555,7 +555,13 @@ class LinuxBuilder(Builder):
 			cmake.append("-DLLVM_STATIC=ON")
 			cmake.append("-DWITH_CYCLES_CUDA=ON")
 			cmake.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
-			cmake.append("-DCUDA_TOOLKIT_ROOT_DIR=%s" % os.path.join(self.xpak_path, 'CUDA9'))
+			cudaRoot = os.path.join(self.xpak_path, 'CUDA9')
+			cmake.append("-DCUDA_TOOLKIT_ROOT_DIR=%s" % cudaRoot)
+			cmake.append("-DCUDA_TOOLKIT_TARGET_DIR=%s" % cudaRoot)
+			cmake.append("-DCUDA_NVCC_EXECUTABLE=%s" % os.path.join(cudaRoot, 'bin', 'nvcc'))
+			cmake.append("-DCUDA_CUDART_LIBRARY=%s" % os.path.join(cudaRoot, 'lib', 'linux_x64', 'libcudart.so.9.0.176'))
+			cmake.append("-DCUDA_TOOLKIT_INCLUDE=%s" % os.path.join(cudaRoot, 'include'))
+
 			cmake.append("-DWITH_CYCLES_OSL=ON")
 
 		cmake.append("-DWITH_MOD_OCEANSIM=ON")

@@ -494,7 +494,7 @@ class LinuxBuilder(Builder):
 		cudaBinPath = os.path.join(self.xpak_path, 'CUDA9', 'bin')
 		os.environ['PATH'] = os.environ['PATH'] + os.pathsep + cudaBinPath
 		os.environ['CUDA_BIN_PATH'] = cudaBinPath
-		which('nvcc')
+		utils.which('nvcc')
 
 
 	def get_cache_num(self):

@@ -492,7 +492,7 @@ class LinuxBuilder(Builder):
 
 		self.xpak_pak_install('CUDA9/1000')
 		cudaRoot = os.path.join(self.xpak_path, 'CUDA9')
-		cudaBinPath = os.path.join(cudaRoot 'bin')
+		cudaBinPath = os.path.join(cudaRoot, 'bin')
 		os.environ['PATH'] = os.environ['PATH'] + os.pathsep + cudaBinPath
 		os.environ['CUDA_BIN_PATH'] = cudaBinPath
 		os.environ['LD_LIBRARY_PATH'] = os.environ['LD_LIBRARY_PATH'] + os.pathsep + os.path.join(cudaRoot, 'lib', 'linux_x64')

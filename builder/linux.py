@@ -364,7 +364,7 @@ def getDepsCompilationData(self, prefix, wd, jobs):
 		)),
 		('libxml2', getLibPath('libxml'), (
 			getChDirCmd(wd),
-			getDownloadCmd('https://git.gnome.org/browse/libxml2/snapshot/libxml2-%s.tar.xz' % LIBXML_VERSION, 'libxml.tar.xz'),
+			getDownloadCmd('https://gitlab.gnome.org/GNOME/libxml2/-/archive/v%s/libxml2-v%s.tar.gz' % (LIBXML_VERSION, LIBXML_VERSION), 'libxml.tar.xz'),
 			'tar -C . -xf libxml.tar.xz',
 			getChDirCmd(os.path.join(wd, 'libxml2-%s' % LIBXML_VERSION)),
 			' '.join(['./autogen.sh', '--enable-static', '--disable-shared', '--without-python', '--prefix=%s' % getLibPath('libxml')]),

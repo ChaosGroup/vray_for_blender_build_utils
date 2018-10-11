@@ -73,7 +73,6 @@ def main(args):
     ]
 
     os.chdir(dir_source)
-    utils.remove_directory(os.path.join(dir_source, 'blender'))
     utils.get_repo('git@github.com:ChaosGroup/blender_with_vray_additions',
                    branch=blender_branch,
                    submodules=blender_modules,

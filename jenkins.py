@@ -79,6 +79,7 @@ def main(args):
                    target_name='blender')
 
     utils.get_repo('ssh://gitolite@mantis.chaosgroup.com:2047/vray_for_blender_libs',
+                   branch=args.jenkins_libs_git_ref,
                    target_name='blender-for-vray-libs')
 
     utils.get_repo('ssh://gitolite@mantis.chaosgroup.com:2047/vray_for_blender_server.git',
@@ -103,7 +104,6 @@ def main(args):
 
     ### ADD APPSDK PATH
     bl_libs_os_dir_name = {
-        # TODO: fix this for vc14
         utils.WIN: 'Windows',
         utils.LNX: 'Linux',
         utils.MAC: 'Darwin',
@@ -111,11 +111,6 @@ def main(args):
     appsdk_path = os.path.join(dir_source, 'blender-for-vray-libs', bl_libs_os_dir_name, 'appsdk')
     appsdk_version = '20170307'# re.match(r'.*?vray\d{5}-(\d{8})\.(?:tar\.xz|7z)*?', appsdk_remote_name).groups()[0]
     os.environ['CGR_APPSDK_PATH'] = appsdk_path
-    os.environ['CGR_APPSDK_VERSION'] = appsdk_version
-    os.environ['CGR_BUILD_TYPE'] = args.jenkins_build_type
-    sys.stdout.write('CGR_APPSDK_PATH [%s], CGR_APPSDK_VERSION [%s]\n' % (appsdk_path, appsdk_version))
-    sys.stdout.flush()
-
     python_exe = sys.executable
 
     sys.stdout.write('jenkins args:\n%s\n' % str(args))
@@ -202,6 +197,11 @@ if __name__ == '__main__':
     )
 
     parser.add_argument('--jenkins_exporter_git_ref',
+        default = "master",
+        required=False,
+    )
+
+    parser.add_argument('--jenkins_libs_git_ref',
         default = "master",
         required=False,
     )

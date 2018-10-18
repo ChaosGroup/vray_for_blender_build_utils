@@ -142,7 +142,7 @@ def main(args):
     cmd.append('--dir_source=%s' % dir_source)
     cmd.append('--dir_build=%s' % dir_build)
 
-    cmd.append('--github-src-branch=%s' % blender_branch)
+    cmd.append('--github-src-branch=%s' % gitRefs['blender'])
     cmd.append('--zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(dir_source, 'vrayserverzmq')))
 
     cmd.append('--jenkins_output=%s' % args.jenkins_output)

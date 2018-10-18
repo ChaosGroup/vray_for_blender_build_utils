@@ -27,6 +27,7 @@ import re
 import sys
 import glob
 import time
+import json
 import platform
 import subprocess
 
@@ -36,9 +37,30 @@ def main(args):
     sys.stdout.write('jenkins args:\n%s\n' % str(args))
     sys.stdout.flush()
 
-    blender_branch = args.jenkins_blender_git_ref
-    sys.stdout.write('Blender git ref:\t %s\n' % blender_branch)
-    sys.stdout.flush()
+    gitRefs = {
+        'blender': args.jenkins_blender_git_ref,
+        'zmq': args.jenkins_zmq_branch,
+        'libs': args.jenkins_libs_git_ref,
+        'exporter': args.jenkins_exporter_git_ref,
+    }
+
+    if args.jenkins_predefined_config == 'vb40':
+        gitRefs = {
+            'blender': 'dev/vray_for_blender/vb40',
+            'zmq': 'dev/vray_for_blender/vb40',
+            'libs': 'dev/vray_for_blender/vb40',
+            'exporter': 'dev/vray_for_blender/vb40',
+        }
+    elif args.jenkins_predefined_config == 'vb35':
+        gitRefs = {
+            'blender': 'dev/vray_for_blender/vb35',
+            'zmq': 'master',
+            'libs': 'master',
+            'exporter': 'master',
+        }
+
+    utils.stdout_log('GIT refs:')
+    utils.stdout_log(json.dumps(gitRefs, indent=4))
 
     # minimal build is only true if build_mode == 'default'
     minimal_build = False
@@ -74,16 +96,16 @@ def main(args):
 
     os.chdir(dir_source)
     utils.get_repo('git@github.com:ChaosGroup/blender_with_vray_additions',
-                   branch=blender_branch,
+                   branch=gitRefs['blender'],
                    submodules=blender_modules,
                    target_name='blender')
 
     utils.get_repo('ssh://gitolite@mantis.chaosgroup.com:2047/vray_for_blender_libs',
-                   branch=args.jenkins_libs_git_ref,
+                   branch=gitRefs['libs'],
                    target_name='blender-for-vray-libs')
 
     utils.get_repo('ssh://gitolite@mantis.chaosgroup.com:2047/vray_for_blender_server.git',
-                   branch=args.jenkins_zmq_branch,
+                   branch=gitRefs['zmq'],
                    submodules=['extern/vray-zmq-wrapper'],
                    target_name='vrayserverzmq')
 
@@ -113,8 +135,6 @@ def main(args):
     os.environ['CGR_APPSDK_PATH'] = appsdk_path
     python_exe = sys.executable
 
-    sys.stdout.write('jenkins args:\n%s\n' % str(args))
-    sys.stdout.flush()
 
     cmd = [python_exe]
     cmd.append("vb25-patch/build.py")
@@ -135,8 +155,8 @@ def main(args):
         os.makedirs(dir_blender_libs)
     cmd.append('--dir_blender_libs=%s' % dir_blender_libs)
 
-    if args.jenkins_exporter_git_ref != 'master':
-        cmd.append('--github-exp-branch=%s' % args.jenkins_exporter_git_ref)
+    if gitRefs['exporter'] != 'master':
+        cmd.append('--github-exp-branch=%s' % gitRefs['exporter'])
 
     cmd.append('--build_clean')
     cmd.append('--with_ge')
@@ -217,6 +237,12 @@ if __name__ == '__main__':
 
     parser.add_argument('--jenkins_zmq_branch',
         default='master'
+    )
+
+    parser.add_argument('--jenkins_predefined_config',
+        default='vb35',
+        choices=['vb35', 'vb40', 'custom'],
+        required=False,
     )
 
     parser.add_argument('--jenkins_minimal_build',

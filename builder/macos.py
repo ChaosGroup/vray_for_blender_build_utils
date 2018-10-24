@@ -304,8 +304,8 @@ class MacBuilder(Builder):
 			cmake.append("-DWITH_CYCLES_CUDA_BINARIES=ON")
 			cmake.append("-DCUDA_TOOLKIT_ROOT_DIR=%s" % os.path.join(self.xpak_path, 'CUDA9'))
 
-		if self.build_mode == 'nightly':
-			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
+
+		cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
 		cmake.append("-DWITH_CXX11=ON")
 		cmake.append(self.dir_blender)
 

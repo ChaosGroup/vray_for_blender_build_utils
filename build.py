@@ -228,6 +228,10 @@ parser.add_argument('--build_mode',
 	choices = {'release', 'nightly'},
 	help    = argparse.SUPPRESS # Option for CGR installer
 )
+parser.add_argument('--target_version_suffix',
+	default = '35',
+	help    = 'Version suffix to append to filename' # Option for CGR installer
+)
 parser.add_argument('--use_package_upload',
 	default = 'off',
 	choices = {'off', 'ftp', 'http'},

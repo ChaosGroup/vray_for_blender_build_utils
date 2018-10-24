@@ -132,9 +132,7 @@ class WindowsBuilder(Builder):
 
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.jenkins))
-
-		if self.build_mode == 'nightly':
-			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
+		cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
 
 		if self.jenkins_minimal_build:
 			cmake.append("-DWITH_GAMEENGINE=OFF")

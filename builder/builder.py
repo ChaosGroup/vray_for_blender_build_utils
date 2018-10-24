@@ -51,7 +51,7 @@ class Builder:
 		for p in params:
 			setattr(self, p, params[p])
 
-		self.project        = "vrayblender35"
+		self.project        = "vrayblender" + self.target_version_suffix
 		self.version        = utils.VERSION
 		self.revision       = utils.REVISION
 		self.brev           = ""

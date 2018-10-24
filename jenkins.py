@@ -178,6 +178,11 @@ def main(args):
     if args.jenkins_with_static_libc:
         cmd.append('--with_static_libc')
 
+    if args.jenkins_predefined_config == 'vb40':
+        cmd.append('--target_version_suffix=%s' % 40)
+    elif args.jenkins_predefined_config == 'vb35':
+        cmd.append('--target_version_suffix=%s' % 35)
+
     cmd.append('--dev_static_libs')
 
     cmd.append('--upblender=off')

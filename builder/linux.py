@@ -539,9 +539,7 @@ class LinuxBuilder(Builder):
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.jenkins))
 		cmake.append('-DWITH_STATIC_LIBC=%s' % utils.GetCmakeOnOff(self.with_static_libc))
-
-		if self.build_mode == 'nightly':
-			cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
+		cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
 
 		cmake.append("-DWITH_GAMEENGINE=%s" % utils.GetCmakeOnOff(self.with_ge))
 		cmake.append("-DWITH_PLAYER=%s" % utils.GetCmakeOnOff(self.with_player))

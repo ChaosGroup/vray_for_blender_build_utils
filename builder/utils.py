@@ -703,7 +703,7 @@ def WritePackageInfo(self, packagePath):
 		path_create(packagePath)
 	with open(bInfo, 'w+') as f:
 		f.write('BLENDER_VERSION=%s\n' % self.version)
-		f.write('BLENDER_HASH=%s\n' % self.revision)
+		f.write('BLENDER_HASH=%s\n' % self.revision[:7])
 
 
 def GetPackageName(self, ext=None):

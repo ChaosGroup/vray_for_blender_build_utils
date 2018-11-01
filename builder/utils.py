@@ -1082,7 +1082,7 @@ def generateLinuxInstaller(self, InstallerDir, tmplFinal, installer_path):
 			sys.exit(1)
 
 
-def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr_installer"):
+def GenCGRInstaller(self, installer_path, InstallerDir):
 	sys.stdout.write("Generating CGR installer:\n")
 	sys.stdout.write("  %s\n" % installer_path)
 
@@ -1091,7 +1091,9 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 	removeJunk   = set()
 	installerFiles = []
 
-	installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]">%s/postinstall.py</FN>' % InstallerDir)
+
+	postinstallDir = os.path.join(self.dir_source, 'vb25-patch', 'installer')
+	installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]">%s/postinstall.py</FN>' % postinstallDir)
 
 	empty_installer_files = [
 		os.path.join(InstallerDir, 'assets/backup.bin'),
@@ -1236,15 +1238,14 @@ def GenCGRInstaller(self, installer_path, InstallerDir="H:/devel/vrayblender/cgr
 		tmpl = tmpl.replace("${FILE_LIST}", "\n".join(sorted(reversed(installerFiles))))
 		tmpl = tmpl.replace("${RUNTIME_JUNK_LIST}", "\n".join(sorted(removeJunk)))
 		tmpl = tmpl.replace("${INSTALL_XML_PATH}", tmplFinal)
+		tmpl = tmpl.replace("${ZMQ_ENV_VARIABLE}", '<Replace VarName="VRAY_ZMQSERVER_APPSDK_PATH" IsPath="1">%s</Replace>'  % os.path.join(appsdk_root, appsdkFile))
 
 		# Appsdk env var path
 		if get_host_os() == WIN or get_host_os() == MAC:
 			# set it as env var from installer
-			tmpl = tmpl.replace("${ZMQ_ENV_VARIABLE}", '<Replace VarName="VRAY_ZMQSERVER_APPSDK_PATH" IsPath="1">%s</Replace>'  % os.path.join(appsdk_root, appsdkFile))
 			tmpl = tmpl.replace("${VRAY_ZMQSERVER_APPSDK_PATH}", '')
 		else:
 			# set it as argument for postinstall.py
-			tmpl = tmpl.replace("${ZMQ_ENV_VARIABLE}", '')
 			tmpl = tmpl.replace("${VRAY_ZMQSERVER_APPSDK_PATH}", '%s/%s'  % (appsdk_root, appsdkFile))
 
 		# Versions

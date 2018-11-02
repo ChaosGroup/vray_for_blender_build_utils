@@ -1092,8 +1092,8 @@ def GenCGRInstaller(self, installer_path, InstallerDir):
 	installerFiles = []
 
 
-	postinstallDir = os.path.join(self.dir_source, 'vb25-patch', 'installer')
-	installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]">%s/postinstall.py</FN>' % postinstallDir)
+	postinstallScript = os.path.join(self.dir_source, 'vb25-patch', 'installer', 'postinstall.py')
+	installerFiles.append('\t\t\t<FN Dest="[INSTALL_ROOT]">%s</FN>' % unix_slashes(postinstallScript))
 
 	empty_installer_files = [
 		os.path.join(InstallerDir, 'assets/backup.bin'),

@@ -1048,10 +1048,10 @@ def generateLinuxInstaller(self, InstallerDir, tmplFinal, installer_path):
 	packer.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
 	packer.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
 
-	print(" ".join(packer))
+	stderr_log(" ".join(packer))
 	if not self.mode_test:
 		if subprocess.call(packer) != 0:
-			print('Failed linux ibin creation')
+			stderr_log('Failed linux ibin creation')
 			sys.exit(1)
 
 	tmpl = open("%s/linux/launcher_wrapper.xml" % InstallerDir, 'r').read()
@@ -1075,10 +1075,10 @@ def generateLinuxInstaller(self, InstallerDir, tmplFinal, installer_path):
 	cmd.append('-wmstr="bdbe6b7e-b69c-4ad8-b3d9-646bbeb5c3e1"')
 	cmd.append('-wmval="580c154c-9043-493a-b436-f15ad8772763"')
 
-	print(" ".join(cmd))
+	stderr_log(" ".join(cmd))
 	if not self.mode_test:
 		if subprocess.call(cmd) != 0:
-			print('Failed linux installer creation')
+			stderr_log('Failed linux installer creation')
 			sys.exit(1)
 
 

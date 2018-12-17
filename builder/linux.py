@@ -535,6 +535,7 @@ class LinuxBuilder(Builder):
 		cmake.append("-DWITH_INTERNATIONAL=ON")
 		cmake.append("-DWITH_PYTHON_INSTALL=ON")
 		cmake.append("-DWITH_PYTHON_INSTALL_NUMPY=ON")
+		cmake.append("-DWITH_ASSERT_ABORT=OFF")
 
 		cmake.append("-DWITH_VRAY_FOR_BLENDER=ON")
 		cmake.append("-DWITH_MANUAL_BUILDINFO=%s" % utils.GetCmakeOnOff(self.jenkins))

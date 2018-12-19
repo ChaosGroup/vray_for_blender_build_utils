@@ -124,7 +124,7 @@ class Builder:
 			sys.stdout.flush()
 			return
 
-		svn_exec = lambda cmd: utils.exec_and_log(cmd, 'SVN')
+		svn_exec = lambda cmd: utils.exec_and_log(cmd, 'SVN', exit=True)
 
 		# Update Blender libs
 		if self.upblender == 'on' or self.jenkins:

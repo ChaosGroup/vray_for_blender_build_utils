@@ -418,6 +418,7 @@ class Builder:
 			exporterPath = utils.path_join(addonsPath, "vb30")
 			if os.path.exists(exporterPath):
 				utils.remove_directory(exporterPath)
+			utils.stdout_log("Cloning vb30 to [%s]" % addonsPath)
 			os.system("git clone --recursive https://github.com/ChaosGroup/vray_for_blender_exporter vb30")
 
 			if self.use_exp_branch not in {'master'}:

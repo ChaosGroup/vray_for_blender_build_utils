@@ -71,10 +71,6 @@ def main(args):
         sys.stdout.flush()
 
     dir_build = os.getcwd()
-    os.environ['http_proxy'] = 'http://10.0.0.1:1234/'
-    os.environ['https_proxy'] = 'https://10.0.0.1:1234/'
-    os.environ['ftp_proxy'] = '10.0.0.1:1234'
-    os.environ['socks_proxy'] = '10.0.0.1:1080'
 
     dir_source = os.path.join(args.jenkins_perm_path, 'blender-dependencies')
     if not os.path.exists(dir_source):

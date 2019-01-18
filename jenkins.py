@@ -42,6 +42,7 @@ def main(args):
         'zmq': args.jenkins_zmq_branch,
         'libs': args.jenkins_libs_git_ref,
         'exporter': args.jenkins_exporter_git_ref,
+        'svn_revision': '62167',
     }
 
     if args.jenkins_predefined_config == 'vb40':
@@ -50,6 +51,7 @@ def main(args):
             'zmq': 'dev/vray_for_blender/vb40',
             'libs': 'dev/vray_for_blender/vb40',
             'exporter': 'dev/vray_for_blender/vb40',
+            'svn_revision': '62167',
         }
     elif args.jenkins_predefined_config == 'vb35':
         gitRefs = {
@@ -57,6 +59,7 @@ def main(args):
             'zmq': 'master',
             'libs': 'master',
             'exporter': 'master',
+            'svn_revision': '62167',
         }
 
     utils.stdout_log('GIT refs:')
@@ -131,7 +134,6 @@ def main(args):
     os.environ['CGR_APPSDK_PATH'] = appsdk_path
     python_exe = sys.executable
 
-
     cmd = [python_exe]
     cmd.append("vb25-patch/build.py")
     cmd.append("--jenkins")
@@ -142,7 +144,7 @@ def main(args):
     cmd.append('--zmq_server_hash=%s' % utils.get_git_head_hash(os.path.join(dir_source, 'vrayserverzmq')))
 
     cmd.append('--jenkins_output=%s' % args.jenkins_output)
-
+    cmd.append('--svn_revision=%s' % gitRefs['svn_revision'])
 
     dir_blender_libs = os.path.join(dir_source, 'prebuilt-libs')
     if not os.path.exists(dir_blender_libs):

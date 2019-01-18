@@ -156,6 +156,9 @@ class Builder:
 						svn_exec("svn cleanup")
 						svn_exec("svn update")
 
+				if self.svn_revision != '':
+					svn_exec("svn up -r%s" % self.svn_revision)
+
 	def update_sources(self):
 		"""
 		  Getting/updating sources

@@ -124,7 +124,7 @@ class Builder:
 			sys.stdout.flush()
 			return
 
-		svn_exec = lambda cmd: utils.exec_and_log(cmd, 'SVN')
+		svn_exec = lambda cmd: utils.exec_and_log(cmd, 'SVN', exit=True)
 
 		# Update Blender libs
 		if self.upblender == 'on' or self.jenkins:
@@ -155,6 +155,9 @@ class Builder:
 						svn_exec("svn revert . --recursive --depth=infinity")
 						svn_exec("svn cleanup")
 						svn_exec("svn update")
+
+				if self.svn_revision != '':
+					svn_exec("svn up -r%s" % self.svn_revision)
 
 	def update_sources(self):
 		"""
@@ -418,6 +421,7 @@ class Builder:
 			exporterPath = utils.path_join(addonsPath, "vb30")
 			if os.path.exists(exporterPath):
 				utils.remove_directory(exporterPath)
+			utils.stdout_log("Cloning vb30 to [%s]" % addonsPath)
 			os.system("git clone --recursive https://github.com/ChaosGroup/vray_for_blender_exporter vb30")
 
 			if self.use_exp_branch not in {'master'}:

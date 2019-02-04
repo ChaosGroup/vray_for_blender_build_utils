@@ -1145,6 +1145,11 @@ def GenCGRInstaller(self, installer_path, InstallerDir):
 
 	# add the zmq server
 	cg_root = os.path.normpath(os.path.join(get_default_install_path(), 'V-Ray', 'VRayZmqServer'))
+	exeExtension = '.exe' if host_os == WIN else ''
+
+	zmqExecutable ='VRayZmqServer%s' % exeExtension
+	zmqExecutablePath = os.path.join(cg_root, zmqExecutable)
+
 	os_type = get_host_os()
 	os_dir = "darwin" if os_type == MAC else os_type
 	appsdk = os.path.join(os.environ['CGR_APPSDK_PATH'], 'bin')
@@ -1233,6 +1238,10 @@ def GenCGRInstaller(self, installer_path, InstallerDir):
 
 		tmpl = tmpl.replace("${APP_TITLE}",      short_title)
 		tmpl = tmpl.replace("${APP_TITLE_FULL}", long_title)
+
+		# zmq executable
+		tmpl = tmpl.replace("${ZMQ_EXECUTABLE}", zmqExecutable)
+		tmpl = tmpl.replace("${ZMQ_EXECUTABLE_PATH}", zmqExecutablePath)
 
 		# Files
 		tmpl = tmpl.replace("${FILE_LIST}", "\n".join(sorted(reversed(installerFiles))))

@@ -193,6 +193,12 @@ gr_src.add_argument(
 	default = "",
 	help    = "Use specific revision"
 )
+gr_src.add_argument(
+	'--svn_revision',
+	dest    = "svn_revision",
+	default = "",
+	help    = "Use specific svn revision"
+)
 
 
 gr_deps = parser.add_argument_group(title="Build Dependencies (Linux Only)")

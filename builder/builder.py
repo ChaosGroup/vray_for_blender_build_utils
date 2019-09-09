@@ -152,6 +152,7 @@ class Builder:
 					if not self.mode_test:
 						os.chdir(lib_dir)
 						utils.remove_directory(os.path.join(lib_dir, 'release', 'site-packages'))
+						svn_exec("svn cleanup")
 						svn_exec("svn revert . --recursive --depth=infinity")
 						svn_exec("svn cleanup")
 						svn_exec("svn update")

@@ -128,15 +128,18 @@ class Builder:
 
 		# Update Blender libs
 		if self.upblender == 'on' or self.jenkins:
+			revisionSuffix = ''
+			if self.svn_revision != '':
+				revisionSuffix = '@%s' % str(self.svn_revision)
 			lib_dir = None
 			svn_cmd = None
 			if self.host_os != utils.LNX:
 				if self.host_os == utils.WIN:
-					lib_dir = utils.path_join(self.dir_source, "lib", "win64_vc14")
-					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc14 lib/win64_vc14"
+					lib_dir = utils.path_join(self.dir_source, "lib", "win64_vc15")
+					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/win64_vc15%s lib/win64_vc15" % revisionSuffix
 				elif self.host_os == utils.MAC:
 					lib_dir = utils.path_join(self.dir_source, "lib", "darwin-9.x.universal")
-					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin lib/darwin-9.x.universal"
+					svn_cmd = "svn checkout https://svn.blender.org/svnroot/bf-blender/trunk/lib/darwin%s lib/darwin-9.x.universal" % revisionSuffix
 
 				sys.stdout.write('Lib dir: [%s]\n' % lib_dir)
 				sys.stdout.flush()
@@ -155,9 +158,11 @@ class Builder:
 						svn_exec("svn cleanup")
 						svn_exec("svn revert . --recursive --depth=infinity")
 						svn_exec("svn cleanup")
+					if self.svn_revision == '':
 						svn_exec("svn update")
 
 				if self.svn_revision != '':
+					os.chdir(lib_dir)
 					svn_exec("svn up -r%s" % self.svn_revision)
 
 	def update_sources(self):
@@ -423,7 +428,7 @@ class Builder:
 			if os.path.exists(exporterPath):
 				utils.remove_directory(exporterPath)
 			utils.stdout_log("Cloning vb30 to [%s]" % addonsPath)
-			os.system("git clone --recursive https://github.com/ChaosGroup/vray_for_blender_exporter vb30")
+			os.system("git clone --recursive git@git.chaosgroup.com:blender/vray_for_blender_python_exporter.git vb30")
 
 			if self.use_exp_branch not in {'master'}:
 				os.chdir(exporterPath)

@@ -33,55 +33,26 @@ from .builder import Builder
 
 
 class WindowsBuilder(Builder):
-	def setup_msvc_2013(self, cgrepo):
-		env = {
-			'INCLUDE' : [
-				"{CGR_SDK}/msvs2013/PlatformSDK/Include/shared",
-				"{CGR_SDK}/msvs2013/PlatformSDK/Include/um",
-				"{CGR_SDK}/msvs2013/PlatformSDK/Include/winrt",
-				"{CGR_SDK}/msvs2013/PlatformSDK/Include/ucrt",
-				"{CGR_SDK}/msvs2013/include",
-				"{CGR_SDK}/msvs2013/atlmfc/include",
-			],
-
-			'LIB' : [
-				"{CGR_SDK}/msvs2013/PlatformSDK/Lib/winv6.3/um/x64",
-				"{CGR_SDK}/msvs2013/PlatformSDK/Lib/ucrt/x64",
-				"{CGR_SDK}/msvs2013/atlmfc/lib/amd64",
-				"{CGR_SDK}/msvs2013/lib/amd64",
-			],
-
-			'PATH' : [
-					"{CGR_SDK}/msvs2013/bin/amd64",
-					"{CGR_SDK}/msvs2013/bin",
-					"{CGR_SDK}/msvs2013/PlatformSDK/bin/x64",
-				] + os.environ['PATH'].split(';')
-			,
-		}
-		os.environ['__MS_VC_INSTALL_PATH'] = "{CGR_SDK}/msvs2013"
-		for var in env:
-			os.environ[var] = ";".join(env[var]).format(CGR_SDK=cgrepo)
-
-	def setup_msvc_2015_xpak(self):
+	def setup_msvc_2019_xpak(self):
 		env = {
 			'INCLUDE' : [
 				"{xpakRoot}/PlatformSDK10/Include/shared",
 				"{xpakRoot}/PlatformSDK10/Include/um",
 				"{xpakRoot}/PlatformSDK10/Include/winrt",
 				"{xpakRoot}/PlatformSDK10/Include/ucrt",
-				"{xpakRoot}/MSVS2017/include",
-				"{xpakRoot}/MSVS2017/atlmfc/include",
+				"{xpakRoot}/MSVS2019/include",
+				"{xpakRoot}/MSVS2019/atlmfc/include",
 			],
 
 			'LIB' : [
 				"{xpakRoot}/PlatformSDK10/Lib/winv6.3/um/x64",
 				"{xpakRoot}/PlatformSDK10/Lib/ucrt/x64",
-				"{xpakRoot}/MSVS2017/atlmfc/lib/x64",
-				"{xpakRoot}/MSVS2017/lib/x64",
+				"{xpakRoot}/MSVS2019/atlmfc/lib/x64",
+				"{xpakRoot}/MSVS2019/lib/x64",
 			],
 
 			'PATH' : [
-				"{xpakRoot}/MSVS2017/bin/Hostx64/x64",
+				"{xpakRoot}/MSVS2019/bin/Hostx64/x64",
 				"{xpakRoot}/PlatformSDK10/bin/x64",
 			] + os.environ['PATH'].split(os.pathsep),
 		}
@@ -92,9 +63,10 @@ class WindowsBuilder(Builder):
 			os.environ[var] = varValue
 
 
+
 	def post_init(self):
 		xpak_list = [
-			'MSVS2017/1912.25831.1000',
+			'MSVS2019/1924.28316.1000',
 			'PlatformSDK10/1000.10586.212.1000',
 			'CUDA9/1000',
 		]
@@ -104,7 +76,7 @@ class WindowsBuilder(Builder):
 
 
 	def compile(self):
-		self.setup_msvc_2015_xpak()
+		self.setup_msvc_2019_xpak()
 		cmake_build_dir = os.path.join(self.dir_build, "blender-cmake-build")
 		if self.build_clean and os.path.exists(cmake_build_dir):
 			utils.remove_directory(cmake_build_dir)
@@ -202,7 +174,7 @@ class WindowsBuilder(Builder):
 
 
 	def compile_post(self):
-		dllDir = os.path.join(self.xpak_path, 'MSVS2017', 'bin', 'Hostx64', 'x64')
+		dllDir = os.path.join(self.xpak_path, 'MSVS2019', 'bin', 'Hostx64', 'x64')
 		files = [
 			"msvcp140.dll",
 			"vcruntime140.dll",

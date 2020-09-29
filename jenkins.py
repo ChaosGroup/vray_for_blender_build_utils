@@ -42,7 +42,7 @@ def main(args):
         'zmq': args.jenkins_zmq_branch,
         'libs': args.jenkins_libs_git_ref,
         'exporter': args.jenkins_exporter_git_ref,
-        'svn_revision': '62167',
+        'svn_revision': '62461',
     }
 
     if args.jenkins_predefined_config == 'vb40':
@@ -94,21 +94,21 @@ def main(args):
     ]
 
     os.chdir(dir_source)
-    utils.get_repo('git@github.com:ChaosGroup/blender_with_vray_additions',
+    utils.get_repo('git@git.chaosgroup.com:blender/vray_for_blender.git',
                    branch=gitRefs['blender'],
                    submodules=blender_modules,
                    target_name='blender')
 
-    utils.get_repo('ssh://gitolite@mantis.chaosgroup.com:2047/vray_for_blender_libs',
+    utils.get_repo('git@git.chaosgroup.com:blender/vray_for_blender_libs.git',
                    branch=gitRefs['libs'],
                    target_name='blender-for-vray-libs')
 
-    utils.get_repo('ssh://gitolite@mantis.chaosgroup.com:2047/vray_for_blender_server.git',
+    utils.get_repo('git@git.chaosgroup.com:blender/vray_for_blender_server.git',
                    branch=gitRefs['zmq'],
                    submodules=['extern/vray-zmq-wrapper'],
                    target_name='vrayserverzmq')
 
-    utils.get_repo('gitolite@gitolite.chaosgroup.com:bintools',
+    utils.get_repo('git@git.chaosgroup.com:core/bintools.git',
                    target_name='bintools')
 
     ### ADD NINJA TO PATH

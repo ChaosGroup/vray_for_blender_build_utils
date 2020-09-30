@@ -437,9 +437,6 @@ class Builder:
 
 			os.chdir(exporterPath)
 			os.system("git submodule update --init --recursive")
-			os.system("git submodule foreach git checkout master")
-			os.system("git submodule foreach git pull --rebase origin master")
-
 
 	def package(self):
 		"""

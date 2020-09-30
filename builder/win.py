@@ -66,6 +66,7 @@ class WindowsBuilder(Builder):
 
 	def post_init(self):
 		xpak_list = [
+			'MSVS2017/1912.25831.1000', # needed for ZMQ
 			'MSVS2019/1924.28316.1000',
 			'PlatformSDK10/1000.10586.212.1000',
 			'CUDA9/1000',

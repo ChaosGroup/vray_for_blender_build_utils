@@ -99,7 +99,6 @@ class WindowsBuilder(Builder):
 			old_path = os.environ['PATH']
 			os.environ['PATH'] += os.pathsep + utils.path_join(self.patch_dir, "tools")
 
-
 		cmake.append("-DCMAKE_BUILD_TYPE=%s" % self.build_type.capitalize())
 		cmake.append('-DCMAKE_INSTALL_PREFIX=%s' % self.dir_install_path)
 
@@ -108,6 +107,7 @@ class WindowsBuilder(Builder):
 		cmake.append("-DLIBS_ROOT=%s" % utils.path_join(self.dir_source, 'blender-for-vray-libs'))
 		cmake.append("-DWITH_ASSERT_ABORT=OFF")
 
+		cmake.append("-DWITH_WINDOWS_BUNDLE_CRT=ON")
 		if self.jenkins_minimal_build:
 			cmake.append("-DWITH_GAMEENGINE=OFF")
 			cmake.append("-DWITH_PLAYER=OFF")

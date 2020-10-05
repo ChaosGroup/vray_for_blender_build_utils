@@ -178,11 +178,16 @@ class WindowsBuilder(Builder):
 		dllDir = os.path.join(self.xpak_path, 'MSVS2019', 'bin', 'Hostx64', 'x64')
 		files = [
 			"msvcp140.dll",
+			"msvcp140_1.dll",
+			"msvcp140_2.dll",
+			"msvcp140_codecvt_ids.dll",
 			"vcruntime140.dll",
+			"vcruntime140_1.dll",
 		]
 
+		crtDir = utils.path_join(self.dir_install_path, 'blender.crt')
 		for f in files:
-			shutil.copy(utils.path_join(dllDir, f), self.dir_install_path)
+			shutil.copy(utils.path_join(dllDir, f), crtDir)
 
 
 	def config(self):

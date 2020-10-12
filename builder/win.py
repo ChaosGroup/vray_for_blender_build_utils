@@ -185,9 +185,8 @@ class WindowsBuilder(Builder):
 			"vcruntime140_1.dll",
 		]
 
-		crtDir = utils.path_join(self.dir_install_path, 'blender.crt')
 		for f in files:
-			shutil.copy(utils.path_join(dllDir, f), crtDir)
+			shutil.copy(utils.path_join(dllDir, f), self.dir_install_path)
 
 
 	def config(self):
